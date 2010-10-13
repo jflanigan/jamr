@@ -24,6 +24,8 @@ def findHead_returnDET(str, head):
 def findHeads_returnDETS(str, headdict):
     return [ findHead_returnDET(str, entry['HEAD']) for entry in headdict ]
 
+#def jdfksl
+
 def run():
     ref = open(sys.argv[1], 'r').readlines()
     #mt = open(sys.argv[2], 'r').readlines()
