@@ -19,12 +19,23 @@ def findHead_returnDET(str, head):
     Ns = '(\s*\w*_((NN)|(NNS)|(NNP)|(NNPS)))*'
     HEAD = '\s*(' + head + ')_((NN)|(NNS)|(NNP)|(NNPS))'
     regexp = DET + ADJs + Ns + HEAD
-    return [ match.groupdict()['DET'] for match in re.finditer(regexp, str) ]
+    return [ match.groupdict()['DET'] for match in re.finditer(regexp, str, re.I) ]
 
 def findHeads_returnDETS(str, headdict):
-    return [ findHead_returnDET(str, entry['HEAD']) for entry in headdict ]
+    return [ (entry['HEAD'], entry['DET'], findHead_returnDET(str, entry['HEAD'])) for entry in headdict ]
 
-#def jdfksl
+def strDETcorrespondence(ref, mt):
+    return findHeads_returnDETS(mt, findNounPhrase_returnDETandHead(ref))
+
+def printcorrespondences(refs, mts):
+    for (ref, mt) in zip(refs, mts):
+        print('ref = ' + ref)
+        print('mt =  ' + mt)
+        print(strDETcorrespondence(ref, mt))
+    return
+
+#def print
+
 
 def run():
     ref = open(sys.argv[1], 'r').readlines()
