@@ -21,6 +21,9 @@ def findHead_returnDET(str, head):
     regexp = DET + ADJs + Ns + HEAD
     return [ match.groupdict()['DET'] for match in re.finditer(regexp, str) ]
 
+def findHeads_returnDETS(str, headdict):
+    return [ findHead_returnDET(str, entry['HEAD']) for entry in headdict ]
+
 def run():
     ref = open(sys.argv[1], 'r').readlines()
     #mt = open(sys.argv[2], 'r').readlines()
