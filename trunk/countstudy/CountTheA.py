@@ -34,8 +34,53 @@ def printcorrespondences(refs, mts):
         print(strDETcorrespondence(ref, mt))
     return
 
-#def print
+def histogram(refs, mts):
+    total = 0
+    counts = {'the' : {'the':0, 'a':0, 'NONE':0, 'other':0},
+              'a' : {'the':0, 'a':0, 'NONE':0, 'other':0},
+              'NONE' : {'the':0, 'a':0, 'NONE':0, 'other':0},
+              'other' : 0,
+              'found' : 0,
+              'notfound' : 0,
+              'multiple' : 0}
+    for (ref, mt) in zip(refs, mts):
+        for (head, refDET, mtDETlist) in strDETcorrespondence(ref, mt):
+            total = total + 1
+            if len(mtDETlist) == 0:
+                counts['notfound'] = counts['notfound'] + 1
+            if len(mtDETlist) >= 2:
+                counts['multiple'] = counts['multiple'] + 1
+            if len(mtDETlist) == 1:
+                counts['found'] = counts['found'] + 1
+                if refDET == None:
+                    refDET = 'NONE'
+                if mtDETlist[0] == None:
+                    mtDETlist[0] = 'NONE'
+                refdet = refDET.lower()
+                mtdet = mtDETlist[0].lower()
+                if refdet == 'an':
+                    refdet = 'a'
+                if mtdet == 'an':
+                    mtdet = 'a'
+                if refdet == 'NONE' or refdet == 'the' or refdet == 'a':
+                    if mtdet == 'NONE' or mtdet == 'the' or mtdet == 'a':
+                        counts[refdet][mtdet] = counts[refdet][mtdet] + 1
+                    else:
+                        counts[refdet]['NONE'] = counts[refdet]['NONE'] + 1
+                else:
+                    counts['NONE']['NONE'] = counts['NONE']['NONE'] + 1
+    return (counts, total)
 
+def printhistogram(refs, mts):
+    (hist, total) = histogram(refs, mts)
+    dets = ['the', 'a', 'NONE']
+    for r in dets:
+        for m in dets:
+            print(r,'->',m,' \t',hist[r][m],'\t',100*hist[r][m]/total,'%')
+    print(hist['found'])
+    for s in ['found', 'notfound', 'multiple']:
+        print(hist[s],'\t(',100*hist[s]/total,'%)\t',s)
+    print(total)
 
 def run():
     ref = open(sys.argv[1], 'r').readlines()
