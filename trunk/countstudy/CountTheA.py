@@ -76,8 +76,9 @@ def printhistogram(refs, mts):
     dets = ['the', 'a', 'NONE']
     for r in dets:
         for m in dets:
-            print(r,'->',m,' \t',hist[r][m],'\t',100*hist[r][m]/total,'%')
-    print(hist['found'])
+            print(r,'->',m,' \t',hist[r][m],'\t',100*hist[r][m]/hist['found'],'%')
+    numcorrect = sum([ hist[r][r] for r in dets ])
+    print(100*numcorrect/hist['found'],'% correct out of',hist['found'],'found')
     for s in ['found', 'notfound', 'multiple']:
         print(hist[s],'\t(',100*hist[s]/total,'%)\t',s)
     print(total)
