@@ -73,10 +73,14 @@ def histogram(refs, mts):
 
 def printhistogram(refs, mts):
     (hist, total) = histogram(refs, mts)
+    print('ref -> mt')
     dets = ['the', 'a', 'NONE']
     for r in dets:
+        branchingtotal = sum([hist[r][key] for key in dets])     # (a la high energy particle physics 'Branching Fraction')
+        if branchingtotal == 0:
+            branchingtotal = 1
         for m in dets:
-            print(r,'->',m,' \t',hist[r][m],'\t',100*hist[r][m]/hist['found'],'%')
+            print(r,'->',m,' \t',hist[r][m],'\t',100*hist[r][m]/branchingtotal,'%')
     numcorrect = sum([ hist[r][r] for r in dets ])
     print()
     print(100*numcorrect/hist['found'],'% correct out of',hist['found'],'found in MT output\n')
