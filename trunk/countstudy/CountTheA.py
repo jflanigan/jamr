@@ -78,10 +78,11 @@ def printhistogram(refs, mts):
         for m in dets:
             print(r,'->',m,' \t',hist[r][m],'\t',100*hist[r][m]/hist['found'],'%')
     numcorrect = sum([ hist[r][r] for r in dets ])
-    print(100*numcorrect/hist['found'],'% correct out of',hist['found'],'found')
+    print()
+    print(100*numcorrect/hist['found'],'% correct out of',hist['found'],'found in MT output\n')
     for s in ['found', 'notfound', 'multiple']:
         print(hist[s],'\t(',100*hist[s]/total,'%)\t',s)
-    print(total)
+    print(total, 'total noun phrases in ref')
 
 def run():
     ref = open(sys.argv[1], 'r').readlines()
