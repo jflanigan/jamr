@@ -71,25 +71,25 @@ def histogram(refs, mts):
                     if mtdet == 'NONE' or mtdet == 'the' or mtdet == 'a':
                         counts[refdet][mtdet] = counts[refdet][mtdet] + 1
                     else:
-                        counts[refdet]['other'] = counts[refdet]['other'] + 1
+                        counts[refdet]['NONE'] = counts[refdet]['NONE'] + 1
                 else:
-                    print(refdet)
+                    #print(refdet)
                     if mtdet == 'NONE' or mtdet == 'the' or mtdet == 'a':
-                        counts['other'][mtdet] = counts['other'][mtdet] + 1
+                        counts['NONE'][mtdet] = counts['NONE'][mtdet] + 1
                     else:
-                        counts['other']['other'] = counts['other']['other'] + 1
+                        counts['NONE']['NONE'] = counts['NONE']['NONE'] + 1
     return (counts, total)
 
 def printhistogram(refs, mts):
     (hist, total) = histogram(refs, mts)
-    print('ref -> mt')
-    dets = ['NONE', 'the', 'a', 'other']
+    print('ref - mt')
+    dets = ['NONE', 'the', 'a']
     for r in dets:
         branchingtotal = sum([hist[r][key] for key in dets])     # (a la high energy particle physics 'Branching Fraction')
         if branchingtotal == 0:
             branchingtotal = 1
         for m in dets:
-            print(r,'->',m,' \t',hist[r][m],'\t',100*hist[r][m]/hist['found'],'%')
+            print(r,'-',m,' \t',hist[r][m],'\t',100*hist[r][m]/hist['found'],'%')
     numcorrect = sum([ hist[r][r] for r in dets ])
     numnoncorret = sum([ hist[r][r] for r in ['the', 'a'] ])
     print()
