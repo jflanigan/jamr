@@ -39,7 +39,7 @@ def histogram(refs, mts):
     counts = {'the' : {'the':0, 'a':0, 'NONE':0, 'other':0},
               'a' : {'the':0, 'a':0, 'NONE':0, 'other':0},
               'NONE' : {'the':0, 'a':0, 'NONE':0, 'other':0},
-              'other' : 0,
+              'other' : {'the':0, 'a':0, 'NONE':0, 'other':0},
               'found' : 0,
               'notfound' : 0,
               'multiple' : 0}
@@ -58,6 +58,11 @@ def histogram(refs, mts):
                     mtDETlist[0] = 'NONE'
                 refdet = refDET.lower()
                 mtdet = mtDETlist[0].lower()
+                if refDET == 'NONE':
+                    refdet = 'NONE'
+                if mtDETlist[0] == 'NONE':
+                    mtdet = 'NONE'
+
                 if refdet == 'an':
                     refdet = 'a'
                 if mtdet == 'an':
@@ -66,24 +71,30 @@ def histogram(refs, mts):
                     if mtdet == 'NONE' or mtdet == 'the' or mtdet == 'a':
                         counts[refdet][mtdet] = counts[refdet][mtdet] + 1
                     else:
-                        counts[refdet]['NONE'] = counts[refdet]['NONE'] + 1
+                        counts[refdet]['other'] = counts[refdet]['other'] + 1
                 else:
-                    counts['NONE']['NONE'] = counts['NONE']['NONE'] + 1
+                    print(refdet)
+                    if mtdet == 'NONE' or mtdet == 'the' or mtdet == 'a':
+                        counts['other'][mtdet] = counts['other'][mtdet] + 1
+                    else:
+                        counts['other']['other'] = counts['other']['other'] + 1
     return (counts, total)
 
 def printhistogram(refs, mts):
     (hist, total) = histogram(refs, mts)
     print('ref -> mt')
-    dets = ['the', 'a', 'NONE']
+    dets = ['NONE', 'the', 'a', 'other']
     for r in dets:
         branchingtotal = sum([hist[r][key] for key in dets])     # (a la high energy particle physics 'Branching Fraction')
         if branchingtotal == 0:
             branchingtotal = 1
         for m in dets:
-            print(r,'->',m,' \t',hist[r][m],'\t',100*hist[r][m]/branchingtotal,'%')
+            print(r,'->',m,' \t',hist[r][m],'\t',100*hist[r][m]/hist['found'],'%')
     numcorrect = sum([ hist[r][r] for r in dets ])
+    numnoncorret = sum([ hist[r][r] for r in ['the', 'a'] ])
     print()
     print(100*numcorrect/hist['found'],'% correct out of',hist['found'],'found in MT output\n')
+#    print(100*numnoncorrect/hist['found'],'% correct out of',hist['found'],'found in MT output\n')
     for s in ['found', 'notfound', 'multiple']:
         print(hist[s],'\t(',100*hist[s]/total,'%)\t',s)
     print(total, 'total noun phrases in ref')
