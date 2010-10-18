@@ -88,6 +88,10 @@ def printhistogram(refs, mts):
         print(hist[s],'\t(',100*hist[s]/total,'%)\t',s)
     print(total, 'total noun phrases in ref')
 
+ref = open('ref', 'r').readlines()
+phrase = open('phrase', 'r').readlines()
+hiero = open('hiero', 'r').readlines()
+
 def run():
     ref = open(sys.argv[1], 'r').readlines()
     #mt = open(sys.argv[2], 'r').readlines()
