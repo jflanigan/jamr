@@ -76,13 +76,13 @@ def histogram(refs, mts):
                     if mtdet == 'NONE' or mtdet == 'the' or mtdet == 'a':
                         counts[refdet][mtdet] = counts[refdet][mtdet] + 1
                     else:
-                        counts[refdet]['NONE'] = counts[refdet]['NONE'] + 1
+                        counts[refdet]['other'] = counts[refdet]['other'] + 1
                 else:
                     #print(refdet)
                     if mtdet == 'NONE' or mtdet == 'the' or mtdet == 'a':
-                        counts['NONE'][mtdet] = counts['NONE'][mtdet] + 1
+                        counts['other'][mtdet] = counts['other'][mtdet] + 1
                     else:
-                        counts['NONE']['NONE'] = counts['NONE']['NONE'] + 1
+                        counts['other']['other'] = counts['other']['other'] + 1
             else:
                 print("-------------ERROR------------")
     return (counts, total)
@@ -98,7 +98,7 @@ def testhistogram(refs, mts):
 def printhistogram(refs, mts):
     (hist, total) = histogram(refs, mts)
     print('ref - mt\n')
-    dets = ['NONE', 'the', 'a']
+    dets = ['NONE', 'the', 'a', 'other']
     for r in dets:
         branchingtotal = sum([hist[r][key] for key in dets])     # (a la high energy particle physics 'Branching Fraction')
         if branchingtotal == 0:
