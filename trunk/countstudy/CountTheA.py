@@ -6,32 +6,32 @@ import sys
 def findNounPhrase_returnDETandHead(str):
 # Searches for all noun phrases in a string POStagged by the stanford tagger and returns a list
 # of dictionaries that contain entries for the head and determiner of the noun phrases
-    DET = '((?P<DET>\w*)_DT)?'
-    ADJs = '(\s*\w*_JJ)*'
-    Ns = '(\s*\w*_((NN)|(NNS)|(NNP)|(NNPS)))*'
-    HEAD = '\s*(?P<HEAD>\w*)_((NN)|(NNS)|(NNP)|(NNPS))'
+    DET = '((?P<DET>\w+)_DT)?'
+    ADJs = '(\s*\w+_JJ)*'
+    Ns = '(\s*\w+_((NN)|(NNS)|(NNP)|(NNPS)))*'
+    HEAD = '\s*(?P<HEAD>\w+)_((NN)|(NNS)|(NNP)|(NNPS))'
     regexp = DET + ADJs + Ns + HEAD
     return [ match.groupdict() for match in re.finditer(regexp, str) ]
 
 def findHead_returnDET(str, head):
-    DET = '((?P<DET>\w*)_DT)?'
-    ADJs = '(\s*\w*_JJ)*'
-    Ns = '(\s*\w*_((NN)|(NNS)|(NNP)|(NNPS)))*'
+    DET = '((?P<DET>\w+)_DT)?'
+    ADJs = '(\s*\w+_JJ)*'
+    Ns = '(\s*\w+_((NN)|(NNS)|(NNP)|(NNPS)))*'
     HEAD = '\s*(' + head + ')_((NN)|(NNS)|(NNP)|(NNPS))'
     regexp = DET + ADJs + Ns + HEAD
     return [ match.groupdict()['DET'] for match in re.finditer(regexp, str, re.I) ]
 
-def findHeads_returnDETS(str, headdict):
-    return [ (entry['HEAD'], entry['DET'], findHead_returnDET(str, entry['HEAD'])) for entry in headdict ]
+def findHeads_returnDETS(ref, mt, headdict):
+    return [ (entry['HEAD'], entry['DET'], findHead_returnDET(ref, entry['HEAD']), findHead_returnDET(mt, entry['HEAD'])) for entry in headdict ]
 
 def strDETcorrespondence(ref, mt):
-    return findHeads_returnDETS(mt, findNounPhrase_returnDETandHead(ref))
+    return findHeads_returnDETS(ref, mt, findNounPhrase_returnDETandHead(ref))
 
 def printcorrespondences(refs, mts):
     for (ref, mt) in zip(refs, mts):
         print('ref = ' + ref)
         print('mt =  ' + mt)
-        print(strDETcorrespondence(ref, mt))
+        print(strDETcorrespondence(ref, mt),'\n')
     return
 
 def histogram(refs, mts):
@@ -44,13 +44,18 @@ def histogram(refs, mts):
               'notfound' : 0,
               'multiple' : 0}
     for (ref, mt) in zip(refs, mts):
-        for (head, refDET, mtDETlist) in strDETcorrespondence(ref, mt):
+        for (head, refDET, refDETlist, mtDETlist) in strDETcorrespondence(ref, mt):
             total = total + 1
             if len(mtDETlist) == 0:
                 counts['notfound'] = counts['notfound'] + 1
+                break;
             if len(mtDETlist) >= 2:
                 counts['multiple'] = counts['multiple'] + 1
-            if len(mtDETlist) == 1:
+                break;
+            elif len(refDETlist) >= 2:
+                counts['multiple'] = counts['multiple'] + 1
+                break;
+            if len(mtDETlist) == 1 and len(refDETlist) == 1:
                 counts['found'] = counts['found'] + 1
                 if refDET == None:
                     refDET = 'NONE'
@@ -78,7 +83,17 @@ def histogram(refs, mts):
                         counts['NONE'][mtdet] = counts['NONE'][mtdet] + 1
                     else:
                         counts['NONE']['NONE'] = counts['NONE']['NONE'] + 1
+            else:
+                print("-------------ERROR------------")
     return (counts, total)
+
+def testhistogram(refs, mts):
+    for (ref, mt) in zip(refs, mts):
+        (hist1, total1) = histogram([ref], [mt])
+        (hist2, total2) = histogram([mt], [ref])
+        if total1 != total2:
+            printcorrespondences([ref], [mt])
+            printcorrespondences([mt], [ref])
 
 def printhistogram(refs, mts):
     (hist, total) = histogram(refs, mts)
