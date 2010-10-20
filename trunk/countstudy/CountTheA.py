@@ -48,11 +48,17 @@ def detkey(DET):
     return det
 
 def starHead(str, head):
-    HEAD = re.compile('\s*(' + head + ')_((NN)|(NNS)|(NNP)|(NNPS))', re.I)
+    HEAD = re.compile('\s*(' + head + ')_((NNPS)|(NNS)|(NNP)|(NN))', re.I)
     starred = re.sub(HEAD, ' ***'+head+'***_HEAD', str)
     return starred
 
+def starPhrase(str, head):
+    phrase = findHead_returnPhrase(str, head)
+    return re.sub(phrase, ' ***'+phrase+'*** ', str)
+
 def remove_POS(str):
+#    POSstar = '(_.*?)(\\*)'
+#    str = re.sub(POSstar, '*', str)
     POS = '_.*?((\s+)|$)'
     return re.sub(POS, ' ', str)
 
@@ -68,7 +74,7 @@ def findHead_returnPhrase(str, head):
     DET = '(?:(?:\w+)_DT)?'
     ADJs = '(?:\s*\w+_JJ)*'
     Ns = '(?:\s*\w+_(?:(?:NN)|(?:NNS)|(?:NNP)|(?:NNPS)))*'
-    HEAD = '\s*(?:' + head + ')_(?:(?:NN)|(?:NNS)|(?:NNP)|(?:NNPS))'
+    HEAD = '\s*(?:' + head + ')_(?:(?:NNPS)|(?:NNS)|(?:NNP)|(?:NN))'
     regexp = DET + ADJs + Ns + HEAD
     phrase = re.findall(regexp, str, re.I)
     if len(phrase) != 1:
@@ -83,7 +89,7 @@ def logphrase(head, ref, mt, refdet, mtdet):
     outfile.write('mt =  '+mtphrase+'\n\n')
     outfile.close()
 
-def histogram(refs, mts):
+def histogram(refs, mts, log = 'false'):
     total = 0
     counts = {'the' : {'the':0, 'a':0, 'NONE':0, 'other':0},
               'a' : {'the':0, 'a':0, 'NONE':0, 'other':0},
