@@ -3,6 +3,8 @@
 import re
 import sys
 
+mtfile = 'hiero'
+
 def findNounPhrase_returnDETandHead(str):
 # Searches for all noun phrases in a string POStagged by the stanford tagger and returns a list
 # of dictionaries that contain entries for the head and determiner of the noun phrases
@@ -34,6 +36,53 @@ def printcorrespondences(refs, mts):
         print(strDETcorrespondence(ref, mt),'\n')
     return
 
+def detkey(DET):
+    if DET == None:
+        det = 'NONE'
+    else:
+        det = DET.lower()
+        if det == 'an':
+            det = 'a'
+        if det != 'the' and det != 'a':
+            det = 'other'
+    return det
+
+def starHead(str, head):
+    HEAD = re.compile('\s*(' + head + ')_((NN)|(NNS)|(NNP)|(NNPS))', re.I)
+    starred = re.sub(HEAD, ' ***'+head+'***_HEAD', str)
+    return starred
+
+def remove_POS(str):
+    POS = '_.*?((\s+)|$)'
+    return re.sub(POS, ' ', str)
+
+def logsentence(head, ref, mt, refdet, mtdet):
+    outfile = open(mtfile+'.sentences_'+refdet+'_'+mtdet, mode='at')
+    refphrase = remove_POS(starHead(ref, head))
+    mtphrase = remove_POS(starHead(mt, head))
+    outfile.write('REF:\n'+refphrase+'\n')
+    outfile.write('MT:\n'+mtphrase+'\n\n')
+    outfile.close()
+
+def findHead_returnPhrase(str, head):
+    DET = '(?:(?:\w+)_DT)?'
+    ADJs = '(?:\s*\w+_JJ)*'
+    Ns = '(?:\s*\w+_(?:(?:NN)|(?:NNS)|(?:NNP)|(?:NNPS)))*'
+    HEAD = '\s*(?:' + head + ')_(?:(?:NN)|(?:NNS)|(?:NNP)|(?:NNPS))'
+    regexp = DET + ADJs + Ns + HEAD
+    phrase = re.findall(regexp, str, re.I)
+    if len(phrase) != 1:
+        print("ERROR: findHead_returnPhrase found more than one phrase.")
+    return phrase[0]
+
+def logphrase(head, ref, mt, refdet, mtdet):
+    outfile = open(mtfile+'.phrases_'+refdet+'_'+mtdet, mode='at')
+    refphrase = remove_POS(findHead_returnPhrase(ref, head))
+    mtphrase = remove_POS(findHead_returnPhrase(mt, head))
+    outfile.write('ref = '+refphrase+'\n')
+    outfile.write('mt =  '+mtphrase+'\n\n')
+    outfile.close()
+
 def histogram(refs, mts):
     total = 0
     counts = {'the' : {'the':0, 'a':0, 'NONE':0, 'other':0},
@@ -45,6 +94,7 @@ def histogram(refs, mts):
               'multiple' : 0}
     for (ref, mt) in zip(refs, mts):
         for (head, refDET, refDETlist, mtDETlist) in strDETcorrespondence(ref, mt):
+            goodheadlist = []
             total = total + 1
             if len(mtDETlist) == 0:
                 counts['notfound'] = counts['notfound'] + 1
@@ -57,32 +107,11 @@ def histogram(refs, mts):
                 break;
             if len(mtDETlist) == 1 and len(refDETlist) == 1:
                 counts['found'] = counts['found'] + 1
-                if refDET == None:
-                    refDET = 'NONE'
-                if mtDETlist[0] == None:
-                    mtDETlist[0] = 'NONE'
-                refdet = refDET.lower()
-                mtdet = mtDETlist[0].lower()
-                if refDET == 'NONE':
-                    refdet = 'NONE'
-                if mtDETlist[0] == 'NONE':
-                    mtdet = 'NONE'
-
-                if refdet == 'an':
-                    refdet = 'a'
-                if mtdet == 'an':
-                    mtdet = 'a'
-                if refdet == 'NONE' or refdet == 'the' or refdet == 'a':
-                    if mtdet == 'NONE' or mtdet == 'the' or mtdet == 'a':
-                        counts[refdet][mtdet] = counts[refdet][mtdet] + 1
-                    else:
-                        counts[refdet]['other'] = counts[refdet]['other'] + 1
-                else:
-                    #print(refdet)
-                    if mtdet == 'NONE' or mtdet == 'the' or mtdet == 'a':
-                        counts['other'][mtdet] = counts['other'][mtdet] + 1
-                    else:
-                        counts['other']['other'] = counts['other']['other'] + 1
+                refdet = detkey(refDET)
+                mtdet = detkey(mtDETlist[0])
+                counts[detkey(refDET)][detkey(mtDETlist[0])] = counts[detkey(refDET)][detkey(mtDETlist[0])] + 1
+                logphrase(head, ref, mt, refdet, mtdet)
+                logsentence(head, ref, mt, refdet, mtdet)
             else:
                 print("-------------ERROR------------")
     return (counts, total)
@@ -103,8 +132,11 @@ def printhistogram(refs, mts):
         branchingtotal = sum([hist[r][key] for key in dets])     # (a la high energy particle physics 'Branching Fraction')
         if branchingtotal == 0:
             branchingtotal = 1
+        hist_found = hist['found']
+        if hist_found == 0:
+            hist_found = 1
         for m in dets:
-            print(r,'-',m,' \t',hist[r][m],'\t',100*hist[r][m]/hist['found'],'%')
+            print(r,'-',m,' \t',hist[r][m],'\t',100*hist[r][m]/hist_found,'%')
     numcorrect = sum([ hist[r][r] for r in dets ])
     numnoncorret = sum([ hist[r][r] for r in ['the', 'a'] ])
     print()
