@@ -89,7 +89,7 @@ def logphrase(head, ref, mt, refdet, mtdet):
     outfile.write('mt =  '+mtphrase+'\n\n')
     outfile.close()
 
-def histogram(refs, mts, log = 'false'):
+def histogram(refs, mts, log = False):
     total = 0
     counts = {'the' : {'the':0, 'a':0, 'NONE':0, 'other':0},
               'a' : {'the':0, 'a':0, 'NONE':0, 'other':0},
@@ -116,8 +116,9 @@ def histogram(refs, mts, log = 'false'):
                 refdet = detkey(refDET)
                 mtdet = detkey(mtDETlist[0])
                 counts[detkey(refDET)][detkey(mtDETlist[0])] = counts[detkey(refDET)][detkey(mtDETlist[0])] + 1
-                logphrase(head, ref, mt, refdet, mtdet)
-                logsentence(head, ref, mt, refdet, mtdet)
+                if log:
+                    logphrase(head, ref, mt, refdet, mtdet)
+                    logsentence(head, ref, mt, refdet, mtdet)
             else:
                 print("-------------ERROR------------")
     return (counts, total)
@@ -130,8 +131,8 @@ def testhistogram(refs, mts):
             printcorrespondences([ref], [mt])
             printcorrespondences([mt], [ref])
 
-def printhistogram(refs, mts):
-    (hist, total) = histogram(refs, mts)
+def printhistogram(refs, mts, log = False):
+    (hist, total) = histogram(refs, mts, log)
     print('ref - mt\n')
     dets = ['NONE', 'the', 'a', 'other']
     for r in dets:
@@ -158,8 +159,8 @@ def printhistogram(refs, mts):
     print(total, 'total noun phrases in ref')
 
 ref = open('ref', 'r').readlines()
-phrase = open('phrase', 'r').readlines()
-hiero = open('hiero', 'r').readlines()
+#phrase = open('phrase', 'r').readlines()
+#hiero = open('hiero', 'r').readlines()
 
 def run():
     ref = open(sys.argv[1], 'r').readlines()
