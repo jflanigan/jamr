@@ -4,8 +4,8 @@ mkdir data
 ./cpAndSplitOutputFromQin.sh
 ./cpRefFiles.sh
 ./createPhraseHieroRef.sh
-./Tokenize.py
 cd data
+../Tokenize.py
 ../tagMT.sh
 cd ..
 ./createLinks.sh
