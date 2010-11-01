@@ -10,5 +10,6 @@ cd data
 cd ..
 ./createLinks.sh
 
+mkdir output
 ./CountTheA.py
 

@@ -3,7 +3,7 @@
 import re
 import sys
 
-mtfile = 'hiero'
+mtfile = 'output/hiero'
 
 def findNounPhrase_returnDETandHead(str):
 # Searches for all noun phrases in a string POStagged by the stanford tagger and returns a list
