@@ -17,11 +17,11 @@ cat ref4.MT03 ref1.MT08 >> ref4
 cd ..
 
 cd ..
-ln -s output.hiero/hiero .
-ln -s output.phrase.based/phrase .
-ln -s ref/ref1 ref
-ln -s ref/ref1 .
-ln -s ref/ref2 .
-ln -s ref/ref3 .
-ln -s ref/ref4 .
+ln -s data/output.hiero/hiero .
+ln -s data/output.phrase.based/phrase .
+ln -s data/ref/ref1 ref
+ln -s data/ref/ref1 .
+ln -s data/ref/ref2 .
+ln -s data/ref/ref3 .
+ln -s data/ref/ref4 .
 
