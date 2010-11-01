@@ -158,9 +158,20 @@ def printhistogram(refs, mts, log = False):
         print(hist[s],'\t(',100*hist[s]/total,'%)\t',s)
     print(total, 'total noun phrases in ref')
 
-ref = open('ref', 'r').readlines()
-#phrase = open('phrase', 'r').readlines()
-#hiero = open('hiero', 'r').readlines()
+# back when I used just one ref, I opened it like this:
+#ref = open('ref', 'r').readlines()
+
+# now I open the refs like this:
+ref1 = open('ref1', 'r').readlines()
+ref2 = open('ref2', 'r').readlines()
+ref3 = open('ref3', 'r').readlines()
+ref4 = open('ref4', 'r').readlines()
+phrase = open('phrase', 'r').readlines()
+hiero = open('hiero', 'r').readlines()
+
+#if running as a script:
+if __name__ == "main":
+    printhistogram(ref1, hiero, True)
 
 def run():
     ref = open(sys.argv[1], 'r').readlines()
