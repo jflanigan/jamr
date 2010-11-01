@@ -170,7 +170,7 @@ phrase = open('phrase', 'r').readlines()
 hiero = open('hiero', 'r').readlines()
 
 #if running as a script:
-if __name__ == "main":
+if __name__ == "__main__":
     printhistogram(ref1, hiero, True)
 
 def run():
