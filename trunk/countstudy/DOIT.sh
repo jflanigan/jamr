@@ -6,7 +6,7 @@ mkdir data
 ./createPhraseHieroRef.sh
 ./Tokenize.py
 cd data
-./tagMT.sh
+../tagMT.sh
 cd ..
 ./createLinks.sh
 
