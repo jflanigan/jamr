@@ -14,6 +14,7 @@ cat ref1.MT03 ref1.MT08 >> ref1
 cat ref2.MT03 ref1.MT08 >> ref2
 cat ref3.MT03 ref1.MT08 >> ref3
 cat ref4.MT03 ref1.MT08 >> ref4
+cd ..
 
 cd ..
 ln -s output.hiero/hiero .
