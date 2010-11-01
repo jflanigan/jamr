@@ -4,7 +4,7 @@
 cd data
 # Originally the output from Qin was located in /afs/cs.cmu.edu/user/qing/ForJeff
 # I copied it to my local computer (tahoe.lti.cs.cmu) in case he deleted it
-cp -v ~/archive/afs_cs.cmu.edu_user_qing_ForJeff .
+cp -rv ~/archive/afs_cs.cmu.edu_user_qing_ForJeff .
 
 mkdir output.phrase.based
 cd output.phrase.based/
