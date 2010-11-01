@@ -13,5 +13,3 @@
 ./stanford-postagger-newline.sh models/left3words-wsj-0-18.tagger ref/ref4.tokens > ref/ref4.tagged
 
 
-
-

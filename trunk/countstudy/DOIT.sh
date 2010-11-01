@@ -5,6 +5,9 @@ mkdir data
 ./cpRefFiles.sh
 ./createPhraseHieroRef.sh
 ./Tokenize.py
+cd data
 ./tagMT.sh
+cd ..
+
 ./CountTheA.py
 
