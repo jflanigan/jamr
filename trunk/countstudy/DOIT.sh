@@ -11,5 +11,6 @@ cd ..
 ./createLinks.sh
 
 mkdir output
+echo "Running CountTheA.py..."
 ./CountTheA.py
 
