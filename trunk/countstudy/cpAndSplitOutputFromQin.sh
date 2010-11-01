@@ -3,7 +3,7 @@
 
 # Originally the output from Qin was located in /afs/cs.cmu.edu/user/qing/ForJeff
 # I copied it to my local computer (tahoe.lti.cs.cmu) in case he deleted it
-cp -rv ~/archive/afs_cs.cmu.edu_user_qing_ForJeff data
+cp -rv ~/archive/afs_cs.cmu.edu_user_qing_ForJeff/* data
 
 cd data
 
