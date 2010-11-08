@@ -62,12 +62,17 @@ def remove_POS(str):
     POS = '_.*?((\s+)|$)'
     return re.sub(POS, ' ', str)
 
-def logsentence(head, ref, mt, refdet, mtdet):
+def logsentence(head, refs, mt, refdet, mtdet, refnum):
     outfile = open(mtfile+'.sentences_'+refdet+'_'+mtdet, mode='at')
-    refphrase = remove_POS(starHead(ref, head))
     mtphrase = remove_POS(starHead(mt, head))
-    outfile.write('REF:\n'+refphrase+'\n')
-    outfile.write('MT:\n'+mtphrase+'\n\n')
+    outfile.write('MT :\n'+mtphrase+'\n')
+    for i in range(len(refs)):
+        ref = refs[i]
+        refphrase = remove_POS(starHead(ref, head))
+        if i == refnum:
+            outfile.write('-->')
+        outfile.write('REF '+str(i)+':\n'+refphrase+'\n')
+    outfile.write('\n')
     outfile.close()
 
 def findHead_returnPhrase(str, head):
@@ -85,11 +90,14 @@ def logphrase(head, ref, mt, refdet, mtdet):
     outfile = open(mtfile+'.phrases_'+refdet+'_'+mtdet, mode='at')
     refphrase = remove_POS(findHead_returnPhrase(ref, head))
     mtphrase = remove_POS(findHead_returnPhrase(mt, head))
-    outfile.write('ref = '+refphrase+'\n')
-    outfile.write('mt =  '+mtphrase+'\n\n')
+    outfile.write('MT: '+mtphrase+'\n')
+    outfile.write('REF: '+refphrase+'\n\n')
     outfile.close()
 
-def histogram(refs, mts, log = False):
+def flip(lst):
+    return [ [ lst[i][j] for i in range(len(lst)) ] for j in range(len(lst[0])) ]
+
+def histogram(refses, mts, refnum, log = False):
     total = 0
     counts = {'the' : {'the':0, 'a':0, 'NONE':0, 'other':0},
               'a' : {'the':0, 'a':0, 'NONE':0, 'other':0},
@@ -98,8 +106,17 @@ def histogram(refs, mts, log = False):
               'found' : 0,
               'notfound' : 0,
               'multiple' : 0}
-    for (ref, mt) in zip(refs, mts):
-        for (head, refDET, refDETlist, mtDETlist) in strDETcorrespondence(ref, mt):
+    print('calculating histogram...')
+    print('--------------------------------------------------------------------------------')
+    progress = 1 # for progress bar
+    for linenumber in range(len(mts)):
+        if linenumber > progress*(len(mts)/80):
+            print('-', end='')
+            sys.stdout.flush()
+            progress = progress + 1
+        refs = refses[linenumber]
+        mt = mts[linenumber]
+        for (head, refDET, refDETlist, mtDETlist) in strDETcorrespondence(refs[refnum], mt):
             goodheadlist = []
             total = total + 1
             if len(mtDETlist) == 0:
@@ -110,17 +127,18 @@ def histogram(refs, mts, log = False):
                 break;
             elif len(refDETlist) >= 2:
                 counts['multiple'] = counts['multiple'] + 1
-                break;
+                break
             if len(mtDETlist) == 1 and len(refDETlist) == 1:
                 counts['found'] = counts['found'] + 1
                 refdet = detkey(refDET)
                 mtdet = detkey(mtDETlist[0])
                 counts[detkey(refDET)][detkey(mtDETlist[0])] = counts[detkey(refDET)][detkey(mtDETlist[0])] + 1
                 if log:
-                    logphrase(head, ref, mt, refdet, mtdet)
-                    logsentence(head, ref, mt, refdet, mtdet)
+                    logphrase(head, refs[refnum], mt, refdet, mtdet)
+                    logsentence(head, refs, mt, refdet, mtdet, refnum)
             else:
                 print("-------------ERROR------------")
+    print('-\n')
     return (counts, total)
 
 def testhistogram(refs, mts):
@@ -131,8 +149,8 @@ def testhistogram(refs, mts):
             printcorrespondences([ref], [mt])
             printcorrespondences([mt], [ref])
 
-def printhistogram(refs, mts, log = False):
-    (hist, total) = histogram(refs, mts, log)
+def printhistogram(refses, mts, refnum, log = False):
+    (hist, total) = histogram(refses, mts, refnum, log)
     print('ref - mt\n')
     dets = ['NONE', 'the', 'a', 'other']
     for r in dets:
@@ -158,20 +176,17 @@ def printhistogram(refs, mts, log = False):
         print(hist[s],'\t(',100*hist[s]/total,'%)\t',s)
     print(total, 'total noun phrases in ref')
 
-# back when I used just one ref, I opened it like this:
-#ref = open('ref', 'r').readlines()
-
-# now I open the refs like this:
 ref1 = open('ref1', 'r').readlines()
 ref2 = open('ref2', 'r').readlines()
 ref3 = open('ref3', 'r').readlines()
 ref4 = open('ref4', 'r').readlines()
+refses = list(zip(ref1, ref2, ref3, ref4))
 phrase = open('phrase', 'r').readlines()
 hiero = open('hiero', 'r').readlines()
 
 #if running as a script:
 if __name__ == "__main__":
-    printhistogram(ref1, hiero, True)
+    printhistogram(refses, hiero, 1, True)
 
 def run():
     ref = open(sys.argv[1], 'r').readlines()
