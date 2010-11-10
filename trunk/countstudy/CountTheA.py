@@ -8,18 +8,18 @@ mtfile = 'output/hiero'
 def findNounPhrase_returnDETandHead(str):
 # Searches for all noun phrases in a string POStagged by the stanford tagger and returns a list
 # of dictionaries that contain entries for the head and determiner of the noun phrases
-    DET = '((?P<DET>\w+)_DT)?'
-    ADJs = '(\s*\w+_JJ(S|R)?)*'
-    Ns = '(\s*\w+_((NN)|(NNS)|(NNP)|(NNPS)))*'
-    HEAD = '\s*(?P<HEAD>\w+)_((NN)|(NNS)|(NNP)|(NNPS))'
+    DET = r'((?P<DET>[^ _]+)_DT)?'
+    ADJs = r'(\s*[^ _]+_JJ)*'
+    Ns = r'(\s*[^ _]+_((NN)|(NNS)|(NNP)|(NNPS)))*'
+    HEAD = r'\s*(?P<HEAD>[^ _]+)_((NN)|(NNS)|(NNP)|(NNPS))'
     regexp = DET + ADJs + Ns + HEAD
     return [ match.groupdict() for match in re.finditer(regexp, str) ]
 
 def findHead_returnDET(str, head):
-    DET = '((?P<DET>\w+)_DT)?'
-    ADJs = '(\s*\w+_JJ(S|R)?)*'
-    Ns = '(\s*\w+_((NN)|(NNS)|(NNP)|(NNPS)))*'
-    HEAD = '\s*(' + head + ')_((NN)|(NNS)|(NNP)|(NNPS))'
+    DET = r'((?P<DET>[^ _]+)_DT)?'
+    ADJs = r'(\s*[^ _]+_JJ(S|R)?)*'
+    Ns = r'(\s*[^ _]+_((NN)|(NNS)|(NNP)|(NNPS)))*'
+    HEAD = r'\s*(' + head + ')_((NN)|(NNS)|(NNP)|(NNPS))'
     regexp = DET + ADJs + Ns + HEAD
     return [ match.groupdict()['DET'] for match in re.finditer(regexp, str, re.I) ]
 
@@ -48,7 +48,7 @@ def detkey(DET):
     return det
 
 def starHead(str, head):
-    HEAD = re.compile('\s*(' + head + ')_((NNPS)|(NNS)|(NNP)|(NN))', re.I)
+    HEAD = re.compile(r'\s*(' + head + ')_((NNPS)|(NNS)|(NNP)|(NN))', re.I)
     starred = re.sub(HEAD, ' ***'+head+'***_HEAD', str)
     return starred
 
@@ -59,16 +59,18 @@ def starPhrase(str, head):
 def remove_POS(str):
 #    POSstar = '(_.*?)(\\*)'
 #    str = re.sub(POSstar, '*', str)
-    POS = '_.*?((\s+)|$)'
+    POS = r'_.*?((\s+)|$)'
     return re.sub(POS, ' ', str)
 
 def logsentence(head, refs, mt, refdet, mtdet, refnum):
     outfile = open(mtfile+'.sentences_'+refdet+'_'+mtdet, mode='at')
-    mtphrase = remove_POS(starHead(mt, head))
+#    mtphrase = remove_POS(starHead(mt, head))
+    mtphrase = starHead(mt, head)
     outfile.write('MT :\n'+mtphrase+'\n')
     for i in range(len(refs)):
         ref = refs[i]
-        refphrase = remove_POS(starHead(ref, head))
+#        refphrase = remove_POS(starHead(ref, head))
+        refphrase = starHead(ref, head)
         if i == refnum:
             outfile.write('-->')
         outfile.write('REF '+str(i)+':\n'+refphrase+'\n')
@@ -76,10 +78,10 @@ def logsentence(head, refs, mt, refdet, mtdet, refnum):
     outfile.close()
 
 def findHead_returnPhrase(str, head):
-    DET = '(?:(?:\w+)_DT)?'
-    ADJs = '(?:\s*\w+_JJ)*'
-    Ns = '(?:\s*\w+_(?:(?:NN)|(?:NNS)|(?:NNP)|(?:NNPS)))*'
-    HEAD = '\s*(?:' + head + ')_(?:(?:NNPS)|(?:NNS)|(?:NNP)|(?:NN))'
+    DET = r'(?:(?:[^ _]+)_DT)?'
+    ADJs = r'(?:\s*[^ _]+_JJ)*'
+    Ns = r'(?:\s*[^ _]+_(?:(?:NN)|(?:NNS)|(?:NNP)|(?:NNPS)))*'
+    HEAD = r'\s*(?:' + head + ')_(?:(?:NNPS)|(?:NNS)|(?:NNP)|(?:NN))'
     regexp = DET + ADJs + Ns + HEAD
     phrase = re.findall(regexp, str, re.I)
     if len(phrase) != 1:
@@ -176,6 +178,7 @@ def printhistogram(refses, mts, refnum, log = False):
         print(hist[s],'\t(',100*hist[s]/total,'%)\t',s)
     print(total, 'total noun phrases in ref')
 
+"""
 ref1 = open('ref1', 'r').readlines()
 ref2 = open('ref2', 'r').readlines()
 ref3 = open('ref3', 'r').readlines()
@@ -183,10 +186,22 @@ ref4 = open('ref4', 'r').readlines()
 refses = list(zip(ref1, ref2, ref3, ref4))
 phrase = open('phrase', 'r').readlines()
 hiero = open('hiero', 'r').readlines()
+"""
+
+ref1 = open('data/ref/ref1.parsertagged', 'r').readlines()
+ref2 = open('data/ref/ref2.parsertagged', 'r').readlines()
+ref3 = open('data/ref/ref3.parsertagged', 'r').readlines()
+ref4 = open('data/ref/ref4.parsertagged', 'r').readlines()
+refses = list(zip(ref2, ref4, ref1))
+phrase = open('data/output.phrase.based/phrase.parsertagged', 'r').readlines()
+hiero = open('data/output.hiero/hiero.parsertagged', 'r').readlines()
+
 
 #if running as a script:
 if __name__ == "__main__":
-    printhistogram(refses, hiero, 1, True)
+#    printhistogram(refses, hiero, 0, log=True)
+    printhistogram(refses, ref1, 0, log=False)
+
 
 def run():
     ref = open(sys.argv[1], 'r').readlines()
