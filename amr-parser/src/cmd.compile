@@ -1,3 +1,3 @@
 #!/bin/bash
 
-fsc -classpath "wordnet/edu.mit.jwi_2.3.0_jdk.jar" *.scala
+fsc -classpath "../wordnet/edu.mit.jwi_2.3.0_jdk.jar" *.scala
