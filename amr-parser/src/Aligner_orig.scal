@@ -1,0 +1,119 @@
+package edu.cmu.lti.nlp.amr
+
+import java.io.File
+import java.io.FileOutputStream
+import java.io.PrintStream
+import java.io.BufferedOutputStream
+import java.io.OutputStreamWriter
+import java.lang.Math.abs
+import java.lang.Math.log
+import java.lang.Math.exp
+import java.lang.Math.random
+import java.lang.Math.floor
+import java.lang.Math.min
+import java.lang.Math.max
+import scala.io.Source
+import scala.util.matching.Regex
+import scala.collection.mutable.Map
+import scala.collection.mutable.Set
+import scala.collection.mutable.ArrayBuffer
+import scala.util.parsing.combinator._
+
+/****************************** Driver Program *****************************/
+object Aligner {
+
+    val usage = """Usage:
+scala -classpath . edu.cmu.lti.nlp.ner.Aligner -w weights -t tagset < CoNLL > output"""
+    type OptionMap = Map[Symbol, Any]
+
+    def parseOptions(map : OptionMap, list: List[String]) : OptionMap = {
+        def isSwitch(s : String) = (s(0) == '-')
+        list match {
+            case Nil => map
+            case "--train" :: tail =>
+                      parseOptions(map ++ Map('train -> true), tail)
+            case "-w" :: value :: tail =>
+                      parseOptions(map ++ Map('weights -> value), tail)
+            case "-g" :: value :: tail =>
+                      parseOptions(map ++ Map('gazetteer -> value), tail)
+            case "--features" :: value :: tail =>
+                      parseOptions(map ++ Map('features -> value), tail)
+            case "-v" :: value :: tail =>
+                      parseOptions(map ++ Map('verbosity -> value.toInt), tail)
+            case "-p" :: value :: tail =>
+                      parseOptions(map ++ Map('passes -> value.toInt), tail)
+            case string :: opt2 :: tail if isSwitch(opt2) => 
+                      parseOptions(map ++ Map('infile -> string), list.tail)
+            case string :: Nil =>  parseOptions(map ++ Map('infile -> string), list.tail)
+            case option :: tail => println("Error: Unknown option "+option) 
+                               sys.exit(1) 
+      }
+    }
+
+    def main(args: Array[String]) {
+
+        if (args.length == 0) { println(usage); sys.exit(1) }
+
+        val options = parseOptions(Map(),args.toList)
+        if (options.contains('verbosity)) {
+            verbosity = options('verbosity).asInstanceOf[Int]
+        }
+
+        var features = List("prevtag","1to4","prev_next1to4","1to4_conj_prev_next","prev_tag_conj_1to5","prefixes","gazetteer_unigram","capital","position")
+
+        if (options.contains('features)) {
+            features = options('features).asInstanceOf[String].split(",").toList
+        }
+
+        if (features.contains("gazetteer_unigram")) {
+            if (!options.contains('gazetteer)) {
+                System.err.println("Error: No gazeteer file specified")
+                sys.exit(1)
+            } else {
+                val filename = options('gazetteer).asInstanceOf[String]
+                Features.loadGazetteer(Source.fromFile(filename).getLines())
+            }
+        }
+
+        if (options contains 'train) {
+
+            ////////////////// Training ////////////////
+            var passes = 20
+            if (options.contains('passes)) { passes = options('passes).asInstanceOf[Int] }
+
+            System.err.print("Loading training data...")
+            val trainingData = new TrainingData(io.Source.stdin.getLines())
+            System.err.println(" done")
+            //val decoder = new Decoder(trainingData.tags, List("unigrams","prevtag"))
+            //val decoder = new Decoder(trainingData.tags, List("prevtag","1to4","prev_next1to4","1to4_conj_prev_next","prev_tag_conj_1to5"))
+            val decoder = new Decoder(trainingData.tags, features)
+            val weights = Perceptron.learnParameters(decoder, trainingData, passes, false)
+            print(weights.unsorted)
+
+            //val iterator = Source.fromFile(filename).getLines()
+        } else {
+            
+            ///////////////// Decoding //////////////
+
+            if (!options.contains('weights)){
+                System.err.println("Error: No weights file specified")
+                sys.exit(1)
+            }
+            val weightfile : String = options('weights).asInstanceOf[String]
+
+            //System.err.print("Reading data...")
+            val input = new TrainingData(io.Source.stdin.getLines())
+            //System.err.println(" done")  // CHANGE
+            //val decoder = new Decoder(input.tags, List("unigram","prevtag")) // TODO:fix this
+            //val decoder = new Decoder(input.tags, List("prevtag","1to4","prev_next1to4","1to4_conj_prev_next","prev_tag_conj_1to5"))
+            val decoder = new Decoder(input.tags, features)
+            decoder.weights.read(Source.fromFile(weightfile).getLines())
+            
+            for (line <- input.corpus) {
+                val decoder_object = decoder.decode(line)
+                print(decoder_object.tagged_sentence.conllFormat + '\n')
+            }
+        }
+    }
+}
+
