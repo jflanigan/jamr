@@ -23,42 +23,69 @@ case class Var(node: Node, name: String)
 
 case class Node(var id: String, name: Option[String], concept: String, var relations: List[(String, Node)], var topologicalOrdering: List[(String, Node)], var variableRelations: List[(String, Var)], var alignment: Option[Int], var span: Option[Int]) {
     override def toString() : String = {
-        if (name != None) {  // TODO: fix this up
-            val Some(n) = name
-            if (relations.size != 0) {
-                //"("+n+" / "+concept+" "+relations.map(x => x._1+" "+x._2.toString).mkString(" ")+")"
-                //"("+concept+" "+relations.map(x => x._1+" "+x._2.toString).mkString(" ")+")"
-                "("+concept+" "+topologicalOrdering.map(x => x._1+" "+x._2.toString).mkString(" ")+" "+
-                                variableRelations.map(x => x._1+" "+x._2.name).mkString(" ")+")"
-            } else {
-                //"("+n+" / "+concept+")"
-                "("+concept+")"
-            }
-        } else if (relations.size == 0) {
-            concept
-        } else {
-            "("+concept+" "+topologicalOrdering.map(x => x._1+" "+x._2.toString).mkString(" ")+" "+
-                            variableRelations.map(x => x._1+" "+x._2.name).mkString(" ")+")"
-        }
+        prettyString(0, false)
     }
 
-    def fullString() : String = {
-        if (name != None) {  // TODO: fix this up
+    def prettyString(detail: Int, pretty: Boolean) : String = {
+    // Detail 0: Least detail. No variables names or node ids.
+    //           (date-entity :day 5 :month 1 :year 2002)
+
+    // Detail 1: Variable names included.
+    //           (d / date-entity :day 5 :month 1 :year 2002)
+
+    // Detail 2: Nodes are labelled with id.
+    //           ([0] d / date-entity :day [0.2] 5 :month [0.1] 1 :year [0.0] 2002)
+
+    // Boolean 'pretty' indicates whether to indent into pretty format or leave on one line
+
+        prettyString(detail, pretty, "")
+    }
+
+    private def prettyString(detail: Int, pretty: Boolean, indent: String) : String = {
+        var nextIndent = ""
+        var prefix = "" 
+        if (pretty) {   // prefix for the children (so that it goes ':ARG0 concept' on the same line)
+            nextIndent = indent + "      "  // indent by six
+            prefix = "\n" + nextIndent
+        }
+        if (name != None) {
             val Some(n) = name
-            if (relations.size != 0) {
-                //"("+n+" / "+concept+" "+relations.map(x => x._1+" "+x._2.toString).mkString(" ")+")"
-                //"("+concept+" "+relations.map(x => x._1+" "+x._2.toString).mkString(" ")+")"
-                "(["+id+"] "+n+" / "+concept+" "+topologicalOrdering.map(x => x._1+" "+x._2.fullString).mkString(" ")+" "+
-                                        variableRelations.map(x => x._1+" ["+x._2.node.id+"] "+x._2.name).mkString(" ")+")"
-            } else {
-                "(["+id+"] "+n+" / "+concept+")"
-                //"("+concept+")"
+            if (relations.size != 0) {      // Concept with name and children
+                detail match {
+                    case 0 =>
+                "("+concept+" "+(topologicalOrdering.map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, nextIndent)) :::
+                                 variableRelations.map(x => prefix+x._1+" ["+x._2.node.id+"] "+x._2.name)).sorted.mkString(" ")+")"
+                    case 1 =>
+                "("+n+" / "+concept+" "+(topologicalOrdering.map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, nextIndent)) :::
+                                 variableRelations.map(x => prefix+x._1+" ["+x._2.node.id+"] "+x._2.name)).sorted.mkString(" ")+")"
+                    case 2 =>
+                "(["+id+"] "+n+" / "+concept+" "+(topologicalOrdering.map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, nextIndent)) :::
+                                 variableRelations.map(x => prefix+x._1+" ["+x._2.node.id+"] "+x._2.name)).sorted.mkString(" ")+")"
+                }
+            } else {                        // Concept with name, but no children
+                detail match {
+                    case 0 =>
+                        concept
+                    case 1 =>
+                        "("+n+" / "+concept+")"
+                    case 2 =>
+                        "(["+id+"] "+n+" / "+concept+")"
+                }
             }
-        } else if (relations.size == 0) {
-            "["+id+"] "+concept
-        } else {
-            "(["+id+"] "+concept+" "+topologicalOrdering.map(x => x._1+" "+x._2.fullString).mkString(" ")+" "+
-                            variableRelations.map(x => x._1+" ["+x._2.node.id+"] "+x._2.name).mkString(" ")+")"
+        } else if (relations.size == 0) {   // Concept with no name and no children
+            if (detail < 2) {
+                concept
+            } else {
+                "["+id+"] "+concept
+            }
+        } else {                            // Concept with no name but has children
+            if (detail < 2) {
+                "("+concept+" "+(topologicalOrdering.map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, nextIndent)) :::
+                                 variableRelations.map(x => prefix+x._1+" ["+x._2.node.id+"] "+x._2.name)).sorted.mkString(" ")+")"
+            } else {
+                "(["+id+"] "+concept+" "+(topologicalOrdering.map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, nextIndent)) :::
+                            variableRelations.map(x => prefix+x._1+" ["+x._2.node.id+"] "+x._2.name)).sorted.mkString(" ")+")"
+            }
         }
     }
 }
