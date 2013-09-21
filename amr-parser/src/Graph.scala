@@ -90,33 +90,22 @@ case class Node(var id: String, name: Option[String], concept: String, var relat
     }
 }
 
-case class Graph(root: Node, spans: ArrayBuffer[Span], getNodeByName: Map[String, Node]) {
-    def getNodeById(idStr : String) : Node = {
-        // Get node according to string id (for example "0" is the root and "0.1" is the 2nd child of the root)
-        try {
-            val id = idStr.split("[.]").map(_.toInt).toList // split takes a regex string
-            return getNodeById(root, id.tail)
-        } catch {
-            case _ => throw new RuntimeException("can't find node by id = " + idStr)
-        }
+case class Graph(root: Node, spans: ArrayBuffer[Span], getNodeById: Map[String, Node], getNodeByName: Map[String, Node]) {
+    def loadSpans(spanStr: String, sentence: Array[String]) = {
+        Span.readSpans(spanStr, this, sentence)
     }
 
-    private def getNodeById(node : Node, id : List[Int]) : Node = {
-        if (id.size == 0) {
-            node
-        } else {
-            getNodeById(node.relations(id(0))._2, id.tail)
-        }
-    }
-
-    private def makeIds() {
-        // Sets the node.id field for every node in the graph
+    def makeIds() {
+        // Sets the node.id field for every node in the graph according to the topologicalOrdering
+        // For example "0" is the root and "0.1" is the 2nd child of the root
         // Assumes that a topological ordering already exists (node.topologicalOrdering is non-empty)
+        getNodeById.clear
         makeIds(root, List(0))
     }
 
     private def makeIds(node: Node, id: List[Int]) {
         node.id = id.mkString(".")
+        getNodeById += (node.id -> node)
         for (((_,child), i) <- node.topologicalOrdering.zipWithIndex) {
             makeIds(child, id ::: List(i))
         }
@@ -124,7 +113,7 @@ case class Graph(root: Node, spans: ArrayBuffer[Span], getNodeByName: Map[String
 
     private def makeVariables() {
         // Populate the getNodeByName map
-        // Assumes topologicalOrdering exists and node.name is set
+        // Assumes a topologicalOrdering exists and node.name is set
         getNodeByName.clear
         makeVariables(root)
     }
@@ -144,9 +133,9 @@ case class Graph(root: Node, spans: ArrayBuffer[Span], getNodeByName: Map[String
     }
 
     private def unifyVariables() {
-        // Unify variables, remove variables from node.topologicalOrdering,
+        // Postcondition: Unify variables, remove variables from node.topologicalOrdering,
         // and populate node.relations and node.variableRealtions attributes for each node
-        // Assumes that topologicalOrdering was filled in by the graph parser
+        // Precondition: topologicalOrdering was filled in by the graph parser
         // and that makeVariables has already been called
         unifyVariables(root)
     }
@@ -172,7 +161,6 @@ case class Graph(root: Node, spans: ArrayBuffer[Span], getNodeByName: Map[String
             }
         }
     }
-
 }
 
 object Graph {
@@ -208,7 +196,7 @@ object Graph {
 
     def parse(amr: String) : Graph = {
         val graph = parser.parseAll(parser.node, amr) match {
-            case parser.Success(e, _) => Graph(e, new ArrayBuffer[Span](), Map[String, Node]())
+            case parser.Success(e, _) => Graph(e, new ArrayBuffer[Span](), Map[String, Node](), Map[String, Node]())
         }
         graph.makeVariables
         graph.unifyVariables
