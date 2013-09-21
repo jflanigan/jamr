@@ -89,14 +89,15 @@ case class Graph(root: Node, spans: ArrayBuffer[Span], getNodeByName: Map[String
     }
 
     private def makeIds(node: Node, id: List[Int]) {
-        // Recurisively label nodes with their id
         node.id = id.mkString(".")
         for (((_,child), i) <- node.topologicalOrdering.zipWithIndex) {
             makeIds(child, id ::: List(i))
         }
     }
 
-    private def makeVariables() {   // Populate the getNodeByName map
+    private def makeVariables() {
+        // Populate the getNodeByName map
+        // Assumes topologicalOrdering exists and node.name is set
         getNodeByName.clear
         makeVariables(root)
     }
@@ -108,32 +109,36 @@ case class Graph(root: Node, spans: ArrayBuffer[Span], getNodeByName: Map[String
                 throw new RuntimeException("duplicate variable name: " + name)
             } else {
                 getNodeByName += (name -> node)
-                for ((_,child) <- node.relations) {
+                for ((_,child) <- node.topologicalOrdering) {
                     makeVariables(child)
                 }
             }
         }
     }
 
-    private def unifyVariables() {  // Unify variables and save the topological ordering
+    private def unifyVariables() {
+        // Unify variables, remove variables from node.topologicalOrdering,
+        // and populate node.relations and node.variableRealtions attributes for each node
+        // Assumes that topologicalOrdering was filled in by the graph parser
+        // and that makeVariables has already been called
         unifyVariables(root)
     }
 
-    private def unifyVariables(node: Node) {  // Unify variables and save the topological ordering
-        val relations = node.relations
+    private def unifyVariables(node: Node) {
+        val relations = node.topologicalOrdering
         node.relations = List[(String, Node)]()
         node.topologicalOrdering = List[(String, Node)]()
         node.variableRelations = List[(String, Var)]()
         for ((relation, child) <- relations) {
-            // figure out if child a node, or a variable
+            // figure out if child is a node, or a variable
             if (child.name == None && getNodeByName.contains(child.concept)) { // variables have concepts, but no names
-                // I am a dumb variable
+                // child is a variable
                 val varName = child.concept
                 val actualNode = getNodeByName(varName)
                 node.relations = node.relations ::: List((relation, actualNode))
                 node.variableRelations = node.variableRelations ::: List((relation, Var(actualNode, varName)))
             } else {
-                // I am a legit node
+                // child is a legit node
                 node.relations = node.relations ::: List((relation, child))
                 node.topologicalOrdering = node.topologicalOrdering ::: List((relation, child))
                 unifyVariables(child)
@@ -158,7 +163,7 @@ object Graph {
         }
         def relations : Parser[List[(String, Node)]] = rep(relation)
         def internalNode : Parser[Node] = "("~>variable~"/"~concept~relations<~")" ^^ {
-            case variable~"/"~concept~relations => Node("", Some(variable), concept, relations, List[(String, Node)](), List[(String, Var)](), None, None)
+            case variable~"/"~concept~relations => Node("", Some(variable), concept, List[(String, Node)](), relations, List[(String, Var)](), None, None)
         }
         def terminalNode : Parser[Node] = concept ^^ { 
             case concept => Node("", None, concept, List[(String, Node)](), List[(String, Node)](), List[(String, Var)](), None, None)
