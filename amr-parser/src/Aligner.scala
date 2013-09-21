@@ -69,7 +69,11 @@ object Aligner {
             println(sentence)
             println(amrstr)
             val amr = Graph.parse(amrstr)
-            logger(2, "AMR Graph: \n" + amr.root.fullString)
+            if (verbosity >= 2) {
+                logger(2, "AMR Graph:\n" + amr.root.prettyString(detail=2, pretty=true))
+            } else {
+                logger(1, "AMR Graph:\n" + amr.root.prettyString(detail=1, pretty=true))
+            }
             //println(amr)
             val tokenized = sentence.split(" ")
             //println(tokenized.toList)
@@ -99,7 +103,7 @@ object Aligner {
             println() */
             for ((span, i) <- spans.zipWithIndex) {
                 logger(1, "Span "+(i+1).toString+":  "+span.words+" => "+span.amr)
-                logger(1, "* "+span.format)
+                logger(3, "* "+span.format)
             }
             println(spans.map(_.format).mkString(" "))
             println()
