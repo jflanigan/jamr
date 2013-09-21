@@ -23,11 +23,10 @@ import scala.util.parsing.combinator._
 object AlignSpans {
 
     def logUnalignedConcepts(node: Node) {
-        //if (node.alignment == None) {
         if (node.span == None) {
             logger(1, "WARNING: Unaligned concept "+node.concept)
         }
-        for ((_, child) <- node.relations) {
+        for ((_, child) <- node.topologicalOrdering) {
             logUnalignedConcepts(child)
         }
     }
@@ -42,13 +41,17 @@ object AlignSpans {
         return spanAlignments
     }
 
-    val specialConcepts : Set[String] = Set("name","country","person","date-entity","organization","city","thing","company","monetary-quantity","continent","mass-quantity","religious-group","political-party","distance-quantity","criminal-organization","research-institute","date-interval","temporal-quantity","world-region","ethnic-group","university")
+    val specialRelations1 : List[String] = List(":ARG.*-of")
+    val specialRelations2 : List[String] = List(":unit")
+    val specialConcepts : Set[String] = Set(
+        "name","country","person","date-entity","organization","city","thing","company","monetary-quantity","continent","mass-quantity","religious-group","political-party","distance-quantity","criminal-organization","research-institute","date-interval","temporal-quantity","world-region","ethnic-group","university")
 // "govern-01"
 
     def createSpans(sentence: Array[String], /*stemmedSentence: Array[List[String]],*/ node: Node, wordAlignments: Array[Option[Node]], spanAlignments: Array[Option[Int]], spanIndex: Option[Int], spans: ArrayBuffer[Span]) : Option[Span] = {
-//Span(start: Int, end: Int, words: String, amr: Node)
-//Node(name: Option[String], concept: String, relations: List[(String, Node)], var alignment: Option[Int], var span: Option[Int])
-        var mySpan = Span(sentence.size, 0, "", Node(node.name, node.concept, List[(String, Node)](), None, None)) // will update later
+    // Returns the span for 'node'
+//Span(var start: Int, var end: Int, var nodeIds: List[String], var words: String, var amr: Node
+//Node(var id: String, name: Option[String], concept: String, var relations: List[(String, Node)], var topologicalOrdering: List[(String, Node)], var variableRelations: List[(String, Var)], var alignment: Option[Int], var span: Option[Int])
+        var mySpan = Span(sentence.size, 0, List(node.id), "", Node("", node.name, node.concept, List[(String, Node)](), List[(String, Node)](), List[(String, Var)](), None, None)) // will update later
         var valid = false
         if (specialConcepts contains node.concept) {
             var mySpanIndex = spanIndex
@@ -56,15 +59,18 @@ object AlignSpans {
                 mySpanIndex = Some(spans.size)
                 spans.append(mySpan) // so we can pass a valid spanIndex
             }
-            for ((relation, child) <- node.relations) {
+            for ((relation, child) <- node.topologicalOrdering) {
                 val span = createSpans(sentence, /*stemmedSentence,*/ child, wordAlignments, spanAlignments, mySpanIndex, spans)
                 if (span != None) {
-                    val Some(Span(start,end,_,amr)) = span
+                    val Some(Span(start,end,nodeIds,_,amr)) = span
                     mySpan.start = min(mySpan.start, start)
                     mySpan.end = max(mySpan.end, end)
+                    mySpan.nodeIds = mySpan.nodeIds ::: nodeIds
+                    mySpan.amr.topologicalOrdering = (relation, amr) :: mySpan.amr.topologicalOrdering
                     mySpan.amr.relations = (relation, amr) :: mySpan.amr.relations
                 }
             }
+            mySpan.amr.topologicalOrdering = mySpan.amr.topologicalOrdering.reverse
             mySpan.amr.relations = mySpan.amr.relations.reverse
             // TODO: check that the span is valid and update spanAlignments
             valid = true
@@ -96,7 +102,7 @@ object AlignSpans {
                 node.span = Some(spans.size)
                 valid = true
             }
-            for ((relation, child) <- node.relations) {
+            for ((relation, child) <- node.topologicalOrdering) {
                 createSpans(sentence, /*stemmedSentence,*/ child, wordAlignments, spanAlignments, None, spans)
             }
         }

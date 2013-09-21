@@ -19,5 +19,9 @@ import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 import scala.util.parsing.combinator._
 
-case class Span(var start: Int, var end: Int, var words: String, var amr: Node)
+case class Span(var start: Int, var end: Int, var nodeIds: List[String], var words: String, var amr: Node) {
+    def format() : String = {
+        start.toString+"-"+end.toString+"|"+nodeIds.mkString("+")
+    }
+}
 
