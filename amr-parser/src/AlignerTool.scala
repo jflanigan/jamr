@@ -11,7 +11,7 @@ import javax.swing.event.ListSelectionListener
 import javax.swing.event.ListSelectionEvent
 import javax.swing.ListSelectionModel
 
-class AlignerToolFrame() extends JFrame("AMR Aligner Tool v0.1a") {
+class AlignerToolFrame((Int) => AMRTriple) extends JFrame("AMR Aligner Tool v0.1a") {
     val colorNames = Array[Object]("Black", "Blue", "Cyan", "Dark Gray", "Gray", "Green", "Light Gray", "Magenta", "Orange", "Pink", "Red", "White", "Yellow")
     val colors = Array(Color.BLACK, Color.BLUE, Color.CYAN, Color.DARK_GRAY, Color.GRAY, Color.GREEN, Color.LIGHT_GRAY, Color.MAGENTA, Color.ORANGE, Color.PINK, Color.RED, Color.WHITE, Color.YELLOW)
 
@@ -53,10 +53,61 @@ class AlignerToolFrame() extends JFrame("AMR Aligner Tool v0.1a") {
     }
 }
 
+case class AMRTriple(sentence: Array[String], graph: Graph, spans: Spans)
+def splitOnNewline(iterator: Iterator[String]) : Iterator[String] = {
+    val it = Iterator[String].concat(Iterator("\n", iterator)   // pad a first newline which will get dropped
+    for {
+        x <- it
+        p = it.takewhile(_ != "\n").mkString
+    } yield p
+}
+
 object AlignerTool
 {
+    val usage = """Usage: scala -classpath . edu.cmu.lti.nlp.amr.AlignerTool filename"""
+    type OptionMap = Map[Symbol, Any]
+
+    def parseOptions(map : OptionMap, list: List[String]) : OptionMap = {
+        def isSwitch(s : String) = (s(0) == '-')
+        list match {
+            case Nil => map
+            case "-v" :: value :: tail =>
+                      parseOptions(map ++ Map('verbosity -> value.toInt), tail)
+            case string :: opt2 :: tail if isSwitch(opt2) => 
+                      parseOptions(map ++ Map('infile -> string), list.tail)
+            case string :: Nil =>  parseOptions(map ++ Map('infile -> string), list.tail)
+            case option :: tail => println("Error: Unknown option "+option)
+                               sys.exit(1)
+      }
+    }
+
+    val buffer = ArrayBuffer[AMRTriple]()
+
+    def getAMR(index: Int) : AMRTriple = {
+        if (index < buffer.size) {
+            buffer(index)
+        } else {
+            while (index < buffer.size) {
+                
+                buffer += 
+            }
+        }
+    }
+
     def main(args: Array[String]) {
-        val mainFrame = new AlignerToolFrame()
+
+        if (args.length == 0) { println(usage); sys.exit(1) }
+
+        val options = parseOptions(Map(),args.toList)
+        if (options.contains('verbosity)) {
+            verbosity = options('verbosity).asInstanceOf[Int]
+        }
+        if (!options.contains('infile)) {
+            System.err.println("Error: No AMR file specified")
+            sys.exit(1)
+        }
+
+        val mainFrame = new AlignerToolFrame(getAMR)
         mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE)
         mainFrame.setSize(640,480)
         mainFrame.setVisible(true)
