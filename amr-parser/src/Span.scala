@@ -53,6 +53,7 @@ object Span {
     }
 
     private def getAmr(nodeIds: List[String], graph: Graph) : Node = {
+        // Get the amr corresponding to the span
         // Assumes that the node ids are an in-order traversal of the graph fragment according to topologicalOrdering (and connected)
         if (nodeIds.size == 0) {
             throw new RuntimeException("Span with no aligned nodes")
@@ -72,7 +73,7 @@ object Span {
         }
         var unprocessed = nodes.tail
         // Node(var id: String, name: Option[String], concept: String, var relations: List[(String, Node)], var topologicalOrdering: List[(String, Node)], var variableRelations: List[(String, Var)], var alignment: Option[Int], var span: Option[Int])
-        val myNode = Node(id = myId, name = node.name, concept = node.concept, relations = List[(String, Node)](), topologicalOrdering = List[(String, Node)](), variableRelations = List[(String, Var)](), alignment = None, span = None)
+        val myNode = Node(id = node.id, name = node.name, concept = node.concept, relations = List[(String, Node)](), topologicalOrdering = List[(String, Node)](), variableRelations = List[(String, Var)](), alignment = node.alignment, span = node.span)
         var childNumber = 0
         var done = false
         while (unprocessed.size > 0 && !done) {
