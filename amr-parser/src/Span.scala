@@ -65,7 +65,11 @@ object Span {
     }
 
     private def getAmr(nodes: List[String], graph: Graph, myId: String) : (Node, List[String]) = {
-        val node = graph.getNodeById(nodes(0))
+        val node = try {
+            graph.getNodeById(nodes(0))
+        } catch {
+            case e => throw new RuntimeException("Cannot find node ["+nodes(0)+"]")
+        }
         var unprocessed = nodes.tail
         // Node(var id: String, name: Option[String], concept: String, var relations: List[(String, Node)], var topologicalOrdering: List[(String, Node)], var variableRelations: List[(String, Var)], var alignment: Option[Int], var span: Option[Int])
         val myNode = Node(id = myId, name = node.name, concept = node.concept, relations = List[(String, Node)](), topologicalOrdering = List[(String, Node)](), variableRelations = List[(String, Var)](), alignment = None, span = None)
