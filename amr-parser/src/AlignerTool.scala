@@ -1,64 +1,43 @@
 package edu.cmu.lti.nlp.amr
 
-import java.awt.FlowLayout
-import java.awt.Color
-import java.awt.Font
-import javax.swing.JFrame
-import javax.swing.JList
-import javax.swing.JOptionPane
-import javax.swing.JScrollPane
-import javax.swing.event.ListSelectionListener
-import javax.swing.event.ListSelectionEvent
-import javax.swing.ListSelectionModel
+import scala.swing._
+import scala.swing.event._
+
+import java.io.File
+import java.io.FileOutputStream
+import java.io.PrintStream
+import java.io.BufferedOutputStream
+import java.io.OutputStreamWriter
+import java.lang.Math.abs
+import java.lang.Math.log
+import java.lang.Math.exp
+import java.lang.Math.random
+import java.lang.Math.floor
+import java.lang.Math.min
+import java.lang.Math.max
+import scala.io.Source
+import scala.util.matching.Regex
+import scala.collection.mutable.Map
+import scala.collection.mutable.Set
+import scala.collection.mutable.ArrayBuffer
 
 import Corpus._
 
-class AlignerToolFrame(corpus: LazyArray[AMRTriple]) extends JFrame("AMR Aligner Tool v0.1a") {
-    val sentence : Array[Object] = courpus(0).sentence
-
-    val colorNames = Array[Object]("Black", "Blue", "Cyan", "Dark Gray", "Gray", "Green", "Light Gray", "Magenta", "Orange", "Pink", "Red", "White", "Yellow")
-    val colors = Array(Color.BLACK, Color.BLUE, Color.CYAN, Color.DARK_GRAY, Color.GRAY, Color.GREEN, Color.LIGHT_GRAY, Color.MAGENTA, Color.ORANGE, Color.PINK, Color.RED, Color.WHITE, Color.YELLOW)
-
-    setLayout(new FlowLayout())
-    val wordJList = new JList(colorNames)
-    val amrJList = new JList(colorNames)
-    val jLists = Array(wordJList, amrJList)
-    var update = true
-    for ((l,i) <- jLists.zipWithIndex) {
-        l.setFont(new Font(Font.MONOSPACED, Font.BOLD, 12))
-        l.setVisibleRowCount(10)
-        l.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION)
-        add(new JScrollPane(l))
-
-        l.addListSelectionListener(
-            new ListSelectionListener {
-                def valueChanged(event : ListSelectionEvent) {
-                    if (update) {
-                        update = false
-                        jLists((i+1)%2).setSelectedIndices(l.getSelectedIndices)
-                    }
-                    /*val selection : Array[Int] = l.getSelectedIndices
-                    if (newSelection(i) != selection) {
-                        newSelection(i) = selection
-                        newSelection((i+1)%2) = selection
-                        jLists((i+1)%2).setSelectedIndices(selection)
-                    } */
-                    /*if (update(i) > 0) {
-                        println("Ignoring update")
-                        //update(i) -= 1
-                    } else {
-                        update((i+1)%2) = 1
-                        jLists((i+1)%2).setSelectedIndices(l.getSelectedIndices)
-                    }*/
-                    //getContentPane().setBackground(colors(colorJList.getSelectedIndex()))
-                }
-            }
-        )
+object AlignerTool extends SimpleSwingApplication {
+    def top = new MainFrame {
+        title = "Second Swing App"
+        val colors = List("Black", " Blue", "  Cyan", "    Dark Gray", "Gray", "Green", "Light Gray", "Magenta", "Orange", "Pink", "Red", "White", "Yellow")
+        val list = new ListView(colors) {
+            
+        }
+        contents = new BoxPanel(Orientation.Vertical) {
+            contents += list
+            border = Swing.EmptyBorder(30,30,10,30)
+        }
     }
-}
 
-object AlignerTool
-{
+
+
     val usage = """Usage: scala -classpath . edu.cmu.lti.nlp.amr.AlignerTool filename"""
     type OptionMap = Map[Symbol, Any]
 
@@ -76,7 +55,8 @@ object AlignerTool
       }
     }
 
-    def main(args: Array[String]) {
+    override def main(args: Array[String]) {
+        super.main(args)
 
         if (args.length == 0) { println(usage); sys.exit(1) }
 
@@ -89,19 +69,19 @@ object AlignerTool
             sys.exit(1)
         }
 
-        val filename = options('infile).asInstanceOf[String])
+        val filename = options('infile).asInstanceOf[String]
 
         val corpus = LazyArray(
             for {
                 block <- splitOnNewline(Source.fromFile(filename).getLines)
-                if block.matches(""".*\n[ ]*\(""") // It needs to contain some AMR
+                //if block.matches(""".*\n[ ]*\(""") // It needs to contain some AMR
             } yield toAMRTriple(block)
         )
 
-        val mainFrame = new AlignerToolFrame(corpus)
-        mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE)
-        mainFrame.setSize(640,480)
-        mainFrame.setVisible(true)
+        for (i <- corpus) {
+            println(i)
+        }
+
     }
 }
 
