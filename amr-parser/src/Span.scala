@@ -28,9 +28,8 @@ case class Span(var start: Int, var end: Int, var nodeIds: List[String], var wor
 //case class AbstractSpan(words: String, amr: Node)
 
 object Span {
-    def readSpans(string: String, graph: Graph, sentence: Array[String]) {
-        val spans = graph.spans
-        spans.clear
+    def readSpans(string: String, graph: Graph, sentence: Array[String]) : ArrayBuffer[Span] = {
+        val spans = ArrayBuffer[Span]()
         val SpanRegex = """([0-9]+)-([0-9]+)|(.*)""".r
         for (spanStr <- string.split(" ")) {
             //try {
@@ -43,6 +42,7 @@ object Span {
                 // TODO: catch malformed input (Regex match error, or toInt err
             //}
         }
+        return spans
     }
 
     private def getWords(start: Int, end: Int, sentence: Array[String]) : String = {
