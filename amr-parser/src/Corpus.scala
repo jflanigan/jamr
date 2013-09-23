@@ -12,7 +12,7 @@ object Corpus {
     def splitOnNewline(iterator: Iterator[String]) : Iterator[String] = {   // This treats more than one newline in a row as a single newline
         for {
             x <- iterator if x != ""
-            p = (x :: iterator.takeWhile(_ != "").toList).mkString
+            p = (x :: iterator.takeWhile(_ != "").toList).mkString("\n")
         } yield p
     }
 
@@ -33,9 +33,9 @@ object Corpus {
         val amrstr = lines.filterNot(_.matches("^#.*")).mkString(" ")
         val tokenized = lines.filter(_.matches("^# ::tok .*"))
         assert(tokenized.size == 1, "Incorrect number of tokenized ::tok ")
-        val spanlines = lines.filter(_.matches("^# ::alignment .*"))
+        val spanlines = lines.filter(_.matches("^# ::alignments .*"))
         assert(spanlines.size > 0, "Missing alignments")
-        
+
         val graph = Graph.parse(amrstr)
         //val TokExtractor = "^# ::tok (.*)".r
         //val ("^# ::tok (.*)".r)(sentence) = tokenized(0)
@@ -46,7 +46,10 @@ object Corpus {
         var annotators = List[String]()
         for (spanline <- spanlines) {
             val ulfstr : Map[String, String] = getUlfString(spanline)
-            val newspan : ArrayBuffer[Span] = Span.readSpans(ulfstr("::alignment"), graph, sentence)
+            println(ulfstr("::alignments"))
+            println(graph)
+            println(sentence.toList)
+            val newspan : ArrayBuffer[Span] = Span.readSpans(ulfstr("::alignments"), graph, sentence)
             spans = newspan :: spans
             annotators = (ulfstr("::annotator") + " " + ulfstr("::date")) :: annotators
         }
@@ -57,7 +60,7 @@ object Corpus {
 class CorpusTest /* extends Suite*/ {
     def testSplitOnNewline() {
         val split = Corpus.splitOnNewline(Iterator("a", "b", "c", "", "a", "c", "b"))
-        assert(split.toList == List("abc", "acb"))
+        assert(split.toList == List("a\nb\nc", "a\nc\nb"))
     }
     def testGetUlfString() {
         val map1 = Corpus.getUlfString("# ::snt testing 1 2 3")
