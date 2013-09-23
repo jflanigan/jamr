@@ -30,7 +30,7 @@ case class Span(var start: Int, var end: Int, var nodeIds: List[String], var wor
 object Span {
     def readSpans(string: String, graph: Graph, sentence: Array[String]) : ArrayBuffer[Span] = {
         val spans = ArrayBuffer[Span]()
-        val SpanRegex = """([0-9]+)-([0-9]+)|(.*)""".r
+        val SpanRegex = """([0-9]+)-([0-9]+)\|(.*)""".r
         for (spanStr <- string.split(" ")) {
             //try {
                 val SpanRegex(start, end, nodeStr) = spanStr
