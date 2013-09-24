@@ -43,6 +43,7 @@ object AlignWords {
     //private val ConceptExtractor = """^"?(.+?)(?:-[0-9]+)"?$""".r
     private val ConceptExtractor = """^"?(.+?)-?[0-9]*"?$""".r // works except for numbers
     def alignWords(stemmedSentence: Array[List[String]], node: Node, alignments: Array[Option[Node]]) {
+        logger(3,"alignWords: node.concept = "+node.concept)
         var ConceptExtractor(concept) = node.concept
         if (node.concept.matches("""^[0-9.]*$""")) {
             concept = node.concept
@@ -65,7 +66,7 @@ object AlignWords {
         if (!found) {
             //logger(2,"CONCEPT NOT FOUND: "+node.concept+" by searching "+concept)
         }
-        for ((_, child) <- node.relations) {
+        for ((_, child) <- node.topologicalOrdering) {
             alignWords(stemmedSentence, child, alignments)
         }
     }
@@ -102,7 +103,7 @@ object AlignWords {
         if (!found) {
             //logger(4,"CONCEPT NOT FOUND: "+node.concept+" by fuzzy matching "+concept)
         }
-        for ((_, child) <- node.relations) {
+        for ((_, child) <- node.topologicalOrdering) {
             fuzzyAligner(stemmedSentence, child, alignments)
         }
     }
@@ -180,7 +181,7 @@ object AlignWords {
         if (node.span == None) {
             logger(1, "WARNING: Unaligned concept "+node.concept)
         }
-        for ((_, child) <- node.relations) {
+        for ((_, child) <- node.topologicalOrdering) {
             logUnalignedConcepts(child)
         }
     }

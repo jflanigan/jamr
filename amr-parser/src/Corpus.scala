@@ -18,8 +18,8 @@ object Corpus {
 
     def getUlfString(string: String) : Map[String,String] = {
         // returns a map representation of Ulf's weird string representation
-        assert(string.matches("^# ::.*"), "This is not a valid properties string")
-        val split = string.replaceAll("""#""","").split(" ::")
+        assert(string.matches("^# ::(.|\n)*"), "This is not a valid properties string")
+        val split = string.replaceAll("\n","").replaceAll("""#""","").split(" ::")
         val map = Map[String,String]()
         for (x <- split if x != "") {
             val line = x.split(" ")
