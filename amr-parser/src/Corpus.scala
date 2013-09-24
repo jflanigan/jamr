@@ -6,7 +6,9 @@ import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 //import org.scalatest.Suite
 
-case class AMRTriple(sentence: Array[String], graph: Graph, spans: Array[ArrayBuffer[Span]], annotators: Array[String])
+// AMRTriple holds the (possibly multiple) span annotations for a sentence and graph pair
+// An element in spans is a span string (i.e. "1-2|0 0-1|0.0 2-3|0.1 4-5|0.2")
+case class AMRTriple(sentence: Array[String], graph: Graph, spans: ArrayBuffer[String], annotators: ArrayBuffer[String], annotation_dates: ArrayBuffer[String])
 
 object Corpus {
     def splitOnNewline(iterator: Iterator[String]) : Iterator[String] = {   // This treats more than one newline in a row as a single newline
@@ -37,23 +39,20 @@ object Corpus {
         assert(spanlines.size > 0, "Missing alignments")
 
         val graph = Graph.parse(amrstr)
-        //val TokExtractor = "^# ::tok (.*)".r
-        //val ("^# ::tok (.*)".r)(sentence) = tokenized(0)
-        //val SpanExtractor = "^ ::alignment ([^:])+ ::annotator ([^:])".r
-
         val sentence = getUlfString(tokenized(0))("::tok").split(" ")
-        var spans = List[ArrayBuffer[Span]]()
-        var annotators = List[String]()
+        logger(1,graph.toString)
+        logger(1,sentence.toList.toString)
+        var spans = ArrayBuffer[String]()
+        var annotators = ArrayBuffer[String]()
+        var annotation_dates = ArrayBuffer[String]()
         for (spanline <- spanlines) {
             val ulfstr : Map[String, String] = getUlfString(spanline)
-            println(ulfstr("::alignments"))
-            println(graph)
-            println(sentence.toList)
-            val newspan : ArrayBuffer[Span] = Span.readSpans(ulfstr("::alignments"), graph, sentence)
-            spans = newspan :: spans
-            annotators = (ulfstr("::annotator") + " " + ulfstr("::date")) :: annotators
+            logger(1,spanline)
+            spans += ulfstr("::alignments")
+            annotators += ulfstr("::annotator")
+            annotation_dates += ulfstr("::date")
         }
-        return AMRTriple(sentence, graph, spans.reverse.toArray, annotators.reverse.toArray)
+        return AMRTriple(sentence, graph, spans, annotators, annotation_dates)
     }
 }
 
