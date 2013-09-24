@@ -95,7 +95,22 @@ case class Node(var id: String, name: Option[String], concept: String, var relat
 
 case class Graph(root: Node, spans: ArrayBuffer[Span], getNodeById: Map[String, Node], getNodeByName: Map[String, Node]) {
     def loadSpans(spanStr: String, sentence: Array[String]) = {
-        Span.readSpans(spanStr, this, sentence)
+        spans.clear
+        val SpanRegex = """([0-9]+)-([0-9]+)\|(.*)""".r
+        for (spanStr <- spanStr.split(" ")) {
+            //try {
+                val SpanRegex(start, end, nodeStr) = spanStr
+                val nodeIds = nodeStr.split("[+]").toList.sorted
+                val words = SpanLoader.getWords(start.toInt, end.toInt, sentence)
+                val amr = SpanLoader.getAmr(nodeIds, this)
+                spans += Span(start.toInt, end.toInt, nodeIds, words, amr)
+                for (id <- nodeIds) {
+                    getNodeById(id).span = Some(spans.size-1)
+                }
+            //} catch {
+                // TODO: catch malformed input (Regex match error, or toInt err
+            //}
+        }
     }
 
     def makeIds() {

@@ -44,18 +44,26 @@ object AlignerTool extends SimpleSwingApplication {
     var corpus = LazyArray(Iterator[AMRTriple]())
 
     def top = new MainFrame {
+        /*---------------------- Initialization --------------------*/
         title = "AMR AlignerTool v.1a"
         var recordNumber = 0
+        var annotationIndex = 0
 
         var words = corpus(recordNumber).sentence
         var graph = corpus(recordNumber).graph
+        graph.loadSpans(corpus(recordNumber).spans(annotationIndex), words)
         var amr = graph.root.prettyString(detail = 2, pretty = true).split("\n")
         val ID = """.*\[([^\]]+)\].*""".r
         var ids = graph.root.prettyString(detail = 2, pretty = true).split("\n").map(x => {val ID(id) = x; id})
-        var wordIndexToSpan = Span.toWordMap(corpus(recordNumber).spans(0), words)
+        var wordIndexToSpan = SpanLoader.toWordMap(graph.spans, words)
+        var spans = for {(span, i) <- graph.spans.zipWithIndex
+            } yield "Span "+(i+1).toString+": "+span.start+"-"+span.end+"  "+span.words+" => "+span.amr
 
         val wordList = new ListView(words)
         val amrList = new ListView(amr)
+        val spanList = new ListView(spans)
+
+        /*---------------------- Color Renderers -------------------*/
         amrList.renderer = ListView.Renderer.wrap(new DefaultListCellRenderer() {
             override def getListCellRendererComponent(list: JList, value: Object, index: Int, isSelected: Boolean, cellHasFocus: Boolean) : java.awt.Component = {
                 val spanIndex = graph.getNodeById(ids(index)).span
@@ -108,13 +116,43 @@ object AlignerTool extends SimpleSwingApplication {
                 return this.asInstanceOf[java.awt.Component]
             }
         })
+        /*spanList.renderer = ListView.Renderer.wrap(new DefaultListCellRenderer() {
+            override def getListCellRendererComponent(list: JList, value: Object, index: Int, isSelected: Boolean, cellHasFocus: Boolean) : java.awt.Component = {
+                val spanIndex = Some(index)
+                if (isSelected) {
+                    setBackground(list.getSelectionBackground)
+                    if (spanIndex == None) {
+                        setForeground(list.getSelectionForeground)
+                    } else {
+                        val Some(i) = spanIndex
+                        setForeground(colors(i%colors.size))
+                    }
+                } else {
+                    setBackground(list.getBackground)
+                    if (spanIndex == None) {
+                        setForeground(list.getForeground)
+                    } else {
+                        val Some(i) = spanIndex
+                        setForeground(colors(i%colors.size))
+                    }
+                }
+                setText(spans(index))
+                setFont(list.getFont)
+                return this.asInstanceOf[java.awt.Component]
+            }
+        })*/
+
+        /*------------------------- Layout --------------------------*/
         val nextButton = new Button { text = "Next" }
         val curLabel = new Label { text = recordNumber.toString }
         val prevButton = new Button { text = "Prev" }
         contents = new BoxPanel(Orientation.Vertical) {
-            contents += new BoxPanel(Orientation.Horizontal) {
-                contents += new ScrollPane(wordList)
-                contents += new ScrollPane(amrList)
+            contents += new BoxPanel(Orientation.Vertical) {
+                contents += new BoxPanel(Orientation.Horizontal) {
+                    contents += new ScrollPane(wordList)
+                    contents += new ScrollPane(amrList)
+                }
+                contents += spanList
             }
             contents += new BoxPanel(Orientation.Horizontal) {
                 contents += prevButton
@@ -135,20 +173,32 @@ object AlignerTool extends SimpleSwingApplication {
                 }
         }
 
+        /*------------------------ Update View ---------------------*/
         def updateView() {
-            words = corpus(recordNumber).sentence
+/*            words = corpus(recordNumber).sentence
             graph = corpus(recordNumber).graph
             amr = graph.root.prettyString(detail = 1, pretty = true).split("\n")
             ids = graph.root.prettyString(detail = 2, pretty = true).split("\n").map(x => {val ID(id) = x; id})
-            wordIndexToSpan = Span.toWordMap(corpus(recordNumber).spans(0), words)
+            wordIndexToSpan = Span.toWordMap(corpus(recordNumber).spans(0), words) */
+
+            words = corpus(recordNumber).sentence
+            graph = corpus(recordNumber).graph
+            graph.loadSpans(corpus(recordNumber).spans(annotationIndex), words)
+            amr = graph.root.prettyString(detail = 2, pretty = true).split("\n")
+            ids = graph.root.prettyString(detail = 2, pretty = true).split("\n").map(x => {val ID(id) = x; id})
+            wordIndexToSpan = SpanLoader.toWordMap(graph.spans, words)
+            spans = for {(span, i) <- graph.spans.zipWithIndex
+                } yield "Span "+(i+1).toString+": "+span.start+"-"+span.end+"  "+span.words+" => "+span.amr
+
             curLabel.text = recordNumber.toString
             wordList.listData = words
             amrList.listData = amr
-            for ((span, i) <- corpus(recordNumber).spans(0).zipWithIndex) {
-                println("Span "+(i+1).toString+": "+span.start+"-"+span.end+"  "+span.words+" => "+span.amr)
+            spanList.listData = spans
+
+            for ((span, i) <- graph.spans.zipWithIndex) {
+                println(spans)
             }
         }
-
     }
 
     def parseOptions(map : OptionMap, list: List[String]) : OptionMap = {

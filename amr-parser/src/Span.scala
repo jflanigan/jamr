@@ -27,8 +27,18 @@ case class Span(var start: Int, var end: Int, var nodeIds: List[String], var wor
 
 //case class AbstractSpan(words: String, amr: Node)
 
-object Span {
-    def readSpans(string: String, graph: Graph, sentence: Array[String]) : ArrayBuffer[Span] = {
+/************************************* Span Loader *******************************
+
+This object contains functions usefull for loading the spans into a graph 
+from a span string.  They are used in Graph.loadSpans.
+
+Example span string: "1-2|0 0-1|0.0 2-3|0.1 4-5|0.2"
+
+*********************************************************************************/
+
+object SpanLoader {
+    private def readSpans(string: String, graph: Graph, sentence: Array[String]) : ArrayBuffer[Span] = {
+        // Todo: This function can be removed
         val spans = ArrayBuffer[Span]()
         val SpanRegex = """([0-9]+)-([0-9]+)\|(.*)""".r
         for (spanStr <- string.split(" ")) {
@@ -37,7 +47,7 @@ object Span {
                 val nodeIds = nodeStr.split("[+]").toList.sorted
                 val words = getWords(start.toInt, end.toInt, sentence)
                 val amr = getAmr(nodeIds, graph)
-                graph.spans += Span(start.toInt, end.toInt, nodeIds, words, amr) // TODO: fix!!
+                graph.spans += Span(start.toInt, end.toInt, nodeIds, words, amr)
                 spans += Span(start.toInt, end.toInt, nodeIds, words, amr)
                 for (id <- nodeIds) {
                     graph.getNodeById(id).span = Some(spans.size-1)
@@ -56,9 +66,9 @@ object Span {
             for (i <- Range(span.start, span.end)) {
                 //assert(wordToSpan(i) == None, "Overlapping spans")
                 if (wordToSpan(i) != None) {
-                    println("****************** WARNING: Overlapping spans **********************")
-                    println("Word index = "+i.toString)
-                    println("Span start = "+span.start+" Span end = "+span.end)
+                    logger(0,"****************** WARNING: Overlapping spans **********************")
+                    logger(0,"Word index = "+i.toString)
+                    logger(0,"Span start = "+span.start+" Span end = "+span.end)
                 }
                 wordToSpan(i) = Some(spanIndex)
             }
@@ -66,14 +76,14 @@ object Span {
         return wordToSpan
     }
 
-    private def getWords(start: Int, end: Int, sentence: Array[String]) : String = {
+    def getWords(start: Int, end: Int, sentence: Array[String]) : String = {
         if(start >= end) {
             throw new RuntimeException("Span of improper length: "+start.toString+"-"+end.toString)
         }
         sentence.slice(start, end).mkString(" ")
     }
 
-    private def getAmr(nodeIds: List[String], graph: Graph) : Node = {
+    def getAmr(nodeIds: List[String], graph: Graph) : Node = {
         // Get the amr corresponding to the span
         // Assumes that the node ids are an in-order traversal of the graph fragment according to topologicalOrdering (and connected)
         if (nodeIds.size == 0) {
