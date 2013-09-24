@@ -144,6 +144,9 @@ object AlignerTool extends SimpleSwingApplication {
             curLabel.text = recordNumber.toString
             wordList.listData = words
             amrList.listData = amr
+            for ((span, i) <- corpus(recordNumber).spans(0).zipWithIndex) {
+                println("Span "+(i+1).toString+": "+span.start+"-"+span.end+"  "+span.words+" => "+span.amr)
+            }
         }
 
     }

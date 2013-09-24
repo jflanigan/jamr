@@ -54,7 +54,12 @@ object Span {
         val wordToSpan = Array.fill[Option[Int]](sentence.size)(None)
         for ((span, spanIndex) <- spans.zipWithIndex) {
             for (i <- Range(span.start, span.end)) {
-                assert(wordToSpan(i) == None, "Overlapping spans")
+                //assert(wordToSpan(i) == None, "Overlapping spans")
+                if (wordToSpan(i) != None) {
+                    println("****************** WARNING: Overlapping spans **********************")
+                    println("Word index = "+i.toString)
+                    println("Span start = "+span.start+" Span end = "+span.end)
+                }
                 wordToSpan(i) = Some(spanIndex)
             }
         }
