@@ -31,16 +31,49 @@ object AlignerTool extends SimpleSwingApplication {
 
     def top = new MainFrame {
         title = "AMR AlignerTool v.1a"
-        val colors = List("Black", " Blue", "  Cyan", "    Dark Gray", "Gray", "Green", "Light Gray", "Magenta", "Orange", "Pink", "Red", "White", "Yellow")
+        var recordNumber = 0
 
-        val amr = corpus(0).graph.root.prettyString(detail = 2, pretty = true).split("\n")
+        var words = corpus(recordNumber).sentence
+        var amr = corpus(recordNumber).graph.root.prettyString(detail = 1, pretty = true).split("\n")
 
-        val list = new ListView(amr) {
-            
-        }
+        val wordList = new ListView(words)
+        val amrList = new ListView(amr)
+        val nextButton = new Button { text = "Next" }
+        val curLabel = new Label { text = recordNumber.toString }
+        //val sentenceLabel = new Label { text = words.mkString(" ") }
+        val prevButton = new Button { text = "Prev" }
         contents = new BoxPanel(Orientation.Vertical) {
-            contents += list
-            border = Swing.EmptyBorder(30,30,10,30)
+            //contents += sentenceLabel
+            contents += new BoxPanel(Orientation.Horizontal) {
+                contents += new ScrollPane(wordList)
+                contents += new ScrollPane(amrList)
+            }
+            contents += new BoxPanel(Orientation.Horizontal) {
+                contents += prevButton
+                contents += curLabel
+                contents += nextButton
+            }
+        }
+        listenTo(nextButton)
+        listenTo(prevButton)
+        reactions += {
+            case ButtonClicked(b) =>
+                if (b == nextButton) {
+                    recordNumber += 1
+                    updateView
+                } else if (b == prevButton) {
+                    recordNumber -= 1
+                    updateView
+                }
+        }
+        
+        def updateView() {
+            words = corpus(recordNumber).sentence
+            amr = corpus(recordNumber).graph.root.prettyString(detail = 1, pretty = true).split("\n")
+            curLabel.text = recordNumber.toString
+            //sentenceLabel.text = "<html>"+words.mkString(" ")+"</html>"
+            wordList.listData = words
+            amrList.listData = amr
         }
     }
 
@@ -79,10 +112,6 @@ object AlignerTool extends SimpleSwingApplication {
                 if block.matches("(.|\n)*\n\\((.|\n)*")     // needs to contain some AMR
             } yield toAMRTriple(block)
         )
-/*
-        for (i <- corpus) {
-            println(i)
-        } */
 
         super.main(args)    // Start GUI
     }
