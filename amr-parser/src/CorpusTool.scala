@@ -53,15 +53,17 @@ object CorpusTool {
             sys.exit(1)
         }
 
-        val tokenized = Source.fromFile(options('tokenized).asInstanceOf[String])
+        val tokenized = Source.fromFile(options('tokenized).asInstanceOf[String]).getLines.toArray
 
         val Block = """((?:\n|.)*)\n(\((?:\n|.)*)""".r  // (?: ) is non-capturing group
-        for ((block, tokens) <- (splitOnNewline(Source.stdin.getLines) zip tokenized.getLines)) {
+        var i = 0
+        for (block <- splitOnNewline(Source.stdin.getLines)) {
             if (block matches "(.|\n)*\n\\((.|\n)*") { // . does not match \n
                 val Block(extras, amr) = block
                 println(extras)
-                println("# ::tok " + tokens)
+                println("# ::tok " + tokenized(i))
                 println(amr+"\n")
+                i += 1
             } else {
                 println(block+"\n")
             }

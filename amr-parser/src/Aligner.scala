@@ -12,6 +12,8 @@ import java.lang.Math.random
 import java.lang.Math.floor
 import java.lang.Math.min
 import java.lang.Math.max
+import java.util.Date
+import java.text.SimpleDateFormat
 import scala.io.Source
 import scala.util.matching.Regex
 import scala.collection.mutable.Map
@@ -22,7 +24,7 @@ import scala.util.parsing.combinator._
 /****************************** Driver Program *****************************/
 object Aligner {
 
-    val usage = """Usage: scala -classpath . edu.cmu.lti.nlp.amr.Aligner -a amr_file -e english_file > alignments"""
+    val usage = """Usage: scala -classpath . edu.cmu.lti.nlp.amr.Aligner < amr_file > alignments"""
     type OptionMap = Map[Symbol, Any]
 
     def parseOptions(map : OptionMap, list: List[String]) : OptionMap = {
@@ -31,13 +33,15 @@ object Aligner {
             case Nil => map
             //case "--train" :: tail =>
             //          parseOptions(map ++ Map('train -> true), tail)
-            case "-a" :: value :: tail =>
-                      parseOptions(map ++ Map('amrfile -> value), tail)
-            case "-e" :: value :: tail =>
-                      parseOptions(map ++ Map('englishfile -> value), tail)
+            //case "-a" :: value :: tail =>
+            //          parseOptions(map ++ Map('amrfile -> value), tail)
+            //case "--only" :: tail =>
+            //          parseOptions(map ++ Map('only -> true), tail)
+            case "-h" :: value :: tail =>
+                      parseOptions(map ++ Map('help -> value.toInt), tail)
             case "-v" :: value :: tail =>
                       parseOptions(map ++ Map('verbosity -> value.toInt), tail)
-            //case string :: opt2 :: tail if isSwitch(opt2) => 
+             //case string :: opt2 :: tail if isSwitch(opt2) => 
             //          parseOptions(map ++ Map('infile -> string), list.tail)
             //case string :: Nil =>  parseOptions(map ++ Map('infile -> string), list.tail)
             case option :: tail => println("Error: Unknown option "+option) 
@@ -46,22 +50,46 @@ object Aligner {
     }
 
     def main(args: Array[String]) {
-
-        if (args.length == 0) { println(usage); sys.exit(1) }
-
         val options = parseOptions(Map(),args.toList)
+        if (options.contains('help)) { println(usage); sys.exit(1) }
+
         if (options.contains('verbosity)) {
             verbosity = options('verbosity).asInstanceOf[Int]
         }
-        if (!options.contains('englishfile)) {
-            System.err.println("Error: No English source file specified")
-            sys.exit(1)
-        }
-        if (!options.contains('amrfile)) {
-            System.err.println("Error: No AMR file specified")
-            sys.exit(1)
-        }
 
+        val sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
+        val Block = """((?:\n|.)*)\n(\((?:\n|.)*)""".r  // (?: ) is non-capturing group
+                                                        // and . does not match \n
+        for (block <- Corpus.splitOnNewline(Source.stdin.getLines)) {
+            if (block matches "(.|\n)*\n\\((.|\n)*") {  // Does it contain some AMR?
+                logger(2,"**** Processsing Block *****")
+                logger(2,block)
+                logger(2,"****************************")
+                val Block(extrastr, amrstr) = block
+                println(extrastr)
+                val amr = Graph.parse(amrstr)
+                val extras = Corpus.getUlfString(extrastr)
+                val tokenized = extras("::tok").split(" ")
+                val wordAlignments = AlignWords.alignWords(tokenized, amr)
+                val spanAlignments = AlignSpans.alignSpans(tokenized, amr, wordAlignments)
+                AlignSpans.logUnalignedConcepts(amr.root)
+
+                val spans = amr.spans
+                for ((span, i) <- spans.zipWithIndex) {
+                    logger(1, "Span "+(i+1).toString+":  "+span.words+" => "+span.amr)
+                    logger(3, "* "+span.format)
+                }
+                println("# ::alignments "+spans.map(_.format).mkString(" ")+" ::annotator Aligner v.01 ::date "+sdf.format(new Date))
+                println(amrstr+"\n")
+            } else {
+                println(block+"\n")
+            }
+        }
+    }
+
+}
+
+/*
         val sentences = Source.fromFile(options('englishfile).asInstanceOf[String]).getLines
         val amrs = Source.fromFile(options('amrfile).asInstanceOf[String]).getLines
 
@@ -107,8 +135,5 @@ object Aligner {
             }
             println(spans.map(_.format).mkString(" "))
             println()
-        }
-    }
-
-}
+        } */
 
