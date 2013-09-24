@@ -76,13 +76,13 @@ object AlignerTool extends SimpleSwingApplication {
         corpus = LazyArray(
             for {
                 block <- splitOnNewline(Source.fromFile(filename).getLines)
-                //if block.matches(""".*\n[ ]*\(""") // It needs to contain some AMR
+                if block.matches("(.|\n)*\n\\((.|\n)*")     // needs to contain some AMR
             } yield toAMRTriple(block)
         )
-
+/*
         for (i <- corpus) {
             println(i)
-        }
+        } */
 
         super.main(args)    // Start GUI
     }
