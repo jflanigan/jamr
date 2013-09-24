@@ -1,0 +1,3 @@
+#!/bin/bash
+
+scala -classpath . edu.cmu.lti.nlp.amr.CorpusTool < ../aligner/amr.corpus --tokenized ../aligner/snt > corpus.tok
