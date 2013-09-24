@@ -1,5 +1,17 @@
 package edu.cmu.lti.nlp.amr
 
+import java.awt.FlowLayout
+import java.awt.Color
+import java.awt.Font
+import javax.swing.JFrame
+import javax.swing.JList
+import javax.swing.JOptionPane
+import javax.swing.JScrollPane
+import javax.swing.event.ListSelectionListener
+import javax.swing.event.ListSelectionEvent
+import javax.swing.ListSelectionModel
+import javax.swing.DefaultListCellRenderer
+
 import scala.swing._
 import scala.swing.event._
 
@@ -27,6 +39,8 @@ object AlignerTool extends SimpleSwingApplication {
     val usage = """Usage: scala -classpath . edu.cmu.lti.nlp.amr.AlignerTool filename"""
     type OptionMap = Map[Symbol, Any]
 
+    val colors = Array(Color.RED, Color.GREEN, Color.MAGENTA, Color.ORANGE, Color.PINK, Color.CYAN, Color.BLUE )
+
     var corpus = LazyArray(Iterator[AMRTriple]())
 
     def top = new MainFrame {
@@ -34,16 +48,70 @@ object AlignerTool extends SimpleSwingApplication {
         var recordNumber = 0
 
         var words = corpus(recordNumber).sentence
-        var amr = corpus(recordNumber).graph.root.prettyString(detail = 1, pretty = true).split("\n")
+        var graph = corpus(recordNumber).graph
+        var amr = graph.root.prettyString(detail = 2, pretty = true).split("\n")
+        val ID = """.*\[([^\]]+)\].*""".r
+        var ids = graph.root.prettyString(detail = 2, pretty = true).split("\n").map(x => {val ID(id) = x; id})
+        var wordIndexToSpan = Span.toWordMap(corpus(recordNumber).spans(0), words)
 
         val wordList = new ListView(words)
         val amrList = new ListView(amr)
+        amrList.renderer = ListView.Renderer.wrap(new DefaultListCellRenderer() {
+            override def getListCellRendererComponent(list: JList, value: Object, index: Int, isSelected: Boolean, cellHasFocus: Boolean) : java.awt.Component = {
+                val spanIndex = graph.getNodeById(ids(index)).span
+                if (isSelected) {
+                    setBackground(list.getSelectionBackground)
+                    if (spanIndex == None) {
+                        setForeground(list.getSelectionForeground)
+                    } else {
+                        val Some(i) = spanIndex
+                        setForeground(colors(i%colors.size))
+                    }
+                } else {
+                    setBackground(list.getBackground)
+                    if (spanIndex == None) {
+                        setForeground(list.getForeground)
+                    } else {
+                        val Some(i) = spanIndex
+                        setForeground(colors(i%colors.size))
+                    }
+                }
+                setText(amr(index))
+                //setText(value.asInstanceOf[String])
+                setFont(list.getFont)
+                return this.asInstanceOf[java.awt.Component]
+            }
+        })
+        wordList.renderer = ListView.Renderer.wrap(new DefaultListCellRenderer() {
+            override def getListCellRendererComponent(list: JList, value: Object, index: Int, isSelected: Boolean, cellHasFocus: Boolean) : java.awt.Component = {
+                val spanIndex = wordIndexToSpan(index)
+                if (isSelected) {
+                    setBackground(list.getSelectionBackground)
+                    if (spanIndex == None) {
+                        setForeground(list.getSelectionForeground)
+                    } else {
+                        val Some(i) = spanIndex
+                        setForeground(colors(i%colors.size))
+                    }
+                } else {
+                    setBackground(list.getBackground)
+                    if (spanIndex == None) {
+                        setForeground(list.getForeground)
+                    } else {
+                        val Some(i) = spanIndex
+                        setForeground(colors(i%colors.size))
+                    }
+                }
+                setText(words(index))
+                //setText(value.asInstanceOf[String])
+                setFont(list.getFont)
+                return this.asInstanceOf[java.awt.Component]
+            }
+        })
         val nextButton = new Button { text = "Next" }
         val curLabel = new Label { text = recordNumber.toString }
-        //val sentenceLabel = new Label { text = words.mkString(" ") }
         val prevButton = new Button { text = "Prev" }
         contents = new BoxPanel(Orientation.Vertical) {
-            //contents += sentenceLabel
             contents += new BoxPanel(Orientation.Horizontal) {
                 contents += new ScrollPane(wordList)
                 contents += new ScrollPane(amrList)
@@ -66,15 +134,18 @@ object AlignerTool extends SimpleSwingApplication {
                     updateView
                 }
         }
-        
+
         def updateView() {
             words = corpus(recordNumber).sentence
-            amr = corpus(recordNumber).graph.root.prettyString(detail = 1, pretty = true).split("\n")
+            graph = corpus(recordNumber).graph
+            amr = graph.root.prettyString(detail = 1, pretty = true).split("\n")
+            ids = graph.root.prettyString(detail = 2, pretty = true).split("\n").map(x => {val ID(id) = x; id})
+            wordIndexToSpan = Span.toWordMap(corpus(recordNumber).spans(0), words)
             curLabel.text = recordNumber.toString
-            //sentenceLabel.text = "<html>"+words.mkString(" ")+"</html>"
             wordList.listData = words
             amrList.listData = amr
         }
+
     }
 
     def parseOptions(map : OptionMap, list: List[String]) : OptionMap = {

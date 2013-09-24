@@ -54,10 +54,10 @@ case class Node(var id: String, name: Option[String], concept: String, var relat
                 detail match {
                     case 0 =>
                 "("+concept+" "+(topologicalOrdering.map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, nextIndent)) :::
-                                 variableRelations.map(x => prefix+x._1+" ["+x._2.node.id+"] "+x._2.name)).sorted.mkString(" ")+")"
+                                 variableRelations.map(x => prefix+x._1+" "+x._2.node.concept)).sorted.mkString(" ")+")"
                     case 1 =>
                 "("+n+" / "+concept+" "+(topologicalOrdering.map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, nextIndent)) :::
-                                 variableRelations.map(x => prefix+x._1+" ["+x._2.node.id+"] "+x._2.name)).sorted.mkString(" ")+")"
+                                 variableRelations.map(x => prefix+x._1+" "+x._2.name)).sorted.mkString(" ")+")"
                     case 2 =>
                 "(["+id+"] "+n+" / "+concept+" "+(topologicalOrdering.map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, nextIndent)) :::
                                  variableRelations.map(x => prefix+x._1+" ["+x._2.node.id+"] "+x._2.name)).sorted.mkString(" ")+")"
@@ -79,9 +79,12 @@ case class Node(var id: String, name: Option[String], concept: String, var relat
                 "["+id+"] "+concept
             }
         } else {                            // Concept with no name but has children
-            if (detail < 2) {
+            if (detail == 0) {
                 "("+concept+" "+(topologicalOrdering.map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, nextIndent)) :::
-                                 variableRelations.map(x => prefix+x._1+" ["+x._2.node.id+"] "+x._2.name)).sorted.mkString(" ")+")"
+                                 variableRelations.map(x => prefix+x._1+" "+x._2.node.concept)).sorted.mkString(" ")+")"
+            } else if (detail == 1) {
+                "("+concept+" "+(topologicalOrdering.map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, nextIndent)) :::
+                                 variableRelations.map(x => prefix+x._1+" "+x._2.name)).sorted.mkString(" ")+")"
             } else {
                 "(["+id+"] "+concept+" "+(topologicalOrdering.map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, nextIndent)) :::
                             variableRelations.map(x => prefix+x._1+" ["+x._2.node.id+"] "+x._2.name)).sorted.mkString(" ")+")"

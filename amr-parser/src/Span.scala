@@ -37,12 +37,28 @@ object Span {
                 val nodeIds = nodeStr.split("[+]").toList.sorted
                 val words = getWords(start.toInt, end.toInt, sentence)
                 val amr = getAmr(nodeIds, graph)
+                graph.spans += Span(start.toInt, end.toInt, nodeIds, words, amr) // TODO: fix!!
                 spans += Span(start.toInt, end.toInt, nodeIds, words, amr)
+                for (id <- nodeIds) {
+                    graph.getNodeById(id).span = Some(spans.size-1)
+                }
             //} catch {
                 // TODO: catch malformed input (Regex match error, or toInt err
             //}
         }
         return spans
+    }
+
+    def toWordMap(spans: ArrayBuffer[Span], sentence: Array[String]) : Array[Option[Int]] = {
+        // returns an array that gives the span index of each word
+        val wordToSpan = Array.fill[Option[Int]](sentence.size)(None)
+        for ((span, spanIndex) <- spans.zipWithIndex) {
+            for (i <- Range(span.start, span.end)) {
+                assert(wordToSpan(i) == None, "Overlapping spans")
+                wordToSpan(i) = Some(spanIndex)
+            }
+        }
+        return wordToSpan
     }
 
     private def getWords(start: Int, end: Int, sentence: Array[String]) : String = {
