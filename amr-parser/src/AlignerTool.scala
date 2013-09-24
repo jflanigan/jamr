@@ -24,10 +24,18 @@ import scala.collection.mutable.ArrayBuffer
 import Corpus._
 
 object AlignerTool extends SimpleSwingApplication {
+    val usage = """Usage: scala -classpath . edu.cmu.lti.nlp.amr.AlignerTool filename"""
+    type OptionMap = Map[Symbol, Any]
+
+    var corpus = LazyArray(Iterator[AMRTriple]())
+
     def top = new MainFrame {
-        title = "Second Swing App"
+        title = "AMR AlignerTool v.1a"
         val colors = List("Black", " Blue", "  Cyan", "    Dark Gray", "Gray", "Green", "Light Gray", "Magenta", "Orange", "Pink", "Red", "White", "Yellow")
-        val list = new ListView(colors) {
+
+        val amr = corpus(0).graph.root.prettyString(detail = 2, pretty = true).split("\n")
+
+        val list = new ListView(amr) {
             
         }
         contents = new BoxPanel(Orientation.Vertical) {
@@ -35,11 +43,6 @@ object AlignerTool extends SimpleSwingApplication {
             border = Swing.EmptyBorder(30,30,10,30)
         }
     }
-
-
-
-    val usage = """Usage: scala -classpath . edu.cmu.lti.nlp.amr.AlignerTool filename"""
-    type OptionMap = Map[Symbol, Any]
 
     def parseOptions(map : OptionMap, list: List[String]) : OptionMap = {
         def isSwitch(s : String) = (s(0) == '-')
@@ -56,7 +59,6 @@ object AlignerTool extends SimpleSwingApplication {
     }
 
     override def main(args: Array[String]) {
-        super.main(args)
 
         if (args.length == 0) { println(usage); sys.exit(1) }
 
@@ -71,7 +73,7 @@ object AlignerTool extends SimpleSwingApplication {
 
         val filename = options('infile).asInstanceOf[String]
 
-        val corpus = LazyArray(
+        corpus = LazyArray(
             for {
                 block <- splitOnNewline(Source.fromFile(filename).getLines)
                 //if block.matches(""".*\n[ ]*\(""") // It needs to contain some AMR
@@ -82,6 +84,7 @@ object AlignerTool extends SimpleSwingApplication {
             println(i)
         }
 
+        super.main(args)    // Start GUI
     }
 }
 
