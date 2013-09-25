@@ -59,18 +59,20 @@ object SpanLoader {
         return spans
     }
 
-    def toWordMap(spans: ArrayBuffer[Span], sentence: Array[String]) : Array[Option[Int]] = {
+    def toWordMap(spans: ArrayBuffer[Span], sentence: Array[String], assertNoOverlap: Boolean = false) : Array[ArrayBuffer[Int]] = {
         // returns an array that gives the span index of each word
-        val wordToSpan = Array.fill[Option[Int]](sentence.size)(None)
+        val wordToSpan : Array[ArrayBuffer[Int]] = Array.fill[ArrayBuffer[Int]](sentence.size)(ArrayBuffer.empty[Int])
         for ((span, spanIndex) <- spans.zipWithIndex) {
             for (i <- Range(span.start, span.end)) {
-                //assert(wordToSpan(i) == None, "Overlapping spans")
-                if (wordToSpan(i) != None) {
+                if (assertNoOverlap) {
+                    assert(wordToSpan(i) == 0, "Overlapping spans")
+                }
+                if (wordToSpan(i).size > 0) {
                     logger(0,"****************** WARNING: Overlapping spans **********************")
                     logger(0,"Word index = "+i.toString)
                     logger(0,"Span start = "+span.start+" Span end = "+span.end)
                 }
-                wordToSpan(i) = Some(spanIndex)
+                wordToSpan(i).+=:(spanIndex)   // prepend the element
             }
         }
         return wordToSpan

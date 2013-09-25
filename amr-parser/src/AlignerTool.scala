@@ -112,10 +112,10 @@ object AlignerTool extends SimpleSwingApplication {
                 val spanIndex = wordIndexToSpan(index)
                 if (cellHasFocus) {
                     setBackground(list.getSelectionBackground)
-                    if (spanIndex == None) {
+                    if (spanIndex.size == 0) {
                         setForeground(list.getSelectionForeground)
                     } else {
-                        val Some(i) = spanIndex
+                        val i = spanIndex(0)
                         setForeground(colors(i%colors.size))
                         if (spanSelection != i) {
                             spanSelection = i
@@ -124,11 +124,11 @@ object AlignerTool extends SimpleSwingApplication {
                         }
                     }
                 } else {
-                    if (spanIndex == None) {
+                    if (spanIndex.size == 0) {
                         setBackground(list.getBackground)
                         setForeground(list.getForeground)
                     } else {
-                        val Some(i) = spanIndex
+                        val i = spanIndex(0)
                         if (spanSelection == i) {
                             setBackground(list.getSelectionBackground)
                             setForeground(colors(i%colors.size))
@@ -224,7 +224,10 @@ object AlignerTool extends SimpleSwingApplication {
                                 spanIndex = graph.getNodeById(ids(nodeIndex)).span
                             } else {
                                 val wordIndex : Int = indices.toList(0)
-                                spanIndex = wordIndexToSpan(wordIndex)
+                                val spanIndexArray = wordIndexToSpan(wordIndex)
+                                if (spanIndexArray.size > 0) {
+                                    spanIndex = Some(spanIndexArray(0)) // Take the first element
+                                }   // otherwise it leaves spanIndex as None
                             }
                             if (spanIndex != None) {
                                 val Some(j) = spanIndex
