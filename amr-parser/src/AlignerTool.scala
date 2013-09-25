@@ -68,6 +68,8 @@ object AlignerTool extends SimpleSwingApplication {
         val spanList = new ListView(spans)
         spanList.selection.intervalMode = ListView.IntervalMode.Single
 
+        var spanSelection = -1  // variable the keeps track of which span # is currently highlighted (across all views)
+
         /*---------------------- Color Renderers -------------------*/
         amrList.renderer = ListView.Renderer.wrap(new DefaultListCellRenderer() {
             override def getListCellRendererComponent(list: JList, value: Object, index: Int, isSelected: Boolean, cellHasFocus: Boolean) : java.awt.Component = {
@@ -78,6 +80,11 @@ object AlignerTool extends SimpleSwingApplication {
                         setForeground(list.getSelectionForeground)
                     } else {
                         val Some(i) = spanIndex
+                        if (spanSelection != i) {
+                            spanSelection = i
+                            amrList.repaint     // if changed, repaint
+                            wordList.repaint
+                        }
                         setForeground(colors(i%colors.size))
                     }
                 } else {
@@ -85,13 +92,17 @@ object AlignerTool extends SimpleSwingApplication {
                         setBackground(Color.RED)
                         setForeground(list.getForeground)
                     } else {
-                        setBackground(list.getBackground)
                         val Some(i) = spanIndex
-                        setForeground(colors(i%colors.size))
+                        if (spanSelection == i) {
+                            setBackground(list.getSelectionBackground)
+                            setForeground(colors(i%colors.size))
+                        } else{
+                            setBackground(list.getBackground)
+                            setForeground(colors(i%colors.size))
+                        }
                     }
                 }
                 setText(amr(index))
-                //setText(value.asInstanceOf[String])
                 setFont(list.getFont)
                 return this.asInstanceOf[java.awt.Component]
             }
@@ -145,28 +156,42 @@ object AlignerTool extends SimpleSwingApplication {
         listenTo(nextButton)
         listenTo(prevButton)
         reactions += {
-            case ButtonClicked(b) =>
-                if (b == nextButton) {
-                    recordNumber += 1
-                    updateView
-                } else if (b == prevButton) {
-                    recordNumber -= 1
-                    updateView
-                }
+            case ButtonClicked(this.nextButton) =>
+                recordNumber += 1
+                updateView
+            case ButtonClicked(this.prevButton) =>
+                recordNumber -= 1
+                updateView
         }
 
         listenTo(spanList.selection)
         reactions += {
-            case SelectionChanged(source) =>
-                if (source == spanList) {
-                    val indices = spanList.selection.indices
-                    val i = indices.toList(0)  // indices will be of size one
-                    amrList.selectIndices(spanToAMRIndex(i).toSeq :_* )
-                    wordList.selectIndices(spanToWordIndex(i) :_* )
-                }
+            case SelectionChanged(this.spanList) =>
+                val indices = spanList.selection.indices
+                val i = indices.toList(0)  // indices will be of size one
+                amrList.selectIndices(spanToAMRIndex(i).toSeq :_* )
+                wordList.selectIndices(spanToWordIndex(i) :_* )
         }
 
-/*  complicated stuff for updating the list when you click
+        var keypressed = false
+        listenTo(amrList.keys)
+        reactions += {
+            case KeyPressed(_, Key.Shift, _, _) =>
+                keypressed = true
+                println("Shift pressed")
+            case KeyReleased(_, Key.Shift, _, _) =>
+                keypressed = false
+                println("Shift release")
+            case KeyPressed(_, Key.Control, _, _) =>
+                keypressed = true
+                println("Control pressed")
+            case KeyReleased(_, Key.Control, _, _) =>
+                keypressed = false
+                println("Control release")
+         }
+
+
+//  complicated stuff for updating the list when you click
         var amrListIgnore = false
         var amrListNew = Set(-1)
         listenTo(amrList.selection)
@@ -193,7 +218,7 @@ object AlignerTool extends SimpleSwingApplication {
                         }
                     }
                 }
-        } */
+        }
 
         /*------------------------ Update View ---------------------*/
         def updateView() {
