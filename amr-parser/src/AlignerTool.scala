@@ -80,11 +80,11 @@ object AlignerTool extends SimpleSwingApplication {
                         setForeground(list.getSelectionForeground)
                     } else {
                         val Some(i) = spanIndex
-                        if (spanSelection != i) {
+                        /*if (spanSelection != i) {
                             spanSelection = i
                             amrList.repaint     // if changed, repaint
                             wordList.repaint
-                        }
+                        } */
                         setForeground(colors(i%colors.size))
                     }
                 } else {
@@ -116,19 +116,29 @@ object AlignerTool extends SimpleSwingApplication {
                         setForeground(list.getSelectionForeground)
                     } else {
                         val Some(i) = spanIndex
+/*                        if (spanSelection != i) {
+                            spanSelection = i
+                            amrList.repaint     // if changed, repaint
+                            wordList.repaint
+                        } */
                         setForeground(colors(i%colors.size))
                     }
                 } else {
-                    setBackground(list.getBackground)
                     if (spanIndex == None) {
+                        setBackground(list.getBackground)
                         setForeground(list.getForeground)
                     } else {
                         val Some(i) = spanIndex
-                        setForeground(colors(i%colors.size))
+                        if (spanSelection == i) {
+                            setBackground(list.getSelectionBackground)
+                            setForeground(colors(i%colors.size))
+                        } else{
+                            setBackground(list.getBackground)
+                            setForeground(colors(i%colors.size))
+                        }
                     }
                 }
                 setText(words(index))
-                //setText(value.asInstanceOf[String])
                 setFont(list.getFont)
                 return this.asInstanceOf[java.awt.Component]
             }
@@ -166,11 +176,13 @@ object AlignerTool extends SimpleSwingApplication {
 
         listenTo(spanList.selection)
         reactions += {
-            case SelectionChanged(this.spanList) =>
+            case SelectionChanged(this.spanList) if !spanList.selection.adjusting =>
                 val indices = spanList.selection.indices
                 val i = indices.toList(0)  // indices will be of size one
                 amrList.selectIndices(spanToAMRIndex(i).toSeq :_* )
+                listSelection(0) = spanToAMRIndex(i)
                 wordList.selectIndices(spanToWordIndex(i) :_* )
+                listSelection(1) = Set()++spanToWordIndex(i)
         }
 
         var keypressed = false
@@ -190,34 +202,54 @@ object AlignerTool extends SimpleSwingApplication {
                 println("Control release")
          }
 
-
-//  complicated stuff for updating the list when you click
-        var amrListIgnore = false
-        var amrListNew = Set(-1)
-        listenTo(amrList.selection)
-        reactions += {
-            case SelectionChanged(source) =>
-                if (source == amrList && !amrList.selection.adjusting) {
-                    val indices = amrList.selection.indices
-                    println(indices)
-                    if (!amrListIgnore) {
-                        amrListIgnore = true
+        val lists = Array(amrList, wordList)
+        var listIgnore = Array(false, false)
+        var listSelection = Array(Set(-1), Set(-1))
+        for (i <- Range(0, 2)) {
+            val list = lists(i)
+            listenTo(lists(i).selection)
+            reactions += {
+            case SelectionChanged(`list`) if !lists(i).selection.adjusting =>
+                val indices = lists(i).selection.indices
+                println(indices)
+                if (!keypressed) {
+                    if (!listIgnore(i)) {
                         if (indices.size == 1) {
-                            val nodeIndex : Int = indices.toList(0)
-                            val spanIndex = graph.getNodeById(ids(nodeIndex)).span
+                            //val nodeIndex : Int = indices.toList(0)
+                            var spanIndex : Option[Int] = None
+                            if (i == 0) {
+                                val nodeIndex : Int = indices.toList(0)
+                                spanIndex = graph.getNodeById(ids(nodeIndex)).span
+                            } else {
+                                val wordIndex : Int = indices.toList(0)
+                                spanIndex = wordIndexToSpan(wordIndex)
+                            }
                             if (spanIndex != None) {
-                                val Some(i) = spanIndex
-                                println("Setting to "+spanToAMRIndex(i))
-                                amrListNew = spanToAMRIndex(i)
-                                amrList.selectIndices(spanToAMRIndex(i).toSeq :_* )
+                                val Some(j) = spanIndex
+                                println("Setting to "+spanToAMRIndex(j))
+                                listIgnore = Array(true, true)
+                                listSelection(0) = spanToAMRIndex(j)
+                                amrList.selectIndices(spanToAMRIndex(j).toSeq :_* )
+                                listSelection(1) = Set()++spanToWordIndex(j)
+                                wordList.selectIndices(spanToWordIndex(j) :_* )
+                                //spanList.selectIndices(j)
+                             } else {
+                                listSelection((i+1)%2) = Set.empty[Int]
+                                listIgnore((i+1)%2) = true
+                                lists((i+1)%2).selectIndices()
+                                listSelection(i) = indices
                             }
                         }
                     } else {
-                        if (amrListNew == indices) {
-                            amrListIgnore = false
+                        if (listSelection(i) == indices) {
+                            listIgnore(i) = false
                         }
                     }
+                } else {
+                    // TODO: update the span
+                    listSelection(i) = indices
                 }
+            }
         }
 
         /*------------------------ Update View ---------------------*/
@@ -243,6 +275,10 @@ object AlignerTool extends SimpleSwingApplication {
             amrList.listData = amr
             spanList.listData = spans
 
+            spanSelection = -1
+            listIgnore = Array(false, false)
+            listSelection = Array(Set(-1), Set(-1))
+ 
             for ((span, i) <- graph.spans.zipWithIndex) {
                 println(spans)
             }
