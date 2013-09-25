@@ -58,10 +58,15 @@ object AlignerTool extends SimpleSwingApplication {
         var wordIndexToSpan = SpanLoader.toWordMap(graph.spans, words)
         var spans = for {(span, i) <- graph.spans.zipWithIndex
             } yield "Span "+(i+1).toString+": "+span.start+"-"+span.end+"  "+span.words+" => "+span.amr
+        var spanToAMRIndex : ArrayBuffer[Set[Int]] = graph.spans.map(x => Set()++x.nodeIds.map(ids.indexOf(_)))
+        def spanToWordIndex(i: Int) : Seq[Int] = {
+            Range(graph.spans(i).start, graph.spans(i).end)
+        }
 
         val wordList = new ListView(words)
         val amrList = new ListView(amr)
         val spanList = new ListView(spans)
+        spanList.selection.intervalMode = ListView.IntervalMode.Single
 
         /*---------------------- Color Renderers -------------------*/
         amrList.renderer = ListView.Renderer.wrap(new DefaultListCellRenderer() {
@@ -116,50 +121,26 @@ object AlignerTool extends SimpleSwingApplication {
                 return this.asInstanceOf[java.awt.Component]
             }
         })
-        /*spanList.renderer = ListView.Renderer.wrap(new DefaultListCellRenderer() {
-            override def getListCellRendererComponent(list: JList, value: Object, index: Int, isSelected: Boolean, cellHasFocus: Boolean) : java.awt.Component = {
-                val spanIndex = Some(index)
-                if (isSelected) {
-                    setBackground(list.getSelectionBackground)
-                    if (spanIndex == None) {
-                        setForeground(list.getSelectionForeground)
-                    } else {
-                        val Some(i) = spanIndex
-                        setForeground(colors(i%colors.size))
-                    }
-                } else {
-                    setBackground(list.getBackground)
-                    if (spanIndex == None) {
-                        setForeground(list.getForeground)
-                    } else {
-                        val Some(i) = spanIndex
-                        setForeground(colors(i%colors.size))
-                    }
-                }
-                setText(spans(index))
-                setFont(list.getFont)
-                return this.asInstanceOf[java.awt.Component]
-            }
-        })*/
 
         /*------------------------- Layout --------------------------*/
         val nextButton = new Button { text = "Next" }
         val curLabel = new Label { text = recordNumber.toString }
         val prevButton = new Button { text = "Prev" }
         contents = new BoxPanel(Orientation.Vertical) {
-            contents += new BoxPanel(Orientation.Vertical) {
-                contents += new BoxPanel(Orientation.Horizontal) {
-                    contents += new ScrollPane(wordList)
-                    contents += new ScrollPane(amrList)
-                }
-                contents += spanList
-            }
             contents += new BoxPanel(Orientation.Horizontal) {
                 contents += prevButton
                 contents += curLabel
                 contents += nextButton
             }
+            contents += new BoxPanel(Orientation.Vertical) {
+                contents += spanList
+                contents += new BoxPanel(Orientation.Horizontal) {
+                    contents += new ScrollPane(wordList)
+                    contents += new ScrollPane(amrList)
+                }
+            }
         }
+        /*------------------------- Listeners --------------------------*/
         listenTo(nextButton)
         listenTo(prevButton)
         reactions += {
@@ -172,6 +153,46 @@ object AlignerTool extends SimpleSwingApplication {
                     updateView
                 }
         }
+
+        listenTo(spanList.selection)
+        reactions += {
+            case SelectionChanged(source) =>
+                if (source == spanList) {
+                    val indices = spanList.selection.indices
+                    val i = indices.toList(0)  // indices will be of size one
+                    amrList.selectIndices(spanToAMRIndex(i).toSeq :_* )
+                    wordList.selectIndices(spanToWordIndex(i) :_* )
+                }
+        }
+
+/*  complicated stuff for updating the list when you click
+        var amrListIgnore = false
+        var amrListNew = Set(-1)
+        listenTo(amrList.selection)
+        reactions += {
+            case SelectionChanged(source) =>
+                if (source == amrList && !amrList.selection.adjusting) {
+                    val indices = amrList.selection.indices
+                    println(indices)
+                    if (!amrListIgnore) {
+                        amrListIgnore = true
+                        if (indices.size == 1) {
+                            val nodeIndex : Int = indices.toList(0)
+                            val spanIndex = graph.getNodeById(ids(nodeIndex)).span
+                            if (spanIndex != None) {
+                                val Some(i) = spanIndex
+                                println("Setting to "+spanToAMRIndex(i))
+                                amrListNew = spanToAMRIndex(i)
+                                amrList.selectIndices(spanToAMRIndex(i).toSeq :_* )
+                            }
+                        }
+                    } else {
+                        if (amrListNew == indices) {
+                            amrListIgnore = false
+                        }
+                    }
+                }
+        } */
 
         /*------------------------ Update View ---------------------*/
         def updateView() {
@@ -189,6 +210,7 @@ object AlignerTool extends SimpleSwingApplication {
             wordIndexToSpan = SpanLoader.toWordMap(graph.spans, words)
             spans = for {(span, i) <- graph.spans.zipWithIndex
                 } yield "Span "+(i+1).toString+": "+span.start+"-"+span.end+"  "+span.words+" => "+span.amr
+            spanToAMRIndex = graph.spans.map(x => Set()++x.nodeIds.map(ids.indexOf(_))) 
 
             curLabel.text = recordNumber.toString
             wordList.listData = words
