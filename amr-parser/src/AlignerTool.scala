@@ -133,8 +133,12 @@ object AlignerTool extends SimpleSwingApplication {
                             setBackground(list.getSelectionBackground)
                             setForeground(colors(i%colors.size))
                         } else{
-                            setBackground(list.getBackground)
                             setForeground(colors(i%colors.size))
+                            if (spanIndex.size == 1) {
+                                setBackground(list.getBackground)
+                            } else {
+                                setBackground(Color.RED)
+                            }
                         }
                     }
                 }
