@@ -81,10 +81,11 @@ object AlignerTool extends SimpleSwingApplication {
                         setForeground(colors(i%colors.size))
                     }
                 } else {
-                    setBackground(list.getBackground)
                     if (spanIndex == None) {
+                        setBackground(Color.RED)
                         setForeground(list.getForeground)
                     } else {
+                        setBackground(list.getBackground)
                         val Some(i) = spanIndex
                         setForeground(colors(i%colors.size))
                     }
