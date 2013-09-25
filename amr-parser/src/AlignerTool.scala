@@ -80,11 +80,11 @@ object AlignerTool extends SimpleSwingApplication {
                         setForeground(list.getSelectionForeground)
                     } else {
                         val Some(i) = spanIndex
-                        /*if (spanSelection != i) {
+                        if (spanSelection != i) {
                             spanSelection = i
                             amrList.repaint     // if changed, repaint
                             wordList.repaint
-                        } */
+                        }
                         setForeground(colors(i%colors.size))
                     }
                 } else {
@@ -93,7 +93,7 @@ object AlignerTool extends SimpleSwingApplication {
                         setForeground(list.getForeground)
                     } else {
                         val Some(i) = spanIndex
-                        if (spanSelection == i) {
+                        if (spanSelection == i && spanToAMRIndex(i).contains(index)) {
                             setBackground(list.getSelectionBackground)
                             setForeground(colors(i%colors.size))
                         } else{
@@ -234,6 +234,7 @@ object AlignerTool extends SimpleSwingApplication {
                                 wordList.selectIndices(spanToWordIndex(j) :_* )
                                 //spanList.selectIndices(j)
                              } else {
+                                spanSelection = -1
                                 listSelection((i+1)%2) = Set.empty[Int]
                                 listIgnore((i+1)%2) = true
                                 lists((i+1)%2).selectIndices()
