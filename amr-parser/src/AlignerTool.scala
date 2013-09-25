@@ -80,9 +80,10 @@ object AlignerTool extends SimpleSwingApplication {
                         setForeground(list.getSelectionForeground)
                     } else {
                         val Some(i) = spanIndex
-                        if (dynamicSelect && spanSelection != i) {
+                        if (dynamicSelect && spanSelection != i && cellHasFocus) {
                             spanSelection = i
                             amrList.repaint     // if changed, repaint
+                            wordList.repaint
                         }
                         setForeground(colors(i%colors.size))
                     }
@@ -115,8 +116,9 @@ object AlignerTool extends SimpleSwingApplication {
                         setForeground(list.getSelectionForeground)
                     } else {
                         val Some(i) = spanIndex
-                        if (dynamicSelect && spanSelection != i) {
+                        if (dynamicSelect && spanSelection != i && cellHasFocus) {
                             spanSelection = i
+                            amrList.repaint
                             wordList.repaint
                         }
                         setForeground(colors(i%colors.size))
@@ -209,7 +211,9 @@ object AlignerTool extends SimpleSwingApplication {
             reactions += {
             case SelectionChanged(`list`) if !lists(i).selection.adjusting =>
                 val indices = lists(i).selection.indices
-                println(indices)
+                logger(1,"Indices = "+indices.toString)
+                logger(1,"Selection = "+listSelection(i))
+                logger(1,"Ignore = "+listIgnore(i).toString)
                 if (!keypressed) {
                     if (!listIgnore(i)) {
                         if (indices.size == 1) {
@@ -224,7 +228,8 @@ object AlignerTool extends SimpleSwingApplication {
                             }
                             if (spanIndex != None) {
                                 val Some(j) = spanIndex
-                                println("Setting to "+spanToAMRIndex(j))
+                                logger(1,"Setting to "+spanToAMRIndex(j))
+                                spanSelection = j
                                 listIgnore = Array(true, true)
                                 listSelection(0) = spanToAMRIndex(j)
                                 amrList.selectIndices(spanToAMRIndex(j).toSeq :_* )
@@ -232,10 +237,14 @@ object AlignerTool extends SimpleSwingApplication {
                                 wordList.selectIndices(spanToWordIndex(j) :_* )
                                 //spanList.selectIndices(j)
                              } else {
-                                spanSelection = -1
-                                listSelection((i+1)%2) = Set.empty[Int]
-                                listIgnore((i+1)%2) = true
-                                lists((i+1)%2).selectIndices()
+                                if (lists((i+1)%2).selection.indices != Set()) {
+                                    logger(1,"Clearing list = "+((i+1)%2).toString)
+                                    spanSelection = -1
+                                    listSelection((i+1)%2) = Set.empty[Int]
+                                    listIgnore((i+1)%2) = true
+                                    lists((i+1)%2).selectIndices()
+                                }
+                                logger(1,"Setting mine to "+indices)
                                 listSelection(i) = indices
                             }
                         }
