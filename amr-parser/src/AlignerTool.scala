@@ -80,10 +80,9 @@ object AlignerTool extends SimpleSwingApplication {
                         setForeground(list.getSelectionForeground)
                     } else {
                         val Some(i) = spanIndex
-                        if (spanSelection != i) {
+                        if (dynamicSelect && spanSelection != i) {
                             spanSelection = i
                             amrList.repaint     // if changed, repaint
-                            wordList.repaint
                         }
                         setForeground(colors(i%colors.size))
                     }
@@ -116,11 +115,10 @@ object AlignerTool extends SimpleSwingApplication {
                         setForeground(list.getSelectionForeground)
                     } else {
                         val Some(i) = spanIndex
-/*                        if (spanSelection != i) {
+                        if (dynamicSelect && spanSelection != i) {
                             spanSelection = i
-                            amrList.repaint     // if changed, repaint
                             wordList.repaint
-                        } */
+                        }
                         setForeground(colors(i%colors.size))
                     }
                 } else {
@@ -290,6 +288,8 @@ object AlignerTool extends SimpleSwingApplication {
         def isSwitch(s : String) = (s(0) == '-')
         list match {
             case Nil => map
+            case "--refresh" :: tail =>
+                      parseOptions(map ++ Map('refresh -> true), tail)
             case "-v" :: value :: tail =>
                       parseOptions(map ++ Map('verbosity -> value.toInt), tail)
             case string :: opt2 :: tail if isSwitch(opt2) => 
@@ -299,6 +299,8 @@ object AlignerTool extends SimpleSwingApplication {
                                sys.exit(1)
       }
     }
+
+    var dynamicSelect = false
 
     override def main(args: Array[String]) {
 
@@ -312,6 +314,7 @@ object AlignerTool extends SimpleSwingApplication {
             System.err.println("Error: No AMR file specified")
             sys.exit(1)
         }
+        dynamicSelect = options.contains('refresh)
 
         val filename = options('infile).asInstanceOf[String]
 
