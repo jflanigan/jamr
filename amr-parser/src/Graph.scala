@@ -101,7 +101,7 @@ case class Graph(root: Node, spans: ArrayBuffer[Span], getNodeById: Map[String, 
             //try {
                 val SpanRegex(start, end, nodeStr) = spanStr
                 val nodeIds = nodeStr.split("[+]").toList.sorted
-                val words = SpanLoader.getWords(start.toInt, end.toInt, sentence)
+                val words = SpanLoader.getWords(start.toInt, end.toInt, sentence)   // TODO: use addSpan function
                 val amr = SpanLoader.getAmr(nodeIds, this)
                 spans += Span(start.toInt, end.toInt, nodeIds, words, amr)
                 for (id <- nodeIds) {
@@ -110,6 +110,25 @@ case class Graph(root: Node, spans: ArrayBuffer[Span], getNodeById: Map[String, 
             //} catch {
                 // TODO: catch malformed input (Regex match error, or toInt err
             //}
+        }
+    }
+
+    def addSpan(start: Int, end: Int, nodeIds: List[String], sentence: Array[String]) {
+        val span = Span(start, end, nodeIds, sentence.slice(start, end).mkString(" "), SpanLoader.getAmr(nodeIds, this))
+        spans += span
+        for (id <- nodeIds) {
+            getNodeById(id).span = Some(spans.size-1)
+        }
+    }
+
+    def updateSpan(spanIndex: Int, start: Int, end: Int, nodeIds: List[String], sentence: Array[String]) {
+        for (id <- spans(spanIndex).nodeIds) {
+            getNodeById(id).span = None
+        }
+        val span = Span(start, end, nodeIds, sentence.slice(start, end).mkString(" "), SpanLoader.getAmr(nodeIds, this))
+        spans(spanIndex) = span
+        for (id <- nodeIds) {
+            getNodeById(id).span = Some(spanIndex)
         }
     }
 

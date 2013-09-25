@@ -46,8 +46,8 @@ object AlignerTool extends SimpleSwingApplication {
     def top = new MainFrame {
         /*---------------------- Initialization --------------------*/
         title = "AMR AlignerTool v.1a"
-        var recordNumber = 0
-        var annotationIndex = 0
+        var recordNumber = 6
+        var annotationIndex = corpus(recordNumber).annotators.size - 1
 
         var words = corpus(recordNumber).sentence
         var graph = corpus(recordNumber).graph
@@ -67,14 +67,24 @@ object AlignerTool extends SimpleSwingApplication {
         val amrList = new ListView(amr)
         val spanList = new ListView(spans)
         spanList.selection.intervalMode = ListView.IntervalMode.Single
+        wordList.peer.setVisibleRowCount(35)
+        amrList.peer.setVisibleRowCount(35)
 
-        var spanSelection = -1  // variable the keeps track of which span # is currently highlighted (across all views)
+        var annotations = 
+            for {i <- Range(0,corpus(recordNumber).annotators.size)
+              } yield (corpus(recordNumber).annotators(i) + " on " + corpus(recordNumber).annotation_dates(i)).asInstanceOf[Object]
+        var annotationList = new ComboBox(annotations)
+        annotationList.maximumSize = annotationList.minimumSize
+
+
+        var spanSelection = -1  // variable that keeps track of which span # is currently highlighted (across all views)
+        var spanEdit : Option[Int] = None       // variable that keeps track of which span # is currently being edited 
 
         /*---------------------- Color Renderers -------------------*/
         amrList.renderer = ListView.Renderer.wrap(new DefaultListCellRenderer() {
             override def getListCellRendererComponent(list: JList, value: Object, index: Int, isSelected: Boolean, cellHasFocus: Boolean) : java.awt.Component = {
                 val spanIndex = graph.getNodeById(ids(index)).span
-                if (!dynamicSelect) {
+                if (!dynamicSelect || keypressed) {
                     if(isSelected) {
                         setBackground(list.getSelectionBackground)
                         spanIndex match {
@@ -131,7 +141,7 @@ object AlignerTool extends SimpleSwingApplication {
         wordList.renderer = ListView.Renderer.wrap(new DefaultListCellRenderer() {
             override def getListCellRendererComponent(list: JList, value: Object, index: Int, isSelected: Boolean, cellHasFocus: Boolean) : java.awt.Component = {
                 val spanIndex = wordIndexToSpan(index)
-                if (!dynamicSelect) {
+                if (!dynamicSelect || keypressed) {
                     if(isSelected) {
                         setBackground(list.getSelectionBackground)
                         spanIndex.size match {
@@ -197,6 +207,7 @@ object AlignerTool extends SimpleSwingApplication {
         val curLabel = new Label { text = recordNumber.toString }
         val prevButton = new Button { text = "Prev" }
         contents = new BoxPanel(Orientation.Vertical) {
+            contents += annotationList
             contents += new BoxPanel(Orientation.Horizontal) {
                 contents += prevButton
                 contents += curLabel
@@ -239,20 +250,56 @@ object AlignerTool extends SimpleSwingApplication {
 
         var keypressed = false
         listenTo(amrList.keys)
+        listenTo(wordList.keys)
+        listenTo(spanList.keys)
+        listenTo(annotationList.keys)
+
+        def onKeyPressed() {
+            logger(1,"Key pressed")
+            keypressed = true
+            if (spanSelection >= 0) {
+                spanEdit = Some(spanSelection)
+            } else {
+                spanEdit = Some(graph.spans.size)
+            }
+            amrList.repaint
+            wordList.repaint
+        }
+
+        def onKeyReleased() {
+            logger(1,"Key released")
+            keypressed = false
+            if (spanEdit != None) {
+                val Some(spanIndex) = spanEdit
+                val start = wordList.selection.indices.min
+                val end = wordList.selection.indices.max + 1
+                val nodeIds = amrList.selection.indices.map(x => ids(x)).toList.sorted
+                if (spanIndex < graph.spans.size) { // we are editing an existing span
+                    graph.updateSpan(spanIndex, start, end, nodeIds, words)
+                } else {                            // we are adding a new span
+                    graph.addSpan(start, end, nodeIds, words)
+                    assert(spanIndex == graph.spans.size - 1, "Sanity check that we correctly added the span")
+                }
+            }
+            wordIndexToSpan = SpanLoader.toWordMap(graph.spans, words)
+            spans = for {(span, i) <- graph.spans.zipWithIndex
+                } yield "Span "+(i+1).toString+": "+span.start+"-"+span.end+"  "+span.words+" => "+span.amr
+            spanToAMRIndex = graph.spans.map(x => Set()++x.nodeIds.map(ids.indexOf(_))) 
+
+            spanEdit = None
+            spanList.listData = spans
+            annotationList.peer.setModel(new javax.swing.DefaultComboBoxModel(annotations.toArray))
+
+            amrList.repaint
+            wordList.repaint
+        }
+
         reactions += {
-            case KeyPressed(_, Key.Shift, _, _) =>
-                keypressed = true
-                println("Shift pressed")
-            case KeyReleased(_, Key.Shift, _, _) =>
-                keypressed = false
-                println("Shift release")
-            case KeyPressed(_, Key.Control, _, _) =>
-                keypressed = true
-                println("Control pressed")
-            case KeyReleased(_, Key.Control, _, _) =>
-                keypressed = false
-                println("Control release")
-         }
+            case KeyPressed(_, Key.Shift, _, _) => onKeyPressed
+            case KeyReleased(_, Key.Shift, _, _) => onKeyReleased
+            case KeyPressed(_, Key.Control, _, _) => onKeyPressed
+            case KeyReleased(_, Key.Control, _, _) => onKeyReleased
+        }
 
         val lists = Array(amrList, wordList)
         var listIgnore = Array(false, false)
@@ -318,6 +365,8 @@ object AlignerTool extends SimpleSwingApplication {
             }
         }
 
+        spanList.selectIndices(0)
+
         /*------------------------ Update View ---------------------*/
         def updateView() {
 /*            words = corpus(recordNumber).sentence
@@ -325,6 +374,10 @@ object AlignerTool extends SimpleSwingApplication {
             amr = graph.root.prettyString(detail = 1, pretty = true).split("\n")
             ids = graph.root.prettyString(detail = 2, pretty = true).split("\n").map(x => {val ID(id) = x; id})
             wordIndexToSpan = Span.toWordMap(corpus(recordNumber).spans(0), words) */
+            annotationIndex = corpus(recordNumber).annotators.size - 1
+            annotations = 
+                for {i <- Range(0,corpus(recordNumber).annotators.size)
+                  } yield corpus(recordNumber).annotators(i) + " on " + corpus(recordNumber).annotation_dates(i)
 
             words = corpus(recordNumber).sentence
             graph = corpus(recordNumber).graph
@@ -340,6 +393,7 @@ object AlignerTool extends SimpleSwingApplication {
             wordList.listData = words
             amrList.listData = amr
             spanList.listData = spans
+            annotationList.peer.setModel(new javax.swing.DefaultComboBoxModel(annotations.toArray))
 
             spanSelection = -1
             listIgnore = Array(false, false)
@@ -348,6 +402,8 @@ object AlignerTool extends SimpleSwingApplication {
             for ((span, i) <- graph.spans.zipWithIndex) {
                 println(spans)
             }
+
+            spanList.selectIndices(0)
         }
     }
 
