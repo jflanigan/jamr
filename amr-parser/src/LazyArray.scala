@@ -45,6 +45,11 @@ class LazyArray[T](iterator : Iterator[T]) {
             f(x)
         }
     }
+    def loadEverything() {
+        while(iterator.hasNext) {
+            buffer.+=(iterator.next)
+        }
+    }
 }
 
 object LazyArray {

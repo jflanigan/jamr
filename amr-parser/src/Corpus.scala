@@ -8,7 +8,7 @@ import scala.collection.mutable.ArrayBuffer
 
 // AMRTriple holds the (possibly multiple) span annotations for a sentence and graph pair
 // An element in spans is a span string (i.e. "1-2|0 0-1|0.0 2-3|0.1 4-5|0.2")
-case class AMRTriple(sentence: Array[String], graph: Graph, spans: ArrayBuffer[String], annotators: ArrayBuffer[String], annotation_dates: ArrayBuffer[String])
+case class AMRTriple(sentence: Array[String], graph: Graph, spans: ArrayBuffer[String], annotators: ArrayBuffer[String], annotation_dates: ArrayBuffer[String], amrStr: String, extras: String)
 
 object Corpus {
     def splitOnNewline(iterator: Iterator[String]) : Iterator[String] = {   // This treats more than one newline in a row as a single newline
@@ -40,6 +40,7 @@ object Corpus {
 
         val graph = Graph.parse(amrstr)
         val sentence = getUlfString(tokenized(0))("::tok").split(" ")
+        val extras = lines.filter(_.matches("^#.*")).filterNot(_.matches("^# ::alignments .*")).mkString("\n")
         logger(1,graph.toString)
         logger(1,sentence.toList.toString)
         var spans = ArrayBuffer[String]()
@@ -52,7 +53,7 @@ object Corpus {
             annotators += ulfstr("::annotator")
             annotation_dates += ulfstr("::date")
         }
-        return AMRTriple(sentence, graph, spans, annotators, annotation_dates)
+        return AMRTriple(sentence, graph, spans, annotators, annotation_dates, lines.filterNot(_.matches("^#.*")).mkString("\n"), extras)
     }
 }
 
