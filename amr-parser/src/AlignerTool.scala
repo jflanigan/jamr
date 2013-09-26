@@ -12,11 +12,15 @@ import javax.swing.event.ListSelectionEvent
 import javax.swing.ListSelectionModel
 import javax.swing.DefaultListCellRenderer
 
+import java.util.Date
+import java.text.SimpleDateFormat
+
 import scala.swing._
 import scala.swing.event._
 
 import java.io.File
 import java.io.FileOutputStream
+import java.io.PrintWriter
 import java.io.PrintStream
 import java.io.BufferedOutputStream
 import java.io.OutputStreamWriter
@@ -71,11 +75,12 @@ object AlignerTool extends SimpleSwingApplication {
         amrList.peer.setVisibleRowCount(35)
 
         var annotations = 
-            for {i <- Range(0,corpus(recordNumber).annotators.size)
-              } yield (corpus(recordNumber).annotators(i) + " on " + corpus(recordNumber).annotation_dates(i)).asInstanceOf[Object]
+            (for {i <- Range(0,corpus(recordNumber).annotators.size)
+              } yield (corpus(recordNumber).annotators(i) + " on " + corpus(recordNumber).annotation_dates(i)).asInstanceOf[Object]).reverse
         var annotationList = new ComboBox(annotations)
         annotationList.maximumSize = annotationList.minimumSize
 
+        var madeChanges = false
 
         var spanSelection = -1  // variable that keeps track of which span # is currently highlighted (across all views)
         var spanEdit : Option[Int] = None       // variable that keeps track of which span # is currently being edited 
@@ -221,14 +226,21 @@ object AlignerTool extends SimpleSwingApplication {
                 }
             }
         }
+
         /*------------------------- Listeners --------------------------*/
         listenTo(nextButton)
         listenTo(prevButton)
         reactions += {
             case ButtonClicked(this.nextButton) =>
+                if (madeChanges) {
+                    saveEdits
+                }
                 recordNumber += 1
                 updateView
             case ButtonClicked(this.prevButton) =>
+                if (madeChanges) {
+                    saveEdits
+                }
                 recordNumber -= 1
                 updateView
         }
@@ -269,6 +281,7 @@ object AlignerTool extends SimpleSwingApplication {
         def onKeyReleased() {
             logger(1,"Key released")
             keypressed = false
+            madeChanges = true
             if (spanEdit != None) {
                 val Some(spanIndex) = spanEdit
                 val start = wordList.selection.indices.min
@@ -374,10 +387,11 @@ object AlignerTool extends SimpleSwingApplication {
             amr = graph.root.prettyString(detail = 1, pretty = true).split("\n")
             ids = graph.root.prettyString(detail = 2, pretty = true).split("\n").map(x => {val ID(id) = x; id})
             wordIndexToSpan = Span.toWordMap(corpus(recordNumber).spans(0), words) */
+            madeChanges = false
             annotationIndex = corpus(recordNumber).annotators.size - 1
             annotations = 
-                for {i <- Range(0,corpus(recordNumber).annotators.size)
-                  } yield corpus(recordNumber).annotators(i) + " on " + corpus(recordNumber).annotation_dates(i)
+                (for {i <- Range(0,corpus(recordNumber).annotators.size)
+                  } yield corpus(recordNumber).annotators(i) + " on " + corpus(recordNumber).annotation_dates(i)).reverse
 
             words = corpus(recordNumber).sentence
             graph = corpus(recordNumber).graph
@@ -405,8 +419,28 @@ object AlignerTool extends SimpleSwingApplication {
 
             spanList.selectIndices(0)
         }
+
+        /*------------------------ Save Edits ---------------------*/
+        val sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
+        var edited : Set[Int] = Set()
+        def saveEdits() {
+            val r = corpus(recordNumber)
+            val AMRTriple(_,_,annotations,annotators,annotation_date,_,_) = r
+            if (!edited.contains(recordNumber)) {
+                edited += recordNumber
+                annotations += graph.spans.map(x => x.format).mkString(" ")
+                annotators += annotator
+                annotation_date += sdf.format(new Date)
+            } else {
+                val i = annotations.size - 1
+                annotations(i) = graph.spans.map(x => x.format).mkString(" ")
+                annotators(i) = annotator
+                annotation_date(i) = sdf.format(new Date)
+            }
+        }
     }
 
+        /*------------------------ Main Program --------------------*/
     def parseOptions(map : OptionMap, list: List[String]) : OptionMap = {
         def isSwitch(s : String) = (s(0) == '-')
         list match {
@@ -424,6 +458,7 @@ object AlignerTool extends SimpleSwingApplication {
     }
 
     var dynamicSelect = false
+    var annotator = "Jeffrey Flanigan"
 
     override def main(args: Array[String]) {
 
@@ -441,14 +476,38 @@ object AlignerTool extends SimpleSwingApplication {
 
         val filename = options('infile).asInstanceOf[String]
 
+        val file = Source.fromFile(filename)
         corpus = LazyArray(
             for {
-                block <- splitOnNewline(Source.fromFile(filename).getLines)
+                block <- splitOnNewline(file.getLines)
                 if block.matches("(.|\n)*\n\\((.|\n)*")     // needs to contain some AMR
             } yield toAMRTriple(block)
         )
 
         super.main(args)    // Start GUI
+
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            override def run() {
+                print("saving... ")
+                verbosity = 0
+                corpus.loadEverything
+                file.close
+                val output = new PrintWriter(filename, "UTF-8")
+                try {
+                    for (block <- corpus) {
+                        output.println(block.extras)
+                        for (((alignment, annotator), date) <- block.spans.zip(block.annotators).zip(block.annotation_dates)) {
+                            output.println("# ::alignments "+alignment+" ::annotator "+annotator+" ::date "+date)
+                        }
+                        output.println(block.amrStr)
+                        output.println()
+                    }
+                } finally {
+                    output.close
+                }
+                println("done")
+            }
+        })
     }
 }
 
