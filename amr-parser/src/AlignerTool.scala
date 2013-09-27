@@ -56,7 +56,7 @@ object AlignerTool extends SimpleSwingApplication {
         var words = corpus(recordNumber).sentence
         var graph = corpus(recordNumber).graph
         graph.loadSpans(corpus(recordNumber).spans(annotationIndex), words)
-        var amr = graph.root.prettyString(detail = 1, pretty = true).split("\n")
+        var amr = graph.root.prettyString(detail = 2, pretty = true).split("\n")
         val ID = """.*\[([^\]]+)\].*""".r
         var ids = graph.root.prettyString(detail = 2, pretty = true).split("\n").map(x => {val ID(id) = x; id})
         var wordIndexToSpan = SpanLoader.toWordMap(graph.spans, words)
@@ -396,7 +396,7 @@ object AlignerTool extends SimpleSwingApplication {
             words = corpus(recordNumber).sentence
             graph = corpus(recordNumber).graph
             graph.loadSpans(corpus(recordNumber).spans(annotationIndex), words)
-            amr = graph.root.prettyString(detail = 1, pretty = true).split("\n")
+            amr = graph.root.prettyString(detail = 2, pretty = true).split("\n")
             ids = graph.root.prettyString(detail = 2, pretty = true).split("\n").map(x => {val ID(id) = x; id})
             wordIndexToSpan = SpanLoader.toWordMap(graph.spans, words)
             spans = for {(span, i) <- graph.spans.zipWithIndex
