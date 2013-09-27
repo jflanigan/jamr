@@ -288,9 +288,9 @@ object AlignerTool extends SimpleSwingApplication {
                 val end = wordList.selection.indices.max + 1
                 val nodeIds = amrList.selection.indices.map(x => ids(x)).toList.sorted
                 if (spanIndex < graph.spans.size) { // we are editing an existing span
-                    graph.updateSpan(spanIndex, start, end, nodeIds, words)
+                    graph.updateSpan(spanIndex, start, end, graph.spans(spanIndex).coRefs, nodeIds, words)
                 } else {                            // we are adding a new span
-                    graph.addSpan(start, end, nodeIds, words)
+                    graph.addSpan(start, end, List(), nodeIds, words)
                     assert(spanIndex == graph.spans.size - 1, "Sanity check that we correctly added the span")
                 }
             }

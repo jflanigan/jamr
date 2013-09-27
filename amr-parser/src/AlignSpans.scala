@@ -51,7 +51,7 @@ object AlignSpans {
     // Returns the span for 'node'
 //Span(var start: Int, var end: Int, var nodeIds: List[String], var words: String, var amr: Node
 //Node(var id: String, name: Option[String], concept: String, var relations: List[(String, Node)], var topologicalOrdering: List[(String, Node)], var variableRelations: List[(String, Var)], var alignment: Option[Int], var span: Option[Int])
-        var mySpan = Span(sentence.size, 0, List(node.id), "", Node("", node.name, node.concept, List[(String, Node)](), List[(String, Node)](), List[(String, Var)](), None, None)) // will update later
+        var mySpan = Span(sentence.size, 0, List(), List(node.id), "", Node("", node.name, node.concept, List[(String, Node)](), List[(String, Node)](), List[(String, Var)](), None, None)) // will update later
         var valid = false
         if (specialConcepts contains node.concept) {
             var mySpanIndex = spanIndex
@@ -62,7 +62,7 @@ object AlignSpans {
             for ((relation, child) <- node.topologicalOrdering) {
                 val span = createSpans(sentence, /*stemmedSentence,*/ child, wordAlignments, spanAlignments, mySpanIndex, spans)
                 if (span != None) {
-                    val Some(Span(start,end,nodeIds,_,amr)) = span
+                    val Some(Span(start,end,List(),nodeIds,_,amr)) = span
                     mySpan.start = min(mySpan.start, start)
                     mySpan.end = max(mySpan.end, end)
                     mySpan.nodeIds = mySpan.nodeIds ::: nodeIds
