@@ -282,8 +282,8 @@ object AlignerTool extends SimpleSwingApplication {
             logger(1,"Key released")
             keypressed = false
             madeChanges = true
-            if (spanEdit != None) {
-                val Some(spanIndex) = spanEdit
+            if (spanEdit != None) {  // are we currently editing a span?
+                val Some(spanIndex) = spanEdit  // if so, get the span index
                 val start = wordList.selection.indices.min
                 val end = wordList.selection.indices.max + 1
                 val nodeIds = amrList.selection.indices.map(x => ids(x)).toList.sorted
@@ -299,7 +299,7 @@ object AlignerTool extends SimpleSwingApplication {
                 } yield "Span "+(i+1).toString+": "+span.start+"-"+span.end+"  "+span.words+" => "+span.amr
             spanToAMRIndex = graph.spans.map(x => Set()++x.nodeIds.map(ids.indexOf(_))) 
 
-            spanEdit = None
+            spanEdit = None // we are done editing
             spanList.listData = spans
             annotationList.peer.setModel(new javax.swing.DefaultComboBoxModel(annotations.toArray))
 
@@ -307,11 +307,24 @@ object AlignerTool extends SimpleSwingApplication {
             wordList.repaint
         }
 
+        var corefEdit : Option[Int] = None
+        def createCoref() {
+            if (spanSelection >= 0) {
+                val span = graph.spans(spanSelection)
+                span.coRefs = span.coRefs ::: List(CoRef(span.start, span.end, span.words))
+            }
+            madeChanges = true
+            amrList.repaint
+            wordList.repaint
+            spanList.repaint
+        }
+
         reactions += {
             case KeyPressed(_, Key.Shift, _, _) => onKeyPressed
             case KeyReleased(_, Key.Shift, _, _) => onKeyReleased
             case KeyPressed(_, Key.Control, _, _) => onKeyPressed
             case KeyReleased(_, Key.Control, _, _) => onKeyReleased
+            case KeyPressed(_, Key.C, _, _) => createCoref
         }
 
         val lists = Array(amrList, wordList)

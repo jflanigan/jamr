@@ -101,15 +101,22 @@ case class Graph(root: Node, spans: ArrayBuffer[Span], getNodeById: Map[String, 
         val CoRefRegex = """([0-9]+)-([0-9]+)""".r
         for (spanStr <- spanStr.split(" ")) {
             //try {
+                println(spanStr)
                 val SpanRegex(start, end, corefStr, nodeStr) = spanStr
                 val nodeIds = nodeStr.split("[+]").toList.sorted
                 val words = SpanLoader.getWords(start.toInt, end.toInt, sentence)   // TODO: use addSpan function
                 val amr = SpanLoader.getAmr(nodeIds, this)
-                val corefs = for { str <- corefStr.split("[+]").toList  // remember split takes a regex!
-                    } yield { 
-                        val CoRefRegex(start, end) = str;
-                        CoRef(start.toInt, end.toInt, sentence.slice(start.toInt, end.toInt).mkString(" "))
+                println(corefStr)
+                val corefs = if(corefStr == "") {
+                    List[CoRef]()
+                } else {
+                    for { str <- corefStr.split("[+]").toList  // remember split takes a regex!
+                        } yield {
+                            println("trying = "+str)
+                            val CoRefRegex(start, end) = str;
+                            CoRef(start.toInt, end.toInt, sentence.slice(start.toInt, end.toInt).mkString(" "))
                     }
+                }
                 spans += Span(start.toInt, end.toInt, corefs, nodeIds, words, amr)
                 for (id <- nodeIds) {
                     getNodeById(id).span = Some(spans.size-1)
