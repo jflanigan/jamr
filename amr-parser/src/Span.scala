@@ -19,9 +19,16 @@ import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 import scala.util.parsing.combinator._
 
-case class Span(var start: Int, var end: Int, var nodeIds: List[String], var words: String, var amr: Node) {
+case class Span(var start: Int, var end: Int, var nodeIds: List[String], var words: String, var amr: Node, var coRef: Boolean) {
     def format() : String = {
-        start.toString+"-"+end.toString+"|"+nodeIds.mkString("+")
+        if (start < end) {
+            coRef match {
+                case false => start.toString+"-"+end.toString+"|"+nodeIds.mkString("+")
+                case true => "*"+start.toString+"-"+end.toString+"|"+nodeIds.mkString("+")
+            }
+        } else {
+            ""
+        }
     }
 }
 
@@ -37,28 +44,6 @@ Example span string: "1-2|0 0-1|0.0 2-3|0.1 4-5|0.2"
 *********************************************************************************/
 
 object SpanLoader {
-    private def readSpans(string: String, graph: Graph, sentence: Array[String]) : ArrayBuffer[Span] = {
-        // Todo: This function can be removed
-        val spans = ArrayBuffer[Span]()
-        val SpanRegex = """([0-9]+)-([0-9]+)\|(.*)""".r
-        for (spanStr <- string.split(" ")) {
-            //try {
-                val SpanRegex(start, end, nodeStr) = spanStr
-                val nodeIds = nodeStr.split("[+]").toList.sorted
-                val words = getWords(start.toInt, end.toInt, sentence)
-                val amr = getAmr(nodeIds, graph)
-                graph.spans += Span(start.toInt, end.toInt, nodeIds, words, amr)
-                spans += Span(start.toInt, end.toInt, nodeIds, words, amr)
-                for (id <- nodeIds) {
-                    graph.getNodeById(id).span = Some(spans.size-1)
-                }
-            //} catch {
-                // TODO: catch malformed input (Regex match error, or toInt err
-            //}
-        }
-        return spans
-    }
-
     def toWordMap(spans: ArrayBuffer[Span], sentence: Array[String], assertNoOverlap: Boolean = false) : Array[ArrayBuffer[Int]] = {
         // returns an array that gives the span index of each word
         val wordToSpan : Array[ArrayBuffer[Int]] = Array.fill[ArrayBuffer[Int]](sentence.size)(ArrayBuffer.empty[Int])
@@ -106,7 +91,7 @@ object SpanLoader {
         }
         var unprocessed = nodes.tail
         // Node(var id: String, name: Option[String], concept: String, var relations: List[(String, Node)], var topologicalOrdering: List[(String, Node)], var variableRelations: List[(String, Var)], var alignment: Option[Int], var span: Option[Int])
-        val myNode = Node(id = node.id, name = node.name, concept = node.concept, relations = List[(String, Node)](), topologicalOrdering = List[(String, Node)](), variableRelations = List[(String, Var)](), alignment = node.alignment, span = node.span)
+        val myNode = Node(id = node.id, name = node.name, concept = node.concept, relations = List[(String, Node)](), topologicalOrdering = List[(String, Node)](), variableRelations = List[(String, Var)](), alignment = node.alignment, spans = node.spans)
         var childNumber = 0
         var done = false
         while (unprocessed.size > 0 && !done) {

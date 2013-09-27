@@ -23,7 +23,7 @@ import scala.util.parsing.combinator._
 object AlignSpans {
 
     def logUnalignedConcepts(node: Node) {
-        if (node.span == None) {
+        if (node.spans.size == 0) {
             logger(1, "WARNING: Unaligned concept "+node.concept)
         }
         for ((_, child) <- node.topologicalOrdering) {
@@ -51,7 +51,7 @@ object AlignSpans {
     // Returns the span for 'node'
 //Span(var start: Int, var end: Int, var nodeIds: List[String], var words: String, var amr: Node
 //Node(var id: String, name: Option[String], concept: String, var relations: List[(String, Node)], var topologicalOrdering: List[(String, Node)], var variableRelations: List[(String, Var)], var alignment: Option[Int], var span: Option[Int])
-        var mySpan = Span(sentence.size, 0, List(node.id), "", Node("", node.name, node.concept, List[(String, Node)](), List[(String, Node)](), List[(String, Var)](), None, None)) // will update later
+        var mySpan = Span(sentence.size, 0, List(node.id), "", Node("", node.name, node.concept, List[(String, Node)](), List[(String, Node)](), List[(String, Var)](), None, ArrayBuffer()), false) // will update later
         var valid = false
         if (specialConcepts contains node.concept) {
             var mySpanIndex = spanIndex
@@ -61,8 +61,8 @@ object AlignSpans {
             }
             for ((relation, child) <- node.topologicalOrdering) {
                 val span = createSpans(sentence, /*stemmedSentence,*/ child, wordAlignments, spanAlignments, mySpanIndex, spans)
-                if (span != None) {
-                    val Some(Span(start,end,nodeIds,_,amr)) = span
+                if (span.size != 0) {
+                    val Some(Span(start,end,nodeIds,_,amr,_)) = span // TODO: is this code right?
                     mySpan.start = min(mySpan.start, start)
                     mySpan.end = max(mySpan.end, end)
                     mySpan.nodeIds = mySpan.nodeIds ::: nodeIds
@@ -82,11 +82,18 @@ object AlignSpans {
                 }
             }
             mySpan.words = sentence.slice(mySpan.start, mySpan.end).mkString(" ")
-            if (spanIndex == None) {  // we need to save the span
+            if (spanIndex == None) {    // we need to save the span
                 val Some(index) = mySpanIndex
                 spans(index) = mySpan
             }
-            node.span = mySpanIndex
+            if (mySpanIndex != None) {  // replaces node.spans = mySpanIndex
+                val Some(myspanindex) = mySpanIndex
+                if (node.spans.size == 0) {
+                    node.spans += myspanindex
+                } else {
+                    node.spans(0) = myspanindex
+                }
+            }
         } else {
             if (node.alignment != None) {
                 val Some(alignment) = node.alignment
@@ -99,7 +106,11 @@ object AlignSpans {
                 } else {
                     spanAlignments(alignment) = spanIndex  // index to this span
                 }
-                node.span = Some(spans.size)
+                if (node.spans.size == 0) {
+                    node.spans += spans.size
+                } else {
+                    node.spans(0) = spans.size  // TODO: check to see if there are other spans already?
+                }
                 valid = true
             }
             for ((relation, child) <- node.topologicalOrdering) {
