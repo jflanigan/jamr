@@ -98,7 +98,7 @@ case class Graph(root: Node, spans: ArrayBuffer[Span], getNodeById: Map[String, 
         spans.clear
         val SpanRegex = """([0-9]+)-([0-9]+)\|(.*)""".r
         for (spanStr <- spanStr.split(" ")) {
-            //try {
+            try {
                 val SpanRegex(start, end, nodeStr) = spanStr
                 val nodeIds = nodeStr.split("[+]").toList.sorted
                 val words = SpanLoader.getWords(start.toInt, end.toInt, sentence)   // TODO: use addSpan function
@@ -107,9 +107,10 @@ case class Graph(root: Node, spans: ArrayBuffer[Span], getNodeById: Map[String, 
                 for (id <- nodeIds) {
                     getNodeById(id).span = Some(spans.size-1)
                 }
-            //} catch {
+            } catch {
                 // TODO: catch malformed input (Regex match error, or toInt err
-            //}
+                case e => Unit
+            }
         }
     }
 
