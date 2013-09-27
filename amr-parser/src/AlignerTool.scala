@@ -39,8 +39,10 @@ import scala.collection.mutable.ArrayBuffer
 
 import Corpus._
 
+
 object AlignerTool extends SimpleSwingApplication {
     val usage = """Usage: scala -classpath . edu.cmu.lti.nlp.amr.AlignerTool filename"""
+    val version = "v.01"
     type OptionMap = Map[Symbol, Any]
 
     val colors = Array(Color.RED, Color.GREEN, Color.MAGENTA, Color.ORANGE, Color.PINK, Color.CYAN, Color.BLUE )
@@ -49,14 +51,14 @@ object AlignerTool extends SimpleSwingApplication {
 
     def top = new MainFrame {
         /*---------------------- Initialization --------------------*/
-        title = "AMR AlignerTool v.1a"
+        title = "AMR AlignerTool "+version
         var recordNumber = 6
         var annotationIndex = corpus(recordNumber).annotators.size - 1
 
         var words = corpus(recordNumber).sentence
         var graph = corpus(recordNumber).graph
         graph.loadSpans(corpus(recordNumber).spans(annotationIndex), words)
-        var amr = graph.root.prettyString(detail = 2, pretty = true).split("\n")
+        var amr = graph.root.prettyString(detail = 1, pretty = true).split("\n")
         val ID = """.*\[([^\]]+)\].*""".r
         var ids = graph.root.prettyString(detail = 2, pretty = true).split("\n").map(x => {val ID(id) = x; id})
         var wordIndexToSpan = SpanLoader.toWordMap(graph.spans, words)
@@ -282,15 +284,15 @@ object AlignerTool extends SimpleSwingApplication {
             logger(1,"Key released")
             keypressed = false
             madeChanges = true
-            if (spanEdit != None) {  // are we currently editing a span?
-                val Some(spanIndex) = spanEdit  // if so, get the span index
+            if (spanEdit != None) {
+                val Some(spanIndex) = spanEdit
                 val start = wordList.selection.indices.min
                 val end = wordList.selection.indices.max + 1
                 val nodeIds = amrList.selection.indices.map(x => ids(x)).toList.sorted
                 if (spanIndex < graph.spans.size) { // we are editing an existing span
-                    graph.updateSpan(spanIndex, start, end, graph.spans(spanIndex).coRefs, nodeIds, words)
+                    graph.updateSpan(spanIndex, start, end, nodeIds, words)
                 } else {                            // we are adding a new span
-                    graph.addSpan(start, end, List(), nodeIds, words)
+                    graph.addSpan(start, end, nodeIds, words)
                     assert(spanIndex == graph.spans.size - 1, "Sanity check that we correctly added the span")
                 }
             }
@@ -299,7 +301,7 @@ object AlignerTool extends SimpleSwingApplication {
                 } yield "Span "+(i+1).toString+": "+span.start+"-"+span.end+"  "+span.words+" => "+span.amr
             spanToAMRIndex = graph.spans.map(x => Set()++x.nodeIds.map(ids.indexOf(_))) 
 
-            spanEdit = None // we are done editing
+            spanEdit = None
             spanList.listData = spans
             annotationList.peer.setModel(new javax.swing.DefaultComboBoxModel(annotations.toArray))
 
@@ -307,24 +309,11 @@ object AlignerTool extends SimpleSwingApplication {
             wordList.repaint
         }
 
-        var corefEdit : Option[Int] = None
-        def createCoref() {
-            if (spanSelection >= 0) {
-                val span = graph.spans(spanSelection)
-                span.coRefs = span.coRefs ::: List(CoRef(span.start, span.end, span.words))
-            }
-            madeChanges = true
-            amrList.repaint
-            wordList.repaint
-            spanList.repaint
-        }
-
         reactions += {
             case KeyPressed(_, Key.Shift, _, _) => onKeyPressed
             case KeyReleased(_, Key.Shift, _, _) => onKeyReleased
             case KeyPressed(_, Key.Control, _, _) => onKeyPressed
             case KeyReleased(_, Key.Control, _, _) => onKeyReleased
-            case KeyPressed(_, Key.C, _, _) => createCoref
         }
 
         val lists = Array(amrList, wordList)
@@ -409,7 +398,7 @@ object AlignerTool extends SimpleSwingApplication {
             words = corpus(recordNumber).sentence
             graph = corpus(recordNumber).graph
             graph.loadSpans(corpus(recordNumber).spans(annotationIndex), words)
-            amr = graph.root.prettyString(detail = 2, pretty = true).split("\n")
+            amr = graph.root.prettyString(detail = 1, pretty = true).split("\n")
             ids = graph.root.prettyString(detail = 2, pretty = true).split("\n").map(x => {val ID(id) = x; id})
             wordIndexToSpan = SpanLoader.toWordMap(graph.spans, words)
             spans = for {(span, i) <- graph.spans.zipWithIndex
@@ -510,7 +499,7 @@ object AlignerTool extends SimpleSwingApplication {
                     for (block <- corpus) {
                         output.println(block.extras)
                         for (((alignment, annotator), date) <- block.spans.zip(block.annotators).zip(block.annotation_dates)) {
-                            output.println("# ::alignments "+alignment+" ::annotator "+annotator+" ::date "+date)
+                            output.println("# ::alignments "+alignment+" ::annotator "+annotator+" ::date "+date+" ::editor AlignerTool "+version)
                         }
                         output.println(block.amrStr)
                         output.println()
