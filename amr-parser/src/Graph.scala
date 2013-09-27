@@ -95,15 +95,22 @@ case class Node(var id: String, name: Option[String], concept: String, var relat
 
 case class Graph(root: Node, spans: ArrayBuffer[Span], getNodeById: Map[String, Node], getNodeByName: Map[String, Node]) {
     def loadSpans(spanStr: String, sentence: Array[String]) = {
+        // Given a span string (ie the string that follows ::alignments in the corpus), load the graph with the spans
         spans.clear
-        val SpanRegex = """([0-9]+)-([0-9]+)\|(.*)""".r
+        val SpanRegex = """([0-9]+)-([0-9]+)\|([^|]*)\|(.*)""".r
+        val CoRefRegex = """([0-9]+)-([0-9]+)""".r
         for (spanStr <- spanStr.split(" ")) {
             //try {
-                val SpanRegex(start, end, nodeStr) = spanStr
+                val SpanRegex(start, end, corefStr, nodeStr) = spanStr
                 val nodeIds = nodeStr.split("[+]").toList.sorted
                 val words = SpanLoader.getWords(start.toInt, end.toInt, sentence)   // TODO: use addSpan function
                 val amr = SpanLoader.getAmr(nodeIds, this)
-                spans += Span(start.toInt, end.toInt, nodeIds, words, amr)
+                val corefs = for { str <- corefStr.split("[+]").toList  // remember split takes a regex!
+                    } yield { 
+                        val CoRefRegex(start, end) = str;
+                        CoRef(start.toInt, end.toInt, sentence.slice(start.toInt, end.toInt).mkString(" "))
+                    }
+                spans += Span(start.toInt, end.toInt, corefs, nodeIds, words, amr)
                 for (id <- nodeIds) {
                     getNodeById(id).span = Some(spans.size-1)
                 }
@@ -113,19 +120,23 @@ case class Graph(root: Node, spans: ArrayBuffer[Span], getNodeById: Map[String, 
         }
     }
 
-    def addSpan(start: Int, end: Int, nodeIds: List[String], sentence: Array[String]) {
-        val span = Span(start, end, nodeIds, sentence.slice(start, end).mkString(" "), SpanLoader.getAmr(nodeIds, this))
+    def addSpan(start: Int, end: Int, coRefs: List[CoRef], nodeIds: List[String], sentence: Array[String]) {
+        // Adds a new span to the list of spans
+        // Sets node.span for the appropriate nodes in the graph
+        val span = Span(start, end, coRefs, nodeIds, sentence.slice(start, end).mkString(" "), SpanLoader.getAmr(nodeIds, this))
         spans += span
         for (id <- nodeIds) {
             getNodeById(id).span = Some(spans.size-1)
         }
     }
 
-    def updateSpan(spanIndex: Int, start: Int, end: Int, nodeIds: List[String], sentence: Array[String]) {
+    def updateSpan(spanIndex: Int, start: Int, end: Int, coRefs: List[CoRef], nodeIds: List[String], sentence: Array[String]) {
+        // Changes the span pointed to by spanIndex to the new span
+        // Updates node.span for the appropriate nodes in the graph
         for (id <- spans(spanIndex).nodeIds) {
             getNodeById(id).span = None
         }
-        val span = Span(start, end, nodeIds, sentence.slice(start, end).mkString(" "), SpanLoader.getAmr(nodeIds, this))
+        val span = Span(start, end, coRefs, nodeIds, sentence.slice(start, end).mkString(" "), SpanLoader.getAmr(nodeIds, this))
         spans(spanIndex) = span
         for (id <- nodeIds) {
             getNodeById(id).span = Some(spanIndex)
