@@ -21,7 +21,15 @@ import scala.util.parsing.combinator._
 
 case class Var(node: Node, name: String)
 
-case class Node(var id: String, name: Option[String], concept: String, var relations: List[(String, Node)], var topologicalOrdering: List[(String, Node)], var variableRelations: List[(String, Var)], var alignment: Option[Int], var span: Option[Int]) {
+case class Node(var id: String, name: Option[String], concept: String, var relations: List[(String, Node)], var topologicalOrdering: List[(String, Node)], var variableRelations: List[(String, Var)], var alignment: Option[Int], var spans: ArrayBuffer[Int]) {
+    def addSpan(span: Int, coRef: Boolean){
+        if (coRef) {
+            spans += span
+        } else {
+            spans.+=:(span) // prepend
+        }
+    }
+
     override def toString() : String = {
         prettyString(0, false)
     }
@@ -96,40 +104,45 @@ case class Node(var id: String, name: Option[String], concept: String, var relat
 case class Graph(root: Node, spans: ArrayBuffer[Span], getNodeById: Map[String, Node], getNodeByName: Map[String, Node]) {
     def loadSpans(spanStr: String, sentence: Array[String]) = {
         spans.clear
-        val SpanRegex = """([0-9]+)-([0-9]+)\|(.*)""".r
+        val SpanRegex = """([*]?)([0-9]+)-([0-9]+)\|(.*)""".r
         for (spanStr <- spanStr.split(" ")) {
             try {
-                val SpanRegex(start, end, nodeStr) = spanStr
+                val SpanRegex(corefStr, start, end, nodeStr) = spanStr
                 val nodeIds = nodeStr.split("[+]").toList.sorted
                 val words = SpanLoader.getWords(start.toInt, end.toInt, sentence)   // TODO: use addSpan function
                 val amr = SpanLoader.getAmr(nodeIds, this)
-                spans += Span(start.toInt, end.toInt, nodeIds, words, amr)
+                val coref = corefStr match {
+                    case "*" => true
+                    case "" => false
+                }
+                spans += Span(start.toInt, end.toInt, nodeIds, words, amr, coref)
                 for (id <- nodeIds) {
-                    getNodeById(id).span = Some(spans.size-1)
+                    getNodeById(id).addSpan(spans.size-1, coref)
                 }
             } catch {
                 // TODO: catch malformed input (Regex match error, or toInt err
-                case e => Unit
+                case e => logger(1, "****************** MALFORMED SPAN: "+spanStr)
             }
         }
     }
 
-    def addSpan(start: Int, end: Int, nodeIds: List[String], sentence: Array[String]) {
-        val span = Span(start, end, nodeIds, sentence.slice(start, end).mkString(" "), SpanLoader.getAmr(nodeIds, this))
+
+    def addSpan(start: Int, end: Int, nodeIds: List[String], coRef: Boolean, sentence: Array[String]) {
+        val span = Span(start, end, nodeIds, sentence.slice(start, end).mkString(" "), SpanLoader.getAmr(nodeIds, this), coRef)
         spans += span
         for (id <- nodeIds) {
-            getNodeById(id).span = Some(spans.size-1)
+            getNodeById(id).addSpan(spans.size-1, coRef)
         }
     }
 
-    def updateSpan(spanIndex: Int, start: Int, end: Int, nodeIds: List[String], sentence: Array[String]) {
+    def updateSpan(spanIndex: Int, start: Int, end: Int, nodeIds: List[String], coRef: Boolean, sentence: Array[String]) {
         for (id <- spans(spanIndex).nodeIds) {
-            getNodeById(id).span = None
+            getNodeById(id).spans -= spanIndex
         }
-        val span = Span(start, end, nodeIds, sentence.slice(start, end).mkString(" "), SpanLoader.getAmr(nodeIds, this))
+        val span = Span(start, end, nodeIds, sentence.slice(start, end).mkString(" "), SpanLoader.getAmr(nodeIds, this), coRef)
         spans(spanIndex) = span
         for (id <- nodeIds) {
-            getNodeById(id).span = Some(spanIndex)
+            getNodeById(id).addSpan(spans.size-1, coRef)
         }
     }
 
@@ -216,10 +229,10 @@ object Graph {
         }
         def relations : Parser[List[(String, Node)]] = rep(relation)
         def internalNode : Parser[Node] = "("~>variable~"/"~concept~relations<~")" ^^ {
-            case variable~"/"~concept~relations => Node("", Some(variable), concept, List[(String, Node)](), relations, List[(String, Var)](), None, None)
+            case variable~"/"~concept~relations => Node("", Some(variable), concept, List[(String, Node)](), relations, List[(String, Var)](), None, ArrayBuffer[Int]())
         }
         def terminalNode : Parser[Node] = concept ^^ { 
-            case concept => Node("", None, concept, List[(String, Node)](), List[(String, Node)](), List[(String, Var)](), None, None)
+            case concept => Node("", None, concept, List[(String, Node)](), List[(String, Node)](), List[(String, Var)](), None, ArrayBuffer[Int]())
         }
         def node : Parser[Node] = terminalNode | internalNode
     }

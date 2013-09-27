@@ -177,8 +177,7 @@ object AlignWords {
     }
 
     def logUnalignedConcepts(node: Node) {
-        //if (node.alignment == None) {
-        if (node.span == None) {
+        if (node.alignment == None) {
             logger(1, "WARNING: Unaligned concept "+node.concept)
         }
         for ((_, child) <- node.topologicalOrdering) {
