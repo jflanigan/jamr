@@ -52,7 +52,7 @@ object AlignerTool extends SimpleSwingApplication {
     def top = new MainFrame {
         /*---------------------- Initialization --------------------*/
         title = "AMR AlignerTool "+version
-        var recordNumber = 0
+        var recordNumber = 6
         var annotationIndex = corpus(recordNumber).annotators.size - 1
 
         var words = corpus(recordNumber).sentence
@@ -109,7 +109,7 @@ object AlignerTool extends SimpleSwingApplication {
                         setBackground(list.getBackground)
                         spanIndexes.size match {
                             case 0 => setForeground(list.getForeground)
-                                      setBackground(Color.RED)
+                                      setBackground(list.getBackground)
                             case _ => graph.spans(spanIndexes(0)).coRef match {
                                           case false => setForeground(colors(spanIndexes(0)%colors.size))
                                                         setBackground(list.getBackground)
