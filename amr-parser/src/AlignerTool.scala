@@ -306,9 +306,10 @@ object AlignerTool extends SimpleSwingApplication {
             case KeyReleased(_, Key.Shift, _, _) => onKeyReleased
             case KeyPressed(_, Key.Control, _, _) => onKeyPressed
             case KeyReleased(_, Key.Control, _, _) => onKeyReleased
+            case KeyReleased(_, Key.Space, _, _) => toggleCoRef
         }
 
-        def onSpace {
+        def toggleCoRef {
             if (spanSelection >= 0) {
                 graph.updateSpan(spanSelection, !graph.spans(spanSelection).coRef, words)
             }
