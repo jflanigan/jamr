@@ -52,7 +52,7 @@ object AlignerTool extends SimpleSwingApplication {
     def top = new MainFrame {
         /*---------------------- Initialization --------------------*/
         title = "AMR AlignerTool "+version
-        var recordNumber = 6
+        var recordNumber = 0
         var annotationIndex = corpus(recordNumber).annotators.size - 1
 
         var words = corpus(recordNumber).sentence
@@ -200,7 +200,9 @@ object AlignerTool extends SimpleSwingApplication {
         /*------------------------- Layout --------------------------*/
         val nextButton = new Button { text = "Next" }
         //val curLabel = new Label { text = recordNumber.toString }
-        val curField = new TextField { text = recordNumber.toString; columns = 5 }
+        val curField = new TextField { text = recordNumber.toString}
+        curField.maximumSize = new java.awt.Dimension(30,200)
+        //curField.peer.setSize(5,5)
         val prevButton = new Button { text = "Prev" }
         contents = new BoxPanel(Orientation.Vertical) {
             contents += annotationList
