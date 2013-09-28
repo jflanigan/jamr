@@ -42,7 +42,7 @@ import Corpus._
 
 object AlignerTool extends SimpleSwingApplication {
     val usage = """Usage: scala -classpath . edu.cmu.lti.nlp.amr.AlignerTool filename"""
-    val version = "v.01"
+    val version = "v.02"
     type OptionMap = Map[Symbol, Any]
 
     val colors = Array(Color.RED, Color.GREEN, Color.MAGENTA, Color.ORANGE, Color.PINK, Color.CYAN, Color.BLUE )
