@@ -199,13 +199,14 @@ object AlignerTool extends SimpleSwingApplication {
 
         /*------------------------- Layout --------------------------*/
         val nextButton = new Button { text = "Next" }
-        val curLabel = new Label { text = recordNumber.toString }
+        //val curLabel = new Label { text = recordNumber.toString }
+        val curField = new TextField { text = recordNumber.toString; columns = 5 }
         val prevButton = new Button { text = "Prev" }
         contents = new BoxPanel(Orientation.Vertical) {
             contents += annotationList
             contents += new BoxPanel(Orientation.Horizontal) {
                 contents += prevButton
-                contents += curLabel
+                contents += curField
                 contents += nextButton
             }
             contents += new BoxPanel(Orientation.Vertical) {
@@ -220,6 +221,7 @@ object AlignerTool extends SimpleSwingApplication {
         /*------------------------- Listeners --------------------------*/
         listenTo(nextButton)
         listenTo(prevButton)
+        listenTo(curField)
         reactions += {
             case ButtonClicked(this.nextButton) =>
                 if (madeChanges) {
@@ -232,6 +234,12 @@ object AlignerTool extends SimpleSwingApplication {
                     saveEdits
                 }
                 recordNumber -= 1
+                updateView
+            case EditDone(this.curField) =>
+                if (madeChanges) {
+                    saveEdits
+                }
+                recordNumber = curField.text.toInt
                 updateView
         }
 
@@ -420,7 +428,7 @@ object AlignerTool extends SimpleSwingApplication {
                 }
             spanToAMRIndex = graph.spans.map(x => Set()++x.nodeIds.map(ids.indexOf(_))) 
 
-            curLabel.text = recordNumber.toString
+            curField.text = recordNumber.toString
             wordList.listData = words
             amrList.listData = amr
             spanList.listData = spans
