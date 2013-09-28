@@ -21,12 +21,20 @@ import scala.util.parsing.combinator._
 
 case class Var(node: Node, name: String)
 
-case class Node(var id: String, name: Option[String], concept: String, var relations: List[(String, Node)], var topologicalOrdering: List[(String, Node)], var variableRelations: List[(String, Var)], var alignment: Option[Int], var spans: ArrayBuffer[Int]) {
+case class Node(var id: String, name: Option[String], concept: String, var relations: List[(String, Node)], var topologicalOrdering: List[(String, Node)], var variableRelations: List[(String, Var)], var alignment: Option[Int], var spans: ArrayBuffer[Int] /* TODO: change to something immutable (ie List) Interacts if a span gets copied from this span */) {
     def addSpan(span: Int, coRef: Boolean){
         if (coRef) {
             spans += span
         } else {
             spans.+=:(span) // prepend
+        }
+    }
+
+    def someSpan() : Option[Int] = {
+        if (spans.isEmpty) {
+            None
+        } else {
+            Some(spans(0))
         }
     }
 
@@ -144,6 +152,11 @@ case class Graph(root: Node, spans: ArrayBuffer[Span], getNodeById: Map[String, 
         for (id <- nodeIds) {
             getNodeById(id).addSpan(spans.size-1, coRef)
         }
+    }
+
+    def updateSpan(spanIndex: Int, coRef: Boolean, sentence: Array[String]) {
+        val span = spans(spanIndex)
+        updateSpan(spanIndex, span.start, span.end, span.nodeIds, coRef, sentence)
     }
 
     def makeIds() {
