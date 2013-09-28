@@ -66,7 +66,7 @@ object AlignerTool extends SimpleSwingApplication {
             } yield if(!span.coRef) {
                 "Span "+(i+1).toString+": "+span.start+"-"+span.end+"  "+span.words+" => "+span.amr
             } else {
-                "(Span "+(i+1).toString+": "+span.start+"-"+span.end+"  "+span.words+" => "+span.amr+")}"
+                "*** Span "+(i+1).toString+": "+span.start+"-"+span.end+"  "+span.words+" => "+span.amr+" ***"
             }
         var spanToAMRIndex : ArrayBuffer[Set[Int]] = graph.spans.map(x => Set()++x.nodeIds.map(ids.indexOf(_)))
         def spanToWordIndex(i: Int) : Seq[Int] = {
@@ -289,7 +289,7 @@ object AlignerTool extends SimpleSwingApplication {
                 } yield if(!span.coRef) {
                     "Span "+(i+1).toString+": "+span.start+"-"+span.end+"  "+span.words+" => "+span.amr
                 } else {
-                    "(Span "+(i+1).toString+": "+span.start+"-"+span.end+"  "+span.words+" => "+span.amr+")}"
+                    "*** Span "+(i+1).toString+": "+span.start+"-"+span.end+"  "+span.words+" => "+span.amr+" ***"
                 }
             spanToAMRIndex = graph.spans.map(x => Set()++x.nodeIds.map(ids.indexOf(_))) 
 
@@ -312,12 +312,13 @@ object AlignerTool extends SimpleSwingApplication {
         def toggleCoRef {
             if (spanSelection >= 0) {
                 graph.updateSpan(spanSelection, !graph.spans(spanSelection).coRef, words)
+                madeChanges = true
             }
             spans = for {(span, i) <- graph.spans.zipWithIndex
                 } yield if(!span.coRef) {
                     "Span "+(i+1).toString+": "+span.start+"-"+span.end+"  "+span.words+" => "+span.amr
                 } else {
-                    "(Span "+(i+1).toString+": "+span.start+"-"+span.end+"  "+span.words+" => "+span.amr+")}"
+                    "*** Span "+(i+1).toString+": "+span.start+"-"+span.end+"  "+span.words+" => "+span.amr+" ***"
                 }
             spanList.listData = spans
 
@@ -415,7 +416,7 @@ object AlignerTool extends SimpleSwingApplication {
                 } yield if(!span.coRef) {
                     "Span "+(i+1).toString+": "+span.start+"-"+span.end+"  "+span.words+" => "+span.amr
                 } else {
-                    "(Span "+(i+1).toString+": "+span.start+"-"+span.end+"  "+span.words+" => "+span.amr+")}"
+                    "*** Span "+(i+1).toString+": "+span.start+"-"+span.end+"  "+span.words+" => "+span.amr+" ***"
                 }
             spanToAMRIndex = graph.spans.map(x => Set()++x.nodeIds.map(ids.indexOf(_))) 
 
