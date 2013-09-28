@@ -57,7 +57,11 @@ object SpanLoader {
                     logger(0,"Word index = "+i.toString)
                     logger(0,"Span start = "+span.start+" Span end = "+span.end)
                 }
-                wordToSpan(i).+=:(spanIndex)   // prepend the element
+                if (!spans(spanIndex).coRef) {
+                    wordToSpan(i).+=:(spanIndex)    // prepend if not coRef
+                } else {
+                    wordToSpan(i) += spanIndex      // append if coRef
+                }
             }
         }
         return wordToSpan

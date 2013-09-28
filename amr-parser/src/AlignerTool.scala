@@ -90,56 +90,30 @@ object AlignerTool extends SimpleSwingApplication {
         /*---------------------- Color Renderers -------------------*/
         amrList.renderer = ListView.Renderer.wrap(new DefaultListCellRenderer() {
             override def getListCellRendererComponent(list: JList, value: Object, index: Int, isSelected: Boolean, cellHasFocus: Boolean) : java.awt.Component = {
-                val spanIndex = graph.getNodeById(ids(index)).span
-                if (!dynamicSelect || keypressed) {
+                val spanIndexes = graph.getNodeById(ids(index)).spans
+//                if (!dynamicSelect || keypressed) {
                     if(isSelected) {
                         setBackground(list.getSelectionBackground)
-                        spanIndex match {
-                            case None => setForeground(list.getSelectionForeground)
-                            case Some(i) => setForeground(colors(i%colors.size))
+                        spanIndexes.size match {
+                            case 0 => setForeground(list.getSelectionForeground)
+                            case _ => graph.spans(spanIndexes(0)).coRef match {
+                                          case false => setForeground(colors(spanIndexes(0)%colors.size))
+                                          case true => setForeground(list.getSelectionForeground)
+                                      }
                         }
                     } else {
                         setBackground(list.getBackground)
-                        spanIndex match {
-                            case None => setForeground(list.getForeground)
-                            case Some(i) => setForeground(colors(i%colors.size))
+                        spanIndexes.size match {
+                            case 0 => setForeground(list.getForeground)
+                                      setBackground(Color.RED)
+                            case _ => graph.spans(spanIndexes(0)).coRef match {
+                                          case false => setForeground(colors(spanIndexes(0)%colors.size))
+                                                        setBackground(list.getBackground)
+                                          case true => setForeground(list.getForeground)
+                                                       setBackground(Color.RED)
+                                      }
                         }
-                    }
-                } else {
-                if (cellHasFocus) {
-                    setBackground(list.getSelectionBackground)
-                    if (spanIndex == None) {
-                        setForeground(list.getSelectionForeground)
-                        if (!keypressed && spanSelection != -1) {
-                            spanSelection = -1
-                            amrList.repaint
-                            wordList.repaint
-                        }
-                    } else {
-                        val Some(i) = spanIndex
-                        setForeground(colors(i%colors.size))
-                        if (!keypressed && spanSelection != i) {
-                            spanSelection = i
-                            amrList.repaint     // if changed, repaint
-                            wordList.repaint
-                        }
-                    }
-                } else {
-                    if (spanIndex == None) {
-                        setBackground(Color.RED)
-                        setForeground(list.getForeground)
-                    } else {
-                        val Some(i) = spanIndex
-                        if (spanSelection == i && spanToAMRIndex(i).contains(index)) {
-                            setBackground(list.getSelectionBackground)
-                            setForeground(colors(i%colors.size))
-                        } else {
-                            setBackground(list.getBackground)
-                            setForeground(colors(i%colors.size))
-                        }
-                    }
-                }
-                }
+                    } // cut
                 setText(amr(index))
                 setFont(list.getFont)
                 return this.asInstanceOf[java.awt.Component]
@@ -153,15 +127,25 @@ object AlignerTool extends SimpleSwingApplication {
                         setBackground(list.getSelectionBackground)
                         spanIndex.size match {
                             case 0 => setForeground(list.getSelectionForeground)
-                            case _ => setForeground(colors(spanIndex(0)%colors.size))
+                            case _ => graph.spans(spanIndex(0)).coRef match {
+                                        case false => setForeground(colors(spanIndex(0)%colors.size))
+                                        case true => setForeground(Color.GRAY)
+                                      }
                         }
                     } else {
                         setBackground(list.getBackground)
                         spanIndex.size match {
                             case 0 => setForeground(list.getForeground)
-                            case 1 => setForeground(colors(spanIndex(0)%colors.size))
-                            case _ => setForeground(colors(spanIndex(0)%colors.size))
-                                      setBackground(Color.RED)
+                            case 1 => graph.spans(spanIndex(0)).coRef match {
+                                        case false => setForeground(colors(spanIndex(0)%colors.size))
+                                        case true => setForeground(Color.GRAY)
+                                      }
+                            case _ => graph.spans(spanIndex(1)).coRef match {
+                                        case false => setForeground(list.getForeground)
+                                                      setBackground(Color.RED)
+                                        case true => setForeground(colors(spanIndex(0)%colors.size))
+                                                     setBackground(list.getBackground)
+                                      }
                         }
                     }
                 } else {
@@ -290,9 +274,9 @@ object AlignerTool extends SimpleSwingApplication {
                 val end = wordList.selection.indices.max + 1
                 val nodeIds = amrList.selection.indices.map(x => ids(x)).toList.sorted
                 if (spanIndex < graph.spans.size) { // we are editing an existing span
-                    graph.updateSpan(spanIndex, start, end, nodeIds, words)
+                    graph.updateSpan(spanIndex, start, end, nodeIds, graph.spans(spanIndex).coRef, words)
                 } else {                            // we are adding a new span
-                    graph.addSpan(start, end, nodeIds, words)
+                    graph.addSpan(start, end, nodeIds, false , words)
                     assert(spanIndex == graph.spans.size - 1, "Sanity check that we correctly added the span")
                 }
             }
@@ -316,6 +300,15 @@ object AlignerTool extends SimpleSwingApplication {
             case KeyReleased(_, Key.Control, _, _) => onKeyReleased
         }
 
+        def onSpace {
+            if (spanSelection >= 0) {
+                graph.updateSpan(spanSelection, !graph.spans(spanSelection).coRef, words)
+            }
+            amrList.repaint
+            wordList.repaint
+            spanList.repaint
+        }
+
         val lists = Array(amrList, wordList)
         var listIgnore = Array(false, false)
         var listSelection = Array(Set(-1), Set(-1))
@@ -328,15 +321,15 @@ object AlignerTool extends SimpleSwingApplication {
                 logger(1,"Indices = "+indices.toString)
                 logger(1,"Selection = "+listSelection(i))
                 logger(1,"Ignore = "+listIgnore(i).toString)
-                if (!keypressed) {
-                    if (!listIgnore(i)) {
+                if (!keypressed) {  // key press means we are editing the span, so don't change spans
+                    if (!listIgnore(i)) {   // ignore if this event came from a list.selectIndices (i.e. not mouse click)
                         if (indices.size == 1) {
                             //val nodeIndex : Int = indices.toList(0)
                             var spanIndex : Option[Int] = None
-                            if (i == 0) {
+                            if (i == 0) { // amrList
                                 val nodeIndex : Int = indices.toList(0)
-                                spanIndex = graph.getNodeById(ids(nodeIndex)).span
-                            } else {
+                                spanIndex = graph.getNodeById(ids(nodeIndex)).someSpan
+                            } else {      // wordList
                                 val wordIndex : Int = indices.toList(0)
                                 val spanIndexArray = wordIndexToSpan(wordIndex)
                                 if (spanIndexArray.size > 0) {
@@ -512,4 +505,41 @@ object AlignerTool extends SimpleSwingApplication {
         })
     }
 }
+
+
+/*                } else {
+                if (cellHasFocus) {
+                    setBackground(list.getSelectionBackground)
+                    if (spanIndex == None) {
+                        setForeground(list.getSelectionForeground)
+                        if (!keypressed && spanSelection != -1) {
+                            spanSelection = -1
+                            amrList.repaint
+                            wordList.repaint
+                        }
+                    } else {
+                        val Some(i) = spanIndex
+                        setForeground(colors(i%colors.size))
+                        if (!keypressed && spanSelection != i) {
+                            spanSelection = i
+                            amrList.repaint     // if changed, repaint
+                            wordList.repaint
+                        }
+                    }
+                } else {
+                    if (spanIndex == None) {
+                        setBackground(Color.RED)
+                        setForeground(list.getForeground)
+                    } else {
+                        val Some(i) = spanIndex
+                        if (spanSelection == i && spanToAMRIndex(i).contains(index)) {
+                            setBackground(list.getSelectionBackground)
+                            setForeground(colors(i%colors.size))
+                        } else {
+                            setBackground(list.getBackground)
+                            setForeground(colors(i%colors.size))
+                        }
+                    }
+                }
+                } */
 
