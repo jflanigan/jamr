@@ -26,6 +26,10 @@ case class Node(var id: String, name: Option[String], concept: String, var relat
         if (coRef) {
             spans += span
         } else {
+            if (spans.size > 0) {
+                println("WARNING ADDING ANOTHER SPAN TO NODE "+id)
+                println(spans.toString+" + "+span.toString)
+            }
             spans.+=:(span) // prepend
         }
     }
@@ -111,7 +115,8 @@ case class Node(var id: String, name: Option[String], concept: String, var relat
 
 case class Graph(root: Node, spans: ArrayBuffer[Span], getNodeById: Map[String, Node], getNodeByName: Map[String, Node]) {
     def loadSpans(spanStr: String, sentence: Array[String]) = {
-        spans.clear
+        assert(spans.size == 0, "This code does not support loading new spans")
+        //spans.clear
         val SpanRegex = """([*]?)([0-9]+)-([0-9]+)\|(.*)""".r
         for (spanStr <- spanStr.split(" ")) {
             try {
@@ -144,13 +149,16 @@ case class Graph(root: Node, spans: ArrayBuffer[Span], getNodeById: Map[String, 
     }
 
     def updateSpan(spanIndex: Int, start: Int, end: Int, nodeIds: List[String], coRef: Boolean, sentence: Array[String]) {
+        println("new nodes = "+nodeIds.toString)
         for (id <- spans(spanIndex).nodeIds) {
+            println(getNodeById(id).spans)
             getNodeById(id).spans -= spanIndex
         }
         val span = Span(start, end, nodeIds, sentence.slice(start, end).mkString(" "), SpanLoader.getAmr(nodeIds, this), coRef)
         spans(spanIndex) = span
         for (id <- nodeIds) {
-            getNodeById(id).addSpan(spans.size-1, coRef)
+            getNodeById(id).addSpan(spanIndex, coRef)
+            println(getNodeById(id).spans)
         }
     }
 
