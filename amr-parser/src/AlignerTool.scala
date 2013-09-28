@@ -269,6 +269,7 @@ object AlignerTool extends SimpleSwingApplication {
         def onKeyPressed() {
             logger(1,"Key pressed")
             keypressed = true
+            println("spanSelection = "+spanSelection.toString)
             if (spanSelection >= 0) {
                 spanEdit = Some(spanSelection)
             } else {
@@ -287,6 +288,7 @@ object AlignerTool extends SimpleSwingApplication {
                 val start = wordList.selection.indices.min
                 val end = wordList.selection.indices.max + 1
                 val nodeIds = amrList.selection.indices.map(x => ids(x)).toList.sorted
+                println("Adjusting span = "+spanIndex)
                 if (spanIndex < graph.spans.size) { // we are editing an existing span
                     graph.updateSpan(spanIndex, start, end, nodeIds, graph.spans(spanIndex).coRef, words)
                 } else {                            // we are adding a new span
@@ -418,7 +420,9 @@ object AlignerTool extends SimpleSwingApplication {
 
             words = corpus(recordNumber).sentence
             graph = corpus(recordNumber).graph
-            graph.loadSpans(corpus(recordNumber).spans(annotationIndex), words)
+            if (graph.spans.size == 0) {
+                graph.loadSpans(corpus(recordNumber).spans(annotationIndex), words)
+            }
             amr = graph.root.prettyString(detail = 1, pretty = true).split("\n")
             ids = graph.root.prettyString(detail = 2, pretty = true).split("\n").map(x => {val ID(id) = x; id})
             wordIndexToSpan = SpanLoader.toWordMap(graph.spans, words)
