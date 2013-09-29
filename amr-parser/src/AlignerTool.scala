@@ -42,7 +42,7 @@ import Corpus._
 
 object AlignerTool extends SimpleSwingApplication {
     val usage = """Usage: scala -classpath . edu.cmu.lti.nlp.amr.AlignerTool filename"""
-    val version = "v.02"
+    val version = "v.03"
     type OptionMap = Map[Symbol, Any]
 
     val colors = Array(Color.RED, Color.GREEN, Color.MAGENTA, Color.ORANGE, Color.PINK, Color.CYAN, Color.BLUE )
@@ -58,9 +58,10 @@ object AlignerTool extends SimpleSwingApplication {
         var words = corpus(recordNumber).sentence
         var graph = corpus(recordNumber).graph
         graph.loadSpans(corpus(recordNumber).spans(annotationIndex), words)
-        var amr = graph.root.prettyString(detail = 1, pretty = true).split("\n")
-        val ID = """.*\[([^\]]+)\].*""".r
-        var ids = graph.root.prettyString(detail = 2, pretty = true).split("\n").map(x => {val ID(id) = x; id})
+        val idRegex = """\[[0-9.]*\] ?""".r
+        var amr = graph.root.prettyString(detail = 2, pretty = true).split("\n").map(x => idRegex.replaceFirstIn(x,""))
+        val IDExtractor = """.*\[([^\]]+)\].*""".r
+        var ids = graph.root.prettyString(detail = 2, pretty = true).split("\n").map(x => {val IDExtractor(id) = x; id})
         var wordIndexToSpan = SpanLoader.toWordMap(graph.spans, words)
         var spans = for {(span, i) <- graph.spans.zipWithIndex
             } yield if(!span.coRef) {
@@ -303,7 +304,9 @@ object AlignerTool extends SimpleSwingApplication {
                 } else {
                     "*** Span "+(i+1).toString+": "+span.start+"-"+span.end+"  "+span.words+" => "+span.amr+" ***"
                 }
-            spanToAMRIndex = graph.spans.map(x => Set()++x.nodeIds.map(ids.indexOf(_))) 
+            spanToAMRIndex = graph.spans.map(x => Set()++x.nodeIds.map(ids.indexOf(_)))
+
+            spanSelection = spanEdit.getOrElse(-1)
 
             spanEdit = None
             spanList.listData = spans
@@ -423,8 +426,8 @@ object AlignerTool extends SimpleSwingApplication {
             if (graph.spans.size == 0) {
                 graph.loadSpans(corpus(recordNumber).spans(annotationIndex), words)
             }
-            amr = graph.root.prettyString(detail = 1, pretty = true).split("\n")
-            ids = graph.root.prettyString(detail = 2, pretty = true).split("\n").map(x => {val ID(id) = x; id})
+            amr = graph.root.prettyString(detail = 2, pretty = true).split("\n").map(x => idRegex.replaceFirstIn(x,""))
+            ids = graph.root.prettyString(detail = 2, pretty = true).split("\n").map(x => {val IDExtractor(id) = x; id})
             wordIndexToSpan = SpanLoader.toWordMap(graph.spans, words)
             spans = for {(span, i) <- graph.spans.zipWithIndex
                 } yield if(!span.coRef) {
