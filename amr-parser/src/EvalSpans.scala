@@ -21,7 +21,7 @@ import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 import scala.util.parsing.combinator._
 
-object Aligner {
+object EvalSpans {
 
     val usage = """Usage: scala -classpath . edu.cmu.lti.nlp.amr.EvalSpans < amr_file"""
     type OptionMap = Map[Symbol, Any]
@@ -52,6 +52,7 @@ object Aligner {
         val options = parseOptions(Map(),args.toList)
         if (options.contains('help)) { println(usage); sys.exit(1) }
 
+        verbosity = 0
         if (options.contains('verbosity)) {
             verbosity = options('verbosity).asInstanceOf[Int]
         }
@@ -71,12 +72,19 @@ object Aligner {
                 val Alignments(annotatorStr) = annotatorStrs(annotatorStrs.size-1)
                 val aligner = alignerStr.split(" ").filterNot(_.matches(""))
                 val annotator = annotatorStr.split(" ").filterNot(_.matches(""))
+                logger(2,"aligner = "+aligner.toList.toString)
+                logger(2,"annotator = "+annotator.toList.toString)
                 aligner_total += aligner.size
                 gold_total += annotator.size
-                correct += annotator.diff(aligner)
+                logger(2,"diff = "+annotator.distinct.diff(annotator.diff(aligner)).toList.toString)
+                correct += annotator.distinct.diff(annotator.diff(aligner)).size
             }
             
         }
+
+        logger(1,"correct = "+correct.toString)
+        logger(1,"aligner_total = "+aligner_total.toString)
+        logger(1,"gold_total = "+gold_total.toString)
 
         val p = correct/aligner_total
         val r = correct/gold_total
