@@ -83,8 +83,8 @@ object EvalSpans {
                     } else {
                         goldStrs(0)
                     }
-                val aligner = alignerStr.split(" ").filterNot(_.matches(""))
-                val annotator = annotatorStr.split(" ").filterNot(_.matches(""))
+                val aligner = alignerStr.split(" ").filterNot(_.matches("")).filterNot(_.matches("[*].*"))
+                val annotator = annotatorStr.split(" ").filterNot(_.matches("")).filterNot(_.matches("[*].*"))
                 logger(2,"aligner = "+aligner.toList.toString)
                 logger(2,"annotator = "+annotator.toList.toString)
                 aligner_total += aligner.size
