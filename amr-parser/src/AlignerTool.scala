@@ -205,7 +205,7 @@ object AlignerTool extends SimpleSwingApplication {
         curField.maximumSize = new java.awt.Dimension(30,200)
         //curField.peer.setSize(5,5)
         val prevButton = new Button { text = "Prev" }
-        contents = new BoxPanel(Orientation.Vertical) {
+        val mainPanel = new BoxPanel(Orientation.Vertical) {
             contents += annotationList
             contents += new BoxPanel(Orientation.Horizontal) {
                 contents += prevButton
@@ -220,6 +220,7 @@ object AlignerTool extends SimpleSwingApplication {
                 }
             }
         }
+        contents = mainPanel
 
         /*------------------------- Listeners --------------------------*/
         listenTo(nextButton)
@@ -266,6 +267,9 @@ object AlignerTool extends SimpleSwingApplication {
         listenTo(wordList.keys)
         listenTo(spanList.keys)
         listenTo(annotationList.keys)
+        listenTo(mainPanel.keys)
+
+        spanList.requestFocus
 
         def onKeyPressed() {
             logger(1,"Key pressed")
@@ -322,6 +326,7 @@ object AlignerTool extends SimpleSwingApplication {
             case KeyPressed(_, Key.Control, _, _) => onKeyPressed
             case KeyReleased(_, Key.Control, _, _) => onKeyReleased
             case KeyReleased(_, Key.Space, _, _) => toggleCoRef
+            case KeyPressed(_, Key.S, _, _) => {println("Here."); madeChanges = true}
         }
 
         def toggleCoRef {
@@ -452,6 +457,7 @@ object AlignerTool extends SimpleSwingApplication {
             }
 
             spanList.selectIndices(0)
+            spanList.requestFocus
         }
 
         /*------------------------ Save Edits ---------------------*/
