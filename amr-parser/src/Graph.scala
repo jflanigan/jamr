@@ -188,9 +188,9 @@ case class Graph(root: Node, spans: ArrayBuffer[Span], getNodeById: Map[String, 
         updateSpan(spanIndex, span.start, span.end, span.nodeIds, coRef, sentence)
     }
 
-    def addAllSpans(f: (Node) => List[Span]) {
+    def addAllSpans(f: AlignSpans2.SpanAligner) {
         def add(node: Node) {
-            for (span <- f(node)) {
+            for (span <- f.getSpans(node)) {
                 if(span.coRef || !overlap(span)) {
                     addSpan(span)
                 }
