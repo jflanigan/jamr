@@ -22,6 +22,12 @@ import scala.util.parsing.combinator._
 case class Var(node: Node, name: String)
 
 case class Node(var id: String, name: Option[String], concept: String, var relations: List[(String, Node)], var topologicalOrdering: List[(String, Node)], var variableRelations: List[(String, Var)], var alignment: Option[Int], var spans: ArrayBuffer[Int] /* TODO: change to something immutable (ie List) Interacts if a span gets copied from this span */) {
+
+    def children: List[(String, Node)] = topologicalOrdering    // property Ch 18.2 stairway book
+    def children_= (c: List[(String, Node)]) {
+        topologicalOrdering = c
+    }
+
     def addSpan(span: Int, coRef: Boolean){
         if (coRef) {
             spans += span
@@ -155,6 +161,14 @@ case class Graph(root: Node, spans: ArrayBuffer[Span], getNodeById: Map[String, 
         }
     }
 
+    def overlap(span: Span) : Boolean = {
+        var overlap = false
+        for (id <- span.nodeIds) {
+            overlap = (getNodeById(id).spans.map(x => !spans(x).coRef) :\ overlap)(_ || _)
+        }
+        return overlap
+    }
+
     def updateSpan(spanIndex: Int, start: Int, end: Int, nodeIds: List[String], coRef: Boolean, sentence: Array[String]) {
         println("new nodes = "+nodeIds.toString)
         for (id <- spans(spanIndex).nodeIds) {
@@ -176,7 +190,12 @@ case class Graph(root: Node, spans: ArrayBuffer[Span], getNodeById: Map[String, 
 
     def addAllSpans(f: (Node) => List[Span]) {
         def add(node: Node) {
-            f(node).map(addSpan(_))
+            for (span <- f(node)) {
+                if(span.coRef || !overlap(span)) {
+                    addSpan(span)
+                }
+            }
+            //f(node).map(addSpan(_))
         }
         doRecursive(root, add)
     }
