@@ -39,6 +39,8 @@ object Aligner {
             //          parseOptions(map ++ Map('only -> true), tail)
             case "-h" :: value :: tail =>
                       parseOptions(map ++ Map('help -> value.toInt), tail)
+            case "-2" :: tail =>
+                      parseOptions(map ++ Map('aligner2 -> true), tail)
             case "-v" :: value :: tail =>
                       parseOptions(map ++ Map('verbosity -> value.toInt), tail)
              //case string :: opt2 :: tail if isSwitch(opt2) => 
@@ -57,6 +59,11 @@ object Aligner {
             verbosity = options('verbosity).asInstanceOf[Int]
         }
 
+        var aligner2 = false
+        if (options.contains('aligner2)) {
+            aligner2 = true
+        }
+
         val sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
         val Block = """((?:\n|.)*)\n(\((?:\n|.)*)""".r  // (?: ) is non-capturing group
                                                         // and . does not match \n
@@ -71,7 +78,11 @@ object Aligner {
                 val extras = Corpus.getUlfString(extrastr)
                 val tokenized = extras("::tok").split(" ")
                 val wordAlignments = AlignWords.alignWords(tokenized, amr)
-                val spanAlignments = AlignSpans.alignSpans(tokenized, amr, wordAlignments)
+                val spanAlignments = if (aligner2) {
+                        AlignSpans2.align(tokenized, amr)
+                    } else {
+                        AlignSpans.alignSpans(tokenized, amr, wordAlignments)
+                    }
                 AlignSpans.logUnalignedConcepts(amr.root)
 
                 val spans = amr.spans
