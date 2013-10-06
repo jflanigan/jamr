@@ -35,16 +35,23 @@ object AlignSpans2 {
     }
 
     def namedEntity(sentence: Array[String], lcSentence: String, graph: Graph)(node: Node) : List[Span] = {
+        logger(3, "Processing concept: " + node.concept)
+        logger(3, "lcSentence = " + lcSentence)
         val entityRegex = """(name)""".r
         return node match {
             case Node(_,_,entityRegex(entity),_,children,_,_,_) => 
                 if (children.exists(_._1 == ":op1")) {
+                    logger(3, "Has an :op1 child")
                     var spanList = List[Span]()
                     val childNodes = for {(relation, node) <- children 
                                      if relation.matches(":op.*")
-                                } yield node
-                    val regex = childNodes.map(x => Pattern.quote(x.concept.toLowerCase)).mkString("[^a-zA-Z]*").r
+                                } yield node //(relation, node) ).sortWith((x,y) => x._1 < y._1).map(x => x.2)
+                    logger(3, "childNodes = " + childNodes.map(_.concept).toList.toString)
+                    val regex = childNodes.map(x => Pattern.quote(getConcept(x.concept).toLowerCase)).mkString("[^a-zA-Z]*").r
+                    logger(3, "regex = " + childNodes.map(x => Pattern.quote(getConcept(x.concept).toLowerCase)).mkString("[^a-zA-Z]*"))
                     var matchList = regex.findAllMatchIn(lcSentence).toList
+                    logger(3, "matchList = " + matchList)
+                    logger(3, "Returning "+matchList.zipWithIndex.map(x => matchToSpan(x._1, node, childNodes, sentence, lcSentence, graph, x._2 > 0)).toString)
                     matchList.zipWithIndex.map(x => matchToSpan(x._1, node, childNodes, sentence, lcSentence, graph, x._2 > 0))
                 } else {
                     List()  // TODO: should still return something (first :mod child?)
@@ -73,6 +80,16 @@ object AlignSpans2 {
         return tabSentence.view.slice(0,charIndex).count(_ == '\t') // views (p.552 stairway book)
     }
 
+    private val ConceptExtractor = """^"?(.+?)-?[0-9]*"?$""".r // works except for numbers
+
+    private def getConcept(conceptStr: String) : String = {
+        var ConceptExtractor(concept) = conceptStr
+        if (conceptStr.matches("""^[0-9.]*$""")) {
+            concept = conceptStr
+        }
+        return concept
+    }
+
     def alignWords(sentence: Array[String], graph: Graph) : Array[Option[Node]] = {
         val size = sentence.size
         val wordAlignments = new Array[Option[Node]](size)
@@ -92,7 +109,7 @@ object AlignSpans2 {
     //private val ConceptExtractor = """([a-zA-Z0-9.-]+)\|(?:"([^ ]+)")""".r
     //private val ConceptExtractor = """"?([a-zA-Z0-9.-]+)"?""".r
     //private val ConceptExtractor = """^"?(.+?)(?:-[0-9]+)"?$""".r
-    private val ConceptExtractor = """^"?(.+?)-?[0-9]*"?$""".r // works except for numbers
+    //private val ConceptExtractor = """^"?(.+?)-?[0-9]*"?$""".r // works except for numbers
     def alignWords(stemmedSentence: Array[List[String]], node: Node, alignments: Array[Option[Node]]) {
         logger(3,"alignWords: node.concept = "+node.concept)
         var ConceptExtractor(concept) = node.concept
