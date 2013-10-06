@@ -24,11 +24,10 @@ import scala.util.parsing.combinator._
 object AlignSpans2 {
 
     def align(sentence: Array[String], graph: Graph) {
-        val lcSentence = sentence.mkString("\t").toLowerCase
 
         val namedEntity = new SpanAligner(sentence, graph) {
-            tabSentence = lcSentence
             concept = "name"
+            tabSentence = sentence.mkString("\t").toLowerCase
             nodes = node => {
                 if (node.children.exists(_._1.matches(":op.*"))) {
                     ("", node) :: node.children.filter(_._1.matches(":op.*"))
@@ -40,8 +39,41 @@ object AlignSpans2 {
             coRefs = true
         }
 
-        //graph.addAllSpans(dateEntity(sentence, graph))
+        val dateEntity = new SpanAligner(sentence, graph) {
+            concept = "date-entity"
+            tabSentence = replaceAll(sentence.mkString("\t").toLowerCase,
+                Map("January" -> "1",
+                    "February" -> "2",
+                    "March" -> "3",
+                    "April" -> "4",
+                    "May" -> "5",
+                    "June" -> "6",
+                    "July" -> "7",
+                    "August" -> "8",
+                    "September" -> "9",
+                    "October" -> "10",
+                    "November" -> "11",
+                    "December" -> "12",
+                    "[^0-9a-zA-Z\t]" -> ""))
+            nodes = node => {
+                if (node.children.exists(_._1.matches(":year|:month|:day"))) {
+                    ("", node) :: node.children.filter(_._1.matches(":year|:month|:day"))
+                } else {
+                    List()
+                }
+            }
+            words = nodes => {
+                val concepts = nodes.map(x => (x._1, x._2.concept))
+                val year = concepts.find(_._1 == ":year").getOrElse(("",""))._2
+                val month = concepts.find(_._1 == ":month").getOrElse(("",""))._2
+                val day = concepts.find(_._1 == ":day").getOrElse(("",""))._2
+                List(year, "0*"+month, "0*"+day).permutations.map(_.mkString("\t*")).mkString("|").r
+            }
+            coRefs = true
+        }
+
         graph.addAllSpans(namedEntity)
+        graph.addAllSpans(dateEntity)
         //dateEntities(sentence, graph)
         //namedEntities(sentence, graph)
         //specialConcepts(sentence, graph) // un, in, etc
@@ -74,9 +106,12 @@ object AlignSpans2 {
                 case Node(_,_,c,_,_,_,_,_) if (concept.r.unapplySeq(getConcept(c)) != None) => {
                     logger(2, "Matched concept regex: " + concept)
                     val allNodes = nodes(node)
+                    logger(2, "tabSentence: " + tabSentence)
                     if (allNodes.size > 0) {
                         val regex = words(allNodes)
+                        logger(2, "regex: " + regex)
                         val matchList = regex.findAllMatchIn(tabSentence).toList
+                        logger(2, "matchList: " + matchList)
                         matchList.zipWithIndex.map(x => matchToSpan(x._1, allNodes.map(_._2.id), sentence, tabSentence, graph, x._2 > 0))
                     } else {
                         List()
@@ -92,7 +127,7 @@ object AlignSpans2 {
         // note: tabSentence does not have to be sentence.mkString('\t') (it could be lowercased, for example)
         assert(nodeIds.size > 0, "Error: matchToSpan passed nodeIds with zero length")
         val start = getIndex(tabSentence, m.start)
-        val end = getIndex(tabSentence, m.end+1)
+        val end = getIndex(tabSentence, m.end)+1
         val amr = SpanLoader.getAmr(nodeIds, graph)
         val words = sentence.slice(start, end).mkString(" ")
         val span = if (!coRef) {
@@ -116,6 +151,10 @@ object AlignSpans2 {
             concept = conceptStr
         }
         return concept
+    }
+
+    private def replaceAll(string: String, map: Map[String, String]) : String = {
+        return (map :\ string)((keyValue, s) => s.replaceAll(keyValue._1, keyValue._2))
     }
 
     // TODO: everything below can be deleted
