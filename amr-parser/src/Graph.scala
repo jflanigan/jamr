@@ -148,6 +148,13 @@ case class Graph(root: Node, spans: ArrayBuffer[Span], getNodeById: Map[String, 
         }
     }
 
+    def addSpan(span: Span) {
+        spans += span
+        for (id <- span.nodeIds) {
+            getNodeById(id).addSpan(spans.size-1, span.coRef)
+        }
+    }
+
     def updateSpan(spanIndex: Int, start: Int, end: Int, nodeIds: List[String], coRef: Boolean, sentence: Array[String]) {
         println("new nodes = "+nodeIds.toString)
         for (id <- spans(spanIndex).nodeIds) {
@@ -166,6 +173,27 @@ case class Graph(root: Node, spans: ArrayBuffer[Span], getNodeById: Map[String, 
         val span = spans(spanIndex)
         updateSpan(spanIndex, span.start, span.end, span.nodeIds, coRef, sentence)
     }
+
+    def addAllSpans(f: (Node) => List[Span]) {
+        def add(node: Node) {
+            f(node).map(addSpan(_))
+        }
+        doRecursive(root, add)
+    }
+
+    def doRecursive(node: Node, f: (Node) => Unit) {
+        f(node)
+        for ((_,child) <- node.topologicalOrdering) {
+            doRecursive(child, f)
+        }
+    }
+
+/* Very cool recursive function TODO: use this one instead
+    def doRecursive(parentMessage: T, node: Node, f: (Node, T) => T, g: List[R] => R ) : R = {
+        val message = f(parentMessage, node)
+        return g(node.topologicalOrdering.map(x => doRecursive(message, x.2, f, g)).toList)
+    }
+*/
 
     def makeIds() {
         // Sets the node.id field for every node in the graph according to the topologicalOrdering
