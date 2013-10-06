@@ -24,16 +24,29 @@ import scala.util.parsing.combinator._
 object AlignSpans2 {
 
     def align(sentence: Array[String], graph: Graph) {
-        val lcSentence = sentence.map(_.toLowerCase).mkString("\t")
+        val lcSentence = sentence.mkString("\t").toLowerCase
+
+        val namedEntity = new SpanAligner(sentence, graph) {
+            tabSentence = lcSentence
+            concept = "name"
+            nodes = node => {
+                if (node.children.exists(_._1.matches(":op.*"))) {
+                    ("", node) :: node.children.filter(_._1.matches(":op.*"))
+                } else {
+                    List()
+                }
+            }
+            words = nodes => { nodes.tail.map(x => Pattern.quote(getConcept(x._2.concept).toLowerCase)).mkString("[^a-zA-Z]*").r }
+            coRefs = true
+        }
+
         //graph.addAllSpans(dateEntity(sentence, graph))
-        graph.addAllSpans(namedEntity(sentence, graph))
+        graph.addAllSpans(namedEntity)
         //dateEntities(sentence, graph)
         //namedEntities(sentence, graph)
         //specialConcepts(sentence, graph) // un, in, etc
         //singleConcepts(sentence, graph)
         //learnedConcepts(sentence, graph)
-    }
-
 
 //    spanEntity("""(date-entity)""".r, (node, children) => node :: children.map(_.2), (node, children) => children.map(x => Pattern.quote(getConcept(x._2.concept).toLowerCase)).mkString("[^a-zA-Z]*"))
 
@@ -44,87 +57,35 @@ object AlignSpans2 {
 
     // newSpan(lcSentence, "name", rep("id.*".r), 
 
-    def namedEntity(sentence: Array[String], graph: Graph) : (Node) => List[Span] = {
-        val lcSentence = sentence.mkString("\t").toLowerCase
-        return newSpan(sentence = sentence, tabSentence = lcSentence, graph = graph,
-            concept = "name",
-            nodes = node => {
-                if (node.children.exists(_._1.matches(":op.*"))) {
-                    ("", node) :: node.children.filter(_._1.matches(":op.*"))
-                } else {
-                    List()
-                }
-            },
-            words = nodes => { nodes.tail.map(x => Pattern.quote(getConcept(x._2.concept).toLowerCase)).mkString("[^a-zA-Z]*").r },
-            coRefs = true)_
     }
 
+    class SpanAligner(val sentence: Array[String],
+                      val graph: Graph) {
 
-/*
-    def dateEntity(sentence: Array[String], graph: Graph) : (Node) => List[Span] = {
-        val lcSentence = 
-        return newSpan(sentence, lcSentence, graph, "name".r,
-            (node, children) => {
-                if (children.exists(_._1.matches(":op.*"))) {
-                    ("", node) :: children.filter(_._1.matches(":op.*"))
-                } else {
-                    List()
-                }
-            },
-            nodes => { nodes.tail.map(x => Pattern.quote(getConcept(x._2.concept).toLowerCase)).mkString("[^a-zA-Z]*").r },
-            coRefs = true)_
-    } */
+        var tabSentence: String = ""
+        var concept: String = ""
+        var nodes: Node => List[(String, Node)] = x => List()   // function that returns the nodes
+        var words: (List[(String,Node)]) => Regex = x => "".r   // function that returns the words
+        var coRefs: Boolean = false
 
-    def newSpan(sentence: Array[String],
-                tabSentence: String,
-                graph: Graph,
-                concept: String,
-                nodes: Node => List[(String, Node)], // function that returns the nodes
-                words: (List[(String,Node)]) => Regex,                    // function that returns the words
-                coRefs: Boolean = true)(node: Node) : List[Span] = {
-        logger(2, "Processing node: " + node.concept)
-        return node match {
-            case Node(_,_,c,_,_,_,_,_) if (concept.r.unapplySeq(getConcept(c)) != None) => {
-                logger(2, "Matched concept regex: " + concept)
-                val allNodes = nodes(node)
-                if (allNodes.size > 0) {
-                    val regex = words(allNodes)
-                    val matchList = regex.findAllMatchIn(tabSentence).toList
-                    matchList.zipWithIndex.map(x => matchToSpan(x._1, allNodes.map(_._2.id), sentence, tabSentence, graph, x._2 > 0))
-                } else {
-                    List()
+        def getSpans(node: Node) : List[Span] = {
+            logger(2, "Processing node: " + node.concept)
+            return node match {
+                case Node(_,_,c,_,_,_,_,_) if (concept.r.unapplySeq(getConcept(c)) != None) => {
+                    logger(2, "Matched concept regex: " + concept)
+                    val allNodes = nodes(node)
+                    if (allNodes.size > 0) {
+                        val regex = words(allNodes)
+                        val matchList = regex.findAllMatchIn(tabSentence).toList
+                        matchList.zipWithIndex.map(x => matchToSpan(x._1, allNodes.map(_._2.id), sentence, tabSentence, graph, x._2 > 0))
+                    } else {
+                        List()
+                    }
                 }
+            case _ => List()
             }
-            case _ => List()
         }
     }
-
-/*
-    def namedEntity(sentence: Array[String], lcSentence: String, graph: Graph)(node: Node) : List[Span] = {
-        logger(3, "Processing concept: " + node.concept)
-        logger(3, "lcSentence = " + lcSentence)
-        val entityRegex = """(name)""".r
-        return node match {
-            case Node(_,_,entityRegex(entity),_,children,_,_,_) => 
-                if (children.exists(_._1 == ":op1")) {
-                    logger(3, "Has an :op1 child")
-                    var spanList = List[Span]()
-                    val childNodes = for {(relation, node) <- children 
-                                     if relation.matches(":op.*")
-                                } yield node //(relation, node) ).sortWith((x,y) => x._1 < y._1).map(x => x.2)
-                    logger(3, "childNodes = " + childNodes.map(_.concept).toList.toString)
-                    val regex = childNodes.map(x => Pattern.quote(getConcept(x.concept).toLowerCase)).mkString("[^a-zA-Z]*").r
-                    logger(3, "regex = " + childNodes.map(x => Pattern.quote(getConcept(x.concept).toLowerCase)).mkString("[^a-zA-Z]*"))
-                    var matchList = regex.findAllMatchIn(lcSentence).toList
-                    logger(3, "matchList = " + matchList)
-                    logger(3, "Returning "+matchList.zipWithIndex.map(x => matchToSpan(x._1, node, childNodes, sentence, lcSentence, graph, x._2 > 0)).toString)
-                    matchList.zipWithIndex.map(x => matchToSpan(x._1, node, childNodes, sentence, lcSentence, graph, x._2 > 0))
-                } else {
-                    List()  // TODO: should still return something (first :mod child?)
-                }
-            case _ => List()
-        }
-    } */
 
     private def matchToSpan(m: Regex.Match, nodeIds: List[String], sentence: Array[String], tabSentence: String, graph: Graph, coRef: Boolean) : Span = {
         // m is a match object which is a match in tabSentence (tabSentence = sentence.mkString('\t'))
@@ -143,25 +104,6 @@ object AlignSpans2 {
         return span
     }
 
-/*
-    private def matchToSpan(m: Regex.Match, nodes: List[Node], sentence: Array[String], tabSentence: String, graph: Graph, coRef: Boolean) : Span = {
-        // m is a match object which is a match in tabSentence (tabSentence = sentence.mkString('\t'))
-        // note: tabSentence does not have to be sentence.mkString('\t') (it could be lowercased, for example)
-        val node = nodes(0)
-        val childNodes = nodes.tail
-        val start = getIndex(tabSentence, m.start)
-        val end = getIndex(tabSentence, m.end+1)
-        val nodeIds : List[String] = node.id :: childNodes.map(_.id)
-        val amr = SpanLoader.getAmr(nodeIds, graph)
-        val words = sentence.slice(start, end).mkString(" ")
-        val span = if (!coRef) {
-                Span(start, end, nodeIds, words, amr, coRef)
-            } else {
-                Span(start, end, List(node.id), words, SpanLoader.getAmr(List(node.id), graph), coRef)
-            }
-        return span
-    } */
-
     private def getIndex(tabSentence: String, charIndex : Int) : Int = {
         return tabSentence.view.slice(0,charIndex).count(_ == '\t') // views (p.552 stairway book)
     }
@@ -175,6 +117,8 @@ object AlignSpans2 {
         }
         return concept
     }
+
+    // TODO: everything below can be deleted
 
     def alignWords(sentence: Array[String], graph: Graph) : Array[Option[Node]] = {
         val size = sentence.size
