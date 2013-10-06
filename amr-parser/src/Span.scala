@@ -88,6 +88,7 @@ object SpanLoader {
     }
 
     private def getAmr(nodes: List[String], graph: Graph, myId: String) : (Node, List[String]) = {
+        // TODO: maybe this function does not actually need graph
         val node = try {
             graph.getNodeById(nodes(0))
         } catch {
