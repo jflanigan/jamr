@@ -42,51 +42,6 @@ object AlignSpans2 {
             coRefs = true
         }
 
-        val unalignedEntity = new SpanUpdater(sentence, graph) {
-            concept = ".*"
-            nodes = node => {
-                if (node.children.exists(_._1.matches(":name"))) {
-                    try {
-                        List(("", node) :: graph.spans(node.children.filter(_._1.matches(":name"))(0)._2.spans(0)).nodeIds.map(x => ("", graph.getNodeById(x))))
-                    } catch { case e : Throwable => List() }
-                } else {
-                    List()
-                }
-            }
-            spanIndex = nodes => nodes.map(x => x(1)._2.spans.filter(!graph.spans(_).coRef)(0)) // 2nd node of each span
-            unalignedOnly = true
-        }
-
-        val quantity = new SpanUpdater(sentence, graph) {
-            concept = ".*-quantity"
-            nodes = node => {
-                if (node.children.exists(_._1.matches(":unit"))) {
-                    try {
-                        List(("", node) :: graph.spans(node.children.filter(_._1.matches(":unit"))(0)._2.spans(0)).nodeIds.map(x => ("", graph.getNodeById(x))))
-                    } catch { case e : Throwable => List() }
-                } else {
-                    List()
-                }
-            }
-            spanIndex = nodes => nodes.map(x => x(1)._2.spans.filter(!graph.spans(_).coRef)(0)) // 2nd node of each span
-            unalignedOnly = true
-        }
-
-        val argOf = new SpanUpdater(sentence, graph) {
-            concept = "person|thing"
-            nodes = node => {
-                if (node.children.exists(_._1.matches(":ARG.*-of"))) {
-                    try {
-                        List(("", node) :: graph.spans(node.children.filter(_._1.matches(":ARG.*-of"))(0)._2.spans(0)).nodeIds.map(x => ("", graph.getNodeById(x))))
-                    } catch { case e : Throwable => List() }
-                } else {
-                    List()
-                }
-            }
-            spanIndex = nodes => nodes.map(x => x(1)._2.spans.filter(!graph.spans(_).coRef)(0)) // 2nd node of each span
-            unalignedOnly = true
-        }
-
         val dateEntity = new SpanAligner(sentence, graph) {
             concept = "date-entity"
             tabSentence = replaceAll(sentence.mkString("\t").toLowerCase,
@@ -149,6 +104,10 @@ object AlignSpans2 {
                 List((index, index+1))
             }
         }
+
+        val unalignedEntity = new UnalignedConcept(sentence, graph) { concept=".*"; label=":name" }
+        val quantity = new UnalignedConcept(sentence, graph) { concept=".*-quantity"; label=":unit" }
+        val argOf = new UnalignedConcept(sentence, graph) { concept="person|thing"; label=":ARG.*-of" }
 
         addAllSpans(namedEntity, graph, wordToSpan, addCoRefs=false)
         addAllSpans(namedEntity, graph, wordToSpan, addCoRefs=true)
@@ -252,6 +211,25 @@ object AlignSpans2 {
             case _ => Unit
             }
         }
+    }
+
+    class UnalignedConcept(override val sentence: Array[String],
+                           override val graph: Graph
+            ) extends SpanUpdater(sentence, graph) {
+
+        var label: String = ""
+
+        nodes = node => {
+            if (node.children.exists(_._1.matches(label))) {
+                try {
+                    List(("", node) :: graph.spans(node.children.filter(_._1.matches(label))(0)._2.spans(0)).nodeIds.map(x => ("", graph.getNodeById(x))))
+                } catch { case e : Throwable => List() }
+            } else {
+                List()
+            }
+        }
+        spanIndex = nodes => nodes.map(x => x(1)._2.spans.filter(!graph.spans(_).coRef)(0)) // 2nd node of each span
+        unalignedOnly = true
     }
 
     private def toSpan(startEnd: (Int, Int), nodeIds: List[String], sentence: Array[String], graph: Graph, coRef: Boolean) : Span = {
