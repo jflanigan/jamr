@@ -145,7 +145,7 @@ case class Graph(root: Node, spans: ArrayBuffer[Span], getNodeById: Map[String, 
                 }
             } catch {
                 // TODO: catch malformed input (Regex match error, or toInt err
-                case e => logger(1, "****************** MALFORMED SPAN: "+spanStr)
+                case e : Throwable => logger(1, "****************** MALFORMED SPAN: "+spanStr)
             }
         }
     }
@@ -163,20 +163,33 @@ case class Graph(root: Node, spans: ArrayBuffer[Span], getNodeById: Map[String, 
     }
 
     def updateSpan(spanIndex: Int, start: Int, end: Int, nodeIds: List[String], coRef: Boolean, sentence: Array[String]) {
-        println("new nodes = "+nodeIds.toString)
+        //println("new nodes = "+nodeIds.toString)
         for (id <- spans(spanIndex).nodeIds) {
-            println(getNodeById(id).spans)
+            //println(getNodeById(id).spans)
             getNodeById(id).spans -= spanIndex
         }
         val span = Span(start, end, nodeIds, sentence.slice(start, end).mkString(" "), SpanLoader.getAmr(nodeIds, this), coRef)
         spans(spanIndex) = span
         for (id <- nodeIds) {
             getNodeById(id).addSpan(spanIndex, coRef)
-            println(getNodeById(id).spans)
+            //println(getNodeById(id).spans)
         }
     }
 
+    def updateSpan(spanIndex: Int, start: Int, end: Int, sentence: Array[String]) {
+        // Update start, end
+        val span = spans(spanIndex)
+        updateSpan(spanIndex, start, end, span.nodeIds, span.coRef, sentence)
+    }
+
+    def updateSpan(spanIndex: Int, nodeIds: List[String], sentence: Array[String]) {
+        // Update nodeIds
+        val span = spans(spanIndex)
+        updateSpan(spanIndex, span.start, span.end, nodeIds, span.coRef, sentence)
+    }
+
     def updateSpan(spanIndex: Int, coRef: Boolean, sentence: Array[String]) {
+        // Update coRef indicator
         val span = spans(spanIndex)
         updateSpan(spanIndex, span.start, span.end, span.nodeIds, coRef, sentence)
     }
