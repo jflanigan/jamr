@@ -75,20 +75,29 @@ object AlignSpans2 {
             coRefs = true
         }
 
-/*
         val singleConcept = new SpanAligner(sentence, graph) {
             concept = ".*"
-            nodes = node => { alignWords(stemmedSentence, node, graph.) }
+            nodes = node => {
+                if (alignWord(stemmedSentence, node, wordToSpan) != None) {
+                    List(("", node))
+                } else {
+                    List()
+                }
+            } /*
+                Span(start, end, List(node), words, SpanLoader.getAmr(List(node), graph), coRef)
 
                 if (node.children.exists(_._1.matches(":op.*"))) {
                     ("", node) :: node.children.filter(_._1.matches(":op.*"))
                 } else {
                     List()
-                }
+                } 
+            } */
+            spans = nodes => { 
+                val Some(index) = alignWord(stemmedSentence, nodes(0)._2, wordToSpan)
+                List((index, index+1))
             }
-            nodes.tail.map(x => Pattern.quote(getConcept(x._2.concept).toLowerCase)).mkString("[^a-zA-Z]*").r
             coRefs = false
-        } */
+        }
 
         addAllSpans(namedEntity, graph, wordToSpan, addCoRefs=false)
         addAllSpans(namedEntity, graph, wordToSpan, addCoRefs=true)
@@ -120,6 +129,14 @@ object AlignSpans2 {
         var words: (List[(String,Node)]) => Regex = x => "".r   // function that returns the words
         var coRefs: Boolean = false
 
+        var spans: (List[(String,Node)]) => List[(Int, Int)] = allNodes => {
+            val regex = words(allNodes)
+            logger(2, "regex: " + regex)
+            val matchList = regex.findAllMatchIn(tabSentence).toList
+            logger(2, "matchList: " + matchList)
+            matchList.map(x => matchToIndices(x, tabSentence))
+        }
+
         def getSpans(node: Node) : List[Span] = {
             logger(2, "Processing node: " + node.concept)
             return node match {
@@ -128,11 +145,8 @@ object AlignSpans2 {
                     val allNodes = nodes(node)
                     logger(2, "tabSentence: " + tabSentence)
                     if (allNodes.size > 0) {
-                        val regex = words(allNodes)
-                        logger(2, "regex: " + regex)
-                        val matchList = regex.findAllMatchIn(tabSentence).toList
-                        logger(2, "matchList: " + matchList)
-                        matchList.zipWithIndex.map(x => matchToSpan(x._1, allNodes.map(_._2.id), sentence, tabSentence, graph, x._2 > 0))
+                        val indices = spans(allNodes) // the default implementation of spans calls words
+                        indices.zipWithIndex.map(x => toSpan(x._1, allNodes.map(_._2.id), sentence, graph, x._2 > 0))
                     } else {
                         List()
                     }
@@ -140,6 +154,22 @@ object AlignSpans2 {
             case _ => List()
             }
         }
+    }
+
+    private def toSpan(startEnd: (Int, Int), nodeIds: List[String], sentence: Array[String], graph: Graph, coRef: Boolean) : Span = {
+        // m is a match object which is a match in tabSentence (tabSentence = sentence.mkString('\t'))
+        // note: tabSentence does not have to be sentence.mkString('\t') (it could be lowercased, for example)
+        assert(nodeIds.size > 0, "Error: matchToSpan passed nodeIds with zero length")
+        val (start, end) = startEnd
+        val amr = SpanLoader.getAmr(nodeIds, graph)
+        val words = sentence.slice(start, end).mkString(" ")
+        val span = if (!coRef) {
+                Span(start, end, nodeIds, words, amr, coRef)
+            } else {
+                val node = nodeIds(0)
+                Span(start, end, List(node), words, SpanLoader.getAmr(List(node), graph), coRef)
+            }
+        return span
     }
 
     private def matchToSpan(m: Regex.Match, nodeIds: List[String], sentence: Array[String], tabSentence: String, graph: Graph, coRef: Boolean) : Span = {
@@ -157,6 +187,10 @@ object AlignSpans2 {
                 Span(start, end, List(node), words, SpanLoader.getAmr(List(node), graph), coRef)
             }
         return span
+    }
+
+    private def matchToIndices(m: Regex.Match, tabSentence: String) : (Int,Int) = {
+        return (getIndex(tabSentence, m.start), getIndex(tabSentence, m.end)+1)
     }
 
     private def getIndex(tabSentence: String, charIndex : Int) : Int = {
@@ -207,7 +241,7 @@ object AlignSpans2 {
         graph.doRecursive(graph.root, add)
     }
 
-/****** </This stuff was originally Graph> *******/
+/****** </This stuff was originally in Graph> *******/
 
     // TODO: everything below can be deleted
 
@@ -217,33 +251,29 @@ object AlignSpans2 {
     //private val ConceptExtractor = """"?([a-zA-Z0-9.-]+)"?""".r
     //private val ConceptExtractor = """^"?(.+?)(?:-[0-9]+)"?$""".r
     //private val ConceptExtractor = """^"?(.+?)-?[0-9]*"?$""".r // works except for numbers
-    def alignWords(stemmedSentence: Array[List[String]], node: Node, alignments: Array[Option[Node]]) {
+    def alignWord(stemmedSentence: Array[List[String]], node: Node, alignments: Array[Option[Int]]) : Option[Int] = {
         logger(3,"alignWords: node.concept = "+node.concept)
         var concept = getConcept(node.concept)
-        var found = false
+        var alignment : Option[Int] = None
         for (i <- Range(0, stemmedSentence.size)) {
             for (word <- stemmedSentence(i)) {
                 if (word == concept && alignments(i) == None) {
-                    if (found) {
+                    if (alignment != None) {
                         logger(1, "WARNING: Found duplicate match for concept "+node.concept)
                     } else {
                         logger(3,"concept: "+node.concept+" word: "+word)
-                        alignments(i) = Some(node) // point to the current node
-                        node.alignment = Some(i)
+                        alignment = Some(i)
                     }
-                    found = true
                 }
             }
         }
+        return alignment
     }
 
-    def fuzzyAligner(stemmedSentence: Array[List[String]], node: Node, alignments: Array[Option[Node]]) {
-        var ConceptExtractor(concept) = node.concept
-        if (node.concept.matches("""^[0-9.]*$""")) {
-            concept = node.concept
-        }
+    def fuzzyAlign(stemmedSentence: Array[List[String]], node: Node, alignments: Array[Option[Int]]) : Option[Int] = {
+        var concept = getConcept(node.concept)
         val size = stemmedSentence.size
-        var found = false
+        var alignment : Option[Int] = None
         val matchlength = new Array[Int](size)
         for (i <- Range(0, size)) {
             matchlength(i) = 0
@@ -257,15 +287,15 @@ object AlignSpans2 {
         val max = matchlength.max
         if (max >= 4) {
             for (i <- Range(0, size) if (matchlength(i) == max && alignments(i) == None && node.alignment == None)) {
-                if (!found) {
+                if (alignment == None) {
                     logger(2,"Fuzzy Matcher concept: "+node.concept+" word: "+stemmedSentence(i)(0))
-                    alignments(i) = Some(node)
-                    node.alignment = Some(i)
+                    alignment = Some(i)
                 } else {
                     logger(1, "WARNING: duplicate fuzzy matches for concept "+node.concept)
                 }
             }
         }
+        return alignment
     }
 
     def matchLength(string1: String, string2: String) : Int = {
