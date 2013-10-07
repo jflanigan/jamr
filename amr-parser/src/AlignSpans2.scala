@@ -109,6 +109,7 @@ object AlignSpans2 {
         val unalignedEntity = new UnalignedConcept(sentence, graph) { concept=".*"; label=":name" }
         val quantity = new UnalignedConcept(sentence, graph) { concept=".*-quantity"; label=":unit" }
         val argOf = new UnalignedConcept(sentence, graph) { concept="person|thing"; label=":ARG.*-of" }
+        val governmentOrg = new UnalignedChild(sentence, graph) { concept="government-organization"; label=":ARG0-of" }
 
         addAllSpans(namedEntity, graph, wordToSpan, addCoRefs=false)
         addAllSpans(namedEntity, graph, wordToSpan, addCoRefs=true)
@@ -125,6 +126,7 @@ object AlignSpans2 {
         try {
             updateSpans(argOf, graph)
         } catch { case e : Throwable => Unit }
+        try { updateSpans(governmentOrg, graph) } catch { case e : Throwable => Unit }
         //dateEntities(sentence, graph)
         //namedEntities(sentence, graph)
         //specialConcepts(sentence, graph) // un, in, etc
@@ -196,15 +198,19 @@ object AlignSpans2 {
                 case Node(_,_,c,_,_,_,_,_) if ((concept.r.unapplySeq(getConcept(c)) != None) && (!node.isAligned(graph) || !unalignedOnly)) => {
                     logger(2, "SpanUpdater matched concept regex: " + concept)
                     val allNodes = nodes(node)
+                    logger(2, "allNodes = "+allNodes.toString)
                     val updateIndices = spanIndex(allNodes)
+                    logger(2, "updateIndices = "+updateIndices.toString)
                     //val wordSpans = spans(node)
                     //for ((spanIndex, (nodes, span)) <- updateIndices.zip(allNodes.zip(wordSpans))) {
                     //    assert(spans == (graph.spans(spanIndex).start, graph.spans(spanIndex).end), "SpanUpdater does not support changing the word span")  // If you want to do this, you must call graph.updateSpan, AND fix up the wordToSpan map
                     for ((spanIndex, nodes) <- updateIndices.zip(allNodes)) {
                         if (nodes.size > 0) {
                             //graph.updateSpan(spanIndex, span._1, span._2, nodes.map(_._2.id), graph.spans(spanIndex).coRef, sentence)
+                            logger(2, "Calling updateSpan( "+spanIndex.toString+", "+nodes.map(_._2.id).toString+" )")
                             graph.updateSpan(spanIndex, nodes.map(_._2.id), sentence)
                         } else {
+                            logger(2, "Deleting span")
                             graph.updateSpan(spanIndex, 0, 0, List(), false, sentence) // this effectively deletes the span
                         }
                     }
@@ -231,6 +237,26 @@ object AlignSpans2 {
         }
         spanIndex = nodes => nodes.map(x => x(1)._2.spans.filter(!graph.spans(_).coRef)(0)) // 2nd node of each span
         unalignedOnly = true
+    }
+
+    class UnalignedChild(override val sentence: Array[String],
+                         override val graph: Graph
+            ) extends SpanUpdater(sentence, graph) {
+
+        var label: String = ""
+
+        nodes = node => {
+            if ((node.children.exists(_._1.matches(label))) && (node.children.filter(_._1.matches(label))(0)._2.spans.size==0)) {
+                try {
+                    val child : Node = node.children.filter(_._1.matches(label))(0)._2
+                    List(graph.spans(node.spans(0)).nodeIds.map(x => ("", graph.getNodeById(x))) ::: List(("ARG0-of", child)))
+                } catch { case e : Throwable => List() }
+            } else {
+                List()
+            }
+        }
+        spanIndex = nodes => nodes.map(x => x(0)._2.spans(0)) // 1nd node of each span
+        unalignedOnly = false
     }
 
     private def toSpan(startEnd: (Int, Int), nodeIds: List[String], sentence: Array[String], graph: Graph, coRef: Boolean) : Span = {
