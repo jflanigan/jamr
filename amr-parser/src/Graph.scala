@@ -145,13 +145,9 @@ case class Graph(root: Node, spans: ArrayBuffer[Span], getNodeById: Map[String, 
         }
     }
 
-
     def addSpan(start: Int, end: Int, nodeIds: List[String], coRef: Boolean, sentence: Array[String]) {
         val span = Span(start, end, nodeIds, sentence.slice(start, end).mkString(" "), SpanLoader.getAmr(nodeIds, this), coRef)
-        spans += span
-        for (id <- nodeIds) {
-            getNodeById(id).addSpan(spans.size-1, coRef)
-        }
+        addSpan(span)
     }
 
     def addSpan(span: Span) {
@@ -159,14 +155,6 @@ case class Graph(root: Node, spans: ArrayBuffer[Span], getNodeById: Map[String, 
         for (id <- span.nodeIds) {
             getNodeById(id).addSpan(spans.size-1, span.coRef)
         }
-    }
-
-    def overlap(span: Span) : Boolean = {
-        var overlap = false
-        for (id <- span.nodeIds) {
-            overlap = (getNodeById(id).spans.map(x => !spans(x).coRef) :\ overlap)(_ || _)
-        }
-        return overlap
     }
 
     def updateSpan(spanIndex: Int, start: Int, end: Int, nodeIds: List[String], coRef: Boolean, sentence: Array[String]) {
@@ -186,18 +174,6 @@ case class Graph(root: Node, spans: ArrayBuffer[Span], getNodeById: Map[String, 
     def updateSpan(spanIndex: Int, coRef: Boolean, sentence: Array[String]) {
         val span = spans(spanIndex)
         updateSpan(spanIndex, span.start, span.end, span.nodeIds, coRef, sentence)
-    }
-
-    def addAllSpans(f: AlignSpans2.SpanAligner) {
-        def add(node: Node) {
-            for (span <- f.getSpans(node)) {
-                if(span.coRef || !overlap(span)) {
-                    addSpan(span)
-                }
-            }
-            //f(node).map(addSpan(_))
-        }
-        doRecursive(root, add)
     }
 
     def doRecursive(node: Node, f: (Node) => Unit) {
