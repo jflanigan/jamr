@@ -42,6 +42,21 @@ object AlignSpans2 {
             coRefs = true
         }
 
+        val unalignedEntity = new SpanUpdater(sentence, graph) {
+            concept = ".*"
+            nodes = node => {
+                if (node.children.exists(_._1.matches(":name"))) {
+                    try {
+                        List(("", node) :: graph.spans(node.children.filter(_._1.matches(":name"))(0)._2.spans(0)).nodeIds.map(x => ("", graph.getNodeById(x))))
+                    } catch { case e : Throwable => List() }
+                } else {
+                    List()
+                }
+            }
+            spanIndex = nodes => nodes.map(x => x(1)._2.spans.filter(!graph.spans(_).coRef)(0)) // 2nd node of each span
+            unalignedOnly = true
+        }
+
         val dateEntity = new SpanAligner(sentence, graph) {
             concept = "date-entity"
             tabSentence = replaceAll(sentence.mkString("\t").toLowerCase,
@@ -111,6 +126,9 @@ object AlignSpans2 {
         addAllSpans(dateEntity, graph, wordToSpan, addCoRefs=true)
         addAllSpans(singleConcept, graph, wordToSpan, addCoRefs=false)
         addAllSpans(fuzzyConcept, graph, wordToSpan, addCoRefs=false)
+        try {
+            updateSpans(unalignedEntity, graph)
+        } catch { case e : Throwable => Unit }
         //dateEntities(sentence, graph)
         //namedEntities(sentence, graph)
         //specialConcepts(sentence, graph) // un, in, etc
@@ -148,7 +166,7 @@ object AlignSpans2 {
         def getSpans(node: Node) : List[Span] = {
             logger(2, "Processing node: " + node.concept)
             return node match {
-                case Node(_,_,c,_,_,_,_,_) if (concept.r.unapplySeq(getConcept(c)) != None) && !node.isAligned(graph) => {
+                case Node(_,_,c,_,_,_,_,_) if ((concept.r.unapplySeq(getConcept(c)) != None) && !node.isAligned(graph)) => {
                     logger(2, "Matched concept regex: " + concept)
                     val allNodes = nodes(node)
                     logger(2, "tabSentence: " + tabSentence)
@@ -160,6 +178,42 @@ object AlignSpans2 {
                     }
                 }
             case _ => List()
+            }
+        }
+    }
+
+    class SpanUpdater(val sentence: Array[String],
+                      val graph: Graph) {
+
+        var concept: String = ""
+        var nodes: Node => List[List[(String, Node)]] = x => List()             // function that returns the nodes
+        var spanIndex: List[List[(String, Node)]] => List[Int] = x => List()    // function that returns pointers to spans to update
+        var unalignedOnly: Boolean = true
+
+/*        var spans: Node => List[(Int, Int)] = node => {                         // default keeps the words unchanged
+            spanIndex(node).map(x => (graph.spans(x).start, graph.spans(x).end))
+        } */
+
+        def update(node: Node) {
+            logger(2, "SpanUpdater processing node: " + node.concept)
+            node match {
+                case Node(_,_,c,_,_,_,_,_) if ((concept.r.unapplySeq(getConcept(c)) != None) && (!node.isAligned(graph) || !unalignedOnly)) => {
+                    logger(2, "SpanUpdater matched concept regex: " + concept)
+                    val allNodes = nodes(node)
+                    val updateIndices = spanIndex(allNodes)
+                    //val wordSpans = spans(node)
+                    //for ((spanIndex, (nodes, span)) <- updateIndices.zip(allNodes.zip(wordSpans))) {
+                    //    assert(spans == (graph.spans(spanIndex).start, graph.spans(spanIndex).end), "SpanUpdater does not support changing the word span")  // If you want to do this, you must call graph.updateSpan, AND fix up the wordToSpan map
+                    for ((spanIndex, nodes) <- updateIndices.zip(allNodes)) {
+                        if (nodes.size > 0) {
+                            //graph.updateSpan(spanIndex, span._1, span._2, nodes.map(_._2.id), graph.spans(spanIndex).coRef, sentence)
+                            graph.updateSpan(spanIndex, nodes.map(_._2.id), sentence)
+                        } else {
+                            graph.updateSpan(spanIndex, 0, 0, List(), false, sentence) // this effectively deletes the span
+                        }
+                    }
+                }
+            case _ => Unit
             }
         }
     }
@@ -236,7 +290,11 @@ object AlignSpans2 {
 
     private def addAllSpans(f: AlignSpans2.SpanAligner, graph: Graph, wordToSpan: Array[Option[Int]], addCoRefs: Boolean) {
         def add(node: Node) {
-            val spans = if (addCoRefs) { f.getSpans(node) } else { f.getSpans(node).slice(0,1) }
+            val spans = if (addCoRefs) {
+                f.getSpans(node)
+            } else {
+                f.getSpans(node).slice(0,1)
+            }
             for (span <- spans) {
                 if(span.coRef || !overlap(span, graph, wordToSpan)) {
                     graph.addSpan(span)
@@ -247,6 +305,10 @@ object AlignSpans2 {
             }
         }
         graph.doRecursive(graph.root, add)
+    }
+
+    private def updateSpans(f: AlignSpans2.SpanUpdater, graph: Graph) {
+        graph.doRecursive(graph.root, f.update)
     }
 
 /****** </This stuff was originally in Graph> *******/
@@ -294,9 +356,9 @@ object AlignSpans2 {
         }
         val max = matchlength.max
         if (max >= 4) {
-            for (i <- Range(0, size) if (matchlength(i) == max && alignments(i) == None && node.alignment == None)) {
+            for (i <- Range(0, size) if (matchlength(i) == max && alignments(i) == None)) {
                 if (alignment == None) {
-                    logger(2,"Fuzzy Matcher concept: "+node.concept+" word: "+stemmedSentence(i)(0))
+                    logger(1,"Fuzzy Matcher concept: "+node.concept+" word: "+stemmedSentence(i)(0))
                     alignment = Some(i)
                 } else {
                     logger(1, "WARNING: duplicate fuzzy matches for concept "+node.concept)
