@@ -26,11 +26,11 @@ object AlignSpans2 {
     def align(sentence: Array[String], graph: Graph) {
         val stemmedSentence = sentence.map(stemmer(_))
         val wordToSpan : Array[Option[Int]] = sentence.map(x => None)
-        logger(2, "Stemmed sentence "+stemmedSentence.toList.toString)
+        logger(3, "Stemmed sentence "+stemmedSentence.toList.toString)
 
         val namedEntity = new SpanAligner(sentence, graph) {
             concept = "name"
-            tabSentence = sentence.mkString("\t").toLowerCase
+            tabSentence = sentence.mkString("\t").toLowerCase.replaceAll("[^a-zA-Z0-9\t]","")
             nodes = node => {
                 if (node.children.exists(_._1.matches(":op.*"))) {
                     ("", node) :: node.children.filter(_._1.matches(":op.*"))
@@ -38,25 +38,25 @@ object AlignSpans2 {
                     List()
                 }
             }
-            words = nodes => { nodes.tail.map(x => Pattern.quote(getConcept(x._2.concept).toLowerCase)).mkString("[^a-zA-Z]*").r }
+            words = nodes => { nodes.tail.map(x => Pattern.quote(getConcept(x._2.concept).toLowerCase.replaceAll("[^a-zA-Z0-9\t]",""))).mkString("[^a-zA-Z]*").r }
             coRefs = true
         }
 
         val dateEntity = new SpanAligner(sentence, graph) {
             concept = "date-entity"
             tabSentence = replaceAll(sentence.mkString("\t").toLowerCase,
-                Map("January" -> "1",
-                    "February" -> "2",
-                    "March" -> "3",
-                    "April" -> "4",
-                    "May" -> "5",
-                    "June" -> "6",
-                    "July" -> "7",
-                    "August" -> "8",
-                    "September" -> "9",
-                    "October" -> "10",
-                    "November" -> "11",
-                    "December" -> "12",
+                Map("january" -> "1",
+                    "february" -> "2",
+                    "march" -> "3",
+                    "april" -> "4",
+                    "may" -> "5",
+                    "june" -> "6",
+                    "july" -> "7",
+                    "august" -> "8",
+                    "september" -> "9",
+                    "october" -> "10",
+                    "november" -> "11",
+                    "december" -> "12",
                     "[^0-9a-zA-Z\t]" -> ""))
             nodes = node => {
                 if (node.children.exists(_._1.matches(":year|:month|:day"))) {
@@ -66,11 +66,11 @@ object AlignSpans2 {
                 }
             }
             words = nodes => {
-                val concepts = nodes.map(x => (x._1, x._2.concept))
-                val year = concepts.find(_._1 == ":year").getOrElse(("",""))._2
-                val month = concepts.find(_._1 == ":month").getOrElse(("",""))._2
-                val day = concepts.find(_._1 == ":day").getOrElse(("",""))._2
-                List(year, "0*"+month, "0*"+day).permutations.map(_.mkString("\t*")).mkString("|").r
+                val concepts = nodes.map(x => (x._1, List(x._2.concept)))
+                val year = concepts.find(_._1 == ":year").getOrElse(("",List()))._2
+                val month = concepts.find(_._1 == ":month").getOrElse(("",List()))._2
+                val day = concepts.find(_._1 == ":day").getOrElse(("",List()))._2
+                (year ::: month ::: day).permutations.map(_.mkString("\t*0*")).mkString("|").r
             }
             coRefs = true
         }
@@ -90,8 +90,10 @@ object AlignSpans2 {
             coRefs = false
         } */
 
-        addAllSpans(namedEntity, graph, wordToSpan)
-        addAllSpans(dateEntity, graph, wordToSpan)
+        addAllSpans(namedEntity, graph, wordToSpan, addCoRefs=false)
+        addAllSpans(namedEntity, graph, wordToSpan, addCoRefs=true)
+        addAllSpans(dateEntity, graph, wordToSpan, addCoRefs=false)
+        addAllSpans(dateEntity, graph, wordToSpan, addCoRefs=true)
         //dateEntities(sentence, graph)
         //namedEntities(sentence, graph)
         //specialConcepts(sentence, graph) // un, in, etc
@@ -121,7 +123,7 @@ object AlignSpans2 {
         def getSpans(node: Node) : List[Span] = {
             logger(2, "Processing node: " + node.concept)
             return node match {
-                case Node(_,_,c,_,_,_,_,_) if (concept.r.unapplySeq(getConcept(c)) != None) => {
+                case Node(_,_,c,_,_,_,_,_) if (concept.r.unapplySeq(getConcept(c)) != None) && !node.isAligned(graph) => {
                     logger(2, "Matched concept regex: " + concept)
                     val allNodes = nodes(node)
                     logger(2, "tabSentence: " + tabSentence)
@@ -175,19 +177,25 @@ object AlignSpans2 {
         return (map :\ string)((keyValue, s) => s.replaceAll(keyValue._1, keyValue._2))
     }
 
-/****** This stuff was originally Graph *******/
+/****** This stuff was originally in Graph *******/
 
     private def overlap(span: Span, graph: Graph, wordToSpan: Array[Option[Int]]) : Boolean = {
         var overlap = false
         for (id <- span.nodeIds) {
             overlap = (graph.getNodeById(id).spans.map(x => !graph.spans(x).coRef) :\ overlap)(_ || _)
         }
+        for (word <- Range(span.start, span.end)) {
+            if (wordToSpan(word) != None) {         // TODO: what about corefs
+                overlap = true
+            }
+        }
         return overlap
     }
 
-    private def addAllSpans(f: AlignSpans2.SpanAligner, graph: Graph, wordToSpan: Array[Option[Int]]) {
+    private def addAllSpans(f: AlignSpans2.SpanAligner, graph: Graph, wordToSpan: Array[Option[Int]], addCoRefs: Boolean) {
         def add(node: Node) {
-            for (span <- f.getSpans(node)) {
+            val spans = if (addCoRefs) { f.getSpans(node) } else { f.getSpans(node).slice(0,1) }
+            for (span <- spans) {
                 if(span.coRef || !overlap(span, graph, wordToSpan)) {
                     graph.addSpan(span)
                     for (i <- Range(span.start, span.end)) {
