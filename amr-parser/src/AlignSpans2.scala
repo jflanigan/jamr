@@ -434,6 +434,12 @@ object AlignSpans2 {
             case "of" => List("include")
             case "speech" => List("speak")
             case "statement" => List("state")
+            case "can" => List("possible")
+            case "could" => List("possible")
+            case "able" => List("possible")
+            case "French" => List("france","France")
+            case "french" => List("france","France")
+            case "death" => List("die")
             case _ => List()
         }
         if (word.matches("""(in|un).*""")) {
