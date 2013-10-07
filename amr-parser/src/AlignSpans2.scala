@@ -110,7 +110,9 @@ object AlignSpans2 {
         val quantity = new UnalignedConcept(sentence, graph) { concept=".*-quantity"; label=":unit" }
         val argOf = new UnalignedConcept(sentence, graph) { concept="person|thing"; label=":ARG.*-of" }
         val governmentOrg = new UnalignedChild(sentence, graph) { concept="government-organization"; label=":ARG0-of" }
-        val polarity = new UnalignedChild(sentence, graph) { concept=".*"; label=":polarity"; words="un.*|in.*" }
+        val polarity = new UnalignedChild(sentence, graph) { concept=".*"; label=":polarity"; words="un.*|in.*|il.*" }  // il.* for illegal
+        val est = new UnalignedChild(sentence, graph) { concept=".*"; label=":degree"; words=".*est" }
+        val er = new UnalignedChild(sentence, graph) { concept=".*"; label=":degree"; words=".*er" }
 
         addAllSpans(namedEntity, graph, wordToSpan, addCoRefs=false)
         addAllSpans(namedEntity, graph, wordToSpan, addCoRefs=true)
@@ -129,6 +131,8 @@ object AlignSpans2 {
         } catch { case e : Throwable => Unit }
         try { updateSpans(governmentOrg, graph) } catch { case e : Throwable => Unit }
         try { updateSpans(polarity, graph) } catch { case e : Throwable => Unit }
+        try { updateSpans(est, graph) } catch { case e : Throwable => Unit }
+        //try { updateSpans(er, graph) } catch { case e : Throwable => Unit }
         //dateEntities(sentence, graph)
         //namedEntities(sentence, graph)
         //specialConcepts(sentence, graph) // un, in, etc
@@ -453,22 +457,26 @@ object AlignSpans2 {
         }
         var exceptions = word.toLowerCase match {
             case ";" => List("and")
+            case "able" => List("possible")
             case "also" => List("include")
             case "anti" => List("oppose","counter")
-            case "but" => List("contrast")
             case "because" => List("cause")
+            //case "biggest" => List("most")  //anything est
+            case "but" => List("contrast")
+            case "can" => List("possible")
+            case "could" => List("possible")
+            case "death" => List("die")
+            case "French" => List("france","France")
+            case "french" => List("france","France")
             case "if" => List("cause")
+            case "illegal" => List("law")
+            case "may" => List("possible")
             case "no" => List("-")
             case "not" => List("-")
             case "of" => List("include")
             case "speech" => List("speak")
+            case "should" => List("recommend")
             case "statement" => List("state")
-            case "can" => List("possible")
-            case "could" => List("possible")
-            case "able" => List("possible")
-            case "French" => List("france","France")
-            case "french" => List("france","France")
-            case "death" => List("die")
             case _ => List()
         }
         if (word.matches("""(in|un).*""")) {
