@@ -28,6 +28,11 @@ case class Node(var id: String, name: Option[String], concept: String, var relat
         topologicalOrdering = c
     }
 
+    def isAligned(graph: Graph) : Boolean = {
+        // Returns true if this node has an non-coref span alignment
+        return (spans.map(x => !graph.spans(x).coRef) :\ false)(_ || _)
+    }
+
     def addSpan(span: Int, coRef: Boolean){
         if (coRef) {
             spans += span
