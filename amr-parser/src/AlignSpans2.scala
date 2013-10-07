@@ -83,26 +83,34 @@ object AlignSpans2 {
                 } else {
                     List()
                 }
-            } /*
-                Span(start, end, List(node), words, SpanLoader.getAmr(List(node), graph), coRef)
-
-                if (node.children.exists(_._1.matches(":op.*"))) {
-                    ("", node) :: node.children.filter(_._1.matches(":op.*"))
-                } else {
-                    List()
-                } 
-            } */
+            } 
             spans = nodes => { 
                 val Some(index) = alignWord(stemmedSentence, nodes(0)._2, wordToSpan)
                 List((index, index+1))
             }
-            coRefs = false
+        }
+
+        val fuzzyConcept = new SpanAligner(sentence, graph) {
+            concept = ".*"
+            nodes = node => {
+                if (fuzzyAlign(stemmedSentence, node, wordToSpan) != None) {
+                    List(("", node))
+                } else {
+                    List()
+                }
+            } 
+            spans = nodes => { 
+                val Some(index) = fuzzyAlign(stemmedSentence, nodes(0)._2, wordToSpan)
+                List((index, index+1))
+            }
         }
 
         addAllSpans(namedEntity, graph, wordToSpan, addCoRefs=false)
         addAllSpans(namedEntity, graph, wordToSpan, addCoRefs=true)
         addAllSpans(dateEntity, graph, wordToSpan, addCoRefs=false)
         addAllSpans(dateEntity, graph, wordToSpan, addCoRefs=true)
+        addAllSpans(singleConcept, graph, wordToSpan, addCoRefs=false)
+        addAllSpans(fuzzyConcept, graph, wordToSpan, addCoRefs=false)
         //dateEntities(sentence, graph)
         //namedEntities(sentence, graph)
         //specialConcepts(sentence, graph) // un, in, etc
