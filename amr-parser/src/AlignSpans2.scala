@@ -57,6 +57,36 @@ object AlignSpans2 {
             unalignedOnly = true
         }
 
+        val quantity = new SpanUpdater(sentence, graph) {
+            concept = ".*-quantity"
+            nodes = node => {
+                if (node.children.exists(_._1.matches(":unit"))) {
+                    try {
+                        List(("", node) :: graph.spans(node.children.filter(_._1.matches(":unit"))(0)._2.spans(0)).nodeIds.map(x => ("", graph.getNodeById(x))))
+                    } catch { case e : Throwable => List() }
+                } else {
+                    List()
+                }
+            }
+            spanIndex = nodes => nodes.map(x => x(1)._2.spans.filter(!graph.spans(_).coRef)(0)) // 2nd node of each span
+            unalignedOnly = true
+        }
+
+        val argOf = new SpanUpdater(sentence, graph) {
+            concept = "person|thing"
+            nodes = node => {
+                if (node.children.exists(_._1.matches(":ARG.*-of"))) {
+                    try {
+                        List(("", node) :: graph.spans(node.children.filter(_._1.matches(":ARG.*-of"))(0)._2.spans(0)).nodeIds.map(x => ("", graph.getNodeById(x))))
+                    } catch { case e : Throwable => List() }
+                } else {
+                    List()
+                }
+            }
+            spanIndex = nodes => nodes.map(x => x(1)._2.spans.filter(!graph.spans(_).coRef)(0)) // 2nd node of each span
+            unalignedOnly = true
+        }
+
         val dateEntity = new SpanAligner(sentence, graph) {
             concept = "date-entity"
             tabSentence = replaceAll(sentence.mkString("\t").toLowerCase,
@@ -128,6 +158,12 @@ object AlignSpans2 {
         addAllSpans(fuzzyConcept, graph, wordToSpan, addCoRefs=false)
         try {
             updateSpans(unalignedEntity, graph)
+        } catch { case e : Throwable => Unit }
+        try {
+            updateSpans(quantity, graph)
+        } catch { case e : Throwable => Unit }
+        try {
+            updateSpans(argOf, graph)
         } catch { case e : Throwable => Unit }
         //dateEntities(sentence, graph)
         //namedEntities(sentence, graph)
