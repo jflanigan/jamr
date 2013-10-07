@@ -24,6 +24,9 @@ import scala.util.parsing.combinator._
 object AlignSpans2 {
 
     def align(sentence: Array[String], graph: Graph) {
+        val stemmedSentence = sentence.map(stemmer(_))
+        val wordToSpan : Array[Option[Int]] = sentence.map(x => None)
+        logger(2, "Stemmed sentence "+stemmedSentence.toList.toString)
 
         val namedEntity = new SpanAligner(sentence, graph) {
             concept = "name"
@@ -72,8 +75,23 @@ object AlignSpans2 {
             coRefs = true
         }
 
-        graph.addAllSpans(namedEntity)
-        graph.addAllSpans(dateEntity)
+/*
+        val singleConcept = new SpanAligner(sentence, graph) {
+            concept = ".*"
+            nodes = node => { alignWords(stemmedSentence, node, graph.) }
+
+                if (node.children.exists(_._1.matches(":op.*"))) {
+                    ("", node) :: node.children.filter(_._1.matches(":op.*"))
+                } else {
+                    List()
+                }
+            }
+            nodes.tail.map(x => Pattern.quote(getConcept(x._2.concept).toLowerCase)).mkString("[^a-zA-Z]*").r
+            coRefs = false
+        } */
+
+        addAllSpans(namedEntity, graph, wordToSpan)
+        addAllSpans(dateEntity, graph, wordToSpan)
         //dateEntities(sentence, graph)
         //namedEntities(sentence, graph)
         //specialConcepts(sentence, graph) // un, in, etc
@@ -157,21 +175,33 @@ object AlignSpans2 {
         return (map :\ string)((keyValue, s) => s.replaceAll(keyValue._1, keyValue._2))
     }
 
-    // TODO: everything below can be deleted
+/****** This stuff was originally Graph *******/
 
-    def alignWords(sentence: Array[String], graph: Graph) : Array[Option[Node]] = {
-        val size = sentence.size
-        val wordAlignments = new Array[Option[Node]](size)
-        val stemmedSentence = new Array[List[String]](size)
-        for (i <- Range(0, size)) {
-            stemmedSentence(i) = stemmer(sentence(i))
-            wordAlignments(i) = None
+    private def overlap(span: Span, graph: Graph, wordToSpan: Array[Option[Int]]) : Boolean = {
+        var overlap = false
+        for (id <- span.nodeIds) {
+            overlap = (graph.getNodeById(id).spans.map(x => !graph.spans(x).coRef) :\ overlap)(_ || _)
         }
-        logger(2, "Stemmed sentence "+stemmedSentence.toList.toString)
-        alignWords(stemmedSentence, graph.root, wordAlignments)
-        fuzzyAligner(stemmedSentence, graph.root, wordAlignments)
-        return wordAlignments  // Todo: Return spanAlignments
+        return overlap
     }
+
+    private def addAllSpans(f: AlignSpans2.SpanAligner, graph: Graph, wordToSpan: Array[Option[Int]]) {
+        def add(node: Node) {
+            for (span <- f.getSpans(node)) {
+                if(span.coRef || !overlap(span, graph, wordToSpan)) {
+                    graph.addSpan(span)
+                    for (i <- Range(span.start, span.end)) {
+                        wordToSpan(i) = Some(graph.spans.size-1)
+                    }
+                }
+            }
+        }
+        graph.doRecursive(graph.root, add)
+    }
+
+/****** </This stuff was originally Graph> *******/
+
+    // TODO: everything below can be deleted
 
     //private val conceptRegex = """-[0-9]+$""".r
     //private val ConceptExtractor = "([a-zA-Z0-9.-]+ *)|\"([^\"]+)\" *".r
@@ -181,10 +211,7 @@ object AlignSpans2 {
     //private val ConceptExtractor = """^"?(.+?)-?[0-9]*"?$""".r // works except for numbers
     def alignWords(stemmedSentence: Array[List[String]], node: Node, alignments: Array[Option[Node]]) {
         logger(3,"alignWords: node.concept = "+node.concept)
-        var ConceptExtractor(concept) = node.concept
-        if (node.concept.matches("""^[0-9.]*$""")) {
-            concept = node.concept
-        }
+        var concept = getConcept(node.concept)
         var found = false
         for (i <- Range(0, stemmedSentence.size)) {
             for (word <- stemmedSentence(i)) {
@@ -199,12 +226,6 @@ object AlignSpans2 {
                     found = true
                 }
             }
-        }
-        if (!found) {
-            //logger(2,"CONCEPT NOT FOUND: "+node.concept+" by searching "+concept)
-        }
-        for ((_, child) <- node.topologicalOrdering) {
-            alignWords(stemmedSentence, child, alignments)
         }
     }
 
@@ -236,12 +257,6 @@ object AlignSpans2 {
                     logger(1, "WARNING: duplicate fuzzy matches for concept "+node.concept)
                 }
             }
-        }
-        if (!found) {
-            //logger(4,"CONCEPT NOT FOUND: "+node.concept+" by fuzzy matching "+concept)
-        }
-        for ((_, child) <- node.topologicalOrdering) {
-            fuzzyAligner(stemmedSentence, child, alignments)
         }
     }
 
