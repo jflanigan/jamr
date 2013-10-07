@@ -30,7 +30,7 @@ object AlignSpans2 {
 
         val namedEntity = new SpanAligner(sentence, graph) {
             concept = "name"
-            tabSentence = sentence.mkString("\t").toLowerCase.replaceAll("[^a-zA-Z0-9\t]","")
+            tabSentence = sentence.mkString("\t").toLowerCase/*.replaceAll("[^a-zA-Z0-9\t]","")*/
             nodes = node => {
                 if (node.children.exists(_._1.matches(":op.*"))) {
                     ("", node) :: node.children.filter(_._1.matches(":op.*"))
@@ -38,7 +38,8 @@ object AlignSpans2 {
                     List()
                 }
             }
-            words = nodes => { nodes.tail.map(x => Pattern.quote(getConcept(x._2.concept).toLowerCase.replaceAll("[^a-zA-Z0-9\t]",""))).mkString("[^a-zA-Z]*").r }
+            //words = nodes => { nodes.tail.map(x => Pattern.quote(getConcept(x._2.concept).toLowerCase.replaceAll("[^a-zA-Z0-9\t]",""))).mkString("[^a-zA-Z]*").r }
+            words = nodes => { nodes.tail.map(x => getConcept(x._2.concept).toLowerCase/*.replaceAll("[^a-zA-Z0-9\t]","")*/.split("").tail.map(Pattern.quote(_)).mkString("\t?")).mkString("[^a-zA-Z]*").r }
             coRefs = true
         }
 
