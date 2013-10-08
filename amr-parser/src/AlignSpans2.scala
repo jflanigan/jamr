@@ -43,6 +43,26 @@ object AlignSpans2 {
             coRefs = true
         }
 
+        val fuzzyNamedEntity = new SpanAligner(sentence, graph) {
+            concept = "name"
+            tabSentence = "\t"+sentence.mkString("\t").toLowerCase+"\t"/*.replaceAll("[^a-zA-Z0-9\t]","")*/
+            nodes = node => {
+                if (node.children.exists(_._1.matches(":op.*"))) {
+                    ("", node) :: node.children.filter(_._1.matches(":op.*"))
+                } else {
+                    List()
+                }
+            }
+            words = nodes => { 
+                ("\t" + (for ((_, node) <- nodes.tail) yield {
+                    var conceptStr = getConcept(node.concept).toLowerCase
+                    conceptStr = conceptStr.slice(0, fuzzyMatchLength(stemmedSentence, node))
+                    conceptStr.split("").tail.map(Pattern.quote(_)).mkString("\t?")
+                }).mkString("[^\t]*[^a-zA-Z]*")+"[^\t]*\t").r }
+                //map(x => getConcept(x._2.concept).toLowerCase/*.replaceAll("[^a-zA-Z0-9\t]","")*/.split("").tail.map(Pattern.quote(_)).mkString("\t?")).mkString("[^\t]*[^a-zA-Z]*")+"[^\t]*\t").r }
+            coRefs = false
+        }
+
         val dateEntity = new SpanAligner(sentence, graph) {
             concept = "date-entity"
             tabSentence = "\t"+replaceAll(sentence.mkString("\t").toLowerCase+"\t",
@@ -115,6 +135,7 @@ object AlignSpans2 {
         val er = new UnalignedChild(sentence, graph) { concept=".*"; label=":degree"; words=".*er" }
 
         addAllSpans(namedEntity, graph, wordToSpan, addCoRefs=false)
+        addAllSpans(fuzzyNamedEntity, graph, wordToSpan, addCoRefs=false)
         addAllSpans(namedEntity, graph, wordToSpan, addCoRefs=true)
         addAllSpans(dateEntity, graph, wordToSpan, addCoRefs=false)
         addAllSpans(dateEntity, graph, wordToSpan, addCoRefs=true)
@@ -390,6 +411,22 @@ object AlignSpans2 {
             }
         }
         return alignment
+    }
+
+    def fuzzyMatchLength(stemmedSentence: Array[List[String]], node: Node) : Int = {
+        var concept = getConcept(node.concept)
+        val size = stemmedSentence.size
+        val matchlength = new Array[Int](size)
+        for (i <- Range(0, size)) {
+            matchlength(i) = 0
+            for (word <- stemmedSentence(i)) {
+                val len = matchLength(word, concept)
+                if (len > matchlength(i)) {
+                    matchlength(i) = len
+                }
+            }
+        }
+        return matchlength.max
     }
 
     def fuzzyAlign(stemmedSentence: Array[List[String]], node: Node, alignments: Array[Option[Int]]) : Option[Int] = {
