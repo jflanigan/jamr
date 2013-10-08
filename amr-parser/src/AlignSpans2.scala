@@ -133,7 +133,7 @@ object AlignSpans2 {
 
         val unalignedEntity = new UnalignedConcept(sentence, graph) { concept=".*"; label=":name" }
         val quantity = new UnalignedConcept(sentence, graph) { concept=".*-quantity"; label=":unit" }
-        val argOf = new UnalignedConcept(sentence, graph) { concept="person|thing"; label=":ARG.*-of" }
+        val argOf = new UnalignedConcept(sentence, graph) { concept="person|thing"; label=":.*-of" } // ARG?-of, instrument-of 
         val governmentOrg = new UnalignedChild(sentence, graph) { concept="government-organization"; label=":ARG0-of" }
         val polarity = new UnalignedChild(sentence, graph) { concept=".*"; label=":polarity"; words="un.*|in.*|il.*" }  // il.* for illegal
         val est = new UnalignedChild(sentence, graph) { concept=".*"; label=":degree"; words=".*est" }
