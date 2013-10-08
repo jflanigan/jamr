@@ -40,7 +40,6 @@ object AlignSpans2 {
             }
             //words = nodes => { nodes.tail.map(x => Pattern.quote(getConcept(x._2.concept).toLowerCase.replaceAll("[^a-zA-Z0-9\t]",""))).mkString("[^a-zA-Z]*").r }
             words = nodes => { ("\t"+nodes.tail.map(x => getConcept(x._2.concept).toLowerCase/*.replaceAll("[^a-zA-Z0-9\t]","")*/.split("").tail.map(Pattern.quote(_)).mkString("\t?")).mkString("[^a-zA-Z]*")+"\t").r }
-            coRefs = true
         }
 
         val fuzzyNamedEntity = new SpanAligner(sentence, graph) {
@@ -60,7 +59,6 @@ object AlignSpans2 {
                     conceptStr.split("").tail.map(Pattern.quote(_)).mkString("\t?")
                 }).mkString("[^\t]*[^a-zA-Z]*")+"[^\t]*\t").r }
                 //map(x => getConcept(x._2.concept).toLowerCase/*.replaceAll("[^a-zA-Z0-9\t]","")*/.split("").tail.map(Pattern.quote(_)).mkString("\t?")).mkString("[^\t]*[^a-zA-Z]*")+"[^\t]*\t").r }
-            coRefs = false
         }
 
         val dateEntity = new SpanAligner(sentence, graph) {
@@ -101,7 +99,6 @@ object AlignSpans2 {
                 ((year ::: month ::: day).permutations.map("\t0*"+_.mkString("\t*0*")+"\t").mkString("|")
                 +"|\t"+to2Digit(yearStr)+to2Digit(monthStr)+to2Digit(dayStr)+"\t").r
             }
-            coRefs = true
         }
 
         val singleConcept = new SpanAligner(sentence, graph) {
@@ -144,9 +141,9 @@ object AlignSpans2 {
 
         addAllSpans(namedEntity, graph, wordToSpan, addCoRefs=false)
         addAllSpans(fuzzyNamedEntity, graph, wordToSpan, addCoRefs=false)
-        addAllSpans(namedEntity, graph, wordToSpan, addCoRefs=true)
+//        addAllSpans(namedEntity, graph, wordToSpan, addCoRefs=true)
         addAllSpans(dateEntity, graph, wordToSpan, addCoRefs=false)
-        addAllSpans(dateEntity, graph, wordToSpan, addCoRefs=true)
+//        addAllSpans(dateEntity, graph, wordToSpan, addCoRefs=true)
         addAllSpans(singleConcept, graph, wordToSpan, addCoRefs=false)
         addAllSpans(fuzzyConcept, graph, wordToSpan, addCoRefs=false)
         try {
@@ -186,7 +183,7 @@ object AlignSpans2 {
         var concept: String = ""
         var nodes: Node => List[(String, Node)] = x => List()   // function that returns the nodes
         var words: (List[(String,Node)]) => Regex = x => "".r   // function that returns the words
-        var coRefs: Boolean = false
+        var coRef = false
 
         var spans: (List[(String,Node)]) => List[(Int, Int)] = allNodes => {
             val regex = words(allNodes)
@@ -205,7 +202,7 @@ object AlignSpans2 {
                     logger(2, "tabSentence: " + tabSentence)
                     if (allNodes.size > 0) {
                         val indices = spans(allNodes) // the default implementation of spans calls words
-                        indices.zipWithIndex.map(x => toSpan(x._1, allNodes.map(_._2.id), sentence, graph, x._2 > 0))
+                        indices.zipWithIndex.map(x => toSpan(x._1, allNodes.map(_._2.id), sentence, graph, coRef))
                     } else {
                         List()
                     }
@@ -310,23 +307,6 @@ object AlignSpans2 {
             }
         return span
     }
-/*
-    private def matchToSpan(m: Regex.Match, nodeIds: List[String], sentence: Array[String], tabSentence: String, graph: Graph, coRef: Boolean) : Span = {
-        // m is a match object which is a match in tabSentence (tabSentence = sentence.mkString('\t'))
-        // note: tabSentence does not have to be sentence.mkString('\t') (it could be lowercased, for example)
-        assert(nodeIds.size > 0, "Error: matchToSpan passed nodeIds with zero length")
-        val start = getIndex(tabSentence, m.start)-1 // because of initial \t on tabSentence
-        val end = getIndex(tabSentence, m.end)-1
-        val amr = SpanLoader.getAmr(nodeIds, graph)
-        val words = sentence.slice(start, end).mkString(" ")
-        val span = if (!coRef) {
-                Span(start, end, nodeIds, words, amr, coRef)
-            } else {
-                val node = nodeIds(0)
-                Span(start, end, List(node), words, SpanLoader.getAmr(List(node), graph), coRef)
-            }
-        return span
-    } */
 
     private def matchToIndices(m: Regex.Match, tabSentence: String) : (Int,Int) = {
         logger(2, "matchToIndices: m.start = "+m.start.toString)
@@ -371,13 +351,10 @@ object AlignSpans2 {
 
     private def addAllSpans(f: AlignSpans2.SpanAligner, graph: Graph, wordToSpan: Array[Option[Int]], addCoRefs: Boolean) {
         def add(node: Node) {
-            val spans = if (addCoRefs) {
-                f.getSpans(node)
-            } else {
-                f.getSpans(node).slice(0,1)
-            }
-            for (span <- spans) {
-                if(span.coRef || !overlap(span, graph, wordToSpan)) {
+            var added = false
+            for (span <- f.getSpans(node)) {
+                if((!overlap(span, graph, wordToSpan) && (!added || addCoRefs) || (span.coRef && addCoRefs))) {
+                    added = true
                     graph.addSpan(span)
                     for (i <- Range(span.start, span.end)) {
                         wordToSpan(i) = Some(graph.spans.size-1)
