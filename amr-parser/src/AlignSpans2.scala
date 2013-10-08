@@ -91,7 +91,15 @@ object AlignSpans2 {
                 val year = concepts.find(_._1 == ":year").getOrElse(("",List()))._2
                 val month = concepts.find(_._1 == ":month").getOrElse(("",List()))._2
                 val day = concepts.find(_._1 == ":day").getOrElse(("",List()))._2
-                (year ::: month ::: day).permutations.map("\t0*"+_.mkString("\t*0*")+"\t").mkString("|").r
+                def to2Digit(str: String) : String = {
+                    // Converts to 2 digit format, i.e. "2012" to "12", "7" to "07", "12" to "12", "" to "00"
+                    (str.reverse.take(2)+"00").slice(0,2).reverse
+                }
+                val yearStr = year.lift(0).getOrElse("")
+                val monthStr = month.lift(0).getOrElse("")
+                val dayStr=day.lift(0).getOrElse("")
+                ((year ::: month ::: day).permutations.map("\t0*"+_.mkString("\t*0*")+"\t").mkString("|")
+                +"|\t"+to2Digit(yearStr)+to2Digit(monthStr)+to2Digit(dayStr)+"\t").r
             }
             coRefs = true
         }
