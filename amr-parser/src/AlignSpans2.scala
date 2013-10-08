@@ -169,6 +169,12 @@ object AlignSpans2 {
         val polarityChild = new UnalignedChild(sentence, graph, wordToSpan) { concept=".*"; label=":polarity"; words="un.*|in.*|il.*" }  // il.* for illegal
         val est = new UnalignedChild(sentence, graph, wordToSpan) { concept=".*"; label=":degree"; words=".*est" }
         val er = new UnalignedChild(sentence, graph, wordToSpan) { concept=".*"; label=":degree"; words=".*er" }
+        val US = new ConceptAndChildren(sentence, graph) {
+            concept="name";
+            children = Map(":op1" -> "United",
+                           ":op2" -> "States")
+            words = x => { "\tus\t|\tu[.]\t?s[.]\t".r }
+        }
 
         addAllSpans(namedEntity, graph, wordToSpan, addCoRefs=false)
         addAllSpans(fuzzyNamedEntity, graph, wordToSpan, addCoRefs=false)
@@ -180,6 +186,7 @@ object AlignSpans2 {
         addAllSpans(minusPolarity, graph, wordToSpan, addCoRefs=false)
         addAllSpans(singleConcept, graph, wordToSpan, addCoRefs=false)
         addAllSpans(fuzzyConcept, graph, wordToSpan, addCoRefs=false)
+        addAllSpans(US, graph, wordToSpan, addCoRefs=false)
         try { updateSpans(namedEntityCollect, graph) } catch { case e : Throwable => Unit }
         try { updateSpans(unalignedEntity, graph) } catch { case e : Throwable => Unit }
         try { updateSpans(quantity, graph) } catch { case e : Throwable => Unit }
@@ -228,8 +235,9 @@ object AlignSpans2 {
             return node match {
                 case Node(_,_,c,_,_,_,_,_) if ((concept.r.unapplySeq(getConcept(c)) != None) && !node.isAligned(graph)) => {
                     logger(2, "Matched concept regex: " + concept)
-                    val allNodes = nodes(node)
                     logger(2, "tabSentence: " + tabSentence)
+                    val allNodes = nodes(node)
+                    logger(2, "allNodes: " + allNodes.map(x => (x._1, getConcept(x._2.concept))).toString)
                     if (allNodes.size > 0) {
                         val indices = spans(allNodes) // the default implementation of spans calls words
                         indices.zipWithIndex.map(x => toSpan(x._1, allNodes.map(_._2.id), sentence, graph, coRef))
@@ -282,6 +290,40 @@ object AlignSpans2 {
                     }
                 }
             case _ => Unit
+            }
+        }
+    }
+
+    class ConceptAndChildren(override val sentence: Array[String],
+                             override val graph: Graph
+            ) extends SpanAligner(sentence, graph) {
+        // To use specify children, and words
+        var children: Map[String,String] = Map()
+
+        tabSentence = "\t"+sentence.mkString("\t").toLowerCase+"\t"
+        def checkMatch(input: (String, Node)) : Boolean = {
+            logger(2, "Checking match on: "+input._1+" "+getConcept(input._2.concept))
+            var matches = true
+            for ((label, concept) <- children) {
+                logger(2, "against "+label+" "+concept)
+                if(input._1.matches(label) && !getConcept(input._2.concept).matches(concept)) {
+                    matches = false
+                }
+            }
+            logger(2, "returning "+matches)
+            return matches
+        }
+
+        nodes = node => {
+            logger(2, "Filtered children = "+node.children.filter(x => checkMatch(x)))
+            logger(2, "children.size = "+children.size)
+            logger(2, "Check: "+(node.children.filter(x => checkMatch(x)) == children.size).toString)
+            if (node.children.filter(x => checkMatch(x)).size == children.size) {    // all specified children are there
+                logger(2, "Returning: "+(("", node) :: node.children.filter(x => checkMatch(x))).map(x => (x._1, getConcept(x._2.concept))))
+                ("", node) :: node.children.filter(x => checkMatch(x))
+            } else {
+                logger(2, "Check failed")
+                List()
             }
         }
     }
