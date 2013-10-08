@@ -55,7 +55,7 @@ object AlignSpans2 {
             words = nodes => { 
                 ("\t" + (for ((_, node) <- nodes.tail) yield {
                     var conceptStr = getConcept(node.concept).toLowerCase
-                    conceptStr = conceptStr.slice(0, fuzzyMatchLength(stemmedSentence, node))
+                    conceptStr = conceptStr.slice(0, max(fuzzyMatchLength(stemmedSentence, node),4))
                     conceptStr.split("").tail.map(Pattern.quote(_)).mkString("\t?")
                 }).mkString("[^\t]*[^a-zA-Z]*")+"[^\t]*\t").r }
                 //map(x => getConcept(x._2.concept).toLowerCase/*.replaceAll("[^a-zA-Z0-9\t]","")*/.split("").tail.map(Pattern.quote(_)).mkString("\t?")).mkString("[^\t]*[^a-zA-Z]*")+"[^\t]*\t").r }
@@ -141,14 +141,14 @@ object AlignSpans2 {
 
         addAllSpans(namedEntity, graph, wordToSpan, addCoRefs=false)
         addAllSpans(fuzzyNamedEntity, graph, wordToSpan, addCoRefs=false)
+//        namedEntity.coRef = true
 //        addAllSpans(namedEntity, graph, wordToSpan, addCoRefs=true)
         addAllSpans(dateEntity, graph, wordToSpan, addCoRefs=false)
+//        dateEntity.coRef = true
 //        addAllSpans(dateEntity, graph, wordToSpan, addCoRefs=true)
         addAllSpans(singleConcept, graph, wordToSpan, addCoRefs=false)
         addAllSpans(fuzzyConcept, graph, wordToSpan, addCoRefs=false)
-        try {
-            updateSpans(unalignedEntity, graph)
-        } catch { case e : Throwable => Unit }
+        try { updateSpans(unalignedEntity, graph) } catch { case e : Throwable => Unit }
         try {
             updateSpans(quantity, graph)
         } catch { case e : Throwable => Unit }
