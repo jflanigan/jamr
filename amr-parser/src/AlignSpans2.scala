@@ -164,7 +164,8 @@ object AlignSpans2 {
         val unalignedEntity = new UnalignedConcept(sentence, graph, wordToSpan) { concept=".*"; label=":name" }
         val quantity = new UnalignedConcept(sentence, graph, wordToSpan) { concept=".*-quantity"; label=":unit" }
         val argOf = new UnalignedConcept(sentence, graph, wordToSpan) { concept="person|thing"; label=":.*-of" } // ARG?-of, instrument-of 
-        val governmentOrg = new UnalignedChild(sentence, graph, wordToSpan) { concept="government-organization"; label=":ARG0-of" }
+        val personOf = new UnalignedConcept(sentence, graph, wordToSpan) { concept="person"; label=":.*"; num=1 } // Koreans = (person :poss ..)
+        val governmentOrg = new UnalignedChild(sentence, graph, wordToSpan) { concept="government-organization"; label=":ARG.*-of" }
         val polarityChild = new UnalignedChild(sentence, graph, wordToSpan) { concept=".*"; label=":polarity"; words="un.*|in.*|il.*" }  // il.* for illegal
         val est = new UnalignedChild(sentence, graph, wordToSpan) { concept=".*"; label=":degree"; words=".*est" }
         val er = new UnalignedChild(sentence, graph, wordToSpan) { concept=".*"; label=":degree"; words=".*er" }
@@ -181,12 +182,9 @@ object AlignSpans2 {
         addAllSpans(fuzzyConcept, graph, wordToSpan, addCoRefs=false)
         try { updateSpans(namedEntityCollect, graph) } catch { case e : Throwable => Unit }
         try { updateSpans(unalignedEntity, graph) } catch { case e : Throwable => Unit }
-        try {
-            updateSpans(quantity, graph)
-        } catch { case e : Throwable => Unit }
-        try {
-            updateSpans(argOf, graph)
-        } catch { case e : Throwable => Unit }
+        try { updateSpans(quantity, graph) } catch { case e : Throwable => Unit }
+        try { updateSpans(argOf, graph) } catch { case e : Throwable => Unit }
+        try { updateSpans(personOf, graph) } catch { case e : Throwable => Unit }
         try { updateSpans(governmentOrg, graph) } catch { case e : Throwable => Unit }
         try { updateSpans(polarityChild, graph) } catch { case e : Throwable => Unit }
         try { updateSpans(est, graph) } catch { case e : Throwable => Unit }
@@ -294,9 +292,10 @@ object AlignSpans2 {
             ) extends SpanUpdater(sentence, graph, wordToSpan) {
 
         var label: String = ""
+        var num = 1000
 
         nodes = node => {
-            if (node.children.exists(_._1.matches(label))) {
+            if (node.children.exists(_._1.matches(label)) && node.children.count(_._1.matches(label)) <= num) {
                 try {
                     List(("", node) :: graph.spans(node.children.filter(_._1.matches(label))(0)._2.spans(0)).nodeIds.map(x => ("", graph.getNodeById(x))))
                 } catch { case e : Throwable => List() }
