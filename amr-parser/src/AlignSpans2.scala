@@ -101,8 +101,21 @@ object AlignSpans2 {
             }
         }
 
+        val minusPolarity = new SpanAligner(sentence, graph) {
+            concept = "-"
+            tabSentence = "\t"+sentence.mkString("\t").toLowerCase+"\t"
+            var word = List("no", "not", "non")
+            nodes = node => { if (sentence.exists(x=> word.contains(x))) {
+                    List(("", node))
+                } else {
+                    List()
+                }
+            }
+            words = nodes => { ("\t" + word.mkString("\t|") + "\t").r }
+        }
+
         val singleConcept = new SpanAligner(sentence, graph) {
-            concept = ".*"
+            concept = "[^-].*"  // so :polarity - doesn't get matched (:op1 "-" still does though)
             nodes = node => {
                 if (alignWord(stemmedSentence, node, wordToSpan) != None) {
                     List(("", node))
@@ -117,7 +130,7 @@ object AlignSpans2 {
         }
 
         val fuzzyConcept = new SpanAligner(sentence, graph) {
-            concept = ".*"
+            concept = "[^-].*"  // so :polarity - doesn't get matched (:op1 "-" still does though)
             nodes = node => {
                 if (fuzzyAlign(stemmedSentence, node, wordToSpan) != None) {
                     List(("", node))
@@ -135,7 +148,7 @@ object AlignSpans2 {
         val quantity = new UnalignedConcept(sentence, graph) { concept=".*-quantity"; label=":unit" }
         val argOf = new UnalignedConcept(sentence, graph) { concept="person|thing"; label=":.*-of" } // ARG?-of, instrument-of 
         val governmentOrg = new UnalignedChild(sentence, graph) { concept="government-organization"; label=":ARG0-of" }
-        val polarity = new UnalignedChild(sentence, graph) { concept=".*"; label=":polarity"; words="un.*|in.*|il.*" }  // il.* for illegal
+        val polarityChild = new UnalignedChild(sentence, graph) { concept=".*"; label=":polarity"; words="un.*|in.*|il.*" }  // il.* for illegal
         val est = new UnalignedChild(sentence, graph) { concept=".*"; label=":degree"; words=".*est" }
         val er = new UnalignedChild(sentence, graph) { concept=".*"; label=":degree"; words=".*er" }
 
@@ -146,6 +159,7 @@ object AlignSpans2 {
         addAllSpans(dateEntity, graph, wordToSpan, addCoRefs=false)
 //        dateEntity.coRef = true
 //        addAllSpans(dateEntity, graph, wordToSpan, addCoRefs=true)
+        addAllSpans(minusPolarity, graph, wordToSpan, addCoRefs=false)
         addAllSpans(singleConcept, graph, wordToSpan, addCoRefs=false)
         addAllSpans(fuzzyConcept, graph, wordToSpan, addCoRefs=false)
         try { updateSpans(unalignedEntity, graph) } catch { case e : Throwable => Unit }
@@ -156,7 +170,7 @@ object AlignSpans2 {
             updateSpans(argOf, graph)
         } catch { case e : Throwable => Unit }
         try { updateSpans(governmentOrg, graph) } catch { case e : Throwable => Unit }
-        try { updateSpans(polarity, graph) } catch { case e : Throwable => Unit }
+        try { updateSpans(polarityChild, graph) } catch { case e : Throwable => Unit }
         try { updateSpans(est, graph) } catch { case e : Throwable => Unit }
         //try { updateSpans(er, graph) } catch { case e : Throwable => Unit }
         //dateEntities(sentence, graph)
