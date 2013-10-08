@@ -68,21 +68,12 @@ object EvalSpans {
             val lines = block.split("\n")
             val alignerStrs = lines.filter(x => x.matches(".*Aligner .*"))
             val annotatorStrs = lines.filter(x => x.matches(".*AlignerTool.*")).filterNot(x => x.matches(".*Aligner .*"))
-            val goldStrs = if((i > 0 && i < 101) || ((i > 1900 && i < 2001))) {
-                    alignerStrs
-                } else {
-                    alignerStrs.filter(_.matches(".* ::gold .*"))
-                }
 
-            if (alignerStrs.size != 0 && (annotatorStrs.size != 0 || goldStrs.size != 0)) {
+            if (alignerStrs.size != 0 && annotatorStrs.size != 0) {
                 logger(1,"Index: "+i.toString)
                 n += 1
                 val Alignments(alignerStr) = alignerStrs(alignerStrs.size-1)
-                val Alignments(annotatorStr) = if (annotatorStrs.size != 0) {
-                        annotatorStrs(annotatorStrs.size-1)
-                    } else {
-                        goldStrs(0)
-                    }
+                val Alignments(annotatorStr) = annotatorStrs(annotatorStrs.size-1)
                 val aligner = alignerStr.split(" ").filterNot(_.matches("")).filterNot(_.matches("[*].*"))
                 val annotator = annotatorStr.split(" ").filterNot(_.matches("")).filterNot(_.matches("[*].*"))
                 logger(2,"aligner = "+aligner.toList.toString)
