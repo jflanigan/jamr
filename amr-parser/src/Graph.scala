@@ -128,7 +128,7 @@ case class Graph(root: Node, spans: ArrayBuffer[Span], getNodeById: Map[String, 
     def loadSpans(spanStr: String, sentence: Array[String]) = {
         assert(spans.size == 0, "This code does not support loading new spans")
         //spans.clear
-        val SpanRegex = """([*]?)([0-9]+)-([0-9]+)\|(.*)""".r
+        val SpanRegex = """([*]?)([0-9]+)-([0-9]+)\|(.*)""".r   // TODO: move to Span
         for (spanStr <- spanStr.split(" ")) {
             try {
                 val SpanRegex(corefStr, start, end, nodeStr) = spanStr
