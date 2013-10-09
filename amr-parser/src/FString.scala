@@ -4,10 +4,9 @@ import scala.util.matching.Regex
 import scala.collection.mutable.Map
 import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
-//import org.scalatest.Suite
 
 class FString private (private val list: List[Int]) {   // private constructor and private member list
-    def this(str: String) = this(if (FString.lookup.contains(str)) {    // create an FString by doing FString("string")
+    private def this(str: String) = this(if (FString.lookup.contains(str)) {    // create an FString by doing FString("string")
         List(FString.lookup(str))
     } else {
         FString.strings += str
@@ -28,8 +27,8 @@ class FString private (private val list: List[Int]) {   // private constructor a
 object FString {
     val strings: ArrayBuffer[String] = new ArrayBuffer()
     val lookup: Map[String, Int] = Map.empty[String, Int]
-/*    def apply(str: String) : FString = {
+    def apply(str: String) : FString = {    // Factory method for creating an FString
         new FString(str)
-    } */
+    }
 }
 
