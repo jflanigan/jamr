@@ -63,6 +63,12 @@ object EvalSpans {
         var n = 0
 
         val Alignments = """.*::alignments ([^:]*) .*""".r
+        val SpanRegex = """([*]?)([0-9]+)-([0-9]+)\|(.*)""".r   // TODO: move to Span
+        def normalizeSpanStr(spanstr: String) : String = {
+            val SpanRegex = """([^|]*)\|(.*)""".r
+            val SpanRegex(wordspan, nodestr) = spanstr
+            wordspan+"|"+nodestr.split("[+]").sorted.mkString("+")
+        }
 
         for ((block, i) <- Corpus.splitOnNewline(Source.stdin.getLines).zipWithIndex) {
             val lines = block.split("\n")
@@ -70,18 +76,35 @@ object EvalSpans {
             val annotatorStrs = lines.filter(x => x.matches(".*AlignerTool.*")).filterNot(x => x.matches(".*Aligner .*"))
 
             if (alignerStrs.size != 0 && annotatorStrs.size != 0) {
-                logger(1,"Index: "+i.toString)
+                assert(lines.filter(x => x.matches("^# ::tok .*")).size == 1, "Invalid # of tokenized")
+                val tokenized = lines.filter(x => x.matches("^# ::tok .*"))(0).drop(8).split(" ")
+
+                logger(2,"Index: "+i.toString)
                 n += 1
                 val Alignments(alignerStr) = alignerStrs(alignerStrs.size-1)
                 val Alignments(annotatorStr) = annotatorStrs(annotatorStrs.size-1)
-                val aligner = alignerStr.split(" ").filterNot(_.matches("")).filterNot(_.matches("[*].*"))
-                val annotator = annotatorStr.split(" ").filterNot(_.matches("")).filterNot(_.matches("[*].*"))
+                val aligner = alignerStr.split(" ").filterNot(_.matches("")).filterNot(_.matches("[*].*")).map(x => normalizeSpanStr(x)).distinct
+                val annotator = annotatorStr.split(" ").filterNot(_.matches("")).filterNot(_.matches("[*].*")).map(x => normalizeSpanStr(x)).distinct
                 logger(2,"aligner = "+aligner.toList.toString)
                 logger(2,"annotator = "+annotator.toList.toString)
+                val extra = aligner.diff(annotator)
+                val missing = annotator.diff(aligner)
+                for (i <- missing) {
+                    val SpanRegex(corefStr, start, end, nodeStr) = i
+                    val blah : String = tokenized.slice(start.toInt, end.toInt).mkString(" ")
+                    //logger(1,"MISSINGt: "+tokenized.slice(start.toInt, end.toInt).toList.map(x => {val y: String = x; y }).toString)
+                    logger(1,"MISSING: "+tokenized.slice(start.toInt, end.toInt).map(_.toString).mkString(" ").toString)
+                }
+                for (i <- extra) {
+                    val SpanRegex(corefStr, start, end, nodeStr) = i
+                    //logger(1,"EXTRAt: "+tokenized.slice(start.toInt, end.toInt).toList.map(x => {val y: String = x; y }).toString)
+                    //logger(1,"EXTRAt: "+tokenized.slice(start.toInt, end.toInt).toList.toString)
+                    logger(1,"EXTRA: "+tokenized.slice(start.toInt, end.toInt).map(_.toString).mkString(" ").toString)
+                }
+                logger(2,"correct = "+annotator.diff(annotator.diff(aligner)).toList.toString)
+                correct += annotator.diff(annotator.diff(aligner)).size
                 aligner_total += aligner.size
                 gold_total += annotator.size
-                logger(2,"diff = "+annotator.distinct.diff(annotator.diff(aligner)).toList.toString)
-                correct += annotator.distinct.diff(annotator.diff(aligner)).size
             }
         }
 
