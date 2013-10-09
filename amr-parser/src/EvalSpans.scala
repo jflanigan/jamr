@@ -93,13 +93,13 @@ object EvalSpans {
                     val SpanRegex(corefStr, start, end, nodeStr) = i
                     val blah : String = tokenized.slice(start.toInt, end.toInt).mkString(" ")
                     //logger(1,"MISSINGt: "+tokenized.slice(start.toInt, end.toInt).toList.map(x => {val y: String = x; y }).toString)
-                    logger(1,"MISSING: "+tokenized.slice(start.toInt, end.toInt).map(_.toString).mkString(" ").toString)
+                    logger(1,"MISSING: "+tokenized.slice(start.toInt, end.toInt).map(_.toString).mkString(" ").toString+" = "+i)
                 }
                 for (i <- extra) {
                     val SpanRegex(corefStr, start, end, nodeStr) = i
                     //logger(1,"EXTRAt: "+tokenized.slice(start.toInt, end.toInt).toList.map(x => {val y: String = x; y }).toString)
                     //logger(1,"EXTRAt: "+tokenized.slice(start.toInt, end.toInt).toList.toString)
-                    logger(1,"EXTRA: "+tokenized.slice(start.toInt, end.toInt).map(_.toString).mkString(" ").toString)
+                    logger(1,"EXTRA:   "+tokenized.slice(start.toInt, end.toInt).map(_.toString).mkString(" ").toString+" = "+i)
                 }
                 logger(2,"correct = "+annotator.diff(annotator.diff(aligner)).toList.toString)
                 correct += annotator.diff(annotator.diff(aligner)).size
