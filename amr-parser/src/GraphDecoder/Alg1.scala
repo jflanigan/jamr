@@ -20,8 +20,8 @@ import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 import Double.{NegativeInfinity => minusInfty}
 
-abstract class Alg1(featureNames: List[String], label_set: Array[String])
-    extends Decoder(featureNames, label_set) {
+abstract class Alg1(featureNames: List[String], labelSet: Array[String])
+    extends Decoder(featureNames, labelSet) {
     // Base class has defined:
     // val features: Features
     // var local_score: (Node, Node, String, Input) => Double
@@ -35,7 +35,7 @@ abstract class Alg1(featureNames: List[String], label_set: Array[String])
         val Input(graph, sentence, parse) = input
         nodes = graph.nodes
 
-        var score: Double = 0.0
+        var score = 0.0
         val feats = new FeatureVector()
         for { node1 <- nodes
               relations = node1.relations.map(_._1).toSet
