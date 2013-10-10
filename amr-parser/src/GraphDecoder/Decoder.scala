@@ -30,10 +30,8 @@ abstract class Decoder(feature_names: List[String], label_set: Array[Label]) {
     var labels = label_set
     var nodes = Array.empty[Node]
 
-    var local_score: (Node, Node, Label, Input) => Double = 
-        (node1: Node, node2: Node, label: Label, input: Input) => {
-        features.local_score(node1, node2, label, input)
-    }
+    var local_score: (Node, Node, Label, Input) => Double = features.local_score
+    var local_features: (Node, Node, Label, Input) => FeatureVector = features.local_features
 
     var neighbors: (Node) => Iterator[Node] = node => {
         nodes.iterator

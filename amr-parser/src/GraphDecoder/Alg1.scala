@@ -25,6 +25,8 @@ abstract class Alg1(featureNames: List[String], label_set: Array[String])
     // Base class has defined:
     // val features: Features
     // var local_score: (Node, Node, String, Input) => Double
+    // var local_features: (Node, Node, Label, Input) => FeatureVector
+    // var neighbors: (Node) => Iterator[Node]
     // var labels
     // var nodes
 
@@ -46,7 +48,7 @@ abstract class Alg1(featureNames: List[String], label_set: Array[String])
             if (weight > 0) {
                 // Adds the relation to the graph
                 node1.relations = (label, node2) :: node1.relations
-                feats += features.local_features(node1, node2, label, input)
+                feats += local_features(node1, node2, label, input)
                 score += weight
             }
         }
