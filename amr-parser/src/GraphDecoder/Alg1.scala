@@ -27,8 +27,9 @@ abstract class Alg1(featureNames: List[String], label_set: Array[String])
     // var labels
 
     def decode(input: Input) : DecoderResult = {
-        return DecoderResult(Graph.parse("(none)"), new FeatureVector(), 0)
         //var nodes: Array[Node]
+
+        return DecoderResult(Graph.parse("(none)"), new FeatureVector(), 0)
     }
 }
 
