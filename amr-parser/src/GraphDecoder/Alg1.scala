@@ -18,6 +18,7 @@ import scala.util.matching.Regex
 import scala.collection.mutable.Map
 import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
+import Double.{NegativeInfinity => minusInfty}
 
 abstract class Alg1(featureNames: List[String], label_set: Array[String])
     extends Decoder(featureNames, label_set) {
@@ -27,9 +28,24 @@ abstract class Alg1(featureNames: List[String], label_set: Array[String])
     // var labels
 
     def decode(input: Input) : DecoderResult = {
-        //var nodes: Array[Node]
+        // Assumes that Node.relations has be setup correctly (for all graph fragments)
+        val Input(graph, sentence, parse) = input
+        nodes = graph.nodes
 
-        return DecoderResult(Graph.parse("(none)"), new FeatureVector(), 0)
+        for{node1 <- nodes
+            relations = node1.relations.map(_._1).toSet
+            label <- labels
+            if !relations.contains(label)} {
+
+            val (weight, node2) = neighbors(node1).map(x => (local_score(node1, x, label, input), x)).maxBy(_._1)
+
+            if (weight > 0) {
+                // Adds the relation to the graph
+                node1.relations = (label, node2) :: node1.relations
+            }
+        }
+
+        return DecoderResult(graph, new FeatureVector(), 0)
     }
 }
 

@@ -194,6 +194,12 @@ case class Graph(root: Node, spans: ArrayBuffer[Span], getNodeById: Map[String, 
         updateSpan(spanIndex, span.start, span.end, span.nodeIds, coRef, sentence)
     }
 
+    def nodes : Array[Node] = {
+        val nodes = new ArrayBuffer[Node]()
+        doRecursive(root, node => nodes += node)
+        return nodes.toArray
+    }
+
     def doRecursive(node: Node, f: (Node) => Unit) {
         f(node)
         for ((_,child) <- node.topologicalOrdering) {
