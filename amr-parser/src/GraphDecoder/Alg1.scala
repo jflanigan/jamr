@@ -53,6 +53,7 @@ abstract class Alg1(featureNames: List[String], labelSet: Array[String])
             }
         }
 
+        graph.doRecursive(graph.root, x => { x.relations = x.relations.reverse })
         return DecoderResult(graph, feats, score)
     }
 }
