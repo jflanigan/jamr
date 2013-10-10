@@ -32,7 +32,7 @@ abstract class Decoder() {
     var nodes: Array[Node]
     var labels: Array[Label]
 
-    def decode(input: Input) : Unit
+    def decode(input: Input) : DecoderResult
 
 }
 
