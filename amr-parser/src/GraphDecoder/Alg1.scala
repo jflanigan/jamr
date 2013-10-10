@@ -24,8 +24,8 @@ abstract class Alg1(featureNames: List[String], labelSet: Array[String])
     extends Decoder(featureNames, labelSet) {
     // Base class has defined:
     // val features: Features
-    // var local_score: (Node, Node, String, Input) => Double
-    // var local_features: (Node, Node, Label, Input) => FeatureVector
+    // val local_score: (Node, Node, String, Input) => Double
+    // val local_features: (Node, Node, Label, Input) => FeatureVector
     // var neighbors: (Node) => Iterator[Node]
     // var labels
     // var nodes
