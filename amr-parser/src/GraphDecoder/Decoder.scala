@@ -35,6 +35,5 @@ abstract class Decoder(feature_names: List[String], label_set: Array[String]) {
     }
 
     def decode(input: Input, labels: Array[Label]) : DecoderResult
-
 }
 
