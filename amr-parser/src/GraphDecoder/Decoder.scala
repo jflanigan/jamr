@@ -34,7 +34,7 @@ abstract class Decoder(feature_names: List[String], label_set: Array[Label]) {
     var local_features: (Node, Node, Label, Input) => FeatureVector = features.local_features
 
     var neighbors: (Node) => Iterator[Node] = node => {
-        nodes.iterator
+        nodes.view.iterator
     }
 
     def decode(input: Input, labels: Array[Label]) : DecoderResult

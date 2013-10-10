@@ -31,16 +31,16 @@ abstract class Alg1(featureNames: List[String], label_set: Array[String])
     // var nodes
 
     def decode(input: Input) : DecoderResult = {
-        // Assumes that Node.relations has be setup correctly (for all graph fragments)
+        // Assumes that Node.relations has been setup correctly (for all graph fragments)
         val Input(graph, sentence, parse) = input
         nodes = graph.nodes
 
         var score: Double = 0.0
         val feats = new FeatureVector()
-        for{node1 <- nodes
-            relations = node1.relations.map(_._1).toSet
-            label <- labels
-            if !relations.contains(label)} {
+        for { node1 <- nodes
+              relations = node1.relations.map(_._1).toSet
+              label <- labels
+              if !relations.contains(label) } {
 
             // Search over neighbors, and pick the one with highest score
             val (weight, node2) = neighbors(node1).map(x => (local_score(node1, x, label, input), x)).maxBy(_._1)
