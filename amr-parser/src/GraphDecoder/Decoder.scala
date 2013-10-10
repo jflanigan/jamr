@@ -26,7 +26,7 @@ case class Input(graph: Graph, sentence: Array[String], parse: Array[Dependency]
 case class DecoderResult(graph: Graph, features: FeatureVector, score: Double)
 
 abstract class Decoder(feature_names: List[String], label_set: Array[Label]) {
-    val features = new Features(feature_names)
+    val features = new Features(feature_names) // maybe this should be renamed ff?
     var labels = label_set
     var nodes = Array.empty[Node]
 

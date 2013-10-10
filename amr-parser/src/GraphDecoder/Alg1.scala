@@ -24,7 +24,7 @@ abstract class Alg1(featureNames: List[String], label_set: Array[String])
     extends Decoder(featureNames, label_set) {
     // Base class has defined:
     // val features: Features
-    // var weight: (Node, Node, String, Input) => Double
+    // var local_score: (Node, Node, String, Input) => Double
     // var labels
     // var nodes
 
@@ -33,6 +33,8 @@ abstract class Alg1(featureNames: List[String], label_set: Array[String])
         val Input(graph, sentence, parse) = input
         nodes = graph.nodes
 
+        var score: Double = 0.0
+        val feats = new FeatureVector()
         for{node1 <- nodes
             relations = node1.relations.map(_._1).toSet
             label <- labels
@@ -44,10 +46,12 @@ abstract class Alg1(featureNames: List[String], label_set: Array[String])
             if (weight > 0) {
                 // Adds the relation to the graph
                 node1.relations = (label, node2) :: node1.relations
+                feats += features.local_features(node1, node2, label, input)
+                score += weight
             }
         }
 
-        return DecoderResult(graph, new FeatureVector(), 0)
+        return DecoderResult(graph, feats, score)
     }
 }
 
