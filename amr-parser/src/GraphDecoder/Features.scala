@@ -54,15 +54,15 @@ class Features(feature_names: List[String]) {
         } yield fftable(feature)
     }
     //logger(0,feature_names)
-
-    def local(t: Int, sCur: String, sPrev: String, input: Sentence) : FeatureVector = {
+*/
+    def local_features(node1: Node, node2: Node, label: Label, input: Input) : FeatureVector = {
         // Calculate the local features given current state, previous state, input
         val feats = FeatureVector()
-        for (ff <- feature_functions) {
-            feats += ff(t, sCur, sPrev, input)
-        }
+//        for (ff <- feature_functions) {
+//            feats += ff(t, sCur, sPrev, input)
+//        }
         return feats
-    } */
+    }
 
     def local_score(node1: Node, node2: Node, label: Label, input: Input) : Double = {
         0.0

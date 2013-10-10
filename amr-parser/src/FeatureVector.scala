@@ -28,9 +28,6 @@ case class MulAssoc(x: Double) { def * (v: FeatureVector) = mul(x, v) }
 // implicit def doubleToMulAssoc(x: Double) = new MulAssoc(x)
 
 case class FeatureVector(fmap : Map[String, Double] = Map[String, Double]()) {
-    def this() = {
-        this(fmap = Map.empty[String, Double])
-    }
 //    def copy(v: FeatureVector) = { FeatureVector(v.fmap.clone()) }
     def dot(v: FeatureVector) : Double = {
         if (fmap.size <= v.fmap.size) {
