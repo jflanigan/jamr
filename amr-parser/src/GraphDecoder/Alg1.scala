@@ -19,12 +19,14 @@ import scala.collection.mutable.Map
 import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 
-abstract class Alg1(featureNames: List[String]) extends Decoder(featureNames) {
+abstract class Alg1(featureNames: List[String], label_set: Array[String])
+    extends Decoder(featureNames, label_set) {
     // Base class has defined:
     // val features: Features
     // var weight: (Node, Node, String, Input) => Double
+    // var labels
 
-    def decode(input: Input, labels: Array[Label]) : DecoderResult = {
+    def decode(input: Input) : DecoderResult = {
         return DecoderResult(Graph.parse("(none)"), new FeatureVector(), 0)
         //var nodes: Array[Node]
     }
