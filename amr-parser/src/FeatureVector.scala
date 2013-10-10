@@ -1,4 +1,4 @@
-package edu.cmu.lti.nlp.ner
+package edu.cmu.lti.nlp.amr
 
 import java.io.File
 import java.io.FileOutputStream
@@ -24,8 +24,13 @@ import scala.util.parsing.combinator._
 case class mul(scale: Double, v: FeatureVector);
 // Trickyness below: see p.452 Programming Scala 2nd Edition (21.5 Implicit conversions)
 case class MulAssoc(x: Double) { def * (v: FeatureVector) = mul(x, v) }
+// in package.scala:
+// implicit def doubleToMulAssoc(x: Double) = new MulAssoc(x)
 
 case class FeatureVector(fmap : Map[String, Double] = Map[String, Double]()) {
+    def this() = {
+        this(fmap = Map.empty[String, Double])
+    }
 //    def copy(v: FeatureVector) = { FeatureVector(v.fmap.clone()) }
     def dot(v: FeatureVector) : Double = {
         if (fmap.size <= v.fmap.size) {
