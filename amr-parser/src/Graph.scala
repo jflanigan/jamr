@@ -316,5 +316,6 @@ object Graph {
         graph.makeIds
         return graph
     }
+    def empty : Graph = { parse("(none)") }
 }
 

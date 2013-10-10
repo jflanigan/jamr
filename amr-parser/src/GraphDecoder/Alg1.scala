@@ -19,21 +19,14 @@ import scala.collection.mutable.Map
 import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 
-case class Dependency(head: Int, dependent: Int, relation: String)
+abstract class Alg1(featureNames: List[String]) extends Decoder(featureNames) {
+    // Base class has defined:
+    // val features: Features
+    // var weight: (Node, Node, String, Input) => Double
 
-case class Input(graph: Graph, sentence: Array[String], parse: Array[Dependency])
-
-case class DecoderResult(graph: Graph, features: FeatureVector, score: Double)
-
-abstract class Decoder(feature_names: List[String]) {
-    val features = new Features(feature_names)
-
-    var weight: (Node, Node, Label, Input) => Double = 
-        (node1: Node, node2: Node, label: Label, input: Input) => {
-        features.local_score(node1, node2, label, input)
+    def decode(input: Input, labels: Array[Label]) : DecoderResult = {
+        return DecoderResult(Graph.parse("(none)"), new FeatureVector(), 0)
+        //var nodes: Array[Node]
     }
-
-    def decode(input: Input, labels: Array[Label]) : DecoderResult
-
 }
 
