@@ -26,6 +26,7 @@ abstract class Alg1(featureNames: List[String], label_set: Array[String])
     // val features: Features
     // var weight: (Node, Node, String, Input) => Double
     // var labels
+    // var nodes
 
     def decode(input: Input) : DecoderResult = {
         // Assumes that Node.relations has be setup correctly (for all graph fragments)
@@ -37,6 +38,7 @@ abstract class Alg1(featureNames: List[String], label_set: Array[String])
             label <- labels
             if !relations.contains(label)} {
 
+            // Search over neighbors, and pick the one with highest score
             val (weight, node2) = neighbors(node1).map(x => (local_score(node1, x, label, input), x)).maxBy(_._1)
 
             if (weight > 0) {
