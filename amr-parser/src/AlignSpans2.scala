@@ -460,16 +460,15 @@ object AlignSpans2 {
                 }
             }
         }
-        graph.doRecursive(graph.root, add)
+        graph.doRecursive(add)
     }
 
     private def updateSpans(f: AlignSpans2.SpanUpdater, graph: Graph) {
-        graph.doRecursive(graph.root, f.update)
+        graph.doRecursive(f.update)
     }
 
 /****** </This stuff was originally in Graph> *******/
 
-    // TODO: everything below can be deleted
 
     //private val conceptRegex = """-[0-9]+$""".r
     //private val ConceptExtractor = "([a-zA-Z0-9.-]+ *)|\"([^\"]+)\" *".r

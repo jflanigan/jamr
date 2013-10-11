@@ -31,7 +31,7 @@ abstract class Alg1(featureNames: List[String], labelSet: Array[String])
     // var nodes
 
     def decode(input: Input) : DecoderResult = {
-        // Assumes that Node.relations has been setup correctly (for all graph fragments)
+        // Assumes that Node.relations has been setup correctly for the graph fragments
         val Input(graph, sentence, parse) = input
         nodes = graph.nodes
 
@@ -46,14 +46,14 @@ abstract class Alg1(featureNames: List[String], labelSet: Array[String])
             val (weight, node2) = neighbors(node1).map(x => (local_score(node1, x, label, input), x)).maxBy(_._1)
 
             if (weight > 0) {
-                // Adds the relation to the graph
+                // Add the relation to the graph
                 node1.relations = (label, node2) :: node1.relations
                 feats += local_features(node1, node2, label, input)
                 score += weight
             }
         }
 
-        graph.doRecursive(graph.root, x => { x.relations = x.relations.reverse })
+        graph.doRecursive(node => { node.relations = node.relations.reverse })
         return DecoderResult(graph, feats, score)
     }
 }
