@@ -19,10 +19,9 @@ import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 import scala.util.parsing.combinator._
 
-
 case class Graph(root: Node, spans: ArrayBuffer[Span], getNodeById: Map[String, Node], getNodeByName: Map[String, Node]) {
     def loadSpans(spanStr: String, sentence: Array[String]) = {
-        assert(spans.size == 0, "This code does not support loading new spans")
+        assert(spans.size == 0, "This code does not support re-loading the spans")
         //spans.clear
         val SpanRegex = """([*]?)([0-9]+)-([0-9]+)\|(.*)""".r   // TODO: move to Span
         for (spanStr <- spanStr.split(" ")) {
@@ -104,21 +103,19 @@ case class Graph(root: Node, spans: ArrayBuffer[Span], getNodeById: Map[String, 
     }
 
 /* Very cool recursive function TODO: use this one instead
-    def doRecursive(parentMessage: T, node: Node, f: (Node, T) => T, g: List[R] => R ) : R = {
+    def doRecursive(parentMessage: T, node: Node, f: (Node, T) => T, g: List[T] => R ) : R = {
         val message = f(parentMessage, node)
         return g(node.topologicalOrdering.map(x => doRecursive(message, x.2, f, g)).toList)
     }
 */
 
-    def makeIds() {
+    private def makeIds(node: Node = root, id: List[Int] = List(0)) {
         // Sets the node.id field for every node in the graph according to the topologicalOrdering
         // For example "0" is the root and "0.1" is the 2nd child of the root
         // Assumes that a topological ordering already exists (node.topologicalOrdering is non-empty)
-        getNodeById.clear
-        makeIds(root, List(0))
-    }
-
-    private def makeIds(node: Node, id: List[Int]) {
+        if (node != root) {
+            getNodeById.clear
+        }
         node.id = id.mkString(".")
         getNodeById += (node.id -> node)
         for (((_,child), i) <- node.topologicalOrdering.zipWithIndex) {
@@ -126,14 +123,12 @@ case class Graph(root: Node, spans: ArrayBuffer[Span], getNodeById: Map[String, 
         }
     }
 
-    private def makeVariables() {
+    private def makeVariables(node: Node = root) {
         // Populate the getNodeByName map
         // Assumes a topologicalOrdering exists and node.name is set
-        getNodeByName.clear
-        makeVariables(root)
-    }
-
-    private def makeVariables(node: Node) {
+        if (node != root) {
+            getNodeByName.clear
+        }
         if (node.name != None) {
             val Some(name) = node.name
             if (getNodeByName.contains(name)) {
@@ -211,7 +206,7 @@ object Graph {
         }
         graph.makeVariables()
         graph.unifyVariables()
-        graph.makeIds
+        graph.makeIds()
         return graph
     }
     def empty : Graph = { parse("(none)") }
