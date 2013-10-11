@@ -57,11 +57,7 @@ case class Node(var id: String, name: Option[String], concept: String, var relat
         prettyString(0, false)
     }
 
-    def prettyString(detail: Int, pretty: Boolean) : String = {
-        prettyString(detail, pretty, "")
-    }
-
-    private def prettyString(detail: Int, pretty: Boolean, indent: String = "") : String = {
+    def prettyString(detail: Int, pretty: Boolean, indent: String = "") : String = {
     // detail = 0: Least detail. No variables names or node ids.
     //             (date-entity :day 5 :month 1 :year 2002)
 
