@@ -20,14 +20,12 @@ import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 import Double.{NegativeInfinity => minusInfty}
 
-abstract class Alg1(featureNames: List[String], labelSet: Array[String])
+class Alg1(featureNames: List[String], labelSet: Array[String])
     extends Decoder(featureNames, labelSet) {
     // Base class has defined:
     // val features: Features
-    // val local_score: (Node, Node, String, Input) => Double
-    // val local_features: (Node, Node, Label, Input) => FeatureVector
     // var neighbors: (Node) => Iterator[Node]
-    // var labels
+    // var labels   (set of labels represented as an array)
     // var nodes
 
     def decode(input: Input) : DecoderResult = {
@@ -43,12 +41,12 @@ abstract class Alg1(featureNames: List[String], labelSet: Array[String])
               if !relations.contains(label) } {
 
             // Search over neighbors, and pick the one with highest score
-            val (weight, node2) = neighbors(node1).map(x => (local_score(node1, x, label, input), x)).maxBy(_._1)
+            val (weight, node2) = neighbors(node1).map(x => (features.local_score(node1, x, label, input), x)).maxBy(_._1)
 
             if (weight > 0) {
                 // Add the relation to the graph
                 node1.relations = (label, node2) :: node1.relations
-                feats += local_features(node1, node2, label, input)
+                feats += features.local_features(node1, node2, label, input)
                 score += weight
             }
         }
