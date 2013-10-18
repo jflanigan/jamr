@@ -20,12 +20,11 @@ import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 import Double.{NegativeInfinity => minusInfty}
 
-class Alg1(featureNames: List[String], labelSet: Array[String])
-    extends Decoder(featureNames, labelSet) {
+class Alg1(featureNames: List[String], labelSet: Array[(String, Int)])
+    extends Decoder(featureNames) {
     // Base class has defined:
     // val features: Features
     // var neighbors: (Node) => Iterator[Node]
-    // var labels   (set of labels represented as an array)
     // var nodes
 
     def decode(input: Input) : DecoderResult = {
@@ -39,18 +38,17 @@ class Alg1(featureNames: List[String], labelSet: Array[String])
         val feats = new FeatureVector()
         for { node1 <- nodes
               relations = node1.relations.map(_._1).toSet
-              label <- labels
+              (label, maxCardinality) <- labelSet
               if !relations.contains(label) } {
             logger(1, "node1 = " + node1.concept)
+            logger(1, "label = " + label)
 
             // Search over neighbors, and pick the one with highest score
-            val (weight, node2) = neighbors(node1).map(x => (features.localScore(node1, x, label, input), x)).maxBy(_._1)
+            val nodes : List[(Node, Double)] = neighbors(node1).toList.map(x => (x, features.localScore(node1, x, label, input))).sortBy(_._2).filter(_._2 > 0).take(maxCardinality)
 
-            logger(1, "node2 = " + node2.concept)
-            logger(1, "weight = " + weight.toString)
+            logger(1, "nodes = " + nodes.toString)
 
-            if (weight > 0) {
-                // Add the relation to the graph
+            for ((node2, weight) <- nodes) {
                 node1.relations = (label, node2) :: node1.relations
                 feats += features.localFeatures(node1, node2, label, input)
                 score += weight
