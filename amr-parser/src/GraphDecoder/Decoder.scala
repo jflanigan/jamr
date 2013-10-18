@@ -25,18 +25,16 @@ case class Input(graph: Graph, sentence: Array[String], parse: Array[Dependency]
 
 case class DecoderResult(graph: Graph, features: FeatureVector, score: Double)
 
-abstract class Decoder(feature_names: List[String], label_set: Array[Label]) {
-    val features = new Features(feature_names) // maybe this should be renamed ff?
-    val local_score: (Node, Node, Label, Input) => Double = features.local_score
-    val local_features: (Node, Node, Label, Input) => FeatureVector = features.local_features
+abstract class Decoder(featureNames: List[String], labelSet: Array[Label]) {
+    val features = new Features(featureNames) // maybe this should be renamed ff?
 
-    var labels = label_set
+    var labels = labelSet
     var nodes = Array.empty[Node]
 
     var neighbors: (Node) => Iterator[Node] = node => {
         nodes.view.iterator
     }
 
-    def decode(input: Input, labels: Array[Label]) : DecoderResult
+    def decode(input: Input) : DecoderResult
 }
 

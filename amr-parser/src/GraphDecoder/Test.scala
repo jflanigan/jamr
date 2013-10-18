@@ -39,7 +39,19 @@ object Test {
       }
     }
 
+    def node(name: String) : Node = {
+        return Node(name, Some(name), name, List(), List(), List(), None, ArrayBuffer())
+    }
+
+    def weights(weightList : List[(String, String, String, Double)]) : FeatureVector = {
+        return FeatureVector(
+            Map() ++ (for ((node1, node2, relation, weight) <- weightList) yield {
+                ("Id1="+node1+":Id2="+node2+":L="+relation, weight)
+            }).toMap)
+    }
+
     def main(args: Array[String]) {
+        println("Starting")
         val options = parseOptions(Map(),args.toList)
         if (options.contains('help)) { println(usage); sys.exit(1) }
 
@@ -47,44 +59,17 @@ object Test {
             verbosity = options('verbosity).asInstanceOf[Int]
         }
 
-        var aligner2 = true
-        if (options.contains('aligner1)) {
-            aligner2 = false
-        }
-
-        val sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
-        val Block = """((?:\n|.)*)\n(\((?:\n|.)*)""".r  // (?: ) is non-capturing group
-                                                        // and . does not match \n
-        for (block <- Corpus.splitOnNewline(Source.stdin.getLines)) {
-            if (block matches "(.|\n)*\n\\((.|\n)*") {  // Does it contain some AMR?
-                logger(2,"**** Processsing Block *****")
-                logger(2,block)
-                logger(2,"****************************")
-                val Block(extrastr, amrstr) = block
-                println(extrastr)
-                val amr = Graph.parse(amrstr)
-                val extras = Corpus.getUlfString(extrastr)
-                val tokenized = extras("::tok").split(" ")
-                val wordAlignments = AlignWords.alignWords(tokenized, amr)
-                val spanAlignments = if (aligner2) {
-                        AlignSpans2.align(tokenized, amr)
-                    } else {
-                        AlignSpans.alignSpans(tokenized, amr, wordAlignments)
-                    }
-                AlignSpans.logUnalignedConcepts(amr.root)
-
-                val spans = amr.spans
-                for ((span, i) <- spans.zipWithIndex) {
-                    logger(1, "Span "+(i+1).toString+":  "+span.words+" => "+span.amr)
-                    logger(3, "* "+span.format)
-                }
-                println("# ::alignments "+spans.map(_.format).mkString(" ")+" ::annotator Aligner v.02 ::date "+sdf.format(new Date))
-                println(amrstr+"\n")
-            } else {
-                println(block+"\n")
-            }
-        }
+        val nodes = Map("1" -> node("1"),
+                        "2" -> node("2"),
+                        "3" -> node("3"))
+        val graph = Graph(nodes("1"), ArrayBuffer(), nodes, nodes)
+        val decoder = new Alg1(List("edgeId"), Array(":r"))
+        decoder.features.weights = weights(
+            List(("1", "2", ":r", 6),
+                 ("2", "3", ":r", -6),
+                 ("1", "3", ":r", 3)))
+        val result = decoder.decode(Input(graph, Array(), Array()))
+        result.graph.printTriples(detail = 1)
     }
-
 }
 

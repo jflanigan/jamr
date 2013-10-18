@@ -33,20 +33,26 @@ class Alg1(featureNames: List[String], labelSet: Array[String])
         val Input(graph, sentence, parse) = input
         nodes = graph.nodes
 
+        logger(1, "weights = " + features.weights)
+
         var score = 0.0
         val feats = new FeatureVector()
         for { node1 <- nodes
               relations = node1.relations.map(_._1).toSet
               label <- labels
               if !relations.contains(label) } {
+            logger(1, "node1 = " + node1.concept)
 
             // Search over neighbors, and pick the one with highest score
-            val (weight, node2) = neighbors(node1).map(x => (features.local_score(node1, x, label, input), x)).maxBy(_._1)
+            val (weight, node2) = neighbors(node1).map(x => (features.localScore(node1, x, label, input), x)).maxBy(_._1)
+
+            logger(1, "node2 = " + node2.concept)
+            logger(1, "weight = " + weight.toString)
 
             if (weight > 0) {
                 // Add the relation to the graph
                 node1.relations = (label, node2) :: node1.relations
-                feats += features.local_features(node1, node2, label, input)
+                feats += features.localFeatures(node1, node2, label, input)
                 score += weight
             }
         }
