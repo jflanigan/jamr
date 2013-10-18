@@ -22,60 +22,69 @@ import scala.util.parsing.combinator._
 
 /**************************** Feature Functions *****************************/
 
-class Features(feature_names: List[String]) {
-//    type FeatureFunction = (Int, String, String, Sentence) => FeatureVector
-/*    val fftable : Map[String, FeatureFunction] = Map[String, FeatureFunction](
-        "unigrams" -> ffunigram,
-        "prevtag" -> ffprevtag,
-        "1to4" -> ff1to4,
-        "prev_next1to4" -> ffprev_next1to4,
-        "1to4_conj_prev_next" -> ff1to4_conj_prev_next,
-        "prev_tag_conj_1to5" -> ffprev_tag_conj_1to5,
-        "prefixes" -> ffprefixes,
-        "gazetteer_unigram" -> ffgazetteer_unigram,
-        "capital" -> ffcapital,
-        "position" -> ffposition
-    ) // TODO: error checking on lookup
-    val nofast = List("gazetteer_unigram")  // ff that don't support fast lookup
+class Features(featureNames: List[String]) {
+    var weights = FeatureVector()
+    type FeatureFunction = (Node, Node, String, Input) => FeatureVector
 
-    var prev_t : Int = -1       // For fast features
+    val ffTable = Map[String, FeatureFunction](
+        "edgeId" -> ffEdgeId,
+        "conceptBigram" -> ffConceptBigram
+    )
+
+    val notFast = List()  // ff that don't support fast lookup
+
+/*    var prev_t : Int = -1       // For fast features
     var prev_input = Array[Token]()
     var prev_sPrev = ""
-    var saved = FeatureVector()
+    var saved = FeatureVector() */
 
-    val feature_functions : List[FeatureFunction] = {
-        for { feature <- feature_names
-              if !nofast.contains(feature)
-        } yield fftable(feature)
-    }
-    val feature_functions_nofast : List[FeatureFunction] = {
+    var featureFunctions : List[FeatureFunction] = {
+        for { feature <- featureNames
+              if !notFast.contains(feature)
+        } yield ffTable(feature)
+    } // TODO: error checking on lookup
+
+/*    val featureFunctionsNotFast : List[FeatureFunction] = {
         for { feature <- feature_names
               if nofast.contains(feature)
         } yield fftable(feature)
     }
     //logger(0,feature_names)
 */
-    def local_features(node1: Node, node2: Node, label: Label, input: Input) : FeatureVector = {
-        // Calculate the local features given current state, previous state, input
+
+    def setFeatures(featureNames: List[String]) {
+        featureFunctions = featureNames.filter(x => !notFast.contains(x)).map(x => ffTable(x))
+        //featureFunctionsNotFast = featureNames.filter(x => notFast.contains(x)).map(x => ffTable(x))
+    }
+
+    def localFeatures(node1: Node, node2: Node, label: String, input: Input) : FeatureVector = {
+        // Calculate the local features
         val feats = FeatureVector()
-//        for (ff <- feature_functions) {
-//            feats += ff(t, sCur, sPrev, input)
-//        }
+        for (ff <- featureFunctions) {
+            feats += ff(node1, node2, label, input)
+        }
         return feats
     }
 
-    def local_score(node1: Node, node2: Node, label: Label, input: Input) : Double = {
-        0.0
+    def localScore(node1: Node, node2: Node, label: String, input: Input) : Double = {
+        var score = 0.0
+        for (ff <- featureFunctions) {
+            logger(2, ff.toString)
+            logger(2, ff(node1, node2, label, input))
+            score += weights.dot(ff(node1, node2, label, input))
+        }
+        return score
     }
 
-/*
-    def ffunigram(i: Int, sCur: String, sPrev: String, input: Sentence) : FeatureVector = {
-        val f = FeatureVector()
-        f.fmap += ("Wi=" + input(i).token + ":Ti=" + sCur -> 1.0)
-        //f += (input(i-1) -> 1.0)
-        //f += (input(i
-        return f
-    } */
-}
+    // node1 is always the tail, and node2 the head
 
+    def ffEdgeId(node1: Node, node2: Node, label: String, input: Input) : FeatureVector = {  
+        return FeatureVector(Map(("Id1="+node1.id+":Id2="+node2.id+":L="+label) -> 1.0))
+    }
+
+    def ffConceptBigram(node1: Node, node2: Node, label: String, input: Input) : FeatureVector = {
+        return FeatureVector(Map(("C1="+node1.concept+":C2="+node2.concept) -> 1.0,
+                                 ("C1="+node1.concept+":C2="+node2.concept+":L="+label) -> 1.0))
+    }
+}
 

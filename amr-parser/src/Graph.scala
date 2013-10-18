@@ -20,6 +20,29 @@ import scala.collection.mutable.ArrayBuffer
 import scala.util.parsing.combinator._
 
 case class Graph(root: Node, spans: ArrayBuffer[Span], getNodeById: Map[String, Node], getNodeByName: Map[String, Node]) {
+
+    def printTriples(detail: Int = 1) {
+
+        def name(node: Node) : String = {
+            node.name match {
+                case None => ""
+                case Some(n) => n + " / "
+            }
+        }
+
+        val Relation = """:?(.*)""".r
+
+        for { node1 <- nodes
+              (Relation(relation), node2) <- node1.relations
+            } {
+            detail match {
+                case 0 => println(relation + "(" + node1.concept + ", " + node2.concept + ")")
+                case _ => println("(" + name(node1) + node1.concept + ", " + name(node2) + node2.concept + ", " + relation + ")")
+            }
+        }
+
+    }
+
     def loadSpans(spanStr: String, sentence: Array[String]) = {
         assert(spans.size == 0, "This code does not support re-loading the spans")
         //spans.clear
@@ -90,9 +113,7 @@ case class Graph(root: Node, spans: ArrayBuffer[Span], getNodeById: Map[String, 
     }
 
     def nodes : Array[Node] = {
-        val nodes = new ArrayBuffer[Node]()
-        doRecursive(node => nodes += node)
-        return nodes.toArray
+        return getNodeByName.values.toArray
     }
 
     def doRecursive(f: (Node) => Unit, node: Node = root) {
@@ -209,6 +230,7 @@ object Graph {
         graph.makeIds()
         return graph
     }
+
     def empty : Graph = { parse("(none)") }
 }
 
