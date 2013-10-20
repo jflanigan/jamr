@@ -48,11 +48,26 @@ case class FeatureVector(fmap : Map[String, Double] = Map[String, Double]()) {
         }
     }
     def -= (v: FeatureVector) : Unit = this += -1.0 * v
+    def -= (m: mul) : Unit = this += mul(-m.scale, m.v)
     def * (scale: Double) = mul(scale, this)
+    def nonzero : Boolean = {
+        var result = false
+        for ((feat, value) <- fmap) {
+            result = result || (value != 0.0)
+        }
+        return result
+    }
     def slice(v: FeatureVector) : FeatureVector = {
         val f = FeatureVector()
         for ((feat, _) <- v.fmap) {
             f.fmap(feat) = fmap.getOrElse(feat,0.0)
+        }
+        return f
+    }
+    def slice(func: String => Boolean) : FeatureVector = {
+        val f = FeatureVector()
+        for ((feat, value) <- fmap if func(feat)) {
+            f.fmap(feat) = value
         }
         return f
     }
