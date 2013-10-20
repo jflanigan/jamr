@@ -42,7 +42,7 @@ class Alg2(featureNames: List[String], labelSet: Array[String])
     def decode(input: Input) : DecoderResult = {
         // Assumes that Node.relations has been setup correctly for the graph fragments
         val Input(graph, sentence, parse) = input
-        nodes = graph.nodes
+        val nodes = graph.nodes
 //        neighbors = mkNeighbors(input)
         
         val set : Array[Int] = nodes.zipWithIndex.map(_._2)
