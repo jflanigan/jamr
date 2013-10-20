@@ -30,7 +30,7 @@ class Alg1(featureNames: List[String], labelSet: Array[(String, Int)])
         val Input(graph, sentence, parse) = input
         val nodes : List[Node] = graph.nodes.toList
 
-        def neighbors(node: Node) = {
+        def neighbors(node: Node) : List[Node] = {
             nodes
         }
 

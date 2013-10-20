@@ -25,26 +25,16 @@ class Alg2(featureNames: List[String], labelSet: Array[String])
     extends Decoder(featureNames) {
     // Base class has defined:
     // val features: Features
-    // var neighbors: (Node) => Iterator[Node]
-    // var nodes
-
-/*    var neighbors : Array[Array[(Node, String, Double)]] = Array()
-
-    def mkNeighbors(input: Input) : Array[Array[(Node, String)]] = {
-        for (node1 <- nodes) yield {
-            for (node2 <- nodes) yield {
-                val (label, weight) = labelSet.map(x => (x, features.localScore(node1, node2, x, input))).maxBy(_._1)
-                (node2, label, weight)
-            }
-        }
-    } */
 
     def decode(input: Input) : DecoderResult = {
         // Assumes that Node.relations has been setup correctly for the graph fragments
         val Input(graph, sentence, parse) = input
         val nodes = graph.nodes
-//        neighbors = mkNeighbors(input)
         
+        // Each node is numbered by its index in 'nodes'
+        // Each set is numbered by its index in 'setArray'
+        // 'set' contains the index of the set that each node is assigned to
+        // At the start each node is in its own set
         val set : Array[Int] = nodes.zipWithIndex.map(_._2)
         val setArray : Array[Set[Int]] = nodes.zipWithIndex.map(x => Set(x._2))
         def getSet(nodeIndex : Int) : Set[Int] = { setArray(set(nodeIndex)) }
@@ -55,13 +45,12 @@ class Alg2(featureNames: List[String], labelSet: Array[String])
             node1.relations = (label, node2) :: node1.relations
             feats += features.localFeatures(node1, node2, label, input)
             score += weight
-            if (set(index1) != set(index2)) {
+            if (set(index1) != set(index2)) {   // If different sets, then merge them
                 logger(1, "Adding an edge")
                 logger(1, "set = " + set.toList)
                 logger(1, "setArray = " + setArray.toList)
                 getSet(index1) ++= getSet(index2)
                 getSet(index2).clear()
-                //setArray(set(index2)) = Set()
                 set(index2) = set(index1)
             }
         }
