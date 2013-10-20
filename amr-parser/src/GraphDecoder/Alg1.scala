@@ -25,16 +25,14 @@ class Alg1(featureNames: List[String], labelSet: Array[(String, Int)])
     // Base class has defined:
     // val features: Features
 
-    var nodes = Array.empty[Node]
-
-    var neighbors: (Node) => Iterator[Node] = node => {
-        nodes.view.iterator
-    }
-
     def decode(input: Input) : DecoderResult = {
         // Assumes that Node.relations has been setup correctly for the graph fragments
         val Input(graph, sentence, parse) = input
-        nodes = graph.nodes
+        val nodes : List[Node] = graph.nodes.toList
+
+        def neighbors(node: Node) = {
+            nodes
+        }
 
         logger(1, "weights = " + features.weights)
 
@@ -47,12 +45,12 @@ class Alg1(featureNames: List[String], labelSet: Array[(String, Int)])
             logger(1, "node1 = " + node1.concept)
             logger(1, "label = " + label)
 
-            // Search over neighbors, and pick the one with highest score
-            val nodes : List[(Node, Double)] = neighbors(node1).toList.map(x => (x, features.localScore(node1, x, label, input))).sortBy(_._2).filter(_._2 > 0).take(maxCardinality)
+            // Search over neighbors, and pick the ones with highest score
+            val nodes2 : List[(Node, Double)] = neighbors(node1).map(x => (x, features.localScore(node1, x, label, input))).sortBy(_._2).filter(_._2 > 0).take(maxCardinality)
 
-            logger(1, "nodes = " + nodes.toString)
+            logger(1, "nodes2 = " + nodes.toString)
 
-            for ((node2, weight) <- nodes) {
+            for ((node2, weight) <- nodes2) {
                 node1.relations = (label, node2) :: node1.relations
                 feats += features.localFeatures(node1, node2, label, input)
                 score += weight
