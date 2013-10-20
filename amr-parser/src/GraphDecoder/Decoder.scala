@@ -28,12 +28,6 @@ case class DecoderResult(graph: Graph, features: FeatureVector, score: Double)
 abstract class Decoder(featureNames: List[String]) {
     val features = new Features(featureNames) // maybe this should be renamed ff?
 
-    var nodes = Array.empty[Node]
-
-    var neighbors: (Node) => Iterator[Node] = node => {
-        nodes.view.iterator
-    }
-
     def decode(input: Input) : DecoderResult
 }
 

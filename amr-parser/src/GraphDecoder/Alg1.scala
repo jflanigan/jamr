@@ -24,8 +24,12 @@ class Alg1(featureNames: List[String], labelSet: Array[(String, Int)])
     extends Decoder(featureNames) {
     // Base class has defined:
     // val features: Features
-    // var neighbors: (Node) => Iterator[Node]
-    // var nodes
+
+    var nodes = Array.empty[Node]
+
+    var neighbors: (Node) => Iterator[Node] = node => {
+        nodes.view.iterator
+    }
 
     def decode(input: Input) : DecoderResult = {
         // Assumes that Node.relations has been setup correctly for the graph fragments
