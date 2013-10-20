@@ -51,13 +51,17 @@ class Alg2(featureNames: List[String], labelSet: Array[String])
 
         var score = 0.0
         var feats = new FeatureVector()
-        def addRelation(node1: Node, index1: Int, node2: Node, index2: Int, label: String, weight: Double) {
+        def addEdge(node1: Node, index1: Int, node2: Node, index2: Int, label: String, weight: Double) {
             node1.relations = (label, node2) :: node1.relations
             feats += features.localFeatures(node1, node2, label, input)
             score += weight
             if (set(index1) != set(index2)) {
-                getSet(index1) ++= getSet(index1)
-                setArray(set(index2)) = Set()
+                logger(1, "Adding an edge")
+                logger(1, "set = " + set.toList)
+                logger(1, "setArray = " + setArray.toList)
+                getSet(index1) ++= getSet(index2)
+                getSet(index2).clear()
+                //setArray(set(index2)) = Set()
                 set(index2) = set(index1)
             }
         }
@@ -67,7 +71,7 @@ class Alg2(featureNames: List[String], labelSet: Array[String])
                 for ((node2, index2) <- nodes.zipWithIndex) yield {
                 val (label, weight) = labelSet.map(x => (x, features.localScore(node1, node2, x, input))).maxBy(_._1)
                     if (weight > 0) {   // Add all positive weights
-                        addRelation(node1, index1, node2, index2, label, weight)
+                        addEdge(node1, index1, node2, index2, label, weight)
                     }
                     (label, weight)
                 }
@@ -75,7 +79,7 @@ class Alg2(featureNames: List[String], labelSet: Array[String])
         }
 
         // Add negative weights to the queue
-        val queue = new PriorityQueue[(Double, Int, Int, String)]()(Ordering.by(x => -x._1))
+        val queue = new PriorityQueue[(Double, Int, Int, String)]()(Ordering.by(x => x._1))
         if (getSet(0).size != nodes.size) {
             for { (node1, index1) <- nodes.zipWithIndex
                   ((label, weight), index2) <- neighbors(index1).zipWithIndex
@@ -85,10 +89,14 @@ class Alg2(featureNames: List[String], labelSet: Array[String])
         }
 
         // Kruskal's algorithm
+        logger(1, queue.toString)
+        logger(1, set.toList)
+        logger(1, setArray.toList)
         while (getSet(0).size != nodes.size) {
+            logger(1, queue.toString)
             val (weight, index1, index2, label) = queue.dequeue
             if (set(index1) != set(index2)) {
-                addRelation(nodes(index1), index1, nodes(index2), index2, label, weight)
+                addEdge(nodes(index1), index1, nodes(index2), index2, label, weight)
             }
         }
 

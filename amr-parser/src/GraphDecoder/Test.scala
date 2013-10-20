@@ -51,7 +51,6 @@ object Test {
     }
 
     def main(args: Array[String]) {
-        println("Starting")
         val options = parseOptions(Map(),args.toList)
         if (options.contains('help)) { println(usage); sys.exit(1) }
 
@@ -59,6 +58,12 @@ object Test {
             verbosity = options('verbosity).asInstanceOf[Int]
         }
 
+        test1()
+        test2()
+    }
+
+    def test1() {
+        println("Test1")
         val nodes = Map("1" -> node("1"),
                         "2" -> node("2"),
                         "3" -> node("3"))
@@ -68,6 +73,21 @@ object Test {
             List(("1", "2", ":r", 6),
                  ("2", "3", ":r", -6),
                  ("1", "3", ":r", 3)))
+        val result = decoder.decode(Input(graph, Array(), Array()))
+        result.graph.printTriples(detail = 1)
+    }
+
+    def test2() {
+        println("Test2")
+        val nodes = Map("1" -> node("1"),
+                        "2" -> node("2"),
+                        "3" -> node("3"))
+        val graph = Graph(nodes("1"), ArrayBuffer(), nodes, nodes)
+        val decoder = new Alg2(List("edgeId"), Array((":r")))
+        decoder.features.weights = weights(
+            List(("1", "2", ":r", 6),
+                 ("2", "3", ":r", -6),
+                 ("1", "3", ":r", -3)))
         val result = decoder.decode(Input(graph, Array(), Array()))
         result.graph.printTriples(detail = 1)
     }
