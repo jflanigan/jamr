@@ -21,7 +21,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.PriorityQueue
 import Double.{NegativeInfinity => minusInfty}
 
-class Alg2(featureNames: List[String], labelSet: Array[String])
+class Alg2(featureNames: List[String], labelSet: Array[(String, Int)])
     extends Decoder(featureNames) {
     // Base class has defined:
     // val features: Features
@@ -30,7 +30,9 @@ class Alg2(featureNames: List[String], labelSet: Array[String])
         // Assumes that Node.relations has been setup correctly for the graph fragments
         val Input(graph, sentence, parse) = input
         val nodes = graph.nodes
-        
+        val nonDistinctLabels = labelSet.toList.filter(x => x._2 > 1)
+        val distinctLabels = labelSet.filter(x => x._2 == 1)
+
         // Each node is numbered by its index in 'nodes'
         // Each set is numbered by its index in 'setArray'
         // 'set' contains the index of the set that each node is assigned to
@@ -58,11 +60,18 @@ class Alg2(featureNames: List[String], labelSet: Array[String])
         val neighbors : Array[Array[(String, Double)]] = {
             for ((node1, index1) <- nodes.zipWithIndex) yield {
                 for ((node2, index2) <- nodes.zipWithIndex) yield {
-                val (label, weight) = labelSet.map(x => (x, features.localScore(node1, node2, x, input))).maxBy(_._1)
+                    val (label, weight) = distinctLabels.map(x => (x._1, features.localScore(node1, node2, x._1, input))).maxBy(_._2)
+                    val ndLabels = nonDistinctLabels.map(x => (x._1, features.localScore(node1, node2, x._1, input))).filter(x => x._2 > 0 && x._1 != label)
+                    ndLabels.map(x => addEdge(node1, index1, node2, index2, x._1, x._2))
                     if (weight > 0) {   // Add all positive weights
                         addEdge(node1, index1, node2, index2, label, weight)
                     }
-                    (label, weight)
+                    val (label2, weight2) = ndLabels.maxBy(_._2)
+                    if (weight > weight2) {
+                        (label, weight)
+                    } else {
+                        (label2, weight2)
+                    }
                 }
             }
         }
