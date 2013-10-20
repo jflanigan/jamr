@@ -83,7 +83,7 @@ object Test {
                         "2" -> node("2"),
                         "3" -> node("3"))
         val graph = Graph(nodes("1"), ArrayBuffer(), nodes, nodes)
-        val decoder = new Alg2(List("edgeId"), Array((":r")))
+        val decoder = new Alg2(List("edgeId"), Array((":r", 1)))
         decoder.features.weights = weights(
             List(("1", "2", ":r", 6),
                  ("2", "3", ":r", -6),
