@@ -27,7 +27,7 @@ class Alg1(featureNames: List[String], labelSet: Array[(String, Int)])
 
     def decode(input: Input) : DecoderResult = {
         // Assumes that Node.relations has been setup correctly for the graph fragments
-        val Input(graph, sentence, parse) = input
+        val graph = input.graph.duplicate
         val nodes : List[Node] = graph.nodes.toList
 
         def neighbors(node: Node) : List[Node] = {

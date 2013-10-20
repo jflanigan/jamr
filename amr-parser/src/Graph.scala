@@ -21,8 +21,25 @@ import scala.util.parsing.combinator._
 
 case class Graph(root: Node, spans: ArrayBuffer[Span], getNodeById: Map[String, Node], getNodeByName: Map[String, Node]) {
 
-    def printTriples(detail: Int = 1) {
+    def duplicate : Graph = {
+        // Makes a copy of the graph
+        // Assumes that getNodeById exists and is properly set up (for 'nodes' call)
+        val getNodeById2 : Map[String, Node] = Map()
+        for (node <- nodes) {
+            val Node(id, name, concept, relations, topologicalOrdering, variableRelations, alignment, spans) = node
+            getNodeById2(id) = Node(id, name, concept, List(), List(), List(), alignment, spans)
+        }
+        for (node <- nodes) {
+            val node2 = getNodeById2(node.id)
+            node2.relations = node.relations.map(x => (x._1, getNodeById2(x._2.id)))
+            node2.topologicalOrdering = node.topologicalOrdering.map(x => (x._1, getNodeById2(x._2.id)))
+            node2.variableRelations = node.variableRelations.map(x => (x._1, Var(getNodeById2(x._2.node.id), x._2.name)))
+        }
+        val getNodeByName2 = getNodeByName.map(x => (x._1, getNodeById2(x._2.id)))
+        return Graph(getNodeById2(root.id), spans.clone, getNodeById2, getNodeByName2)
+    }
 
+    def printTriples(detail: Int = 1) {
         def name(node: Node) : String = {
             node.name match {
                 case None => ""
@@ -40,7 +57,6 @@ case class Graph(root: Node, spans: ArrayBuffer[Span], getNodeById: Map[String, 
                 case _ => println("(" + name(node1) + node1.concept + ", " + name(node2) + node2.concept + ", " + relation + ")")
             }
         }
-
     }
 
     def loadSpans(spanStr: String, sentence: Array[String]) = {
@@ -112,8 +128,8 @@ case class Graph(root: Node, spans: ArrayBuffer[Span], getNodeById: Map[String, 
         updateSpan(spanIndex, span.start, span.end, span.nodeIds, coRef, sentence)
     }
 
-    def nodes : Array[Node] = {
-        return getNodeByName.values.toArray
+    def nodes : Iterator[Node] = {
+        return getNodeByName.valuesIterator
     }
 
     def doRecursive(f: (Node) => Unit, node: Node = root) {
@@ -231,6 +247,6 @@ object Graph {
         return graph
     }
 
-    def empty : Graph = { parse("(none)") }
+    def empty() : Graph = { parse("(none)") }
 }
 
