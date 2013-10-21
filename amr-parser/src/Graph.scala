@@ -247,6 +247,6 @@ object Graph {
         return graph
     }
 
-    def empty() : Graph = { parse("(none)") }
+    def empty() : Graph = { parse("(n / none)") }
 }
 

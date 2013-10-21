@@ -48,9 +48,9 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)])
             feats += features.localFeatures(node1, node2, label, input)
             score += weight
             if (set(index1) != set(index2)) {   // If different sets, then merge them
-                logger(1, "Adding an edge")
-                logger(1, "set = " + set.toList)
-                logger(1, "setArray = " + setArray.toList)
+                logger(2, "Adding an edge")
+                logger(2, "set = " + set.toList)
+                logger(2, "setArray = " + setArray.toList)
                 getSet(index1) ++= getSet(index2)
                 getSet(index2).clear()
                 set(index2) = set(index1)
@@ -66,11 +66,15 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)])
                     if (weight > 0) {   // Add all positive weights
                         addEdge(node1, index1, node2, index2, label, weight)
                     }
-                    val (label2, weight2) = ndLabels.maxBy(_._2)
-                    if (weight > weight2) {
+                    if (ndLabels.size > 0) {
+                        val (label2, weight2) = ndLabels.maxBy(_._2)
+                        if (weight > weight2) {
+                            (label, weight)
+                        } else {
+                            (label2, weight2)
+                        }
+                    } else { 
                         (label, weight)
-                    } else {
-                        (label2, weight2)
                     }
                 }
             }
@@ -87,11 +91,11 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)])
         }
 
         // Kruskal's algorithm
-        logger(1, queue.toString)
-        logger(1, set.toList)
-        logger(1, setArray.toList)
+        logger(2, queue.toString)
+        logger(2, set.toList)
+        logger(2, setArray.toList)
         while (getSet(0).size != nodes.size) {
-            logger(1, queue.toString)
+            logger(2, queue.toString)
             val (weight, index1, index2, label) = queue.dequeue
             if (set(index1) != set(index2)) {
                 addEdge(nodes(index1), index1, nodes(index2), index2, label, weight)

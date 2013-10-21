@@ -60,6 +60,7 @@ object Test {
 
         test1()
         test2()
+        test3()
     }
 
     def test1() {
@@ -74,6 +75,7 @@ object Test {
                  ("2", "3", ":r", -6),
                  ("1", "3", ":r", 3)))
         val result = decoder.decode(Input(graph, Array(), Array()))
+        graph.printTriples(detail = 1)
         result.graph.printTriples(detail = 1)
     }
 
@@ -87,7 +89,22 @@ object Test {
         decoder.features.weights = weights(
             List(("1", "2", ":r", 6),
                  ("2", "3", ":r", -6),
-                 ("1", "3", ":r", -3)))
+                 ("1", "3", ":r", 3)))
+        val result = decoder.decode(Input(graph, Array(), Array()))
+        result.graph.printTriples(detail = 1)
+    }
+
+    def test3() {
+        println("Test3")
+        val nodes = Map("1" -> node("1"),
+                        "2" -> node("2"),
+                        "3" -> node("3"))
+        val graph = Graph(nodes("1"), ArrayBuffer(), nodes, nodes)
+        val decoder = new DualDecomposition(List("edgeId"), Array((":r", 1)), 1)
+        decoder.features.weights = weights(
+            List(("1", "2", ":r", 6),
+                 ("2", "3", ":r", -6), // 5
+                 ("1", "3", ":r", 3))) // 1
         val result = decoder.decode(Input(graph, Array(), Array()))
         result.graph.printTriples(detail = 1)
     }
