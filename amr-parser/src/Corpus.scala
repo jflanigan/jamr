@@ -6,10 +6,6 @@ import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 //import org.scalatest.Suite
 
-// AMRTriple holds the (possibly multiple) span annotations for a sentence and graph pair
-// An element in spans is a span string (i.e. "1-2|0 0-1|0.0 2-3|0.1 4-5|0.2")
-case class AMRTriple(sentence: Array[String], graph: Graph, spans: ArrayBuffer[String], annotators: ArrayBuffer[String], annotation_dates: ArrayBuffer[String], amrStr: String, extras: String)
-
 object Corpus {
     def splitOnNewline(iterator: Iterator[String]) : Iterator[String] = {   // This treats more than one newline in a row as a single newline
         for {
