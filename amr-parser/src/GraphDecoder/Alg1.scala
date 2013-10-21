@@ -35,7 +35,7 @@ class Alg1(featureNames: List[String], labelSet: Array[(String, Int)])
         }
 
         logger(2, "Alg1")
-        logger(2, "weights = " + features.weights)
+        //logger(2, "weights = " + features.weights)
 
         var score = 0.0
         val feats = new FeatureVector()
