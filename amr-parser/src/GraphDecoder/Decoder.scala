@@ -21,7 +21,7 @@ import scala.collection.mutable.ArrayBuffer
 
 case class Dependency(head: Int, dependent: Int, relation: String)
 
-case class Input(graph: Graph, sentence: Array[String], parse: Array[Dependency])
+case class Input(graph: Graph, sentence: Array[String], parse: Array[Dependency], pos: Array[String])
 
 case class DecoderResult(graph: Graph, features: FeatureVector, score: Double)
 

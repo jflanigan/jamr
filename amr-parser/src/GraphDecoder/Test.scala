@@ -74,7 +74,7 @@ object Test {
             List(("1", "2", ":r", 6),
                  ("2", "3", ":r", -6),
                  ("1", "3", ":r", 3)))
-        val result = decoder.decode(Input(graph, Array(), Array()))
+        val result = decoder.decode(Input(graph, Array(), Array(), Array()))
         graph.printTriples(detail = 1)
         result.graph.printTriples(detail = 1)
     }
@@ -90,7 +90,7 @@ object Test {
             List(("1", "2", ":r", 6),
                  ("2", "3", ":r", -6),
                  ("1", "3", ":r", 3)))
-        val result = decoder.decode(Input(graph, Array(), Array()))
+        val result = decoder.decode(Input(graph, Array(), Array(), Array()))
         result.graph.printTriples(detail = 1)
     }
 
@@ -105,7 +105,7 @@ object Test {
             List(("1", "2", ":r", 6),
                  ("2", "3", ":r", -6), // 5
                  ("1", "3", ":r", 3))) // 1
-        val result = decoder.decode(Input(graph, Array(), Array()))
+        val result = decoder.decode(Input(graph, Array(), Array(), Array()))
         result.graph.printTriples(detail = 1)
     }
 }

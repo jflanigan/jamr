@@ -21,7 +21,7 @@ import scala.collection.mutable.ArrayBuffer
 import Double.{NegativeInfinity => minusInfty}
 
 class DualDecomposition(featureNames: List[String], labelSet: Array[(String, Int)], stepsize: Double)
-    extends Decoder(List("edgeId")) {
+    extends Decoder(featureNames) {
     // Base class has defined:
     // val features: Features
 
@@ -46,16 +46,16 @@ class DualDecomposition(featureNames: List[String], labelSet: Array[(String, Int
         var result = DecoderResult(Graph.empty(), FeatureVector(), 0.0)
         var delta = FeatureVector()
         do {
-            logger(1, "weights: \n"+features.weights)
+            //logger(1, "weights: \n"+features.weights)
             logger(1, "multipliers: \n"+multipliers.toString)
             features.weights += multipliers
-            logger(1, "weights1: \n"+features.weights)
+            //logger(1, "weights1: \n"+features.weights)
             result = alg1.decode(input)
-            logger(1, "features1: \n"+result.features)
+            logger(1, "features1: \n"+result.features.slice(x => IdFeature(x)))
             features.weights -= 2.0 * multipliers
-            logger(1, "weights2: \n"+features.weights)
+            //logger(1, "weights2: \n"+features.weights)
             val result2 = alg2.decode(input)
-            logger(1, "features2: \n"+result2.features)
+            logger(1, "features2: \n"+result2.features.slice(x => IdFeature(x)))
             features.weights += multipliers
 
             delta = result.features.slice(x => IdFeature(x))
@@ -63,6 +63,9 @@ class DualDecomposition(featureNames: List[String], labelSet: Array[(String, Int
             logger(1, "delta: \n"+delta.toString)
             multipliers -= stepsize * delta
         } while (delta.nonzero)
+
+        //result.graph.root = result.graph.nodes.map(x => (x, features.rootScore(x, input))).maxBy(_._2)
+        //result.features += features.rootFeatures(result.graph.root, input)
 
         val feats = result.features.slice(x => !IdFeature(x))
         return DecoderResult(result.graph, feats, features.weights.dot(feats))
