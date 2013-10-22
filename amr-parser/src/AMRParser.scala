@@ -130,7 +130,8 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
 
             for (block <- Corpus.splitOnNewline(io.Source.stdin.getLines()) if block.matches("(.|\n)*\n\\((.|\n)*")) {
                 val decoderResult = decoder.decode(Corpus.toAMRTriple(block).toInput)
-                println(decoderResult.graph.root.prettyString(detail=1, pretty=true) + '\n')
+//                println(decoderResult.graph.root.prettyString(detail=1, pretty=true) + '\n')
+                decoderResult.graph.printTriples()
             }
         }
     }
