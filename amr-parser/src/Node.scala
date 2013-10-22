@@ -33,7 +33,7 @@ case class Node(var id: String, name: Option[String], concept: String, var relat
         return (spans.map(x => !graph.spans(x).coRef) :\ false)(_ || _)
     }
 
-    def addSpan(span: Int, coRef: Boolean){
+    def addSpan(span: Int, coRef: Boolean) {
         if (coRef) {
             spans += span
         } else {
