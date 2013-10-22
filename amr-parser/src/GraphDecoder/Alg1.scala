@@ -41,20 +41,25 @@ class Alg1(featureNames: List[String], labelSet: Array[(String, Int)])
         val feats = new FeatureVector()
         for { node1 <- nodes
               relations = node1.relations.map(_._1).toSet
-              (label, maxCardinality) <- labelSet
-              if !relations.contains(label) } {
+              (label, maxCardinality) <- labelSet } {
             logger(2, "node1 = " + node1.concept)
             logger(2, "label = " + label)
 
-            // Search over neighbors, and pick the ones with highest score
-            val nodes2 : List[(Node, Double)] = neighbors(node1).map(x => (x, features.localScore(node1, x, label, input))).sortBy(-_._2).filter(_._2 > 0).take(maxCardinality)
-
-            logger(2, "nodes2 = " + nodes.toString)
-
-            for ((node2, weight) <- nodes2) {
-                node1.relations = (label, node2) :: node1.relations
+            if (relations.contains(label)) {
+                val Some((_, node2)) = node1.relations.find(_._1 == label)
                 feats += features.localFeatures(node1, node2, label, input)
-                score += weight
+                score += features.localScore(node1, node2, label, input)
+            } else {
+                // Search over neighbors, and pick the ones with highest score
+                val nodes2 : List[(Node, Double)] = neighbors(node1).map(x => (x, features.localScore(node1, x, label, input))).sortBy(-_._2).filter(_._2 > 0).take(maxCardinality)
+
+                logger(2, "nodes2 = " + nodes.toString)
+
+                for ((node2, weight) <- nodes2) {
+                    node1.relations = (label, node2) :: node1.relations
+                    feats += features.localFeatures(node1, node2, label, input)
+                    score += weight
+                }
             }
         }
 

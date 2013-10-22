@@ -39,7 +39,7 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)])
         var score = 0.0
         var feats = new FeatureVector()
         def addEdge(node1: Node, index1: Int, node2: Node, index2: Int, label: String, weight: Double, addRelation: Boolean = true) {
-            if (!node1.relations.exists(x => ((x._1 == label) && (x._2.id == node2.id)))) { // Prevent adding an edge twice
+            if (!node1.relations.exists(x => ((x._1 == label) && (x._2.id == node2.id))) || !addRelation) { // Prevent adding an edge twice
                 if (addRelation) {
                     node1.relations = (label, node2) :: node1.relations
                 }

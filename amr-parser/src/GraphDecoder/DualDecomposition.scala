@@ -46,14 +46,14 @@ class DualDecomposition(featureNames: List[String], labelSet: Array[(String, Int
         var result = DecoderResult(Graph.empty(), FeatureVector(), 0.0)
         var delta = FeatureVector()
         do {
-            //logger(1, "weights: \n"+features.weights)
+            logger(1, "weights: \n"+features.weights)
             logger(1, "multipliers: \n"+multipliers.toString)
             features.weights += multipliers
-            //logger(1, "weights1: \n"+features.weights)
+            logger(1, "weights1: \n"+features.weights)
             result = alg1.decode(input)
             logger(1, "features1: \n"+result.features.slice(x => IdFeature(x)))
             features.weights -= 2.0 * multipliers
-            //logger(1, "weights2: \n"+features.weights)
+            logger(1, "weights2: \n"+features.weights)
             val result2 = alg2.decode(input)
             logger(1, "features2: \n"+result2.features.slice(x => IdFeature(x)))
             features.weights += multipliers
