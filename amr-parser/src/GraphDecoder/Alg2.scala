@@ -1,11 +1,6 @@
 package edu.cmu.lti.nlp.amr.GraphDecoder
 import edu.cmu.lti.nlp.amr._
 
-import java.io.File
-import java.io.FileOutputStream
-import java.io.PrintStream
-import java.io.BufferedOutputStream
-import java.io.OutputStreamWriter
 import java.lang.Math.abs
 import java.lang.Math.log
 import java.lang.Math.exp
@@ -43,10 +38,14 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)])
 
         var score = 0.0
         var feats = new FeatureVector()
-        def addEdge(node1: Node, index1: Int, node2: Node, index2: Int, label: String, weight: Double) {
-            node1.relations = (label, node2) :: node1.relations
-            feats += features.localFeatures(node1, node2, label, input)
-            score += weight
+        def addEdge(node1: Node, index1: Int, node2: Node, index2: Int, label: String, weight: Double, addRelation: Boolean = true) {
+            if (!node1.relations.exists(x => ((x._1 == label) && (x._2.id == node2.id)))) { // Prevent adding an edge twice
+                if (addRelation) {
+                    node1.relations = (label, node2) :: node1.relations
+                }
+                feats += features.localFeatures(node1, node2, label, input)
+                score += weight
+            }
             if (set(index1) != set(index2)) {   // If different sets, then merge them
                 logger(2, "Adding an edge")
                 logger(2, "set = " + set.toList)
@@ -55,6 +54,13 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)])
                 getSet(index2).clear()
                 set(index2) = set(index1)
             }
+        }
+
+        val nodeIds : Array[String] = nodes.map(_.id)
+        for { (node1, index1) <- nodes.zipWithIndex
+              (label, node2) <- node1.relations } {
+            val index2 = nodeIds.indexWhere(_ == node2.id)
+            addEdge(node1, index1, node2, index2, label, features.localScore(node1, node2, label, input), addRelation=false)
         }
 
         val neighbors : Array[Array[(String, Double)]] = {
