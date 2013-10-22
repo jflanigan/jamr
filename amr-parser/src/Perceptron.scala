@@ -49,3 +49,4 @@ object Perceptron {
         if(avg) { avg_weights } else { weights }
     }
 }
+
