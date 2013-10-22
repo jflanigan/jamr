@@ -29,15 +29,15 @@ object Perceptron {
                         passes: Int,
                         avg: Boolean) : FeatureVector = {
         var avg_weights = FeatureVector()
-        val permutations = training.corpus.permutations
+        val permutations = Range(0, trainingSize).permutations
         for (i <- Range(1,passes+1)) {
             logger(0,"Pass "+i.toString)
             val corpus = permutations.next
             for (t <- Range(0, trainingSize)) {
 //                weights -= decoder.decode(example).features
 //                weights += decoder.oracle(example)
-                val minus = decoder.decode(t)
-                val plus = decoder.oracle(t)
+                val minus = decoder(t)
+                val plus = oracle(t)
                 weights -= minus
                 weights += plus
                 plus -= minus

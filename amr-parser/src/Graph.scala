@@ -39,6 +39,53 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         return Graph(getNodeById2(root.id), spans.clone, getNodeById2, getNodeByName2)
     }
 
+    def clearEdges() {
+        // Initializes the graph from the spans (effectively clearing the edges)
+        // Sets relations, but leaves topologicalOrdering and variableRelations blank
+
+        var currentId = 0
+        getNodeById.clear
+        getNodeByName.clear
+
+        def addRec(node: Node) : (Node, List[String]) = {
+            var ids = List(currentId.toString)
+            val node2 = Node(node.id, node.name, node.concept, List(), List(), List(), node.alignment, node.spans)
+            var relations = List[(String, Node)]()
+            getNodeById(currentId.toString) = node2
+            node.name match {
+                case Some(name) => { getNodeByName(name) = node2 }
+                case None => Unit
+            }
+            currentId += 1
+            for ((relation, child) <- node.topologicalOrdering) {
+                val result = addRec(child)
+                ids = ids ::: result._2
+                relations = (relation, result._1) :: relations
+            }
+            node2.relations = relations.reverse
+            return (node2, ids)
+        }
+
+        // Add all the non-coref spans
+        for (span <- spans if !span.coRef) {
+            span.nodeIds = addRec(span.amr)._2
+        }
+
+        // Set the span ids for the coref spans correctly
+        for (span <- spans if span.coRef) {
+            span.nodeIds = List()
+        }
+
+        for ((id, node) <- getNodeById) {
+            for { spanIndex <- node.spans
+                  val span = spans(spanIndex)
+                  if span.coRef
+                } {
+                span.nodeIds = span.nodeIds ::: List(id)
+            }
+        }
+    }
+
     def printTriples(detail: Int = 1) {
         def name(node: Node) : String = {
             node.name match {
@@ -78,7 +125,7 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
                     getNodeById(id).addSpan(spans.size-1, coref)
                 }
             } catch {
-                // TODO: catch malformed input (Regex match error, or toInt err
+                // TODO: catch malformed input (Regex match error, or toInt err)
                 case e : Throwable => logger(1, "****************** MALFORMED SPAN: "+spanStr)
             }
         }
