@@ -63,7 +63,11 @@ class Alg1(featureNames: List[String], labelSet: Array[(String, Int)])
             }
         }
 
-        graph.doRecursive(node => { node.relations = node.relations.reverse })
+        graph.root = nodes.map(x => (x, features.rootScore(x, input))).maxBy(_._2)
+        features += features.rootFeatures(graph.root, input)
+
+        nodes.map(node => { node.relations = node.relations.reverse })
+        graph.makeTopologicalOrdering()
         return DecoderResult(graph, feats, score)
     }
 }
