@@ -71,7 +71,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
         }
         val labelset: Array[(String, Int)] = Source.fromFile(options('labelset).asInstanceOf[String]).getLines().toArray.map(x => (x.split(" +")(0), x.split(" +")(1).toInt))
 
-        var features = List("prevtag","1to4","prev_next1to4","1to4_conj_prev_next","prev_tag_conj_1to5","prefixes","gazetteer_unigram","capital","position")
+        var features = List("conceptBigram")
 
         if (options.contains('features)) {
             features = options('features).asInstanceOf[String].split(",").toList
