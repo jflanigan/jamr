@@ -19,6 +19,7 @@ case class AMRTriple(sentence: Array[String], graph: Graph, spans: ArrayBuffer[S
         graph.loadSpans(spans(annotationIndex), sentence)
         graph.clearEdges
         graph.normalizeInverseRelations
+        graph.addVariableToSpans
         return Input(graph, sentence, Array(), Array())
     }
     def toOracle(): Input = {
@@ -26,6 +27,7 @@ case class AMRTriple(sentence: Array[String], graph: Graph, spans: ArrayBuffer[S
         val annotationIndex = annotators.size - 1
         graph.loadSpans(spans(annotationIndex), sentence)
         graph.normalizeInverseRelations
+        graph.addVariableToSpans
         return Input(graph, sentence, Array(), Array())
     }
 }
