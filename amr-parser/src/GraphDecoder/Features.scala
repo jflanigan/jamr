@@ -25,12 +25,17 @@ import scala.util.parsing.combinator._
 class Features(featureNames: List[String]) {
     var weights = FeatureVector()
     type FeatureFunction = (Node, Node, String, Input) => FeatureVector
+    type RootFeatureFunction = (Node, Input) => FeatureVector
 
     val ffTable = Map[String, FeatureFunction](
         "edgeId" -> ffEdgeId,
         "conceptBigram" -> ffConceptBigram
     )
 
+    val rootFFTable = Map[String, RootFeatureFunction](
+    )
+
+    val rootFeature = List("rootPath")
     val notFast = List()  // ff that don't support fast lookup
 
 /*    var prev_t : Int = -1       // For fast features
@@ -40,6 +45,7 @@ class Features(featureNames: List[String]) {
 
     var featureFunctions : List[FeatureFunction] = {
         for { feature <- featureNames
+              if !rootFeature.contains(feature)
               if !notFast.contains(feature)
         } yield ffTable(feature)
     } // TODO: error checking on lookup
@@ -51,6 +57,13 @@ class Features(featureNames: List[String]) {
     }
     //logger(0,feature_names)
 */
+
+    var rootFeatureFunctions : List[RootFeatureFunction] = {
+        for { feature <- featureNames
+              if rootFeature.contains(feature)
+        } yield rootFFTable(feature)
+    } // TODO: error checking on lookup
+
 
     def setFeatures(featureNames: List[String]) {
         featureFunctions = featureNames.filter(x => !notFast.contains(x)).map(x => ffTable(x))
@@ -72,6 +85,25 @@ class Features(featureNames: List[String]) {
             logger(2, ff.toString)
             logger(2, ff(node1, node2, label, input))
             score += weights.dot(ff(node1, node2, label, input))
+        }
+        return score
+    }
+
+    def rootFeatures(node: Node, input: Input) : FeatureVector = {
+        // Calculate the local features
+        val feats = FeatureVector()
+        for (ff <- rootFeatureFunctions) {
+            feats += ff(node, input)
+        }
+        return feats
+    }
+
+    def rootScore(node: Node, input: Input) : Double = {
+        var score = 0.0
+        for (ff <- rootFeatureFunctions) {
+            logger(2, ff.toString)
+            logger(2, ff(node, input))
+            score += weights.dot(ff(node, input))
         }
         return score
     }
