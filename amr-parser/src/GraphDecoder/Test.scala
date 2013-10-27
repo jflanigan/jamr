@@ -58,10 +58,11 @@ object Test {
             verbosity = options('verbosity).asInstanceOf[Int]
         }
 
-        test1()
-        test2()
+//        test1()
+//        test2()
 //        test3()
-        test5()
+        test4()
+        samTest()
     }
 
     def test1() {
@@ -141,6 +142,29 @@ object Test {
             List(("1", "2", ":r", 6),
                  ("2", "3", ":r", -6), // 5
                  ("1", "3", ":r", 0))) // 1
+        val result = decoder.decode(Input(graph, Array(), Array(), Array()))
+        result.graph.printTriples(detail = 1)
+    }
+
+    def samTest() {
+        println("samTest")
+        val nodes = Map("1" -> node("1"),
+                        "2" -> node("2"),
+                        "3" -> node("3"),
+                        "4" -> node("4"))
+        val graph = Graph(nodes("1"), ArrayBuffer(), nodes, nodes)
+        val decoder = new DualDecomposition(List("edgeId"), Array((":r", 1), (":s", 1)), 1)
+        decoder.features.weights = weights(
+            List(("1", "2", ":s", -100),
+                 ("1", "3", ":r", 1),
+                 ("4", "2", ":r", 1),
+                 ("4", "3", ":r", -1)))
+        for { node1 <- nodes.keys
+              node2 <- nodes.keys
+              label <- List(":r", ":s")
+              if (!decoder.features.weights.fmap.contains("Id1="+node1+":Id2="+node2+":L="+label)) } {
+            decoder.features.weights.fmap("Id1="+node1+":Id2="+node2+":L="+label) = minusInfty
+        }
         val result = decoder.decode(Input(graph, Array(), Array(), Array()))
         result.graph.printTriples(detail = 1)
     }
