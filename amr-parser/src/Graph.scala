@@ -235,12 +235,28 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         
     } */
 
+    def normalizeInverseRelations() {
+        // For all nodes, converts all inverse relations in node.relations into forward relations for the corresponding nodes
+        for (node1 <- nodes ) {
+            for { (rel, node2) <- node1.relations
+                  if rel.endsWith("-of")
+                  relation = rel.slice(0,rel.size-3) } {
+                // Add non-inverse relation to node2
+                node2.relations = node2.relations ::: List((relation, node1))
+            }
+            // Remove inverse relations from node1
+            node1.relations = node1.relations.filter(x => !x._1.endsWith("-of"))
+        }
+    }
+
     def inverseRelations : Map[String, List[(String, String)]] = {
+        // Returns all the inverse relations as a map: node_id -> List((inverse_relation, node_id))
+        // Used by makeTopologicalOrdering to follow inverse relations as well
         val inverse = Map.empty[String, List[(String, String)]]
         for { node1 <- nodes
               (rel, node2) <- node1.relations } {
-            val relation = if (rel.endsWith("-of")) { rel.slice(0,rel.size-3) } else { rel }
-            inverse(node2.id) = (relation+"-of", node1.id) :: inverse.getOrElse(node2.id, List())
+            val relation = if (rel.endsWith("-of")) { rel.slice(0,rel.size-3) } else { rel+"-of" }
+            inverse(node2.id) = (relation, node1.id) :: inverse.getOrElse(node2.id, List())
         }
         return inverse
     }

@@ -25,6 +25,7 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)])
         // Assumes that Node.relations has been setup correctly for the graph fragments
         val graph = input.graph.duplicate
         val nodes : Array[Node] = graph.nodes.toArray
+        //val nodes : Array[Node] = graph.nodes.filter(_.name != None).toArray
         val nonDistinctLabels = labelSet.toList.filter(x => x._2 > 1)
         val distinctLabels = labelSet.filter(x => x._2 == 1)
 
