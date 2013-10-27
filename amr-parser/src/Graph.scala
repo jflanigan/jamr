@@ -325,6 +325,32 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         } while (queue.size != 0)
         assert(visited.size == nodes.size, "The graph does not span the nodes")
     }
+
+    private def getNextVariableName(c: Char) : String = {
+        if (!getNodeByName.contains(c.toString)) {
+            c.toString
+        } else {
+            var i = 2
+            while (getNodeByName.contains(c.toString+i.toString)) {
+                i += 1
+            }
+            c.toString+i.toString
+        }
+    }
+
+    def addVariableToSpans() {
+        for (span <- spans) {
+            if (span.nodeIds.map(x => getNodeById(x)).filter(x => x.name != None).size == 0) {
+                logger(1, "WARNING: Adding a variable name to a span")
+                val node = getNodeById(span.nodeIds(0))
+                val c : Char = node.concept(0)
+                assert(c != '"', "Concept starts with \"")
+                val varName = getNextVariableName(c)
+                getNodeByName(varName) = node
+                node.name = Some(varName)
+            }
+        }
+    }
 }
 
 object Graph {
