@@ -15,14 +15,17 @@ import edu.cmu.lti.nlp.amr.GraphDecoder.Input
 case class AMRTriple(sentence: Array[String], graph: Graph, spans: ArrayBuffer[String], annotators: ArrayBuffer[String], annotation_dates: ArrayBuffer[String], amrStr: String, extras: String) {
     def toInput(): Input = {
         // WARNING: this function modifies the graph
-        toOracle
+        val annotationIndex = annotators.size - 1
+        graph.loadSpans(spans(annotationIndex), sentence)
         graph.clearEdges
+        graph.normalizeInverseRelations
         return Input(graph, sentence, Array(), Array())
     }
     def toOracle(): Input = {
         // WARNING: this function modifies the graph
         val annotationIndex = annotators.size - 1
         graph.loadSpans(spans(annotationIndex), sentence)
+        graph.normalizeInverseRelations
         return Input(graph, sentence, Array(), Array())
     }
 }
