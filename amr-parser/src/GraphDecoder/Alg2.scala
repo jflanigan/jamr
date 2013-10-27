@@ -108,11 +108,15 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)])
             }
         }
 
-        graph.root = nodes.map(x => (x, features.rootScore(x, input))).maxBy(_._2)._1
+        if (features.rootFeatureFunctions.size != 0) {
+            graph.root = nodes.map(x => (x, features.rootScore(x, input))).maxBy(_._2)._1
+        } else {
+            graph.root = nodes(0)
+        }
         feats += features.rootFeatures(graph.root, input)
 
         nodes.map(node => { node.relations = node.relations.reverse })
-//        graph.makeTopologicalOrdering()
+        graph.makeTopologicalOrdering()
         return DecoderResult(graph, feats, score)
     }
 }

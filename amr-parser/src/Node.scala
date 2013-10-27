@@ -19,7 +19,7 @@ import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 import scala.util.parsing.combinator._
 
-case class Var(node: Node, name: String)
+case class Var(node: Node, name: String)    // TODO: Remove this? Var is redundant, because the name can be found using node.name (but node.name sometimes can be None, which it should not be)
 
 case class Node(var id: String, name: Option[String], concept: String, var relations: List[(String, Node)], var topologicalOrdering: List[(String, Node)], var variableRelations: List[(String, Var)], var alignment: Option[Int], var spans: ArrayBuffer[Int] /* TODO: change to something immutable (ie List) Interacts if a span gets copied from this span */) {
 

@@ -17,6 +17,7 @@ import scala.util.matching.Regex
 import scala.collection.mutable.Map
 import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.immutable.Queue
 import scala.util.parsing.combinator._
 
 case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[String, Node], getNodeByName: Map[String, Node]) {
@@ -207,7 +208,9 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         }
     }
 
+
     private def makeVariables(node: Node = root) {
+    // TODO: this can be simplified using getNodeById and 'nodes'
         // Populate the getNodeByName map
         // Assumes a topologicalOrdering exists and node.name is set
         if (node != root) {
@@ -226,9 +229,25 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         }
     }
 
+/*    private def makeVariables() {
+        // Populate the getNodeByName map
+        // Assumes getNodeById exists and node.name is set correctly (can be None)
+        
+    } */
+
+    def inverseRelations : Map[String, List[(String, String)]] = {
+        val inverse = Map.empty[String, List[(String, String)]]
+        for { node1 <- nodes
+              (rel, node2) <- node1.relations } {
+            val relation = if (rel.endsWith("-of")) { rel.slice(0,rel.size-3) } else { rel }
+            inverse(node2.id) = (relation+"-of", node1.id) :: inverse.getOrElse(node2.id, List())
+        }
+        return inverse
+    }
+
     private def unifyVariables(node: Node = root) {
         // Postcondition: Unify variables, remove variables from node.topologicalOrdering,
-        // and populate node.relations and node.variableRealtions attributes for each node
+        // and populate node.relations and node.variableRelations attributes for each node
         // Precondition: topologicalOrdering was filled in by the graph parser
         // and that makeVariables has already been called
         val relations = node.topologicalOrdering
@@ -250,6 +269,45 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
                 unifyVariables(child)
             }
         }
+    }
+
+    def makeTopologicalOrdering() {
+        // This function is called after the graph decoder has added edges to the graph and
+        // the root has been chosen. (The edges were added to each node's relations list and
+        // root has been correctly set).
+        // Preconditions:
+        //   root is set
+        //   node.relations is correct for each node
+        //   getNodeByName is setup correctly
+        //   getNodeById is defined for all nodes
+        // Postcondition: This function populates node.variableRelations and node.topologicalOrdering by 
+        // breadth-first-search from the root.
+        var queue = Queue[Node](root)
+        val visited = Set.empty[Node]
+        val inverse = inverseRelations
+        do {
+            val (node, dequeue) = queue.dequeue
+            queue = dequeue
+            visited += node
+            node.topologicalOrdering = List()
+            node.variableRelations = List()
+            val relations = node.relations ::: inverse.getOrElse(node.id, List()).map(x => (x._1, getNodeById(x._2)))
+            for ((relation, child) <- relations.sortBy(_._1).reverse) {
+                if (visited.contains(child)) {
+                    // this is a variable relation
+                    assert(node.name != None, "Attempting to create a variable relation to a node without a variable name")
+                    val Some(name) = node.name
+                    assert(getNodeByName.contains(name), "Variable name not in getNodeByName")
+                    node.variableRelations = (relation, Var(node, name)) :: node.variableRelations
+                } else {
+                    // this node goes into the topological ordering
+                    visited += child
+                    queue = queue.enqueue(child)
+                    node.topologicalOrdering = (relation, node) :: node.topologicalOrdering
+                }
+            }
+        } while (queue.size != 0)
+        assert(visited.size == nodes.size, "The graph does not span the nodes")
     }
 }
 
