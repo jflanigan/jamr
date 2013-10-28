@@ -118,7 +118,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
 
             ///////////////// Decoding //////////////
 
-            if (!options.contains('weights)){
+            if (!options.contains('weights)) {
                 System.err.println("Error: No weights file specified")
                 sys.exit(1)
             }

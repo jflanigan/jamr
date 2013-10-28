@@ -198,7 +198,7 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         // Sets the node.id field for every node in the graph according to the topologicalOrdering
         // For example "0" is the root and "0.1" is the 2nd child of the root
         // Assumes that a topological ordering already exists (node.topologicalOrdering is non-empty)
-        if (node != root) {
+        if (node == root) {
             getNodeById.clear
         }
         node.id = id.mkString(".")
@@ -213,7 +213,7 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
     // TODO: this can be simplified using getNodeById and 'nodes'
         // Populate the getNodeByName map
         // Assumes a topologicalOrdering exists and node.name is set
-        if (node != root) {
+        if (node == root) {
             getNodeByName.clear
         }
         if (node.name != None) {
