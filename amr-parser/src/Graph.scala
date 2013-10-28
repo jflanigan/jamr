@@ -102,6 +102,7 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
             } {
             detail match {
                 case 0 => println(relation + "(" + node1.concept + ", " + node2.concept + ")")
+                case 1 => println(relation + "(" + name(node1) + node1.concept + ", " + name(node2) + node2.concept + ")")
                 case _ => println("(" + name(node1) + node1.concept + ", " + name(node2) + node2.concept + ", " + relation + ")")
             }
         }
