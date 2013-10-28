@@ -16,6 +16,8 @@ case class AMRTriple(sentence: Array[String], graph: Graph, spans: ArrayBuffer[S
     def toInput(): Input = {
         // WARNING: this function modifies the graph
         val annotationIndex = annotators.size - 1
+        logger(1,"Sentence = " + sentence.toList)
+        logger(1,"span = " + spans(annotationIndex))
         graph.loadSpans(spans(annotationIndex), sentence)
         graph.clearEdges
         graph.normalizeInverseRelations
