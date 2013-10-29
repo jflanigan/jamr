@@ -75,7 +75,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
         })
         //(x.split(" +")(0), x.split(" +").zipWithIndex.map(x => (x._2, x._2)).toMap.getOrElse(1,"100").toInt))
 
-        var features = List("conceptBigram")
+        var features = List("bias", "conceptBigram")
 
         if (options.contains('features)) {
             features = options('features).asInstanceOf[String].split(",").toList
@@ -111,13 +111,13 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
             val weights = Perceptron.learnParameters(
                 //i => decoder.decode(Corpus.toAMRTriple(training(i)).toInput).features,
                 i => { val result = decoder.decode(Corpus.toAMRTriple(training(i)).toInput)
-                       logger(1, "AMR: ")
-                       logger(1, result.graph.root.prettyString(detail = 1, pretty = true))
+                       logger(0, "AMR: ")
+                       logger(0, result.graph.root.prettyString(detail = 1, pretty = true))
                        result.features },
                 //i => oracle.decode(Corpus.toAMRTriple(training(i)).toOracle).features,
                 i => { val result = oracle.decode(Corpus.toAMRTriple(training(i)).toOracle)
-                       logger(1, "Oracle: ")
-                       logger(1, result.graph.root.prettyString(detail = 1, pretty = true))
+                       logger(0, "Oracle: ")
+                       logger(0, result.graph.root.prettyString(detail = 1, pretty = true))
                        result.features },
                 decoder.features.weights,
                 training.size,

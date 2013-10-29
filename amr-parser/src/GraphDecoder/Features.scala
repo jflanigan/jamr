@@ -29,6 +29,7 @@ class Features(featureNames: List[String]) {
 
     val ffTable = Map[String, FeatureFunction](
         "edgeId" -> ffEdgeId,
+        "bias" -> ffBias,
         "conceptBigram" -> ffConceptBigram
     )
 
@@ -114,8 +115,12 @@ class Features(featureNames: List[String]) {
         return FeatureVector(Map(("Id1="+node1.id+":Id2="+node2.id+":L="+label) -> 1.0))
     }
 
+    def ffBias(node1: Node, node2: Node, label: String, input: Input) : FeatureVector = {
+        return FeatureVector(Map(("L="+label) -> 1.0))
+    }
+
     def ffConceptBigram(node1: Node, node2: Node, label: String, input: Input) : FeatureVector = {
-        return FeatureVector(Map(("C1="+node1.concept+":C2="+node2.concept) -> 1.0,
+        return FeatureVector(Map(/*("C1="+node1.concept+":C2="+node2.concept) -> 1.0,*/
                                  ("C1="+node1.concept+":C2="+node2.concept+":L="+label) -> 1.0))
     }
 }

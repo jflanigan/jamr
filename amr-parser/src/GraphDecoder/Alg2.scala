@@ -27,6 +27,7 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)])
         val nodes : Array[Node] = graph.nodes.toArray
         //val nodes : Array[Node] = graph.nodes.filter(_.name != None).toArray
         val nonDistinctLabels = labelSet.toList.filter(x => x._2 > 1)
+        logger(1,"ndLabels = "+nonDistinctLabels.toList)
         val distinctLabels = labelSet.filter(x => x._2 == 1)
 
         // Each node is numbered by its index in 'nodes'
@@ -42,13 +43,14 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)])
         def addEdge(node1: Node, index1: Int, node2: Node, index2: Int, label: String, weight: Double, addRelation: Boolean = true) {
             if (!node1.relations.exists(x => ((x._1 == label) && (x._2.id == node2.id))) || !addRelation) { // Prevent adding an edge twice
                 if (addRelation) {
+                    logger(1, "Adding an edge")
+                    logger(1, "label = " + label)
                     node1.relations = (label, node2) :: node1.relations
                 }
                 feats += features.localFeatures(node1, node2, label, input)
                 score += weight
             }
             if (set(index1) != set(index2)) {   // If different sets, then merge them
-                logger(2, "Adding an edge")
                 logger(2, "set = " + set.toList)
                 logger(2, "setArray = " + setArray.toList)
                 getSet(index1) ++= getSet(index2)
@@ -57,6 +59,7 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)])
             }
         }
 
+        logger(1, "Adding edges already there")
         val nodeIds : Array[String] = nodes.map(_.id)
         for { (node1, index1) <- nodes.zipWithIndex
               (label, node2) <- node1.relations } {
@@ -64,23 +67,32 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)])
             addEdge(node1, index1, node2, index2, label, features.localScore(node1, node2, label, input), addRelation=false)
         }
 
+        logger(1, "Adding positive edges")
         val neighbors : Array[Array[(String, Double)]] = {
             for ((node1, index1) <- nodes.zipWithIndex) yield {
                 for ((node2, index2) <- nodes.zipWithIndex) yield {
                     val (label, weight) = distinctLabels.map(x => (x._1, features.localScore(node1, node2, x._1, input))).maxBy(_._2)
+                    logger(1,"distinctLabels = "+distinctLabels.map(x => (x._1, features.localScore(node1, node2, x._1, input))).sortBy(_._2).toList)
+                    logger(1,"label = "+label)
+                    logger(1,"weight = "+label)
                     val ndLabels = nonDistinctLabels.map(x => (x._1, features.localScore(node1, node2, x._1, input))).filter(x => x._2 > 0 && x._1 != label)
-                    ndLabels.map(x => addEdge(node1, index1, node2, index2, x._1, x._2))
+                    logger(1,"ndLabels = "+nonDistinctLabels.map(x => (x._1, features.localScore(node1, node2, x._1, input))))
+                    logger(1,"ndLabels = "+ndLabels.toList)
+                    ndLabels.filter(_._2 > 0).map(x => addEdge(node1, index1, node2, index2, x._1, x._2))
                     if (weight > 0) {   // Add all positive weights
                         addEdge(node1, index1, node2, index2, label, weight)
                     }
                     if (ndLabels.size > 0) {
                         val (label2, weight2) = ndLabels.maxBy(_._2)
                         if (weight > weight2) {
+                            logger(1, "1neighbors("+node1.concept+","+node2.concept+")="+label)
                             (label, weight)
                         } else {
+                            logger(1, "2neighbors("+node1.concept+","+node2.concept+")="+label2)
                             (label2, weight2)
                         }
-                    } else { 
+                    } else {
+                        logger(1, "3neighbors("+node1.concept+","+node2.concept+")="+label)
                         (label, weight)
                     }
                 }
@@ -88,6 +100,7 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)])
         }
 
         // Add negative weights to the queue
+        logger(1, "Adding negative edges")
         val queue = new PriorityQueue[(Double, Int, Int, String)]()(Ordering.by(x => x._1))
         if (getSet(0).size != nodes.size) {
             for { (node1, index1) <- nodes.zipWithIndex
@@ -98,7 +111,7 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)])
         }
 
         // Kruskal's algorithm
-        logger(2, queue.toString)
+        logger(1, queue.toString)
         logger(2, set.toList)
         logger(2, setArray.toList)
         while (getSet(0).size != nodes.size) {
