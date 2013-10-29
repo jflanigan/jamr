@@ -69,7 +69,11 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
             System.err.println("Error: No labelset file specified")
             sys.exit(1)
         }
-        val labelset: Array[(String, Int)] = Source.fromFile(options('labelset).asInstanceOf[String]).getLines().toArray.map(x => (x.split(" +")(0), x.split(" +")(1).toInt))
+        val labelset: Array[(String, Int)] = Source.fromFile(options('labelset).asInstanceOf[String]).getLines().toArray.map(x => {
+            val split = x.split(" +")
+            (split(0), if (split.size > 1) { split(1).toInt } else { 100 })
+        })
+        //(x.split(" +")(0), x.split(" +").zipWithIndex.map(x => (x._2, x._2)).toMap.getOrElse(1,"100").toInt))
 
         var features = List("conceptBigram")
 
@@ -82,8 +86,8 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
             sys.exit(1)
         }
         val decoder: Decoder = options('decoder).asInstanceOf[String] match {
-            case "alg1" => new Alg1(features, labelset)
-            case "alg2" => new Alg2(features, labelset)
+            case "Alg1" => new Alg1(features, labelset)
+            case "Alg2" => new Alg2(features, labelset)
             case "DD" => new DualDecomposition(features, labelset, 1)
             case x => { System.err.println("Error: unknown decoder " + x); sys.exit(1) }
         }
@@ -105,8 +109,16 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
             System.err.println(" done")
 
             val weights = Perceptron.learnParameters(
-                i => decoder.decode(Corpus.toAMRTriple(training(i)).toInput).features,
-                i => oracle.decode(Corpus.toAMRTriple(training(i)).toOracle).features,
+                //i => decoder.decode(Corpus.toAMRTriple(training(i)).toInput).features,
+                i => { val result = decoder.decode(Corpus.toAMRTriple(training(i)).toInput)
+                       logger(1, "AMR: ")
+                       logger(1, result.graph.root.prettyString(detail = 1, pretty = true))
+                       result.features },
+                //i => oracle.decode(Corpus.toAMRTriple(training(i)).toOracle).features,
+                i => { val result = oracle.decode(Corpus.toAMRTriple(training(i)).toOracle)
+                       logger(1, "Oracle: ")
+                       logger(1, result.graph.root.prettyString(detail = 1, pretty = true))
+                       result.features },
                 decoder.features.weights,
                 training.size,
                 passes,
