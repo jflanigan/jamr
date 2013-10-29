@@ -53,14 +53,16 @@ object TestAMRDisplayCode {
 
         for { block <- Corpus.splitOnNewline(Source.stdin.getLines)
               if (block matches "(.|\n)*\n\\((.|\n)*") } {
-            println("**** Processsing Block *****")
-            println(block)
-            println("****************************")
+            logger(0,"**** Processsing Block *****")
+            logger(0,block)
+            logger(0,"****************************")
             val Block(extrastr, amrstr) = block
             val graph = Graph.parse(amrstr)
             logger(1,graph.root.prettyString(detail = 2, pretty = true))
+            graph.normalizeInverseRelations
             graph.makeTopologicalOrdering
             println(graph.root.prettyString(detail = 1, pretty = true))
+            println()
         }
 
     }
