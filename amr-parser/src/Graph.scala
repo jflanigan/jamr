@@ -178,6 +178,10 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
     }
 
     def nodes : Iterator[Node] = {
+        return getNodeById.valuesIterator
+    }
+
+    def nodesByName : Iterator[Node] = {
         return getNodeByName.valuesIterator
     }
 
@@ -306,15 +310,10 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
             logger(1, "Queue = "+queue.toString)
             val (node, dequeue) = queue.dequeue
             logger(1, "Node = "+node.id)
-            logger(3, "Here1")
             queue = dequeue
-            logger(3, "Here2")
             visited += node.id
-            logger(3, "Here3")
             node.topologicalOrdering = List()
-            logger(3, "Here4")
             node.variableRelations = List()
-            logger(3, "Here5")
             logger(3, "node.relations = "+node.relations.toString)
             logger(3, "inverse.getOrElse(node.id, List()) = "+inverse.getOrElse(node.id, List()))
             //logger(1, "getNodeById = "+getNodeById)
@@ -336,12 +335,10 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
                     visited += child.id
                     queue = queue.enqueue(child)
                     node.topologicalOrdering = (relation, child) :: node.topologicalOrdering
-                    println(node.topologicalOrdering.map(x => (x._1, x._2.id)))
                 }
             }
         } while (queue.size != 0)
-        println("In makeTopologicalOrdering()")
-        for (node <- nodes) { println(node.topologicalOrdering.map(x => (x._1, x._2.id))) }
+        logger(1, "visited = "+visited)
         assert(visited.size == nodes.size, "The graph does not span the nodes")
     }
 
