@@ -77,7 +77,7 @@ case class Node(var id: String, var name: Option[String], concept: String, var r
         }
         if (name != None) {
             val Some(n) = name
-            if (relations.size != 0) {      // Concept with name and children
+            if ((topologicalOrdering.size +variableRelations.size) != 0) {      // Concept with name and children
                 detail match {
                     case 0 =>
                 "("+concept+" "+(topologicalOrdering.map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, nextIndent)) :::
@@ -99,7 +99,7 @@ case class Node(var id: String, var name: Option[String], concept: String, var r
                         "(["+id+"] "+n+" / "+concept+")"
                 }
             }
-        } else if (relations.size == 0) {   // Concept with no name and no children
+        } else if ((topologicalOrdering.size + variableRelations.size) == 0) {   // Concept with no name and no children
             if (detail < 2) {
                 concept
             } else {
