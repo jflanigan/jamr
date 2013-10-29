@@ -307,19 +307,14 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         val visited = Set.empty[String]
         val inverse = inverseRelations
         do {
-            logger(1, "Queue = "+queue.toString)
             val (node, dequeue) = queue.dequeue
             logger(1, "Node = "+node.id)
             queue = dequeue
             visited += node.id
             node.topologicalOrdering = List()
             node.variableRelations = List()
-            logger(3, "node.relations = "+node.relations.toString)
             logger(3, "inverse.getOrElse(node.id, List()) = "+inverse.getOrElse(node.id, List()))
-            //logger(1, "getNodeById = "+getNodeById)
-            //logger(1, "inverse.getOrElse(node.id, List()) = "+inverse.getOrElse(node.id, List()).map(x => (x._1, getNodeById(x._2))))
             val relations = node.relations ::: inverse.getOrElse(node.id, List()).map(x => (x._1, getNodeById(x._2)))
-            //logger(1, "Relations = "+relations.toString)
             for ((relation, child) <- relations.sortBy(_._1).reverse) {
                 logger(3, "(relation, child) = "+(relation,child.id))
                 if (queue.contains(child)) {
