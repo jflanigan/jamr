@@ -308,7 +308,7 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         val inverse = inverseRelations
         do {
             val (node, dequeue) = queue.dequeue
-            logger(1, "Node = "+node.id)
+            logger(2, "Node = "+node.id)
             queue = dequeue
             visited += node.id
             node.topologicalOrdering = List()
@@ -319,21 +319,25 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
                 logger(3, "(relation, child) = "+(relation,child.id))
                 if (queue.contains(child)) {
                     // this is a variable relation
-                    logger(1, "Adding "+child.id+" as a variable of "+node.id)
-                    assert(child.name != None, "Attempting to create a variable relation to a node without a variable name")
-                    val Some(name) = child.name
-                    assert(getNodeByName.contains(name), "Variable name not in getNodeByName")
-                    node.variableRelations = (relation, Var(child, name)) :: node.variableRelations
+                    logger(3, "Adding "+child.id+" as a variable of "+node.id)
+                    //assert(child.name != None, "Attempting to create a variable relation to a node without a variable name")
+                    if (child.name != None) {
+                        val Some(name) = child.name
+                        assert(getNodeByName.contains(name), "Variable name not in getNodeByName")
+                        node.variableRelations = (relation, Var(child, name)) :: node.variableRelations
+                    } else {
+                        logger(1, "WARNGING: Attempted to create a variable relation to a node without a variable name - ignoring this relation in the topological ordering")
+                    }
                 } else if (!visited.contains(child.id)) {
                     // this node goes into the topological ordering
-                    logger(1, "Adding "+child.id+" as a child of "+node.id)
+                    logger(3, "Adding "+child.id+" as a child of "+node.id)
                     visited += child.id
                     queue = queue.enqueue(child)
                     node.topologicalOrdering = (relation, child) :: node.topologicalOrdering
                 }
             }
         } while (queue.size != 0)
-        logger(1, "visited = "+visited)
+        logger(2, "visited = "+visited)
         assert(visited.size == nodes.size, "The graph does not span the nodes")
     }
 
