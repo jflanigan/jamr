@@ -119,8 +119,6 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)])
 
         nodes.map(node => { node.relations = node.relations.reverse })
         graph.makeTopologicalOrdering()
-        println("In Alg2")
-        for (node <- nodes) { println(node.topologicalOrdering.map(x => (x._1, x._2.id))) }
         return DecoderResult(graph, feats, score)
     }
 }
