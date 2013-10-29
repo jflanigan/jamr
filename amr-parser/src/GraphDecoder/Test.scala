@@ -59,10 +59,10 @@ object Test {
         }
 
 //        test1()
-//        test2()
+        test2()
 //        test3()
-        test4()
-        samTest()
+//        test4()
+//        samTest()
     }
 
     def test1() {
@@ -92,8 +92,19 @@ object Test {
             List(("1", "2", ":r", 6),
                  ("2", "3", ":r", -6),
                  ("1", "3", ":r", 3)))
+        println("weights:")
+        print(decoder.features.weights)
         val result = decoder.decode(Input(graph, Array(), Array(), Array()))
+        println("In test2()")
+        for (node <- result.graph.nodes) { println(node.topologicalOrdering.map(x => (x._1, x._2.id))) }
+        println("Triples:")
         result.graph.printTriples(detail = 1)
+        println("TopologicalOrdering:")
+        for (node <- result.graph.nodes) {
+            println(node.id + "=" + node.topologicalOrdering.map(x => (x._1, x._2.id)))
+        }
+        println("Graph:")
+        println(result.graph.root.prettyString(detail = 1, pretty = true))
     }
 
     def test3() {

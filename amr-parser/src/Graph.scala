@@ -300,30 +300,48 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         // Postcondition: This function populates node.variableRelations and node.topologicalOrdering by 
         // breadth-first-search from the root.
         var queue = Queue[Node](root)
-        val visited = Set.empty[Node]
+        val visited = Set.empty[String]
         val inverse = inverseRelations
         do {
+            logger(1, "Queue = "+queue.toString)
             val (node, dequeue) = queue.dequeue
+            logger(1, "Node = "+node.id)
+            logger(3, "Here1")
             queue = dequeue
-            visited += node
+            logger(3, "Here2")
+            visited += node.id
+            logger(3, "Here3")
             node.topologicalOrdering = List()
+            logger(3, "Here4")
             node.variableRelations = List()
+            logger(3, "Here5")
+            logger(3, "node.relations = "+node.relations.toString)
+            logger(3, "inverse.getOrElse(node.id, List()) = "+inverse.getOrElse(node.id, List()))
+            //logger(1, "getNodeById = "+getNodeById)
+            //logger(1, "inverse.getOrElse(node.id, List()) = "+inverse.getOrElse(node.id, List()).map(x => (x._1, getNodeById(x._2))))
             val relations = node.relations ::: inverse.getOrElse(node.id, List()).map(x => (x._1, getNodeById(x._2)))
+            //logger(1, "Relations = "+relations.toString)
             for ((relation, child) <- relations.sortBy(_._1).reverse) {
-                if (visited.contains(child)) {
+                logger(3, "(relation, child) = "+(relation,child.id))
+                if (queue.contains(child)) {
                     // this is a variable relation
-                    assert(node.name != None, "Attempting to create a variable relation to a node without a variable name")
-                    val Some(name) = node.name
+                    logger(1, "Adding "+child.id+" as a variable of "+node.id)
+                    assert(child.name != None, "Attempting to create a variable relation to a node without a variable name")
+                    val Some(name) = child.name
                     assert(getNodeByName.contains(name), "Variable name not in getNodeByName")
-                    node.variableRelations = (relation, Var(node, name)) :: node.variableRelations
-                } else {
+                    node.variableRelations = (relation, Var(child, name)) :: node.variableRelations
+                } else if (!visited.contains(child.id)) {
                     // this node goes into the topological ordering
-                    visited += child
+                    logger(1, "Adding "+child.id+" as a child of "+node.id)
+                    visited += child.id
                     queue = queue.enqueue(child)
-                    node.topologicalOrdering = (relation, node) :: node.topologicalOrdering
+                    node.topologicalOrdering = (relation, child) :: node.topologicalOrdering
+                    println(node.topologicalOrdering.map(x => (x._1, x._2.id)))
                 }
             }
         } while (queue.size != 0)
+        println("In makeTopologicalOrdering()")
+        for (node <- nodes) { println(node.topologicalOrdering.map(x => (x._1, x._2.id))) }
         assert(visited.size == nodes.size, "The graph does not span the nodes")
     }
 
