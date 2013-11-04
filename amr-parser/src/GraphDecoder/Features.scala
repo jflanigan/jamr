@@ -34,9 +34,10 @@ class Features(featureNames: List[String]) {
     )
 
     val rootFFTable = Map[String, RootFeatureFunction](
+        "rootConcept" -> ffRootConcept
     )
 
-    val rootFeature = List("rootPath")
+    val rootFeature = List("rootConcept","rootPath")
     val notFast = List()  // ff that don't support fast lookup
 
 /*    var prev_t : Int = -1       // For fast features
@@ -120,8 +121,14 @@ class Features(featureNames: List[String]) {
     }
 
     def ffConceptBigram(node1: Node, node2: Node, label: String, input: Input) : FeatureVector = {
+        logger(2, "ffConceptBigram: Node1 = " + node1.concept + " Node2 = " + node2.concept + " label = " + label)
         return FeatureVector(Map(/*("C1="+node1.concept+":C2="+node2.concept) -> 1.0,*/
                                  ("C1="+node1.concept+":C2="+node2.concept+":L="+label) -> 1.0))
+    }
+
+    def ffRootConcept(node: Node, input: Input) : FeatureVector = {
+        logger(2, "ffRootConcept: Node = " + node.concept)
+        return FeatureVector(Map(("C="+node.concept+":L=<ROOT>") -> 1.0))
     }
 }
 

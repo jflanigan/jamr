@@ -26,9 +26,11 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)])
         val graph = input.graph.duplicate
         val nodes : Array[Node] = graph.nodes.toArray
         //val nodes : Array[Node] = graph.nodes.filter(_.name != None).toArray
-        val nonDistinctLabels = labelSet.toList.filter(x => x._2 > 1)
-        logger(1,"ndLabels = "+nonDistinctLabels.toList)
-        val distinctLabels = labelSet.filter(x => x._2 == 1)
+        //val nonDistinctLabels = labelSet.toList.filter(x => x._2 > 1) // TODO: remove
+        val nonDistinctLabels : Array[(String, Int)] = new Array(0)
+        logger(2,"ndLabels = "+nonDistinctLabels.toList)
+        //val distinctLabels = labelSet.filter(x => x._2 == 1)  // TODO: remove
+        val distinctLabels = labelSet
 
         // Each node is numbered by its index in 'nodes'
         // Each set is numbered by its index in 'setArray'
@@ -72,12 +74,12 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)])
             for ((node1, index1) <- nodes.zipWithIndex) yield {
                 for ((node2, index2) <- nodes.zipWithIndex) yield {
                     val (label, weight) = distinctLabels.map(x => (x._1, features.localScore(node1, node2, x._1, input))).maxBy(_._2)
-                    logger(1,"distinctLabels = "+distinctLabels.map(x => (x._1, features.localScore(node1, node2, x._1, input))).sortBy(_._2).toList)
+                    logger(1,"distinctLabels = "+distinctLabels.map(x => (x._1, features.localScore(node1, node2, x._1, input))).sortBy(-_._2).toList)
                     logger(1,"label = "+label)
-                    logger(1,"weight = "+label)
+                    logger(1,"weight = "+weight)
                     val ndLabels = nonDistinctLabels.map(x => (x._1, features.localScore(node1, node2, x._1, input))).filter(x => x._2 > 0 && x._1 != label)
-                    logger(1,"ndLabels = "+nonDistinctLabels.map(x => (x._1, features.localScore(node1, node2, x._1, input))))
-                    logger(1,"ndLabels = "+ndLabels.toList)
+                    logger(2,"ndLabels = "+nonDistinctLabels.map(x => (x._1, features.localScore(node1, node2, x._1, input))))
+                    logger(2,"ndLabels = "+ndLabels.toList)
                     ndLabels.filter(_._2 > 0).map(x => addEdge(node1, index1, node2, index2, x._1, x._2))
                     if (weight > 0) {   // Add all positive weights
                         addEdge(node1, index1, node2, index2, label, weight)
@@ -92,7 +94,7 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)])
                             (label2, weight2)
                         }
                     } else {
-                        logger(1, "3neighbors("+node1.concept+","+node2.concept+")="+label)
+                        logger(1, "neighbors("+node1.concept+","+node2.concept+")="+label)
                         (label, weight)
                     }
                 }
