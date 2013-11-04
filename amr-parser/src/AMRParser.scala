@@ -75,11 +75,13 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
         })
         //(x.split(" +")(0), x.split(" +").zipWithIndex.map(x => (x._2, x._2)).toMap.getOrElse(1,"100").toInt))
 
-        var features = List("bias", "conceptBigram")
+        var features = List("conceptBigram", "rootConcept")
 
         if (options.contains('features)) {
             features = options('features).asInstanceOf[String].split(",").toList
         }
+
+        logger(1, "features = " + features)
 
         if (!options.contains('decoder)) {
             System.err.println("Error: No decoder specified")

@@ -17,6 +17,7 @@ class Oracle(featureNames: List[String])
               (label, node2) <- node1.relations } {
             feats += features.localFeatures(node1, node2, label, input)
         }
+        feats += features.rootFeatures(input.graph.root, input)
 
         return DecoderResult(input.graph, feats, features.weights.dot(feats))
     }
