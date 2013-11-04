@@ -44,21 +44,28 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)])
         var feats = new FeatureVector()
         def addEdge(node1: Node, index1: Int, node2: Node, index2: Int, label: String, weight: Double, addRelation: Boolean = true) {
             if (!node1.relations.exists(x => ((x._1 == label) && (x._2.id == node2.id))) || !addRelation) { // Prevent adding an edge twice
+                logger(1, "Adding an edge from "+node1.concept+" to "+node2.concept + " label = " + label)
                 if (addRelation) {
-                    logger(1, "Adding an edge")
-                    logger(1, "label = " + label)
                     node1.relations = (label, node2) :: node1.relations
                 }
                 feats += features.localFeatures(node1, node2, label, input)
                 score += weight
             }
+            logger(1, "set = " + set.toList)
+            logger(1, "nodes = " + nodes.map(x => x.concept).toList)
+            logger(1, "setArray = " + setArray.toList)
             if (set(index1) != set(index2)) {   // If different sets, then merge them
-                logger(2, "set = " + set.toList)
-                logger(2, "setArray = " + setArray.toList)
+                logger(1, "Merging sets")
                 getSet(index1) ++= getSet(index2)
-                getSet(index2).clear()
-                set(index2) = set(index1)
+                val set2 = getSet(index2)
+                for (index <- set2) {
+                    set(index) = set(index1)
+                }
+                set2.clear()
             }
+            logger(1, "set = " + set.toList)
+            logger(1, "nodes = " + nodes.map(x => x.concept).toList)
+            logger(1, "setArray = " + setArray.toList)
         }
 
         logger(1, "Adding edges already there")
@@ -69,12 +76,16 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)])
             addEdge(node1, index1, node2, index2, label, features.localScore(node1, node2, label, input), addRelation=false)
         }
 
+        logger(1, "set = " + set.toList)
+        logger(1, "nodes = " + nodes.map(x => x.concept).toList)
+        logger(1, "setArray = " + setArray.toList)
+
         logger(1, "Adding positive edges")
         val neighbors : Array[Array[(String, Double)]] = {
             for ((node1, index1) <- nodes.zipWithIndex) yield {
                 for ((node2, index2) <- nodes.zipWithIndex) yield {
                     val (label, weight) = distinctLabels.map(x => (x._1, features.localScore(node1, node2, x._1, input))).maxBy(_._2)
-                    logger(1,"distinctLabels = "+distinctLabels.map(x => (x._1, features.localScore(node1, node2, x._1, input))).sortBy(-_._2).toList)
+                    logger(1,"distinctLabels = "+distinctLabels.map(x => (x._1, features.localScore(node1, node2, x._1, input))).sortBy(-_._2).toList.take(5)+"...")
                     logger(1,"label = "+label)
                     logger(1,"weight = "+weight)
                     val ndLabels = nonDistinctLabels.map(x => (x._1, features.localScore(node1, node2, x._1, input))).filter(x => x._2 > 0 && x._1 != label)
@@ -103,7 +114,7 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)])
 
         // Add negative weights to the queue
         logger(1, "Adding negative edges")
-        val queue = new PriorityQueue[(Double, Int, Int, String)]()(Ordering.by(x => x._1))
+        val queue = new PriorityQueue[(Double, Int, Int, String)]()(Ordering.by(x => -x._1))
         if (getSet(0).size != nodes.size) {
             for { (node1, index1) <- nodes.zipWithIndex
                   ((label, weight), index2) <- neighbors(index1).zipWithIndex
@@ -113,9 +124,10 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)])
         }
 
         // Kruskal's algorithm
-        logger(1, queue.toString)
-        logger(2, set.toList)
-        logger(2, setArray.toList)
+        logger(1, "queue = " + queue.toString)
+        logger(1, "set = " + set.toList)
+        logger(1, "nodes = " + nodes.map(x => x.concept).toList)
+        logger(1, "setArray = " + setArray.toList)
         while (getSet(0).size != nodes.size) {
             logger(2, queue.toString)
             val (weight, index1, index2, label) = queue.dequeue

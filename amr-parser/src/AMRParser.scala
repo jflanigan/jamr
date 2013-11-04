@@ -114,12 +114,12 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
                 //i => decoder.decode(Corpus.toAMRTriple(training(i)).toInput).features,
                 i => { val result = decoder.decode(Corpus.toAMRTriple(training(i)).toInput)
                        logger(0, "AMR: ")
-                       logger(0, result.graph.root.prettyString(detail = 1, pretty = true))
+                       logger(0, result.graph.root.prettyString(detail = 1, pretty = true)+"\n")
                        result.features },
                 //i => oracle.decode(Corpus.toAMRTriple(training(i)).toOracle).features,
                 i => { val result = oracle.decode(Corpus.toAMRTriple(training(i)).toOracle)
                        logger(0, "Oracle: ")
-                       logger(0, result.graph.root.prettyString(detail = 1, pretty = true))
+                       logger(0, result.graph.root.prettyString(detail = 1, pretty = true)+"\n")
                        result.features },
                 decoder.features.weights,
                 training.size,
