@@ -47,6 +47,24 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         return Graph(root2, spans.clone, getNodeById2, getNodeByName2)
     }
 
+    def clearUnalignedNodes() {
+        // Removes all the unaligned nodes from the graph (useful for oracle experiments)
+        // WARNING: this can break the topological ordering
+        for (node <- nodes) {
+            if (node.spans.size == 0) { // Unaligned
+                getNodeById -= node.id
+                if (node.name != None) {
+                    getNodeByName -= node.name.get
+                }
+            }
+        }
+        for (node <- nodes) {
+            node.topologicalOrdering = node.topologicalOrdering.filter(x => getNodeById.contains(x._2.id)) // Warning this may break the topological ordering
+            node.relations = node.relations.filter(x => getNodeById.contains(x._2.id))
+            node.variableRelations = node.variableRelations.filter(x => getNodeById.contains(x._2.node.id))
+        }
+    }
+
     def clearEdges() {
         // Initializes the graph from the spans (effectively clearing the edges)
         // Sets relations, but leaves topologicalOrdering and variableRelations blank
@@ -108,8 +126,9 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
               (Relation(relation), node2) <- node1.relations
             } {
             detail match {
-                case 0 => println(relation + "(" + node1.concept + ", " + node2.concept + ")")
-                case 1 => println(relation + "(" + name(node1) + node1.concept + ", " + name(node2) + node2.concept + ")")
+                case 0 => println("(" + name(node1) + ", " + relation + ", " + name(node2) + ")")
+                case 1 => println(relation + "(" + node1.concept + ", " + node2.concept + ")")
+                case 2 => println(relation + "(" + name(node1) + node1.concept + ", " + name(node2) + node2.concept + ")")
                 case _ => println("(" + name(node1) + node1.concept + ", " + name(node2) + node2.concept + ", " + relation + ")")
             }
         }
