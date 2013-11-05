@@ -37,7 +37,14 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
             node2.variableRelations = node.variableRelations.map(x => (x._1, Var(getNodeById2(x._2.node.id), x._2.name)))
         }
         val getNodeByName2 = getNodeByName.map(x => (x._1, getNodeById2(x._2.id)))
-        return Graph(getNodeById2(root.id), spans.clone, getNodeById2, getNodeByName2)
+        logger(0, "getNodeById = " + getNodeById)
+        logger(0, "getNodeById2 = " + getNodeById2)
+        val root2 = if (getNodeById2.contains(root.id)) {
+            getNodeById2(root.id)
+        } else {
+            Graph.empty().root  // sometimes the root is not in the spans (if it is from automatically aligned spans, and the root is not in the spans).  So we create a dummy root which will get re-assigned later
+        }
+        return Graph(root2, spans.clone, getNodeById2, getNodeByName2)
     }
 
     def clearEdges() {
