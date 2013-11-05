@@ -24,10 +24,13 @@ case class AMRTriple(sentence: Array[String], graph: Graph, spans: ArrayBuffer[S
         graph.addVariableToSpans
         return Input(graph, sentence, Array(), Array())
     }
-    def toOracle(): Input = {
+    def toOracle(clearUnalignedNodes : Boolean): Input = {
         // WARNING: this function modifies the graph
         val annotationIndex = annotators.size - 1
         graph.loadSpans(spans(annotationIndex), sentence)
+        if (clearUnalignedNodes) {
+            graph.clearUnalignedNodes
+        }
         graph.normalizeInverseRelations
         graph.addVariableToSpans
         return Input(graph, sentence, Array(), Array())
