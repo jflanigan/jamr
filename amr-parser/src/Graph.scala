@@ -37,8 +37,8 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
             node2.variableRelations = node.variableRelations.map(x => (x._1, Var(getNodeById2(x._2.node.id), x._2.name)))
         }
         val getNodeByName2 = getNodeByName.map(x => (x._1, getNodeById2(x._2.id)))
-        logger(0, "getNodeById = " + getNodeById)
-        logger(0, "getNodeById2 = " + getNodeById2)
+        logger(1, "getNodeById = " + getNodeById)
+        logger(1, "getNodeById2 = " + getNodeById2)
         val root2 = if (getNodeById2.contains(root.id)) {
             getNodeById2(root.id)
         } else {
@@ -365,7 +365,10 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
             if (span.nodeIds.map(x => getNodeById(x)).filter(x => x.name != None).size == 0) {
                 logger(1, "WARNING: Adding a variable name to a span")
                 val node = getNodeById(span.nodeIds(0))
-                val c : Char = node.concept(0)
+                var c : Char = node.concept(0)
+                if (c == '"') {
+                    c = node.concept(1)
+                }
                 assert(c != '"', "Concept starts with \"")
                 val varName = getNextVariableName(c)
                 getNodeByName(varName) = node
