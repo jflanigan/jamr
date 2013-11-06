@@ -112,7 +112,7 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         }
     }
 
-    def printTriples(detail: Int = 1) {
+    def printTriples(detail: Int = 1, sorted: Boolean = true) : String = {
         def name(node: Node) : String = {
             node.name match {
                 case None => ""
@@ -120,18 +120,24 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
             }
         }
 
+        var str = ""
         val Relation = """:?(.*)""".r
 
         for { node1 <- nodes
               (Relation(relation), node2) <- node1.relations
             } {
             detail match {
-                case 0 => println("(" + name(node1) + ", " + relation + ", " + name(node2) + ")")
-                case 1 => println(relation + "(" + node1.concept + ", " + node2.concept + ")")
-                case 2 => println(relation + "(" + name(node1) + node1.concept + ", " + name(node2) + node2.concept + ")")
-                case _ => println("(" + name(node1) + node1.concept + ", " + name(node2) + node2.concept + ", " + relation + ")")
+                case 0 => str += "(" + node1.concept + ", " + relation + ", " + node2.concept + ")\n"
+                case 1 => str += "(" + name(node1) + node1.concept + ", " + relation + ", " + name(node2) + node2.concept + ")\n"
+                case 2 => str += relation + "(" + node1.concept + ", " + node2.concept + ")\n"
+                case 3 => str += relation + "(" + name(node1) + node1.concept + ", " + name(node2) + node2.concept + ")\n"
+                case _ => str += "(" + name(node1) + node1.concept + ", " + name(node2) + node2.concept + ", " + relation + ")\n"
             }
         }
+        if (sorted) { 
+            str = str.split("\n").sorted.mkString("\n")
+        }
+        return str
     }
 
     def loadSpans(spanStr: String, sentence: Array[String]) = {
