@@ -16,7 +16,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.PriorityQueue
 import Double.{NegativeInfinity => minusInfty}
 
-class Alg2(featureNames: List[String], labelSet: Array[(String, Int)])
+class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected: Boolean = true)
     extends Decoder(featureNames) {
     // Base class has defined:
     // val features: Features
@@ -115,7 +115,7 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)])
         // Add negative weights to the queue
         logger(1, "Adding negative edges")
         val queue = new PriorityQueue[(Double, Int, Int, String)]()(Ordering.by(x => -x._1))
-        if ((set.size != 0) && (getSet(0).size != nodes.size)) {
+        if (connected && set.size != 0 && getSet(0).size != nodes.size) {
             for { (node1, index1) <- nodes.zipWithIndex
                   ((label, weight), index2) <- neighbors(index1).zipWithIndex
                   if index1 != index2 && weight <= 0 && set(index1) != set(index2) } {
@@ -124,15 +124,17 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)])
         }
 
         // Kruskal's algorithm
-        logger(1, "queue = " + queue.toString)
-        logger(1, "set = " + set.toList)
-        logger(1, "nodes = " + nodes.map(x => x.concept).toList)
-        logger(1, "setArray = " + setArray.toList)
-        while ((set.size != 0) && (getSet(0).size != nodes.size)) {
-            logger(2, queue.toString)
-            val (weight, index1, index2, label) = queue.dequeue
-            if (set(index1) != set(index2)) {
-                addEdge(nodes(index1), index1, nodes(index2), index2, label, weight)
+        if (connected) {    // if we need to produce a connected graph
+            logger(1, "queue = " + queue.toString)
+            logger(1, "set = " + set.toList)
+            logger(1, "nodes = " + nodes.map(x => x.concept).toList)
+            logger(1, "setArray = " + setArray.toList)
+            while (set.size != 0 && getSet(0).size != nodes.size) {
+                logger(2, queue.toString)
+                val (weight, index1, index2, label) = queue.dequeue
+                if (set(index1) != set(index2)) {
+                    addEdge(nodes(index1), index1, nodes(index2), index2, label, weight)
+                }
             }
         }
 

@@ -44,6 +44,10 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
                       parseOptions(map ++ Map('decoder -> value), tail)
             case "--features" :: value :: tail =>
                       parseOptions(map ++ Map('features -> value), tail)
+            case "--outputFormat" :: value :: tail =>
+                      parseOptions(map ++ Map('outputFormat -> value), tail)
+            case "-nc" :: tail =>
+                      parseOptions(map ++ Map('notConnected -> true), tail)
             case "-v" :: value :: tail =>
                       parseOptions(map ++ Map('verbosity -> value.toInt), tail)
             case "-p" :: value :: tail =>
@@ -76,12 +80,23 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
         //(x.split(" +")(0), x.split(" +").zipWithIndex.map(x => (x._2, x._2)).toMap.getOrElse(1,"100").toInt))
 
         var features = List("conceptBigram", "rootConcept")
-
         if (options.contains('features)) {
             features = options('features).asInstanceOf[String].split(",").toList
         }
-
         logger(1, "features = " + features)
+
+        val connected = !options.contains('notconnected)
+        logger(1, "connected = " + connected)
+
+        var outputFormat = List("triples")
+        if (options.contains('outputFormat)) {
+            outputFormat = options('outputFormat).asInstanceOf[String].split(",").toList
+        }
+
+        if (outputFormat.contains("AMR") && !connected) {
+            println("Cannot have both -nc flag and --outputFormat \"Triples\"")
+            sys.exit(1)
+        }
 
         if (!options.contains('decoder)) {
             System.err.println("Error: No decoder specified")
@@ -89,7 +104,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
         }
         val decoder: Decoder = options('decoder).asInstanceOf[String] match {
             case "Alg1" => new Alg1(features, labelset)
-            case "Alg2" => new Alg2(features, labelset)
+            case "Alg2" => new Alg2(features, labelset, connected)
             case "DD" => new DualDecomposition(features, labelset, 1)
             case x => { System.err.println("Error: unknown decoder " + x); sys.exit(1) }
         }
@@ -114,13 +129,23 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
                 //i => decoder.decode(Corpus.toAMRTriple(training(i)).toInput).features,
                 i => { val result = decoder.decode(Corpus.toAMRTriple(training(i)).toInput)
                        logger(0, "AMR: ")
-                       logger(0, result.graph.root.prettyString(detail = 1, pretty = true)+"\n")
+                       if (outputFormat.contains("AMR")) {
+                           logger(0, result.graph.root.prettyString(detail = 1, pretty = true)+"\n")
+                       }
+                       if (outputFormat.contains("triples")) {
+                           logger(0, result.graph.printTriples(detail = 1)+"\n")
+                       }
                        result.features },
                 //i => oracle.decode(Corpus.toAMRTriple(training(i)).toOracle).features,
                 i => { val result = oracle.decode(Corpus.toAMRTriple(training(i)).toOracle(clearUnalignedNodes = true))
                        logger(0, "Oracle: ")
                        val result2 = oracle.decode(Corpus.toAMRTriple(training(i)).toOracle(clearUnalignedNodes = false))
-                       logger(0, result2.graph.root.prettyString(detail = 1, pretty = true)+"\n")
+                       if (outputFormat.contains("AMR")) {
+                           logger(0, result2.graph.root.prettyString(detail = 1, pretty = true)+"\n")
+                       }
+                       if (outputFormat.contains("triples")) {
+                           logger(0, result.graph.printTriples(detail = 1)+"\n")
+                       }
                        result.features },
                 decoder.features.weights,
                 training.size,
