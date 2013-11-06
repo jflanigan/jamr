@@ -83,10 +83,10 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
         if (options.contains('features)) {
             features = options('features).asInstanceOf[String].split(",").toList
         }
-        logger(1, "features = " + features)
+        logger(0, "features = " + features)
 
-        val connected = !options.contains('notconnected)
-        logger(1, "connected = " + connected)
+        val connected = !options.contains('notConnected)
+        logger(0, "connected = " + connected)
 
         var outputFormat = List("triples")
         if (options.contains('outputFormat)) {

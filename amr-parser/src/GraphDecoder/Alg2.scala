@@ -44,7 +44,7 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
         var feats = new FeatureVector()
         def addEdge(node1: Node, index1: Int, node2: Node, index2: Int, label: String, weight: Double, addRelation: Boolean = true) {
             if (!node1.relations.exists(x => ((x._1 == label) && (x._2.id == node2.id))) || !addRelation) { // Prevent adding an edge twice
-                logger(1, "Adding an edge from "+node1.concept+" to "+node2.concept + " label = " + label)
+                logger(0, "Adding edge ("+node1.concept+", "+label +", "+node2.concept + ") with weight "+weight.toString)
                 if (addRelation) {
                     node1.relations = (label, node2) :: node1.relations
                 }
@@ -147,7 +147,9 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
         feats += features.rootFeatures(graph.root, input)
 
         nodes.map(node => { node.relations = node.relations.reverse })
-        graph.makeTopologicalOrdering()
+        if (connected) {
+            graph.makeTopologicalOrdering()
+        }
         return DecoderResult(graph, feats, score)
     }
 }
