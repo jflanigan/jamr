@@ -19,13 +19,14 @@ import scala.collection.mutable.Map
 import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 
-case class Input(graph: Graph, sentence: Array[String], dependencies: Array[Dependency], pos: Array[String])
+case class Dependency(head: Int, dependent: Int, relation: String)
 
-case class DecoderResult(graph: Graph, features: FeatureVector, score: Double)
-
-abstract class Decoder(featureNames: List[String]) {
-    val features = new Features(featureNames) // maybe this should be renamed ff?
-
-    def decode(input: Input) : DecoderResult
+object Dependency {
+    val Stanford = """([^(]+[^-]+([0-9]+), *[^-]+([0-9]+)) *""".r
+    def fromStanford(string: String) : Dependency = {
+        val Stanford(relation, head, dependent) = string
+        return Dependency(head.toInt, dependent.toInt, relation)
+    }
 }
+
 
