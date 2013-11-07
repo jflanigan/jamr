@@ -113,7 +113,7 @@ class Features(featureNames: List[String]) {
     // node1 is always the tail, and node2 the head
 
     def ffEdgeId(node1: Node, node2: Node, label: String, input: Input) : FeatureVector = {  
-        return FeatureVector(Map(("Id1="+node1.id+":Id2="+node2.id+":L="+label) -> 1.0))
+        return FeatureVector(Map(("Id1="+node1.id+"+Id2="+node2.id+"+L="+label) -> 1.0))
     }
 
     def ffBias(node1: Node, node2: Node, label: String, input: Input) : FeatureVector = {
@@ -123,12 +123,12 @@ class Features(featureNames: List[String]) {
     def ffConceptBigram(node1: Node, node2: Node, label: String, input: Input) : FeatureVector = {
         logger(2, "ffConceptBigram: Node1 = " + node1.concept + " Node2 = " + node2.concept + " label = " + label)
         return FeatureVector(Map(/*("C1="+node1.concept+":C2="+node2.concept) -> 1.0,*/
-                                 ("C1="+node1.concept+":C2="+node2.concept+":L="+label) -> 1.0))
+                                 ("C1="+node1.concept+"+C2="+node2.concept+"+L="+label) -> 1.0))
     }
 
     def ffRootConcept(node: Node, input: Input) : FeatureVector = {
         logger(2, "ffRootConcept: Node = " + node.concept)
-        return FeatureVector(Map(("C="+node.concept+":L=<ROOT>") -> 1.0))
+        return FeatureVector(Map(("C="+node.concept+"+L=<ROOT>") -> 1.0))
     }
 }
 

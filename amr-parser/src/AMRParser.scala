@@ -94,7 +94,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
         }
 
         if (outputFormat.contains("AMR") && !connected) {
-            println("Cannot have both -nc flag and --outputFormat \"Triples\"")
+            println("Cannot have both -nc flag and --outputFormat \"AMR\"")
             sys.exit(1)
         }
 
@@ -107,6 +107,10 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
             case "Alg2" => new Alg2(features, labelset, connected)
             case "DD" => new DualDecomposition(features, labelset, 1)
             case x => { System.err.println("Error: unknown decoder " + x); sys.exit(1) }
+        }
+        if (options('decoder).asInstanceOf[String] == "Alg1" && outputFormat.contains("AMR")) {
+            println("Cannot have --outputFormat \"AMR\" for Alg1 (graph may not be connected!)")
+            sys.exit(1)
         }
 
         val oracle = new GraphDecoder.Oracle(features)
@@ -170,8 +174,12 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
 
             for (block <- Corpus.splitOnNewline(io.Source.stdin.getLines()) if block.matches("(.|\n)*\n\\((.|\n)*")) {
                 val decoderResult = decoder.decode(Corpus.toAMRTriple(block).toInput)
-//                println(decoderResult.graph.root.prettyString(detail=1, pretty=true) + '\n')
-                decoderResult.graph.printTriples()
+                if (outputFormat.contains("AMR")) {
+                    println(decoderResult.graph.root.prettyString(detail=1, pretty=true) + '\n')
+                }
+                if (outputFormat.contains("triples")) {
+                    logger(0, decoderResult.graph.printTriples(detail = 1)+"\n")
+                }
             }
         }
     }
