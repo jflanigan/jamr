@@ -20,7 +20,7 @@ import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 import Double.{NegativeInfinity => minusInfty}
 
-class Alg1(featureNames: List[String], labelSet: Array[(String, Int)])
+class Alg1(featureNames: List[String], labelSet: Array[(String, Int)], rootedConstraint: Boolean = true)
     extends Decoder(featureNames) {
     // Base class has defined:
     // val features: Features
@@ -34,7 +34,7 @@ class Alg1(featureNames: List[String], labelSet: Array[(String, Int)])
             nodes
         }
 
-        logger(2, "Alg1")
+        logger(1, "Alg1")
         //logger(2, "weights = " + features.weights)
 
         var score = 0.0
@@ -42,23 +42,27 @@ class Alg1(featureNames: List[String], labelSet: Array[(String, Int)])
         for { node1 <- nodes
               relations = node1.relations.map(_._1).toSet
               (label, maxCardinality) <- labelSet } {
-            logger(2, "node1 = " + node1.concept)
-            logger(2, "label = " + label)
 
             if (relations.contains(label)) {
-                val Some((_, node2)) = node1.relations.find(_._1 == label)
-                feats += features.localFeatures(node1, node2, label, input)
-                score += features.localScore(node1, node2, label, input)
+                for ((_, node2) <- node1.relations.filter(_._1 == label)) {
+                    feats += features.localFeatures(node1, node2, label, input)
+                    score += features.localScore(node1, node2, label, input)
+                }
             } else {
                 // Search over neighbors, and pick the ones with highest score
-                val nodes2 : List[(Node, Double)] = neighbors(node1).map(x => (x, features.localScore(node1, x, label, input))).sortBy(-_._2).filter(_._2 > 0).take(maxCardinality)
-
-                logger(2, "nodes2 = " + nodes.toString)
+                val nodes2 : List[(Node, Double)] = neighbors(node1).map(x => (x, features.localScore(node1, x, label, input))).filter(x => x._2 > 0 && x._1.id != node1.id).sortBy(-_._2).take(maxCardinality)
 
                 for ((node2, weight) <- nodes2) {
                     node1.relations = (label, node2) :: node1.relations
                     feats += features.localFeatures(node1, node2, label, input)
                     score += weight
+                    logger(0, "Adding edge ("+node1.concept+", "+label +", "+node2.concept + ") with weight "+weight.toString)
+                }
+                if (nodes2.size > 0) {
+                    logger(1, "node1 = " + node1.concept)
+                    logger(1, "label = " + label)
+                    logger(1, "nodes2 = " + nodes.toString)
+                    logger(1, "feats = " + feats.toString)
                 }
             }
         }
@@ -71,7 +75,7 @@ class Alg1(featureNames: List[String], labelSet: Array[(String, Int)])
         feats += features.rootFeatures(graph.root, input)
 
         nodes.map(node => { node.relations = node.relations.reverse })
-        graph.makeTopologicalOrdering()
+        //graph.makeTopologicalOrdering()   // won't work - may not be connected
         return DecoderResult(graph, feats, score)
     }
 }

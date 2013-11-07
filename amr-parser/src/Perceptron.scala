@@ -43,11 +43,15 @@ object Perceptron {
 //                weights += decoder.oracle(example)
                 val minus = decoder(t)
                 val plus = oracle(t)
+                logger(1,"-- Good --")
+                logger(1,plus)
+                logger(1,"-- Bad --")
+                logger(1,minus)
                 weights -= minus
                 weights += plus
                 plus -= minus
-                logger(1,"-- Difference --")
-                logger(1,plus)
+                logger(0,"-- Difference --")
+                logger(0,plus)
             }
             avg_weights += weights
         }
