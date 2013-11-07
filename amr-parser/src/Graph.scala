@@ -358,7 +358,8 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
                         assert(getNodeByName.contains(name), "Variable name not in getNodeByName")
                         node.variableRelations = (relation, Var(child, name)) :: node.variableRelations
                     } else {
-                        logger(1, "WARNGING: Attempted to create a variable relation to a node without a variable name - ignoring this relation in the topological ordering")
+                        logger(0, "WARNGING: Creating a variable relation to a node without a variable name - ignoring this relation in the topological ordering")
+                        assert(false, "WARNGING: Attempted to create a variable relation to a node without a variable name")
                     }
                 } else if (!visited.contains(child.id)) {
                     // this node goes into the topological ordering
