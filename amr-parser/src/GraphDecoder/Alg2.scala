@@ -24,8 +24,8 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
     def decode(input: Input) : DecoderResult = {
         // Assumes that Node.relations has been setup correctly for the graph fragments
         val graph = input.graph.duplicate
-        val nodes : Array[Node] = graph.nodes.toArray
-        //val nodes : Array[Node] = graph.nodes.filter(_.name != None).toArray
+        //val nodes : Array[Node] = graph.nodes.filter.toArray
+        val nodes : Array[Node] = graph.nodes.filter(_.name != None).toArray
         //val nonDistinctLabels = labelSet.toList.filter(x => x._2 > 1) // TODO: remove
         val nonDistinctLabels : Array[(String, Int)] = new Array(0)
         logger(2,"ndLabels = "+nonDistinctLabels.toList)
@@ -71,7 +71,8 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
         logger(1, "Adding edges already there")
         val nodeIds : Array[String] = nodes.map(_.id)
         for { (node1, index1) <- nodes.zipWithIndex
-              (label, node2) <- node1.relations } {
+              (label, node2) <- node1.relations
+              if nodeIds.indexWhere(_ == node2.id) != -1 } {
             val index2 = nodeIds.indexWhere(_ == node2.id)
             addEdge(node1, index1, node2, index2, label, features.localScore(node1, node2, label, input), addRelation=false)
         }
