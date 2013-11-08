@@ -25,8 +25,7 @@ object Dependency {
     val Stanford = """([^(]+[^-]+([0-9]+), *[^-]+([0-9]+)) *""".r
     def fromStanford(string: String) : Dependency = {
         val Stanford(relation, head, dependent) = string
-        return Dependency(head.toInt, dependent.toInt, relation)
+        return Dependency(head.toInt-1, dependent.toInt-1, relation)
     }
 }
-
 
