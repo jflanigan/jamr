@@ -1,4 +1,5 @@
-package edu.cmu.lti.nlp.amr
+package edu.cmu.lti.nlp.amr.GraphDecoder
+import edu.cmu.lti.nlp.amr._
 
 import java.io.File
 import java.io.FileOutputStream
