@@ -1,5 +1,4 @@
-package edu.cmu.lti.nlp.amr.GraphDecoder
-import edu.cmu.lti.nlp.amr._
+package edu.cmu.lti.nlp.amr
 
 import java.io.File
 import java.io.FileOutputStream
@@ -19,11 +18,8 @@ import scala.collection.mutable.Map
 import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 
-case class DecoderResult(graph: Graph, features: FeatureVector, score: Double)
-
-abstract class Decoder(featureNames: List[String]) {
-    val features = new Features(featureNames) // maybe this should be renamed ff?
-
-    def decode(input: Input) : DecoderResult
+case class Input(graph: Graph, sentence: Array[String], dependencies: Array[Dependency], pos: Array[String]) {
+    
 }
+
 
