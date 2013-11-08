@@ -13,7 +13,7 @@ import edu.cmu.lti.nlp.amr.GraphDecoder.Input
 // AMRTriple holds the (possibly multiple) span annotations for a sentence and graph pair
 // An element in spans is a span string (i.e. "1-2|0 0-1|0.0 2-3|0.1 4-5|0.2")
 case class AMRTriple(sentence: Array[String], graph: Graph, spans: ArrayBuffer[String], annotators: ArrayBuffer[String], annotation_dates: ArrayBuffer[String], amrStr: String, extras: String) {
-    def toInput(): Input = {
+    def toInputGraph(): Graph = {
         // WARNING: this function modifies the graph
         val annotationIndex = annotators.size - 1
         logger(1,"Sentence = " + sentence.toList)
@@ -22,9 +22,9 @@ case class AMRTriple(sentence: Array[String], graph: Graph, spans: ArrayBuffer[S
         graph.clearEdges
         graph.normalizeInverseRelations
         graph.addVariableToSpans
-        return Input(graph, sentence, Array(), Array())
+        return graph
     }
-    def toOracle(clearUnalignedNodes : Boolean): Input = {
+    def toOracleGraph(clearUnalignedNodes : Boolean): Graph = {
         // WARNING: this function modifies the graph
         val annotationIndex = annotators.size - 1
         graph.loadSpans(spans(annotationIndex), sentence)
@@ -33,7 +33,7 @@ case class AMRTriple(sentence: Array[String], graph: Graph, spans: ArrayBuffer[S
         }
         graph.normalizeInverseRelations
         graph.addVariableToSpans
-        return Input(graph, sentence, Array(), Array())
+        return graph
     }
 }
 
