@@ -20,7 +20,17 @@ import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 
 case class Input(graph: Graph, sentence: Array[String], dependencies: Array[Dependency], pos: Array[String]) {
-    
+
+    def this(amrdata: AMRTriple, dependencies: String, oracle: Boolean, clearUnalignedNodes: Boolean = true) = this(
+        if (oracle) {
+            amrdata.toOracleGraph(clearUnalignedNodes)
+        } else {
+            amrdata.toInputGraph
+        },
+        amrdata.sentence,
+        dependencies.split("\n").map(x => Dependency.fromStanford(x)),
+        Array[String]())
+
 }
 
 

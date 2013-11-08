@@ -142,10 +142,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
             val weights = Perceptron.learnParameters(
                 //i => decoder.decode(Corpus.toAMRTriple(training(i)).toInput).features,
                 i => { val amrdata = Corpus.toAMRTriple(training(i))
-                       val result = decoder.decode(Input(amrdata.toInputGraph,
-                                                         amrdata.sentence,
-                                                         dependencies(i).split("\n").map(x => Dependency.fromStanford(x)),
-                                                         Array()))
+                       val result = decoder.decode(new Input(amrdata, dependencies(i), oracle = false))
                        logger(0, "AMR: ")
                        if (outputFormat.contains("AMR")) {
                            logger(0, result.graph.root.prettyString(detail = 1, pretty = true)+"\n")
@@ -156,17 +153,10 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
                        result.features },
                 //i => oracle.decode(Corpus.toAMRTriple(training(i)).toOracle).features,
                 i => { val amrdata = Corpus.toAMRTriple(training(i))
-                       val result = oracle.decode(Input(amrdata.toOracleGraph(clearUnalignedNodes = true),
-                                                        amrdata.sentence,
-                                                        dependencies(i).split("\n").map(x => Dependency.fromStanford(x)),
-                                                        Array()))
+                       val result = oracle.decode(new Input(amrdata, dependencies(i), oracle = true))
                        logger(0, "Oracle: ")
                        if (outputFormat.contains("AMR")) {
-                           val result2 = oracle.decode(
-                                            Input(amrdata.toOracleGraph(clearUnalignedNodes = false),
-                                                  amrdata.sentence,
-                                                  dependencies(i).split("\n").map(x => Dependency.fromStanford(x)),
-                                                  Array()))
+                           val result2 = oracle.decode(new Input(amrdata, dependencies(i), oracle = true, clearUnalignedNodes = false))
                            logger(0, result2.graph.root.prettyString(detail = 1, pretty = true)+"\n")
                        }
                        if (outputFormat.contains("triples")) {
@@ -205,10 +195,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
 
             for ((block, i) <- Corpus.splitOnNewline(io.Source.stdin.getLines()).filter(_.matches("(.|\n)*\n\\((.|\n)*")).zipWithIndex) {
                 val amrdata = Corpus.toAMRTriple(block)
-                val decoderResult = decoder.decode(Input(amrdata.toInputGraph,
-                                                         amrdata.sentence,
-                                                         ArrayToMyArray(dependencies).getOrElse(i,"").split("\n").map(x => Dependency.fromStanford(x)),
-                                                         Array()))
+                val decoderResult = decoder.decode(new Input(amrdata, dependencies.getOrElse(i,""), oracle = false))
                 if (outputFormat.contains("AMR")) {
                     println(decoderResult.graph.root.prettyString(detail=1, pretty=true) + '\n')
                 }
