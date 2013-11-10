@@ -19,7 +19,7 @@ import scala.collection.mutable.Map
 import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 
-case class Input(graph: Graph, sentence: Array[String], dependencies: Array[Dependency], pos: Array[String]) {
+case class Input(graph: Graph, sentence: Array[String], dependencies: Annotation[Array[Dependency]], pos: Annotation[Array[String]]) {
 
     def this(amrdata: AMRTriple, dependencies: String, oracle: Boolean, clearUnalignedNodes: Boolean = true) = this(
         if (oracle) {
