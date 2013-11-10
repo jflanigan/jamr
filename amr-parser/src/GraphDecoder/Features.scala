@@ -24,18 +24,121 @@ import scala.util.parsing.combinator._
 
 class Features(featureNames: List[String]) {
     var weights = FeatureVector()
-    type FeatureFunction = (Node, Node, String, Input) => FeatureVector
-    type RootFeatureFunction = (Node, Input) => FeatureVector
+    private var graph: Graph = _
+    private var sentence: Array[String] = _
+    private var dependencies: Annotation[Array[Dependency]] = _
+    private var pos: Annotation[Array[String]] = _
+
+    def input: Int = Input(graph, sentence, dependencies, pos)
+    def input_= (i: Input) {
+        graph = i.graph
+        sentence = i.sentence
+        dependencies = i.dependencies
+        pos = i.pos
+        precompute
+    }
+
+    type FeatureFunction = (Node, Node, String) => FeatureVector
+    type RootFeatureFunction = (Node) => FeatureVector
 
     val ffTable = Map[String, FeatureFunction](
         "edgeId" -> ffEdgeId,
         "bias" -> ffBias,
         "conceptBigram" -> ffConceptBigram
+        "dependencyPath" -> ffDependencyPath
     )
 
     val rootFFTable = Map[String, RootFeatureFunction](
         "rootConcept" -> ffRootConcept
     )
+
+    // node1 is always the tail, and node2 the head
+
+    def ffEdgeId(node1: Node, node2: Node, label: String) : FeatureVector = {  
+        return FeatureVector(Map(("Id1="+node1.id+"+Id2="+node2.id+"+L="+label) -> 1.0))
+    }
+
+    def ffBias(node1: Node, node2: Node, label: String) : FeatureVector = {
+        return FeatureVector(Map(("L="+label) -> 1.0))
+    }
+
+    def ffConceptBigram(node1: Node, node2: Node, label: String) : FeatureVector = {
+        //logger(2, "ffConceptBigram: Node1 = " + node1.concept + " Node2 = " + node2.concept + " label = " + label)
+        return FeatureVector(Map(/*("C1="+node1.concept+":C2="+node2.concept) -> 1.0,*/
+                                 ("C1="+node1.concept+"+C2="+node2.concept+"+L="+label) -> 1.0))
+    }
+
+    var rootDependencyPaths = _
+
+    def dependencySpan(node: Node) : Iterator[Int] = {
+        val span = dependencies.annotationSpan(node.spans(0).start, node.spans(0).end)
+        return Range(span.start, span.end)
+    }
+
+    def ffDependencyPath(node1: Node, node2: Node, label: String) : FeatureVector = {
+        val (word1Index, word2Index, path) = (for { w1 <- dependencySpan(node1)
+                                                    w2 <- dependencySpan(node2)
+                                             } yield { (w1, w2, dependencyPath(w1, w2)) }).minBy(x => x._3._1.size + x._3._2.size)
+        // TODO: could also do all paths instead of just the shortest
+        val (word1, word2) = (dependencies.tok(word1Index), dependencies.tok(word2Index))
+        if (path._1.size + path._2.size <= 4) {
+            val pathStr = dependencyPathString(path)
+            FeatureVector(Map(("C1="+node1.concept+"+C2="+node2.concept+"+DP="+pathStr+"+L="+label) -> 1.0,
+                              ("W1="+word1+"+W2="+word2+"+DP="+pathStr+"+L="+label) -> 1.0,
+                              ("W1="+word1+"+DP="+pathStr+"+L="+label) -> 1.0,
+                              ("W2="+word2+"+DP="+pathStr+"+L="+label) -> 1.0,
+                              ("DP="+pathStr+"+L="+label) -> 1.0,
+                              ))
+        } else {
+            FeatureVector()
+        }
+    }
+
+    // TODO: fDependencyAllPaths
+
+    def dependencyPath(word1: Int, word2: Int) : (List[Int], List[Int]) = {
+        // List one is path from word1 to common head
+        // List two is path from common head to word2
+        // Includes the common head in both lists
+        val prefix = rootDependencyPaths(word1).longestCommonPrefixLength(rootDependencyPaths(word2))
+        return (rootDepPaths(word1).drop(prefix-1).reverse, rootDepPaths(word2).drop(prefix-1))
+    }
+
+    def dependencyPathString((path1, path2): (List[Int], List[Int]) = {
+        // Assumes that the POS tags use the same tokenization as the dependencies
+        var pathList
+        for (List(word1, word2) <- path1.sliding(2)) {
+            pathList = pos.tok(word1) + "_" + dependencies.find(x => (x.dependent == word1 && x.head == word2)).get.relation + ">_" + pos.tok(word2) :: pathList
+        }
+        for (List(word1, word2) <- path2.sliding(2)) {
+            pathList = pos.tok(word1) + "_" + dependencies.find(x => (x.head == word1 && x.dependent == word2)).get.relation + "<_" + pos.tok(word2) :: pathList
+        }
+        return pathList.reverse.mkString("_")
+    }
+
+    def rootDependencyPath(word: Int, path: List[Int] = List()) : List[Int] = {
+        // Returns path to root as a list in reverse order (including the word we started at)
+        if (word == -1) {
+            path
+        } else {
+            val dep = dependencies.find(_.dependent == i)
+            assert(dep != None, "The dependency tree seems broken.  I can't find the head of "+input.dependencies.annotationTok(i)+" in position "+i)
+            rootPath(dependencies(dep).head, dependencies, i :: path)
+        }
+    }
+
+    def ffRootConcept(node: Node) : FeatureVector = {
+        logger(2, "ffRootConcept: Node = " + node.concept)
+        return FeatureVector(Map(("C="+node.concept+"+L=<ROOT>") -> 1.0))
+    }
+
+    // TODO: ffRootDependencyPath
+
+    def precompute() {
+        if (featureFunctions.contains(ffDependencyPath) {
+            rootDepPaths = dependencies.annotatedTok.indices.map(i => rootDependencyPath(i).reverse)
+        }
+    }
 
     val rootFeature = List("rootConcept","rootPath")
     val notFast = List()  // ff that don't support fast lookup
@@ -66,32 +169,31 @@ class Features(featureNames: List[String]) {
         } yield rootFFTable(feature)
     } // TODO: error checking on lookup
 
-
     def setFeatures(featureNames: List[String]) {
         featureFunctions = featureNames.filter(x => !notFast.contains(x)).map(x => ffTable(x))
         //featureFunctionsNotFast = featureNames.filter(x => notFast.contains(x)).map(x => ffTable(x))
     }
 
-    def localFeatures(node1: Node, node2: Node, label: String, input: Input) : FeatureVector = {
+    def localFeatures(node1: Node, node2: Node, label: String) : FeatureVector = {
         // Calculate the local features
         val feats = FeatureVector()
         for (ff <- featureFunctions) {
-            feats += ff(node1, node2, label, input)
+            feats += ff(node1, node2, label)
         }
         return feats
     }
 
-    def localScore(node1: Node, node2: Node, label: String, input: Input) : Double = {
+    def localScore(node1: Node, node2: Node, label: String) : Double = {
         var score = 0.0
         for (ff <- featureFunctions) {
             logger(2, ff.toString)
-            logger(2, ff(node1, node2, label, input))
-            score += weights.dot(ff(node1, node2, label, input))
+            logger(2, ff(node1, node2, label))
+            score += weights.dot(ff(node1, node2, label))
         }
         return score
     }
 
-    def rootFeatures(node: Node, input: Input) : FeatureVector = {
+    def rootFeatures(node: Node) : FeatureVector = {
         // Calculate the local features
         val feats = FeatureVector()
         for (ff <- rootFeatureFunctions) {
@@ -100,7 +202,7 @@ class Features(featureNames: List[String]) {
         return feats
     }
 
-    def rootScore(node: Node, input: Input) : Double = {
+    def rootScore(node: Node) : Double = {
         var score = 0.0
         for (ff <- rootFeatureFunctions) {
             logger(2, ff.toString)
@@ -110,25 +212,5 @@ class Features(featureNames: List[String]) {
         return score
     }
 
-    // node1 is always the tail, and node2 the head
-
-    def ffEdgeId(node1: Node, node2: Node, label: String, input: Input) : FeatureVector = {  
-        return FeatureVector(Map(("Id1="+node1.id+"+Id2="+node2.id+"+L="+label) -> 1.0))
-    }
-
-    def ffBias(node1: Node, node2: Node, label: String, input: Input) : FeatureVector = {
-        return FeatureVector(Map(("L="+label) -> 1.0))
-    }
-
-    def ffConceptBigram(node1: Node, node2: Node, label: String, input: Input) : FeatureVector = {
-        logger(2, "ffConceptBigram: Node1 = " + node1.concept + " Node2 = " + node2.concept + " label = " + label)
-        return FeatureVector(Map(/*("C1="+node1.concept+":C2="+node2.concept) -> 1.0,*/
-                                 ("C1="+node1.concept+"+C2="+node2.concept+"+L="+label) -> 1.0))
-    }
-
-    def ffRootConcept(node: Node, input: Input) : FeatureVector = {
-        logger(2, "ffRootConcept: Node = " + node.concept)
-        return FeatureVector(Map(("C="+node.concept+"+L=<ROOT>") -> 1.0))
-    }
 }
 
