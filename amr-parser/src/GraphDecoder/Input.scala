@@ -33,4 +33,3 @@ case class Input(graph: Graph, sentence: Array[String], dependencies: Array[Depe
 
 }
 
-
