@@ -63,7 +63,7 @@ class Alg1(featureNames: List[String], labelSet: Array[(String, Int)], rootedCon
                     logger(1, "node1 = " + node1.concept)
                     logger(1, "label = " + label)
                     logger(1, "nodes2 = " + nodes.toString)
-                    logger(1, "feats = " + feats.toString)
+                    //logger(1, "feats = " + feats.toString)
                 }
             }
         }

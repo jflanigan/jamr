@@ -12,6 +12,7 @@ import java.lang.Math.random
 import java.lang.Math.floor
 import java.lang.Math.min
 import java.lang.Math.max
+import java.util.regex.Pattern
 import scala.io.Source
 import scala.util.matching.Regex
 import scala.collection.mutable.Map
@@ -34,14 +35,16 @@ case class Annotation[T](private val snt: Array[String], val tok: Array[String],
         val right = myTokenized.map(x => 0)
 
         for (i <- Range(0, myTokenized.size)) {
-            val regexr = myTokenized.take(i+1).mkString.split("").drop(1).mkString(" ?").r
-            regexr.findPrefixOf(tokenized.mkString(" ")) match {
+            val regexr = myTokenized.take(i+1).mkString.replaceAllLiterally("(","-LRB-").replaceAllLiterally(")","-RRB-").split("").map(x => Pattern.quote(x)).drop(1).mkString(" ?").r
+            logger(2, "regexr = "+regexr)
+            logger(2, "tokenized = "+tokenized.mkString(" "))
+            regexr.findPrefixOf(tokenized.mkString(" ").replaceAllLiterally("(","-LRB-").replaceAllLiterally(")","-RRB-")) match {
                 case Some(prefix) => { right(i) = prefix.count(_ == ' ') + 1}
                 case None => assert(false, "Error matching the prefix (this should never occur)")
             }
             if (i > 0) {
-                val regexl = (myTokenized.take(i).mkString.split("").drop(1).mkString(" ?")+" ").r
-                regexl.findPrefixOf(tokenized.mkString(" ")) match {
+                val regexl = (myTokenized.take(i).mkString.replaceAllLiterally("(","-LRB-").replaceAllLiterally(")","-RRB-").split("").drop(1).mkString(" ?")+" ").r
+                regexl.findPrefixOf(tokenized.mkString(" ").replaceAllLiterally("(","-LRB-").replaceAllLiterally(")","-RRB-")) match {
                     case Some(prefix) => { left(i) = right(i-1) }
                     case None => { left(i) = right(i-1) - 1 }
                 }
