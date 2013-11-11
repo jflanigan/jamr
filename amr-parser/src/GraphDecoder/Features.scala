@@ -122,11 +122,11 @@ class Features(featureNames: List[String]) {
         var pathList : List[String] = List()
         for (List(word1, word2) <- path._1.sliding(2)) {
             //logger(2, "Looking for dependent="+word1.toString+" head="+word2.toString)
-            pathList = pos.annotation(word1) + "_" + dependencies.annotations.find(x => (x.dependent == word1 && x.head == word2)).get.relation + ">_" + pos.annotation(word2) :: pathList
+            pathList = pos.annotations(word1) + "_" + dependencies.annotations.find(x => (x.dependent == word1 && x.head == word2)).get.relation + ">_" + pos.annotations(word2) :: pathList
         }
         for (List(word1, word2) <- path._2.sliding(2)) {
             //logger(2, "Looking for dependent="+word2.toString+" head="+word1.toString)
-            pathList = pos.annotation(word1) + "_" + dependencies.annotations.find(x => (x.head == word1 && x.dependent == word2)).get.relation + "<_" + pos.annotation(word2) :: pathList
+            pathList = pos.annotations(word1) + "_" + dependencies.annotations.find(x => (x.head == word1 && x.dependent == word2)).get.relation + "<_" + pos.annotations(word2) :: pathList
         }
         return pathList.reverse
     }

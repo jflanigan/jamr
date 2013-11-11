@@ -57,12 +57,12 @@ class Alg1(featureNames: List[String], labelSet: Array[(String, Int)], rootedCon
                     node1.relations = (label, node2) :: node1.relations
                     feats += features.localFeatures(node1, node2, label)
                     score += weight
-                    logger(0, "Adding edge ("+node1.concept+", "+label +", "+node2.concept + ") with weight "+weight.toString)
+                    logger(1, "Adding edge ("+node1.concept+", "+label +", "+node2.concept + ") with weight "+weight.toString)
                 }
                 if (nodes2.size > 0) {
-                    logger(1, "node1 = " + node1.concept)
-                    logger(1, "label = " + label)
-                    logger(1, "nodes2 = " + nodes.toString)
+                    logger(2, "node1 = " + node1.concept)
+                    logger(2, "label = " + label)
+                    logger(2, "nodes2 = " + nodes.toString)
                     //logger(1, "feats = " + feats.toString)
                 }
             }

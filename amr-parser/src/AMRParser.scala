@@ -141,9 +141,10 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
             val weights = Perceptron.learnParameters(
                 //i => decoder.decode(AMRData(training(i)).toInput).features,
                 i => { val amrdata = AMRData(training(i))
+                       logger(0, "Sentence:\n"+amrdata.sentence.mkString(" ")+"\n")
                        logger(1, "Dependencies:\n"+dependencies(i)+"\n")
                        val result = decoder.decode(new Input(amrdata, dependencies(i), oracle = false))
-                       logger(5, "Dependencies:\n"+dependencies(i)+"\n")
+                       //logger(5, "Dependencies:\n"+dependencies(i)+"\n")
                        logger(0, "AMR: ")
                        if (outputFormat.contains("AMR")) {
                            logger(0, result.graph.root.prettyString(detail = 1, pretty = true)+"\n")
