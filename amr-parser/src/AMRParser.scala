@@ -139,8 +139,8 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
             System.err.println(" done")
 
             val weights = Perceptron.learnParameters(
-                //i => decoder.decode(Corpus.toAMRTriple(training(i)).toInput).features,
-                i => { val amrdata = Corpus.toAMRTriple(training(i))
+                //i => decoder.decode(AMRData(training(i)).toInput).features,
+                i => { val amrdata = AMRData(training(i))
                        val result = decoder.decode(new Input(amrdata, dependencies(i), oracle = false))
                        logger(0, "AMR: ")
                        if (outputFormat.contains("AMR")) {
@@ -150,8 +150,8 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
                            logger(0, result.graph.printTriples(detail = 1)+"\n")
                        }
                        result.features },
-                //i => oracle.decode(Corpus.toAMRTriple(training(i)).toOracle).features,
-                i => { val amrdata = Corpus.toAMRTriple(training(i))
+                //i => oracle.decode(AMRData(training(i)).toOracle).features,
+                i => { val amrdata = AMRData(training(i))
                        val result = oracle.decode(new Input(amrdata, dependencies(i), oracle = true))
                        logger(0, "Oracle: ")
                        if (outputFormat.contains("AMR")) {
@@ -193,7 +193,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
             }
 
             for ((block, i) <- Corpus.splitOnNewline(io.Source.stdin.getLines()).filter(_.matches("(.|\n)*\n\\((.|\n)*")).zipWithIndex) {
-                val amrdata = Corpus.toAMRTriple(block)
+                val amrdata = AMRData(block)
                 val decoderResult = decoder.decode(new Input(amrdata, dependencies.getOrElse(i,""), oracle = false))
                 if (outputFormat.contains("AMR")) {
                     println(decoderResult.graph.root.prettyString(detail=1, pretty=true) + '\n')
