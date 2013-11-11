@@ -14,6 +14,7 @@ object Corpus {
         } yield p
     }
 
+/*
     def getUlfString(string: String) : Map[String,String] = {
         // returns a map representation of Ulf's weird string representation
         assert(string.matches("^# ::(.|\n)*"), "This is not a valid properties string")
@@ -50,19 +51,13 @@ object Corpus {
             annotation_dates += ulfstr("::date")
         }
         return AMRTriple(sentence, graph, spans, annotators, annotation_dates, lines.filterNot(_.matches("^#.*")).mkString("\n"), extras)
-    }
+    } */
 }
 
 class CorpusTest /* extends Suite*/ {
     def testSplitOnNewline() {
         val split = Corpus.splitOnNewline(Iterator("a", "b", "c", "", "a", "c", "b"))
         assert(split.toList == List("a\nb\nc", "a\nc\nb"))
-    }
-    def testGetUlfString() {
-        val map1 = Corpus.getUlfString("# ::snt testing 1 2 3")
-        val map2 = Corpus.getUlfString("# ::date 12 15 2005 ::annotator Jeff ::preferred")
-        assert(map1 == Map("::snt" -> "testing 1 2 3"))
-        assert(map2 == Map("::date" -> "12 15 2005", "::annotator" -> "Jeff", "::preferred" -> ""))
     }
 }
 

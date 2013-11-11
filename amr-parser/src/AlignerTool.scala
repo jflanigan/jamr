@@ -39,7 +39,6 @@ import scala.collection.mutable.ArrayBuffer
 
 import Corpus._
 
-
 object AlignerTool extends SimpleSwingApplication {
     val usage = """Usage: scala -classpath . edu.cmu.lti.nlp.amr.AlignerTool filename"""
     val version = "v.03"
@@ -47,7 +46,7 @@ object AlignerTool extends SimpleSwingApplication {
 
     val colors = Array(Color.RED, Color.GREEN, Color.MAGENTA, Color.ORANGE, Color.PINK, Color.CYAN, Color.BLUE )
 
-    var corpus = LazyArray(Iterator[AMRTriple]())
+    var corpus = LazyArray(Iterator[AMRData]())
 
     def top = new MainFrame {
         /*---------------------- Initialization --------------------*/
@@ -465,7 +464,7 @@ object AlignerTool extends SimpleSwingApplication {
         var edited : Set[Int] = Set()
         def saveEdits() {
             val r = corpus(recordNumber)
-            val AMRTriple(_,_,annotations,annotators,annotation_date,_,_) = r
+            val AMRData(_,_,annotations,annotators,annotation_date,_,_) = r
             if (!edited.contains(recordNumber)) {
                 edited += recordNumber
                 annotations += graph.spans.map(x => x.format).mkString(" ")
@@ -521,7 +520,7 @@ object AlignerTool extends SimpleSwingApplication {
             for {
                 block <- splitOnNewline(file.getLines)
                 if block.matches("(.|\n)*\n\\((.|\n)*")     // needs to contain some AMR
-            } yield toAMRTriple(block)
+            } yield AMRData(block)
         )
 
         super.main(args)    // Start GUI
