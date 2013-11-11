@@ -26,25 +26,37 @@ case class Annotation[T](private val snt: Array[String], val tok: Array[String],
     // annotationSpan can used to convert a span in 'snt' to a span in 'tok'.
     // Public member 'get' is the annotation.
 
-    assert(snt.mkString == tok.mkString, "Annotation tokenization schemes do not match:\n"+snt.mkString(" ")+" != "+tok.mkString(" "))
+    assert(normalizedStr(snt,"") == normalizedStr(tok,""), "Tokenization schemes do not match. This may be an error with the parser, the input to the parser, or the POS tagger, or incorrect handling of Unicode characters by either:\n"+snt.mkString(" ")+" != "+tok.mkString(" ")/*+"\nwhich was normalized to:\n"+normalizedStr(snt,"")+" != "+normalizedStr(tok,"")*/)
     assert(snt.mkString.count(_ == ' ') == 0, "Spaces not allowed in tokens") // because we count spaces to find the left and right indices
     assert(tok.mkString.count(_ == ' ') == 0, "Spaces not allowed in tokens") // because we count spaces to find the left and right indices
+
+    def normalizedRegex(tokens: Array[String]) : String = {
+        // For some reason, Pattern.quote doesn't seem to work when we have "(" or ")" in our input, so we change them to "-LRB-" and "-RRB-" (and do the same in normalizedStr)
+        // The Stanford parser replaces unicode with ??? so, we delete any ?
+        // We also remove any unicode
+        normalizedStr(tokens, "").split("").map(x => Pattern.quote(x)).drop(1).mkString(" ?")
+        //normalizedStr(tokens, "").split("").map(x => Pattern.quote(x)).drop(1).mkString(" *")   // * because we may have removed a token completely using the replacement rules, so we must match "  "
+    }
+    def normalizedStr(tokens: Array[String], spacer: String = " ") : String = {
+        tokens.mkString(spacer).replaceAllLiterally("(","-LRB-").replaceAllLiterally(")","-RRB-")
+        //tokens.mkString(spacer).replaceAllLiterally("(","-LRB-").replaceAllLiterally(")","-RRB-").replaceAllLiterally("?", "").replaceAll("\\P{Print}", "")
+    }
 
     def makeLeftRight(tokenized: Array[String], myTokenized: Array[String]) : (Array[Int], Array[Int]) = {
         val left = myTokenized.map(x => 0)
         val right = myTokenized.map(x => 0)
 
         for (i <- Range(0, myTokenized.size)) {
-            val regexr = myTokenized.take(i+1).mkString.replaceAllLiterally("(","-LRB-").replaceAllLiterally(")","-RRB-").split("").map(x => Pattern.quote(x)).drop(1).mkString(" ?").r
-            logger(2, "regexr = "+regexr)
-            logger(2, "tokenized = "+tokenized.mkString(" "))
-            regexr.findPrefixOf(tokenized.mkString(" ").replaceAllLiterally("(","-LRB-").replaceAllLiterally(")","-RRB-")) match {
+            val regexr = normalizedRegex(myTokenized.take(i+1)).r
+            logger(0, "regexr = "+regexr)
+            logger(0, "tokenized = "+normalizedStr(tokenized))
+            regexr.findPrefixOf(normalizedStr(tokenized)) match {
                 case Some(prefix) => { right(i) = prefix.count(_ == ' ') + 1}
                 case None => assert(false, "Error matching the prefix (this should never occur)")
             }
             if (i > 0) {
-                val regexl = (myTokenized.take(i).mkString.replaceAllLiterally("(","-LRB-").replaceAllLiterally(")","-RRB-").split("").drop(1).mkString(" ?")+" ").r
-                regexl.findPrefixOf(tokenized.mkString(" ").replaceAllLiterally("(","-LRB-").replaceAllLiterally(")","-RRB-")) match {
+                val regexl = (normalizedRegex(myTokenized.take(i))+" ").r
+                regexl.findPrefixOf(normalizedStr(tokenized)) match {
                     case Some(prefix) => { left(i) = right(i-1) }
                     case None => { left(i) = right(i-1) - 1 }
                 }
