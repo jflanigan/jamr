@@ -36,7 +36,7 @@ object Perceptron {
             if (permutations.hasNext) {
                 corpus = permutations.next
             }
-            for (t <- Range(0, trainingSize)) {
+            for (t <- corpus) {
 //                logger(1,"-- Weights --")
 //                logger(1,weights)
 //                weights -= decoder.decode(example).features

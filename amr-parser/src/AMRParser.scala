@@ -132,7 +132,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
             val dependencies = if (options.contains('dependencies)) {
                 (for {
                     block <- Corpus.splitOnNewline(Source.fromFile(options('dependencies).asInstanceOf[String]).getLines())
-                } yield block.replaceAllLiterally("-LRB-","(").replaceAllLiterally("-RRB-",")")).toArray
+                } yield block.replaceAllLiterally("-LRB-","(").replaceAllLiterally("-RRB-",")").replaceAllLiterally("""\/""","/")).toArray
             } else {
                 training.map(x => "")
             }
@@ -190,7 +190,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
                 (for {
                     block <- Corpus.splitOnNewline(Source.fromFile(options('dependencies).asInstanceOf[String]).getLines())
                     if block.matches("(.|\n)*\n\\((.|\n)*")     // needs to contain some AMR
-                } yield block.replaceAllLiterally("-LRB-","(").replaceAllLiterally("-RRB-",")")).toArray
+                } yield block.replaceAllLiterally("-LRB-","(").replaceAllLiterally("-RRB-",")").replaceAllLiterally("""\/""","/")).toArray
             } else {
                 new Array(0)
             }
