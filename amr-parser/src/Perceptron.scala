@@ -50,8 +50,8 @@ object Perceptron {
                 weights -= minus
                 weights += plus
                 plus -= minus
-                logger(0,"-- Difference --")
-                logger(0,plus)
+                logger(1,"-- Difference --")
+                logger(1,plus)
             }
             avg_weights += weights
         }
