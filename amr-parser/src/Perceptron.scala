@@ -37,8 +37,8 @@ object Perceptron {
                 corpus = permutations.next
             }
             for (t <- Range(0, trainingSize)) {
-                logger(1,"-- Weights --")
-                logger(1,weights)
+//                logger(1,"-- Weights --")
+//                logger(1,weights)
 //                weights -= decoder.decode(example).features
 //                weights += decoder.oracle(example)
                 val minus = decoder(t)

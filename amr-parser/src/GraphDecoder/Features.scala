@@ -55,8 +55,9 @@ class Features(featureNames: List[String]) {
 
     def precompute() {
         if (featureNames.contains("dependencyPath")) {
-            rootDependencyPaths = dependencies.tok.indices.map(i => rootDependencyPath(i).reverse).toArray
+            rootDependencyPaths = dependencies.tok.indices.map(i => rootDependencyPath(i)).toArray
         }
+        logger(1,"rootDependencyPaths = "+rootDependencyPaths.toList)
     }
 
     // node1 is always the tail, and node2 the head
@@ -108,17 +109,24 @@ class Features(featureNames: List[String]) {
         // List two is path from common head to word2
         // Includes the common head in both lists
         val prefix = rootDependencyPaths(word1).longestCommonPrefixLength(rootDependencyPaths(word2))
+        /*logger(2, "word1 = "+word1.toString)
+        logger(2, "word2 = "+word2.toString)
+        logger(2, "prefix = "+prefix.toString)
+        logger(2, "path = "+(rootDependencyPaths(word1).drop(prefix-1).reverse, rootDependencyPaths(word2).drop(prefix-1)).toString)*/
         return (rootDependencyPaths(word1).drop(prefix-1).reverse, rootDependencyPaths(word2).drop(prefix-1))
     }
 
     def dependencyPathString(path: (List[Int], List[Int])) : List[String] = {
         // Assumes that the POS tags use the same tokenization as the dependencies
+        //logger(2, "path="+path.toString)
         var pathList : List[String] = List()
         for (List(word1, word2) <- path._1.sliding(2)) {
-            pathList = pos.tok(word1) + "_" + dependencies.annotations.find(x => (x.dependent == word1 && x.head == word2)).get.relation + ">_" + pos.tok(word2) :: pathList
+            //logger(2, "Looking for dependent="+word1.toString+" head="+word2.toString)
+            pathList = pos.annotation(word1) + "_" + dependencies.annotations.find(x => (x.dependent == word1 && x.head == word2)).get.relation + ">_" + pos.annotation(word2) :: pathList
         }
         for (List(word1, word2) <- path._2.sliding(2)) {
-            pathList = pos.tok(word1) + "_" + dependencies.annotations.find(x => (x.head == word1 && x.dependent == word2)).get.relation + "<_" + pos.tok(word2) :: pathList
+            //logger(2, "Looking for dependent="+word2.toString+" head="+word1.toString)
+            pathList = pos.annotation(word1) + "_" + dependencies.annotations.find(x => (x.head == word1 && x.dependent == word2)).get.relation + "<_" + pos.annotation(word2) :: pathList
         }
         return pathList.reverse
     }
