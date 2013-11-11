@@ -38,7 +38,7 @@ case class AMRData(sentence: Array[String], graph: Graph, spans: ArrayBuffer[Str
 }
 
 object AMRData {
-    private def getUlfString(string: String) : Map[String,String] = {
+    def getUlfString(string: String) : Map[String,String] = {
         // returns a map representation of Ulf's weird string representation
         assert(string.matches("^# ::(.|\n)*"), "This is not a valid properties string")
         val split = string.replaceAll("\n","").replaceAll("""#""","").split(" ::")

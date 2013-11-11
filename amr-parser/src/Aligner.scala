@@ -75,7 +75,7 @@ object Aligner {
                 val Block(extrastr, amrstr) = block
                 println(extrastr)
                 val amr = Graph.parse(amrstr)
-                val extras = Corpus.getUlfString(extrastr)
+                val extras = AMRData.getUlfString(extrastr)
                 val tokenized = extras("::tok").split(" ")
                 val wordAlignments = AlignWords.alignWords(tokenized, amr)
                 val spanAlignments = if (aligner2) {
@@ -99,52 +99,4 @@ object Aligner {
     }
 
 }
-
-/*
-        val sentences = Source.fromFile(options('englishfile).asInstanceOf[String]).getLines
-        val amrs = Source.fromFile(options('amrfile).asInstanceOf[String]).getLines
-
-        for ((sentence, amrstr) <- sentences.zip(amrs)) {
-            println(sentence)
-            println(amrstr)
-            val amr = Graph.parse(amrstr)
-            if (verbosity >= 2) {
-                logger(2, "AMR Graph:\n" + amr.root.prettyString(detail=2, pretty=true))
-            } else {
-                logger(1, "AMR Graph:\n" + amr.root.prettyString(detail=1, pretty=true))
-            }
-            //println(amr)
-            val tokenized = sentence.split(" ")
-            //println(tokenized.toList)
-            val wordAlignments = AlignWords.alignWords(tokenized, amr)
-            val spanAlignments = AlignSpans.alignSpans(tokenized, amr, wordAlignments)
-            AlignSpans.logUnalignedConcepts(amr.root)
-/*            for ((word, node) <- tokenized.zip(wordAlignments)) {
-                node match {
-                    case Some(n) => { n.name match {
-                        case Some(name) =>  print(word+":("+name+" / "+n.concept+") ")
-                        case _ => print(word+":"+n.concept+" ") } }
-                    case _ => print(word+" ")
-                }
-            }
-            println() */
-            val spans = amr.spans
-            //println(spanAlignments.toList)
-            //println(spans)
-/*            for ((word, spanIndex) <- tokenized.zip(spanAlignments)) {
-                spanIndex match {
-                    case Some(i) => { spans(i).amr.name match {
-                        case Some(name) =>  print(word+":("+name+" / "+spans(i).amr.concept+") ")
-                        case _ => print(word+":"+spans(i).amr.concept+" ") } }
-                    case _ => print(word+" ")
-                }
-            }
-            println() */
-            for ((span, i) <- spans.zipWithIndex) {
-                logger(1, "Span "+(i+1).toString+":  "+span.words+" => "+span.amr)
-                logger(3, "* "+span.format)
-            }
-            println(spans.map(_.format).mkString(" "))
-            println()
-        } */
 
