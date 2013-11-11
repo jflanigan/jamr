@@ -11,13 +11,14 @@ class Oracle(featureNames: List[String])
     // val features: Features
 
     def decode(input: Input) : DecoderResult = {
+        features.input = input
         var feats = new FeatureVector()
 
         for { node1 <- input.graph.nodes
               (label, node2) <- node1.relations } {
-            feats += features.localFeatures(node1, node2, label, input)
+            feats += features.localFeatures(node1, node2, label)
         }
-        feats += features.rootFeatures(input.graph.root, input)
+        feats += features.rootFeatures(input.graph.root)
 
         return DecoderResult(input.graph, feats, features.weights.dot(feats))
     }

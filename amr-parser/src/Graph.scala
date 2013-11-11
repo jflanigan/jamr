@@ -104,7 +104,7 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
 
         for ((id, node) <- getNodeById) {
             for { spanIndex <- node.spans
-                  val span = spans(spanIndex)
+                  span = spans(spanIndex)
                   if span.coRef
                 } {
                 span.nodeIds = span.nodeIds ::: List(id)
@@ -438,6 +438,7 @@ object Graph {
     def parse(amr: String) : Graph = {
         val graph = parser.parseAll(parser.node, amr) match {
             case parser.Success(e, _) => Graph(e, new ArrayBuffer[Span](), Map[String, Node](), Map[String, Node]())
+            case _ => { assert(false, "Could not parse AMR: "+amr); Graph.empty }
         }
         graph.makeVariables()
         graph.unifyVariables()

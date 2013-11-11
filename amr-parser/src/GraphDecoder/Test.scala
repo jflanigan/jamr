@@ -76,7 +76,7 @@ object Test {
             List(("1", "2", ":r", 6),
                  ("2", "3", ":r", -6),
                  ("1", "3", ":r", 3)))
-        val result = decoder.decode(Input(graph, Array(), Array(), Array()))
+        val result = decoder.decode(Input(graph, Array(), Annotation(Array(), Array(), Array()), Annotation(Array(), Array(), Array())))
         graph.printTriples(detail = 1)
         result.graph.printTriples(detail = 1)
     }
@@ -94,7 +94,7 @@ object Test {
                  ("1", "3", ":r", 3)))
         println("weights:")
         print(decoder.features.weights)
-        val result = decoder.decode(Input(graph, Array(), Array(), Array()))
+        val result = decoder.decode(Input(graph, Array(), Annotation(Array(), Array(), Array()), Annotation(Array(), Array(), Array())))
         println("In test2()")
         for (node <- result.graph.nodes) { println(node.topologicalOrdering.map(x => (x._1, x._2.id))) }
         println("Triples:")
@@ -118,7 +118,7 @@ object Test {
             List(("1", "2", ":r", 6),
                  ("2", "3", ":r", -6), // 5
                  ("1", "3", ":r", 3))) // 1
-        val result = decoder.decode(Input(graph, Array(), Array(), Array()))
+        val result = decoder.decode(Input(graph, Array(), Annotation(Array(), Array(), Array()), Annotation(Array(), Array(), Array())))
         result.graph.printTriples(detail = 1)
     }
 
@@ -136,7 +136,7 @@ object Test {
             List(("1", "2", ":r", 6),
                  ("2", "3", ":r", -6), // 5
                  ("1", "3", ":r", 3))) // 1
-        val result = decoder.decode(Input(graph, Array(), Array(), Array()))
+        val result = decoder.decode(Input(graph, Array(), Annotation(Array(), Array(), Array()), Annotation(Array(), Array(), Array())))
         result.graph.printTriples(detail = 1)
     }
 
@@ -153,7 +153,7 @@ object Test {
             List(("1", "2", ":r", 6),
                  ("2", "3", ":r", -6), // 5
                  ("1", "3", ":r", 0))) // 1
-        val result = decoder.decode(Input(graph, Array(), Array(), Array()))
+        val result = decoder.decode(Input(graph, Array(), Annotation(Array(), Array(), Array()), Annotation(Array(), Array(), Array())))
         result.graph.printTriples(detail = 1)
     }
 
@@ -176,7 +176,7 @@ object Test {
               if (!decoder.features.weights.fmap.contains("Id1="+node1+":Id2="+node2+":L="+label)) } {
             decoder.features.weights.fmap("Id1="+node1+":Id2="+node2+":L="+label) = minusInfty
         }
-        val result = decoder.decode(Input(graph, Array(), Array(), Array()))
+        val result = decoder.decode(Input(graph, Array(), Annotation(Array(), Array(), Array()), Annotation(Array(), Array(), Array())))
         result.graph.printTriples(detail = 1)
     }
 }
