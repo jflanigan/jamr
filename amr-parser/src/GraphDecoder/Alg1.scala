@@ -29,6 +29,7 @@ class Alg1(featureNames: List[String], labelSet: Array[(String, Int)], rootedCon
         // Assumes that Node.relations has been setup correctly for the graph fragments
         val graph = input.graph.duplicate
         val nodes : List[Node] = graph.nodes.toList
+        features.input = input
 
         def neighbors(node: Node) : List[Node] = {
             nodes
@@ -45,16 +46,16 @@ class Alg1(featureNames: List[String], labelSet: Array[(String, Int)], rootedCon
 
             if (relations.contains(label)) {
                 for ((_, node2) <- node1.relations.filter(_._1 == label)) {
-                    feats += features.localFeatures(node1, node2, label, input)
-                    score += features.localScore(node1, node2, label, input)
+                    feats += features.localFeatures(node1, node2, label)
+                    score += features.localScore(node1, node2, label)
                 }
             } else {
                 // Search over neighbors, and pick the ones with highest score
-                val nodes2 : List[(Node, Double)] = neighbors(node1).map(x => (x, features.localScore(node1, x, label, input))).filter(x => x._2 > 0 && x._1.id != node1.id).sortBy(-_._2).take(maxCardinality)
+                val nodes2 : List[(Node, Double)] = neighbors(node1).map(x => (x, features.localScore(node1, x, label))).filter(x => x._2 > 0 && x._1.id != node1.id).sortBy(-_._2).take(maxCardinality)
 
                 for ((node2, weight) <- nodes2) {
                     node1.relations = (label, node2) :: node1.relations
-                    feats += features.localFeatures(node1, node2, label, input)
+                    feats += features.localFeatures(node1, node2, label)
                     score += weight
                     logger(0, "Adding edge ("+node1.concept+", "+label +", "+node2.concept + ") with weight "+weight.toString)
                 }
@@ -68,11 +69,11 @@ class Alg1(featureNames: List[String], labelSet: Array[(String, Int)], rootedCon
         }
 
         if (features.rootFeatureFunctions.size != 0) {
-            graph.root = nodes.map(x => (x, features.rootScore(x, input))).maxBy(_._2)._1
+            graph.root = nodes.map(x => (x, features.rootScore(x))).maxBy(_._2)._1
         } else {
             graph.root = nodes(0)
         }
-        feats += features.rootFeatures(graph.root, input)
+        feats += features.rootFeatures(graph.root)
 
         nodes.map(node => { node.relations = node.relations.reverse })
         //graph.makeTopologicalOrdering()   // won't work - may not be connected

@@ -24,6 +24,7 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
     def decode(input: Input) : DecoderResult = {
         // Assumes that Node.relations has been setup correctly for the graph fragments
         val graph = input.graph.duplicate
+        features.input = input
         //val nodes : Array[Node] = graph.nodes.filter.toArray
         val nodes : Array[Node] = graph.nodes.filter(_.name != None).toArray
         //val nonDistinctLabels = labelSet.toList.filter(x => x._2 > 1) // TODO: remove
@@ -48,7 +49,7 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
                 if (addRelation) {
                     node1.relations = (label, node2) :: node1.relations
                 }
-                feats += features.localFeatures(node1, node2, label, input)
+                feats += features.localFeatures(node1, node2, label)
                 score += weight
             }
             logger(1, "set = " + set.toList)
@@ -74,7 +75,7 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
               (label, node2) <- node1.relations
               if nodeIds.indexWhere(_ == node2.id) != -1 } {
             val index2 = nodeIds.indexWhere(_ == node2.id)
-            addEdge(node1, index1, node2, index2, label, features.localScore(node1, node2, label, input), addRelation=false)
+            addEdge(node1, index1, node2, index2, label, features.localScore(node1, node2, label), addRelation=false)
         }
 
         logger(1, "set = " + set.toList)
@@ -85,12 +86,12 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
         val neighbors : Array[Array[(String, Double)]] = {
             for ((node1, index1) <- nodes.zipWithIndex) yield {
                 for ((node2, index2) <- nodes.zipWithIndex if (index1 != index2)) yield {
-                    val (label, weight) = distinctLabels.map(x => (x._1, features.localScore(node1, node2, x._1, input))).maxBy(_._2)
-                    logger(1,"distinctLabels = "+distinctLabels.map(x => (x._1, features.localScore(node1, node2, x._1, input))).sortBy(-_._2).toList.take(5)+"...")
+                    val (label, weight) = distinctLabels.map(x => (x._1, features.localScore(node1, node2, x._1))).maxBy(_._2)
+                    logger(1,"distinctLabels = "+distinctLabels.map(x => (x._1, features.localScore(node1, node2, x._1))).sortBy(-_._2).toList.take(5)+"...")
                     logger(1,"label = "+label)
                     logger(1,"weight = "+weight)
-                    val ndLabels = nonDistinctLabels.map(x => (x._1, features.localScore(node1, node2, x._1, input))).filter(x => x._2 > 0 && x._1 != label)
-                    logger(2,"ndLabels = "+nonDistinctLabels.map(x => (x._1, features.localScore(node1, node2, x._1, input))))
+                    val ndLabels = nonDistinctLabels.map(x => (x._1, features.localScore(node1, node2, x._1))).filter(x => x._2 > 0 && x._1 != label)
+                    logger(2,"ndLabels = "+nonDistinctLabels.map(x => (x._1, features.localScore(node1, node2, x._1))))
                     logger(2,"ndLabels = "+ndLabels.toList)
                     ndLabels.filter(_._2 > 0).map(x => addEdge(node1, index1, node2, index2, x._1, x._2))
                     if (weight > 0) {   // Add all positive weights
@@ -140,12 +141,12 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
         }
 
         if (features.rootFeatureFunctions.size != 0) {
-            graph.root = nodes.map(x => (x, features.rootScore(x, input))).maxBy(_._2)._1
+            graph.root = nodes.map(x => (x, features.rootScore(x))).maxBy(_._2)._1
         } else {
             logger(1, "Setting root to "+nodes(0).id)
             graph.root = nodes(0)
         }
-        feats += features.rootFeatures(graph.root, input)
+        feats += features.rootFeatures(graph.root)
 
         nodes.map(node => { node.relations = node.relations.reverse })
         if (connected) {

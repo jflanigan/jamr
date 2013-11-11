@@ -20,6 +20,7 @@ import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 import scala.util.parsing.combinator._
 
+
 /**************************** Feature Functions *****************************/
 
 class Features(featureNames: List[String]) {
@@ -29,7 +30,7 @@ class Features(featureNames: List[String]) {
     private var dependencies: Annotation[Array[Dependency]] = _
     private var pos: Annotation[Array[String]] = _
 
-    def input: Int = Input(graph, sentence, dependencies, pos)
+    def input: Input = Input(graph, sentence, dependencies, pos)
     def input_= (i: Input) {
         graph = i.graph
         sentence = i.sentence
@@ -44,13 +45,19 @@ class Features(featureNames: List[String]) {
     val ffTable = Map[String, FeatureFunction](
         "edgeId" -> ffEdgeId,
         "bias" -> ffBias,
-        "conceptBigram" -> ffConceptBigram
+        "conceptBigram" -> ffConceptBigram,
         "dependencyPath" -> ffDependencyPath
     )
 
     val rootFFTable = Map[String, RootFeatureFunction](
         "rootConcept" -> ffRootConcept
     )
+
+    def precompute() {
+        if (featureNames.contains("dependencyPath")) {
+            rootDependencyPaths = dependencies.tok.indices.map(i => rootDependencyPath(i).reverse).toArray
+        }
+    }
 
     // node1 is always the tail, and node2 the head
 
@@ -68,11 +75,11 @@ class Features(featureNames: List[String]) {
                                  ("C1="+node1.concept+"+C2="+node2.concept+"+L="+label) -> 1.0))
     }
 
-    var rootDependencyPaths = _
+    var rootDependencyPaths : Array[List[Int]] = _
 
-    def dependencySpan(node: Node) : Iterator[Int] = {
-        val span = dependencies.annotationSpan(node.spans(0).start, node.spans(0).end)
-        return Range(span.start, span.end)
+    def dependencySpan(node: Node) : Range = {
+        val span = dependencies.annotationSpan((graph.spans(node.spans(0)).start, graph.spans(node.spans(0)).end))
+        return Range(span._1, span._2)
     }
 
     def ffDependencyPath(node1: Node, node2: Node, label: String) : FeatureVector = {
@@ -82,12 +89,12 @@ class Features(featureNames: List[String]) {
         // TODO: could also do all paths instead of just the shortest
         val (word1, word2) = (dependencies.tok(word1Index), dependencies.tok(word2Index))
         if (path._1.size + path._2.size <= 4) {
-            val pathStr = dependencyPathString(path)
+            val pathStr = dependencyPathString(path).mkString("_")
             FeatureVector(Map(("C1="+node1.concept+"+C2="+node2.concept+"+DP="+pathStr+"+L="+label) -> 1.0,
                               ("W1="+word1+"+W2="+word2+"+DP="+pathStr+"+L="+label) -> 1.0,
                               ("W1="+word1+"+DP="+pathStr+"+L="+label) -> 1.0,
                               ("W2="+word2+"+DP="+pathStr+"+L="+label) -> 1.0,
-                              ("DP="+pathStr+"+L="+label) -> 1.0,
+                              ("DP="+pathStr+"+L="+label) -> 1.0
                               ))
         } else {
             FeatureVector()
@@ -101,19 +108,19 @@ class Features(featureNames: List[String]) {
         // List two is path from common head to word2
         // Includes the common head in both lists
         val prefix = rootDependencyPaths(word1).longestCommonPrefixLength(rootDependencyPaths(word2))
-        return (rootDepPaths(word1).drop(prefix-1).reverse, rootDepPaths(word2).drop(prefix-1))
+        return (rootDependencyPaths(word1).drop(prefix-1).reverse, rootDependencyPaths(word2).drop(prefix-1))
     }
 
-    def dependencyPathString((path1, path2): (List[Int], List[Int]) = {
+    def dependencyPathString(path: (List[Int], List[Int])) : List[String] = {
         // Assumes that the POS tags use the same tokenization as the dependencies
-        var pathList
-        for (List(word1, word2) <- path1.sliding(2)) {
-            pathList = pos.tok(word1) + "_" + dependencies.find(x => (x.dependent == word1 && x.head == word2)).get.relation + ">_" + pos.tok(word2) :: pathList
+        var pathList : List[String] = List()
+        for (List(word1, word2) <- path._1.sliding(2)) {
+            pathList = pos.tok(word1) + "_" + dependencies.annotations.find(x => (x.dependent == word1 && x.head == word2)).get.relation + ">_" + pos.tok(word2) :: pathList
         }
-        for (List(word1, word2) <- path2.sliding(2)) {
-            pathList = pos.tok(word1) + "_" + dependencies.find(x => (x.head == word1 && x.dependent == word2)).get.relation + "<_" + pos.tok(word2) :: pathList
+        for (List(word1, word2) <- path._2.sliding(2)) {
+            pathList = pos.tok(word1) + "_" + dependencies.annotations.find(x => (x.head == word1 && x.dependent == word2)).get.relation + "<_" + pos.tok(word2) :: pathList
         }
-        return pathList.reverse.mkString("_")
+        return pathList.reverse
     }
 
     def rootDependencyPath(word: Int, path: List[Int] = List()) : List[Int] = {
@@ -121,9 +128,9 @@ class Features(featureNames: List[String]) {
         if (word == -1) {
             path
         } else {
-            val dep = dependencies.find(_.dependent == i)
-            assert(dep != None, "The dependency tree seems broken.  I can't find the head of "+input.dependencies.annotationTok(i)+" in position "+i)
-            rootPath(dependencies(dep).head, dependencies, i :: path)
+            val dep = dependencies.annotations.find(_.dependent == word)
+            assert(dep != None, "The dependency tree seems broken.  I can't find the head of "+input.dependencies.tok(word)+" in position "+word)
+            rootDependencyPath(dep.get.head, word :: path)
         }
     }
 
@@ -133,12 +140,6 @@ class Features(featureNames: List[String]) {
     }
 
     // TODO: ffRootDependencyPath
-
-    def precompute() {
-        if (featureFunctions.contains(ffDependencyPath) {
-            rootDepPaths = dependencies.annotatedTok.indices.map(i => rootDependencyPath(i).reverse)
-        }
-    }
 
     val rootFeature = List("rootConcept","rootPath")
     val notFast = List()  // ff that don't support fast lookup
@@ -197,7 +198,7 @@ class Features(featureNames: List[String]) {
         // Calculate the local features
         val feats = FeatureVector()
         for (ff <- rootFeatureFunctions) {
-            feats += ff(node, input)
+            feats += ff(node)
         }
         return feats
     }
@@ -206,8 +207,8 @@ class Features(featureNames: List[String]) {
         var score = 0.0
         for (ff <- rootFeatureFunctions) {
             logger(2, ff.toString)
-            logger(2, ff(node, input))
-            score += weights.dot(ff(node, input))
+            logger(2, ff(node))
+            score += weights.dot(ff(node))
         }
         return score
     }

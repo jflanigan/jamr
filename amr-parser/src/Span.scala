@@ -92,7 +92,7 @@ object SpanLoader {
         val node = try {
             graph.getNodeById(nodes(0))
         } catch {
-            case e => throw new RuntimeException("Cannot find node ["+nodes(0)+"]")
+            case e : Throwable => throw new RuntimeException("Cannot find node ["+nodes(0)+"]")
         }
         var unprocessed = nodes.tail
         // Node(var id: String, name: Option[String], concept: String, var relations: List[(String, Node)], var topologicalOrdering: List[(String, Node)], var variableRelations: List[(String, Var)], var alignment: Option[Int], var span: Option[Int])
