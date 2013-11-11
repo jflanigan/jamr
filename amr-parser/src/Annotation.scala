@@ -25,7 +25,7 @@ case class Annotation[T](private val snt: Array[String], val tok: Array[String],
     // annotationSpan can used to convert a span in 'snt' to a span in 'tok'.
     // Public member 'get' is the annotation.
 
-    assert(snt.mkString == tok.mkString, "Annotation tokenization schemes do not match")
+    assert(snt.mkString == tok.mkString, "Annotation tokenization schemes do not match:\n"+snt.mkString(" ")+" != "+tok.mkString(" "))
     assert(snt.mkString.count(_ == ' ') == 0, "Spaces not allowed in tokens") // because we count spaces to find the left and right indices
     assert(tok.mkString.count(_ == ' ') == 0, "Spaces not allowed in tokens") // because we count spaces to find the left and right indices
 

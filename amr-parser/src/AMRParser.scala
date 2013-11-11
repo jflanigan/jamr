@@ -132,7 +132,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
             val dependencies = if (options.contains('dependencies)) {
                 (for {
                     block <- Corpus.splitOnNewline(Source.fromFile(options('dependencies).asInstanceOf[String]).getLines())
-                } yield block).toArray
+                } yield block.replaceAllLiterally("-LRB-","(").replaceAllLiterally("-RRB-",")")).toArray
             } else {
                 training.map(x => "")
             }
@@ -141,7 +141,9 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
             val weights = Perceptron.learnParameters(
                 //i => decoder.decode(AMRData(training(i)).toInput).features,
                 i => { val amrdata = AMRData(training(i))
+                       logger(1, "Dependencies:\n"+dependencies(i)+"\n")
                        val result = decoder.decode(new Input(amrdata, dependencies(i), oracle = false))
+                       logger(5, "Dependencies:\n"+dependencies(i)+"\n")
                        logger(0, "AMR: ")
                        if (outputFormat.contains("AMR")) {
                            logger(0, result.graph.root.prettyString(detail = 1, pretty = true)+"\n")
@@ -187,7 +189,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
                 (for {
                     block <- Corpus.splitOnNewline(Source.fromFile(options('dependencies).asInstanceOf[String]).getLines())
                     if block.matches("(.|\n)*\n\\((.|\n)*")     // needs to contain some AMR
-                } yield block).toArray
+                } yield block.replaceAllLiterally("-LRB-","(").replaceAllLiterally("-RRB-",")")).toArray
             } else {
                 new Array(0)
             }
@@ -195,6 +197,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
             for ((block, i) <- Corpus.splitOnNewline(io.Source.stdin.getLines()).filter(_.matches("(.|\n)*\n\\((.|\n)*")).zipWithIndex) {
                 val amrdata = AMRData(block)
                 val decoderResult = decoder.decode(new Input(amrdata, dependencies.getOrElse(i,""), oracle = false))
+                logger(1, "Dependencies:\n"+dependencies(i)+"\n")
                 if (outputFormat.contains("AMR")) {
                     println(decoderResult.graph.root.prettyString(detail=1, pretty=true) + '\n')
                 }
