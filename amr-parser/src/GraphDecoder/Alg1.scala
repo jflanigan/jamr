@@ -20,7 +20,7 @@ import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 import Double.{NegativeInfinity => minusInfty}
 
-class Alg1(featureNames: List[String], labelSet: Array[(String, Int)], rootedConstraint: Boolean = true)
+class Alg1(featureNames: List[String], labelSet: Array[(String, Int)], connectedConstraint: String = "none")
     extends Decoder(featureNames) {
     // Base class has defined:
     // val features: Features
