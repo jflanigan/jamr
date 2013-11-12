@@ -48,8 +48,8 @@ case class Annotation[T](private val snt: Array[String], val tok: Array[String],
 
         for (i <- Range(0, myTokenized.size)) {
             val regexr = normalizedRegex(myTokenized.take(i+1)).r
-            logger(0, "regexr = "+regexr)
-            logger(0, "tokenized = "+normalizedStr(tokenized))
+            logger(2, "regexr = "+regexr)
+            logger(2, "tokenized = "+normalizedStr(tokenized))
             regexr.findPrefixOf(normalizedStr(tokenized)) match {
                 case Some(prefix) => { right(i) = prefix.count(_ == ' ') + 1}
                 case None => assert(false, "Error matching the prefix (this should never occur)")

@@ -79,6 +79,9 @@ class Features(featureNames: List[String]) {
     var rootDependencyPaths : Array[List[Int]] = _
 
     def dependencySpan(node: Node) : Range = {
+        //logger(1, "node.spans = "+node.spans)
+        //logger(1, "node.spans(0) = "+node.spans(0).toString)
+        //logger(1,"span = "+(graph.spans(node.spans(0)).start, graph.spans(node.spans(0)).end))
         val span = dependencies.annotationSpan((graph.spans(node.spans(0)).start, graph.spans(node.spans(0)).end))
         return Range(span._1, span._2)
     }
@@ -214,8 +217,8 @@ class Features(featureNames: List[String]) {
     def rootScore(node: Node) : Double = {
         var score = 0.0
         for (ff <- rootFeatureFunctions) {
-            logger(2, ff.toString)
-            logger(2, ff(node))
+            logger(1, ff.toString)
+            logger(1, ff(node))
             score += weights.dot(ff(node))
         }
         return score
