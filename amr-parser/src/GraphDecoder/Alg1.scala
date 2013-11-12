@@ -81,7 +81,7 @@ class Alg1(featureNames: List[String], labelSet: Array[(String, Int)], connected
                 })
 
             val relations = children.map(x => (":op",x))
-            graph.root = Node(graph.nodes.size.toString,    // id
+            graph.root = Node(graph.nodes.size.toString,    // id       TODO: check that this id doesn't conflict
                               Some("a99"),                  // name     TODO: pick a better name
                               "and",                        // concept
                               relations,                    // relations
@@ -89,6 +89,8 @@ class Alg1(featureNames: List[String], labelSet: Array[(String, Int)], connected
                               List(),                       // variableRelations
                               None,                         // alignment
                               ArrayBuffer())                // spans
+            graph.getNodeById(graph.root.id) = graph.root
+            graph.getNodeByName(graph.root.name.get) = graph.root
             graphObj.set = graphObj.set.map(x => 0) // update the graphObj so it knows the graph is connected
             graphObj.setArray(0) ++= Range(0, graphObj.set.size)
         } else {
