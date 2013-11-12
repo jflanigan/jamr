@@ -27,10 +27,11 @@ class Alg1(featureNames: List[String], labelSet: Array[(String, Int)], connected
 
     def decode(input: Input) : DecoderResult = {
         // Assumes that Node.relations has been setup correctly for the graph fragments
+        features.input = input  // WARNING: This needs to be called before graphObj is created, because when graphObj is created we compute the features of the edges that are already present in the graph fragments
         val graph = input.graph.duplicate
+        logger(1, "graph.spans = "+graph.spans.toList)
         val nodes : List[Node] = graph.nodes.filter(_.name != None).toList    // TODO: test to see if a view is faster
         val graphObj = new GraphObj(graph, nodes.toArray, features)    // graphObj keeps track of the connectivity of the graph as we add edges
-        features.input = input
 
         logger(1, "Alg1")
         //logger(2, "weights = " + features.weights)
@@ -70,17 +71,22 @@ class Alg1(featureNames: List[String], labelSet: Array[(String, Int)], connected
             }
         }
 
+        logger(1, "Alg1 adding root")
+
         if (connectedConstraint == "and" && !graphObj.connected) {
             // We need to add a top level 'and' node, and make it the root
             // We will pick it's children by rootScore, but won't add any features to the feature vector
             // because it would adversely affect learning
+        logger(1, "Alg1 here1")
             val children = (
                 for { setid: Int <- graphObj.set.toList.distinct
                     } yield {
-                      graphObj.setArray(setid).map(nodeIndex => { val node = graphObj.nodes(nodeIndex); (node, features.rootScore(node)) }).maxBy(_._2)._1
+                      graph.getNodeById(graphObj.setArray(setid).map(nodeIndex => { val node = graphObj.nodes(nodeIndex); (node.id, features.rootScore(node)) }).maxBy(_._2)._1)
                 })
+        logger(1, "Alg1 here2")
 
             val relations = children.map(x => (":op",x))
+        logger(1, "Alg1 here3")
             graph.root = Node(graph.nodes.size.toString,    // id       TODO: check that this id doesn't conflict
                               Some("a99"),                  // name     TODO: pick a better name
                               "and",                        // concept
@@ -89,11 +95,16 @@ class Alg1(featureNames: List[String], labelSet: Array[(String, Int)], connected
                               List(),                       // variableRelations
                               None,                         // alignment
                               ArrayBuffer())                // spans
+        logger(1, "Alg1 here4")
             graph.getNodeById(graph.root.id) = graph.root
+        logger(1, "Alg1 here5")
             graph.getNodeByName(graph.root.name.get) = graph.root
+        logger(1, "Alg1 here6")
             graphObj.set = graphObj.set.map(x => 0) // update the graphObj so it knows the graph is connected
+        logger(1, "Alg1 here7")
             graphObj.setArray(0) ++= Range(0, graphObj.set.size)
         } else {
+        logger(1, "Alg1 here8")
             if (features.rootFeatureFunctions.size != 0) {
                 graph.root = nodes.map(x => (x, features.rootScore(x))).maxBy(_._2)._1
             } else {
@@ -102,11 +113,14 @@ class Alg1(featureNames: List[String], labelSet: Array[(String, Int)], connected
             graphObj.feats += features.rootFeatures(graph.root)
             graphObj.score += features.rootScore(graph.root)
         }
+        logger(1, "Alg1 here9")
 
         nodes.map(node => { node.relations = node.relations.reverse })
+        logger(1, "Alg1 makeTopologicalOrdering")
         if (connectedConstraint != "none") {
             graph.makeTopologicalOrdering()   // won't work if not connected
         }
+        logger(1, "Alg1 returning")
         return DecoderResult(graph, graphObj.feats, graphObj.score)
     }
 }
