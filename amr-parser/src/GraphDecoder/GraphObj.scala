@@ -17,6 +17,7 @@ import scala.collection.mutable.PriorityQueue
 import Double.{NegativeInfinity => minusInfty}
 
 case class GraphObj(graph: Graph,
+                    nodes: Array[Node], // usually 'nodes' is graph.nodes.filter(_.name != None).toArray
                     features: Features,
                     set: Array[Int],
                     setArray: Array[Set[Int]],
@@ -35,7 +36,7 @@ case class GraphObj(graph: Graph,
     // 'set' contains the index of the set that each node is assigned to
     // At the start each node is in its own set
 
-    def this(graph: Graph, features: Features) = this(graph, features, graph.nodes.zipWithIndex.map(_._2).toArray, graph.nodes.zipWithIndex.map(x => Set(x._2)).toArray)
+    def this(graph: Graph, nodes: Array[Node], features: Features) = this(graph, nodes, features, nodes.zipWithIndex.map(_._2).toArray, nodes.zipWithIndex.map(x => Set(x._2)).toArray)
 
     def getSet(nodeIndex : Int) : Set[Int] = { setArray(set(nodeIndex)) }
 
@@ -51,7 +52,7 @@ case class GraphObj(graph: Graph,
             score += weight
         }
         //logger(1, "set = " + set.toList)
-        //logger(1, "nodes = " + graph.nodes.map(x => x.concept).toList)
+        //logger(1, "nodes = " + nodes.map(x => x.concept).toList)
         //logger(1, "setArray = " + setArray.toList)
         if (set(index1) != set(index2)) {   // If different sets, then merge them
             //logger(1, "Merging sets")
@@ -63,19 +64,19 @@ case class GraphObj(graph: Graph,
             set2.clear()
         }
         //logger(1, "set = " + set.toList)
-        //logger(1, "nodes = " + graph.nodes.map(x => x.concept).toList)
+        //logger(1, "nodes = " + nodes.map(x => x.concept).toList)
         //logger(1, "setArray = " + setArray.toList)
     }
 
     def log {
         logger(1, "set = " + set.toList)
-        logger(1, "nodes = " + graph.nodes.map(x => x.concept).toList)
+        logger(1, "nodes = " + nodes.map(x => x.concept).toList)
         logger(1, "setArray = " + setArray.toList)
     }
 
     logger(1, "Adding edges already there")
-    val nodeIds : Array[String] = graph.nodes.map(_.id).toArray
-    for { (node1, index1) <- graph.nodes.zipWithIndex
+    val nodeIds : Array[String] = nodes.map(_.id).toArray
+    for { (node1, index1) <- nodes.zipWithIndex
           (label, node2) <- node1.relations
           if nodeIds.indexWhere(_ == node2.id) != -1 } {
         val index2 = nodeIds.indexWhere(_ == node2.id)
