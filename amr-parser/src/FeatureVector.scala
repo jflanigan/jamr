@@ -72,7 +72,6 @@ case class FeatureVector(fmap : Map[String, Double] = Map[String, Double]()) {
         return f
     }
     def read(iterator: Iterator[String]) = {    // TODO: make this another constructor
-        //val regex = """([^ \t]*)[ \t]*([^ \t]*)""".r
         val regex = """(.*)[ \t]([^ \t]*)""".r
         //val iterator = Source.fromFile(filename).getLines()
         fmap.clear()
@@ -83,7 +82,6 @@ case class FeatureVector(fmap : Map[String, Double] = Map[String, Double]()) {
         for (key <- fmap.keys.toList.sorted) {
             if (fmap(key) != 0.0) {
                 string.append(key + " " + fmap(key).toString + "\n")
-                //string.append(key.replaceAll(" ","_") + " " + fmap(key).toString + "\n")    // TODO: WARNING - replacement of spaces to _ is not undone when reading in weights
             }
         }
         return string.toString
