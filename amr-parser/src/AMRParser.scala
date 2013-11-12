@@ -203,7 +203,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
                     println(decoderResult.graph.root.prettyString(detail=1, pretty=true) + '\n')
                 }
                 if (outputFormat.contains("triples")) {
-                    logger(0, decoderResult.graph.printTriples(detail = 1)+"\n")
+                    println(decoderResult.graph.printTriples(detail = 1)+"\n")
                 }
             }
         }
