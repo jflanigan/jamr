@@ -29,7 +29,7 @@ class Alg1(featureNames: List[String], labelSet: Array[(String, Int)], connected
         // Assumes that Node.relations has been setup correctly for the graph fragments
         val graph = input.graph.duplicate
         val nodes : List[Node] = graph.nodes.filter(_.name != None).toList    // TODO: test to see if a view is faster
-        val graphObj = new GraphObj(graph, features)    // graphObj keeps track of the connectivity of the graph as we add edges
+        val graphObj = new GraphObj(graph, nodes.toArray, features)    // graphObj keeps track of the connectivity of the graph as we add edges
         features.input = input
 
         logger(1, "Alg1")
@@ -70,16 +70,39 @@ class Alg1(featureNames: List[String], labelSet: Array[(String, Int)], connected
             }
         }
 
-        if (features.rootFeatureFunctions.size != 0) {
-            graph.root = nodes.map(x => (x, features.rootScore(x))).maxBy(_._2)._1
+        if (connectedConstraint == "and" && !graphObj.connected) {
+            // We need to add a top level 'and' node, and make it the root
+            // We will pick it's children by rootScore, but won't add any features to the feature vector
+            // because it would adversely affect learning
+            val children = (
+                for { setid: Int <- graphObj.set.toList.distinct
+                    } yield {
+                      graphObj.setArray(setid).map(nodeIndex => { val node = graphObj.nodes(nodeIndex); (node, features.rootScore(node)) }).maxBy(_._2)._1
+                })
+
+            val relations = children.map(x => (":op",x))
+            graph.root = Node(graph.nodes.size.toString,    // id
+                              Some("a99"),                  // name     TODO: pick a better name
+                              "and",                        // concept
+                              relations,                    // relations
+                              relations,                    // topologicalOrdering
+                              List(),                       // variableRelations
+                              None,                         // alignment
+                              ArrayBuffer())                // spans
         } else {
-            graph.root = nodes(0)
+            if (features.rootFeatureFunctions.size != 0) {
+                graph.root = nodes.map(x => (x, features.rootScore(x))).maxBy(_._2)._1
+            } else {
+                graph.root = nodes(0)
+            }
+            graphObj.feats += features.rootFeatures(graph.root)
+            graphObj.score += features.rootScore(graph.root)
         }
-        graphObj.feats += features.rootFeatures(graph.root)
-        graphObj.score += features.rootScore(graph.root)
 
         nodes.map(node => { node.relations = node.relations.reverse })
-        //graph.makeTopologicalOrdering()   // won't work - may not be connected
+        if (connectedConstraint != "none") {
+            graph.makeTopologicalOrdering()   // won't work if not connected
+        }
         return DecoderResult(graph, graphObj.feats, graphObj.score)
     }
 }
