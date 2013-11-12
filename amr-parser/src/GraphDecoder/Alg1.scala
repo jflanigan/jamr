@@ -89,6 +89,8 @@ class Alg1(featureNames: List[String], labelSet: Array[(String, Int)], connected
                               List(),                       // variableRelations
                               None,                         // alignment
                               ArrayBuffer())                // spans
+            graphObj.set = graphObj.set.map(x => 0) // update the graphObj so it knows the graph is connected
+            graphObj.setArray(0) ++= Range(0, graphObj.set.size)
         } else {
             if (features.rootFeatureFunctions.size != 0) {
                 graph.root = nodes.map(x => (x, features.rootScore(x))).maxBy(_._2)._1

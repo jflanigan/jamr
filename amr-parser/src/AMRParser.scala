@@ -106,6 +106,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
         }
         val decoder: Decoder = options('decoder).asInstanceOf[String] match {
             case "Alg1" => new Alg1(features, labelset)
+            case "Alg1a" => new Alg1(features, labelset, connectedConstraint = "and")
             case "Alg2" => new Alg2(features, labelset, connected)
             case "DD" => new DualDecomposition(features, labelset, 1)
             case x => { System.err.println("Error: unknown decoder " + x); sys.exit(1) }
