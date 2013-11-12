@@ -19,8 +19,8 @@ import Double.{NegativeInfinity => minusInfty}
 case class GraphObj(graph: Graph,
                     nodes: Array[Node], // usually 'nodes' is graph.nodes.filter(_.name != None).toArray
                     features: Features,
-                    set: Array[Int],
-                    setArray: Array[Set[Int]],
+                    var set: Array[Int],
+                    var setArray: Array[Set[Int]],
                     var score: Double = 0.0,
                     var feats: FeatureVector = new FeatureVector()) {
 
