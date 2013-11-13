@@ -151,7 +151,11 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
                            logger(0, result.graph.root.prettyString(detail = 1, pretty = true)+"\n")
                        }
                        if (outputFormat.contains("triples")) {
-                           logger(0, result.graph.printTriples(detail = 1)+"\n")
+                           //logger(0, result.graph.printTriples(detail = 1)+"\n")
+                           logger(0, "Oracle:\n"+result.graph.printTriples(
+                                detail = 1,
+                                extra = (node1, node2, relation) => {
+                                    "\t"+decoder.features.ffDependencyPath(node1, node2, relation).toString.split("\n").filter(_.matches("^C1.*")).toList.toString})+"\n")
                        }
                        result.features },
                 //i => oracle.decode(AMRData(training(i)).toOracle).features,
@@ -163,7 +167,11 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
                            logger(0, result2.graph.root.prettyString(detail = 1, pretty = true)+"\n")
                        }
                        if (outputFormat.contains("triples")) {
-                           logger(0, result.graph.printTriples(detail = 1)+"\n")
+                           //logger(0, result.graph.printTriples(detail = 1)+"\n")
+                           logger(0, "Oracle:\n"+result.graph.printTriples(
+                                detail = 1,
+                                extra = (node1, node2, relation) => {
+                                    "\t"+oracle.features.ffDependencyPath(node1, node2, relation).toString.split("\n").filter(_.matches("^C1.*")).toList.toString})+"\n")
                        }
                        result.features },
                 decoder.features.weights,
