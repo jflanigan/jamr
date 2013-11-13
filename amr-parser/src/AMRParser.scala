@@ -143,9 +143,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
                 //i => decoder.decode(AMRData(training(i)).toInput).features,
                 i => { val amrdata = AMRData(training(i))
                        logger(0, "Sentence:\n"+amrdata.sentence.mkString(" ")+"\n")
-                       logger(0, "Dependencies:\n"+dependencies(i)+"\n")
                        val result = decoder.decode(new Input(amrdata, dependencies(i), oracle = false))
-                       //logger(5, "Dependencies:\n"+dependencies(i)+"\n")
                        logger(0, "AMR:")
                        if (outputFormat.contains("AMR")) {
                            logger(0, result.graph.root.prettyString(detail = 1, pretty = true)+"\n")
@@ -173,6 +171,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
                                 extra = (node1, node2, relation) => {
                                     "\t"+oracle.features.ffDependencyPath(node1, node2, relation).toString.split("\n").filter(_.matches("^C1.*")).toList.toString})+"\n")
                        }
+                       logger(0, "Dependencies:\n"+dependencies(i)+"\n")
                        result.features },
                 decoder.features.weights,
                 training.size,
@@ -211,10 +210,10 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
                 val decoderResult = decoder.decode(new Input(amrdata, dependencies(i), oracle = false))
                 val oracleResult = oracle.decode(new Input(amrdata2, dependencies(i), oracle = true))
                 logger(0, "Oracle:\n"+oracleResult.graph.printTriples(detail = 1, extra = (node1, node2, relation) => {
-                    "\t"+oracle.features.ffDependencyPath(node1, node2, relation).toString.split("\n").filter(_.matches("^C1.*")).toList.toString
+                    "\t"+oracle.features.ffDependencyPath(node1, node2, relation).toString.split("\n").filter(_.matches("^C1.*")).toList.toString+"\t"+decoder.features.localScore(node1, node2, relation).toString
                 })+"\n")
                 logger(0, "AMR:\n"+decoderResult.graph.printTriples(detail = 1, extra = (node1, node2, relation) => {
-                    "\t"+decoder.features.ffDependencyPath(node1, node2, relation).toString.split("\n").filter(_.matches("^C1.*")).toList.toString
+                    "\t"+decoder.features.ffDependencyPath(node1, node2, relation).toString.split("\n").filter(_.matches("^C1.*")).toList.toString+"\t"+decoder.features.localScore(node1, node2, relation).toString
                 })+"\n")
                 if (outputFormat.contains("AMR")) {
                     println(decoderResult.graph.root.prettyString(detail=1, pretty=true) + '\n')
