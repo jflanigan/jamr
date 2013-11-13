@@ -143,10 +143,10 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
                 //i => decoder.decode(AMRData(training(i)).toInput).features,
                 i => { val amrdata = AMRData(training(i))
                        logger(0, "Sentence:\n"+amrdata.sentence.mkString(" ")+"\n")
-                       logger(1, "Dependencies:\n"+dependencies(i)+"\n")
+                       logger(0, "Dependencies:\n"+dependencies(i)+"\n")
                        val result = decoder.decode(new Input(amrdata, dependencies(i), oracle = false))
                        //logger(5, "Dependencies:\n"+dependencies(i)+"\n")
-                       logger(0, "AMR: ")
+                       logger(0, "AMR:")
                        if (outputFormat.contains("AMR")) {
                            logger(0, result.graph.root.prettyString(detail = 1, pretty = true)+"\n")
                        }
@@ -161,14 +161,14 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
                 //i => oracle.decode(AMRData(training(i)).toOracle).features,
                 i => { val amrdata = AMRData(training(i))
                        val result = oracle.decode(new Input(amrdata, dependencies(i), oracle = true))
-                       logger(0, "Oracle: ")
+                       logger(0, "Oracle:")
                        if (outputFormat.contains("AMR")) {
                            val result2 = oracle.decode(new Input(amrdata, dependencies(i), oracle = true, clearUnalignedNodes = false))
                            logger(0, result2.graph.root.prettyString(detail = 1, pretty = true)+"\n")
                        }
                        if (outputFormat.contains("triples")) {
                            //logger(0, result.graph.printTriples(detail = 1)+"\n")
-                           logger(0, "Oracle:\n"+result.graph.printTriples(
+                           logger(0, result.graph.printTriples(
                                 detail = 1,
                                 extra = (node1, node2, relation) => {
                                     "\t"+oracle.features.ffDependencyPath(node1, node2, relation).toString.split("\n").filter(_.matches("^C1.*")).toList.toString})+"\n")
