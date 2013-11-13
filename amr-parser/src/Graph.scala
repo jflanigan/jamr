@@ -112,7 +112,10 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         }
     }
 
-    def printTriples(detail: Int = 1, sorted: Boolean = true) : String = {
+    def printTriples(detail: Int = 1,
+                     extra: (Node, Node, String) => String = (n1, n2, r) => "",   // Optional string to print after each relation
+                     sorted: Boolean = true
+                     ) : String = {
         def name(node: Node) : String = {
             node.name match {
                 case None => ""
@@ -127,11 +130,11 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
               (Relation(relation), node2) <- node1.relations
             } {
             detail match {
-                case 0 => str += "(" + node1.concept + ", " + relation + ", " + node2.concept + ")\n"
-                case 1 => str += "(" + name(node1) + node1.concept + ", " + relation + ", " + name(node2) + node2.concept + ")\n"
-                case 2 => str += relation + "(" + node1.concept + ", " + node2.concept + ")\n"
-                case 3 => str += relation + "(" + name(node1) + node1.concept + ", " + name(node2) + node2.concept + ")\n"
-                case _ => str += "(" + name(node1) + node1.concept + ", " + name(node2) + node2.concept + ", " + relation + ")\n"
+                case 0 => str += "(" + node1.concept + ", " + relation + ", " + node2.concept + ")"+extra(node1,node2,relation)+"\n"
+                case 1 => str += "(" + name(node1) + node1.concept + ", " + relation + ", " + name(node2) + node2.concept + ")"+extra(node1,node2,relation)+"\n"
+                case 2 => str += relation + "(" + node1.concept + ", " + node2.concept + ")"+extra(node1,node2,relation)+"\n"
+                case 3 => str += relation + "(" + name(node1) + node1.concept + ", " + name(node2) + node2.concept + ")"+extra(node1,node2,relation)+"\n"
+                case _ => str += "(" + name(node1) + node1.concept + ", " + name(node2) + node2.concept + ", " + relation + ")"+extra(node1,node2,relation)+"\n"
             }
         }
         if (sorted) { 
