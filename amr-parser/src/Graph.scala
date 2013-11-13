@@ -127,14 +127,15 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         val Relation = """:?(.*)""".r
 
         for { node1 <- nodes
-              (Relation(relation), node2) <- node1.relations
+              (label, node2) <- node1.relations
+              Relation(relation) = label    // label includes the ":" (passed to extra)
             } {
             detail match {
-                case 0 => str += "(" + node1.concept + ", " + relation + ", " + node2.concept + ")"+extra(node1,node2,relation)+"\n"
-                case 1 => str += "(" + name(node1) + node1.concept + ", " + relation + ", " + name(node2) + node2.concept + ")"+extra(node1,node2,relation)+"\n"
-                case 2 => str += relation + "(" + node1.concept + ", " + node2.concept + ")"+extra(node1,node2,relation)+"\n"
-                case 3 => str += relation + "(" + name(node1) + node1.concept + ", " + name(node2) + node2.concept + ")"+extra(node1,node2,relation)+"\n"
-                case _ => str += "(" + name(node1) + node1.concept + ", " + name(node2) + node2.concept + ", " + relation + ")"+extra(node1,node2,relation)+"\n"
+                case 0 => str += "(" + node1.concept + ", " + relation + ", " + node2.concept + ")"+extra(node1,node2,label)+"\n"
+                case 1 => str += "(" + name(node1) + node1.concept + ", " + relation + ", " + name(node2) + node2.concept + ")"+extra(node1,node2,label)+"\n"
+                case 2 => str += relation + "(" + node1.concept + ", " + node2.concept + ")"+extra(node1,node2,label)+"\n"
+                case 3 => str += relation + "(" + name(node1) + node1.concept + ", " + name(node2) + node2.concept + ")"+extra(node1,node2,label)+"\n"
+                case _ => str += "(" + name(node1) + node1.concept + ", " + name(node2) + node2.concept + ", " + relation + ")"+extra(node1,node2,label)+"\n"
             }
         }
         if (sorted) { 
