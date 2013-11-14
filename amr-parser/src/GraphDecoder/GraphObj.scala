@@ -44,7 +44,7 @@ case class GraphObj(graph: Graph,
 
     def addEdge(node1: Node, index1: Int, node2: Node, index2: Int, label: String, weight: Double, addRelation: Boolean = true) {
         if (!node1.relations.exists(x => ((x._1 == label) && (x._2.id == node2.id))) || !addRelation) { // Prevent adding an edge twice
-            logger(0, "Adding edge ("+node1.concept+", "+label +", "+node2.concept + ") with weight "+weight.toString)
+            logger(1, "Adding edge ("+node1.concept+", "+label +", "+node2.concept + ") with weight "+weight.toString)
             if (addRelation) {
                 node1.relations = (label, node2) :: node1.relations
             }

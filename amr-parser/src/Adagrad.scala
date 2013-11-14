@@ -37,7 +37,8 @@ class Adagrad extends Optimizer {
             for (t <- Random.shuffle(Range(0, trainingSize).toList)) {
                 // normally we would do weights -= stepsize * gradient(t)
                 // but instead we do this: (see equation 8 in SocherBauerManningNg_ACL2013.pdf)
-                for ((feat, value) <- gradient(t).fmap) {
+                for ((feat, value) <- gradient(t).fmap
+                     if value != 0.0 ) {
                     sumSq.fmap(feat) = sumSq.fmap.getOrElse(feat, 0.0) + value * value
                     weights.fmap(feat) = weights.fmap.getOrElse(feat, 0.0) - stepsize * value / sqrt(sumSq.fmap(feat))
                 }

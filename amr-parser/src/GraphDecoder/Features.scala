@@ -94,11 +94,11 @@ class Features(featureNames: List[String]) {
         val (word1, word2) = (dependencies.tok(word1Index), dependencies.tok(word2Index))
         if (path._1.size + path._2.size <= 4) {
             val pathStr = dependencyPathString(path).mkString("_")
-            FeatureVector(Map(("C1="+node1.concept+"+C2="+node2.concept+"+DP="+pathStr+"+L="+label) -> 1.0,
-                              ("W1="+word1+"+W2="+word2+"+DP="+pathStr+"+L="+label) -> 1.0,
-                              ("W1="+word1+"+DP="+pathStr+"+L="+label) -> 1.0,
-                              ("W2="+word2+"+DP="+pathStr+"+L="+label) -> 1.0,
-                              ("DP="+pathStr+"+L="+label) -> 1.0
+            FeatureVector(Map(("C1="+node1.concept+"+C2="+node2.concept+"+DP.2="+pathStr+"+L="+label) -> 1.0,
+                              ("W1="+word1+"+W2="+word2+"+DP.2="+pathStr+"+L="+label) -> 1.0,
+                              ("W1="+word1+"+DP.2="+pathStr+"+L="+label) -> 1.0,
+                              ("W2="+word2+"+DP.2="+pathStr+"+L="+label) -> 1.0,
+                              ("DP.2="+pathStr+"+L="+label) -> 1.0
                               ))
         } else {
             FeatureVector()

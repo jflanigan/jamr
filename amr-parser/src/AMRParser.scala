@@ -131,7 +131,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
             case x => { System.err.println("Error: unknown optimizer " + x); sys.exit(1) }
         }
 
-        val stepsize = options.getOrElse('stepsize, "1.0").asInstanceOf[String].toInt
+        val stepsize = options.getOrElse('stepsize, "1.0").asInstanceOf[String].toDouble
 
         if (options contains 'train) {
 
@@ -168,7 +168,8 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
                            logger(0, "Oracle:\n"+result1.graph.printTriples(
                                 detail = 1,
                                 extra = (node1, node2, relation) => {
-                                    "\t"+decoder.features.ffDependencyPath(node1, node2, relation).toString.split("\n").filter(_.matches("^C1.*")).toList.toString})+"\n")
+                                    "\t"+decoder.features.ffDependencyPath(node1, node2, relation).toString.split("\n").filter(_.matches("^C1.*")).toList.toString+"\t"+decoder.features.localScore(node1, node2, relation).toString
+                                })+"\n")
                        }
                        val amrdata2 = AMRData(training(i))
                        val result2 = oracle.decode(new Input(amrdata2, dependencies(i), oracle = true))
@@ -182,7 +183,8 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
                            logger(0, result2.graph.printTriples(
                                 detail = 1,
                                 extra = (node1, node2, relation) => {
-                                    "\t"+oracle.features.ffDependencyPath(node1, node2, relation).toString.split("\n").filter(_.matches("^C1.*")).toList.toString})+"\n")
+                                    "\t"+oracle.features.ffDependencyPath(node1, node2, relation).toString.split("\n").filter(_.matches("^C1.*")).toList.toString+"\t"+decoder.features.localScore(node1, node2, relation).toString
+                                })+"\n")
                        }
                        logger(0, "Dependencies:\n"+dependencies(i)+"\n")
                        result1.features -= result2.features
