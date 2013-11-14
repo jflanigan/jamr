@@ -29,9 +29,9 @@ class Features(featureNames: List[String]) {
     private var sentence: Array[String] = _
     private var dependencies: Annotation[Array[Dependency]] = _
     private var fullPos: Annotation[Array[String]] = _
-    private var pos: Annotation[Array[String]] = _
+    //private var pos: Annotation[Array[String]] = _
 
-    def input: Input = Input(graph, sentence, dependencies, pos)
+    def input: Input = Input(graph, sentence, dependencies, fullPos)
     def input_= (i: Input) {
         graph = i.graph
         sentence = i.sentence
