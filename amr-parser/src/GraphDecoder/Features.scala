@@ -198,8 +198,8 @@ class Features(featureNames: List[String]) {
     def localScore(node1: Node, node2: Node, label: String) : Double = {
         var score = 0.0
         for (ff <- featureFunctions) {
-            logger(2, ff.toString)
-            logger(2, ff(node1, node2, label))
+            //logger(2, ff.toString)
+            //logger(2, ff(node1, node2, label))
             score += weights.dot(ff(node1, node2, label))
         }
         return score
@@ -217,8 +217,8 @@ class Features(featureNames: List[String]) {
     def rootScore(node: Node) : Double = {
         var score = 0.0
         for (ff <- rootFeatureFunctions) {
-            logger(1, ff.toString)
-            logger(1, ff(node))
+            //logger(1, ff.toString)
+            //logger(1, ff(node))
             score += weights.dot(ff(node))
         }
         return score
