@@ -28,6 +28,7 @@ class Features(featureNames: List[String]) {
     private var graph: Graph = _
     private var sentence: Array[String] = _
     private var dependencies: Annotation[Array[Dependency]] = _
+    private var fullPos: Annotation[Array[String]] = _
     private var pos: Annotation[Array[String]] = _
 
     def input: Input = Input(graph, sentence, dependencies, pos)
@@ -35,7 +36,8 @@ class Features(featureNames: List[String]) {
         graph = i.graph
         sentence = i.sentence
         dependencies = i.dependencies
-        pos = i.pos
+        //pos = i.pos
+        fullPos = i.pos
         precompute
     }
 
@@ -45,8 +47,12 @@ class Features(featureNames: List[String]) {
     val ffTable = Map[String, FeatureFunction](
         "edgeId" -> ffEdgeId,
         "bias" -> ffBias,
+        "edgeCount" -> ffEdgeCount,
         "conceptBigram" -> ffConceptBigram,
-        "dependencyPath" -> ffDependencyPath
+        "conceptUnigramWithLabel" -> ffConceptUnigramWithLabel,
+        //"dependencyPathv1" -> ffDependencyPathv1,
+        "dependencyPathv2" -> ffDependencyPathv2,
+        "dependencyPathv3" -> ffDependencyPathv3
     )
 
     val rootFFTable = Map[String, RootFeatureFunction](
@@ -54,9 +60,7 @@ class Features(featureNames: List[String]) {
     )
 
     def precompute() {
-        if (featureNames.contains("dependencyPath")) {
-            rootDependencyPaths = dependencies.tok.indices.map(i => rootDependencyPath(i)).toArray
-        }
+        rootDependencyPaths = dependencies.tok.indices.map(i => rootDependencyPath(i)).toArray
         logger(1,"rootDependencyPaths = "+rootDependencyPaths.toList)
     }
 
@@ -70,10 +74,20 @@ class Features(featureNames: List[String]) {
         return FeatureVector(Map(("L="+label) -> 1.0))
     }
 
+    def ffEdgeCount(node1: Node, node2: Node, label: String) : FeatureVector = {
+        return FeatureVector(Map(("Edge") -> 1.0))
+    }
+
     def ffConceptBigram(node1: Node, node2: Node, label: String) : FeatureVector = {
         //logger(2, "ffConceptBigram: Node1 = " + node1.concept + " Node2 = " + node2.concept + " label = " + label)
         return FeatureVector(Map(/*("C1="+node1.concept+":C2="+node2.concept) -> 1.0,*/
                                  ("C1="+node1.concept+"+C2="+node2.concept+"+L="+label) -> 1.0))
+    }
+
+    def ffConceptUnigramWithLabel(node1: Node, node2: Node, label: String) : FeatureVector = {
+        //logger(2, "ffConceptBigram: Node1 = " + node1.concept + " Node2 = " + node2.concept + " label = " + label)
+        return FeatureVector(Map(("C1="+node1.concept+"+L="+label) -> 1.0,
+                                 ("C2="+node2.concept+"+L="+label) -> 1.0))
     }
 
     var rootDependencyPaths : Array[List[Int]] = _
@@ -86,23 +100,49 @@ class Features(featureNames: List[String]) {
         return Range(span._1, span._2)
     }
 
-    def ffDependencyPath(node1: Node, node2: Node, label: String) : FeatureVector = {
+    def ffDependencyPathv2(node1: Node, node2: Node, label: String) : FeatureVector = {
         val (word1Index, word2Index, path) = (for { w1 <- dependencySpan(node1)
                                                     w2 <- dependencySpan(node2)
                                              } yield { (w1, w2, dependencyPath(w1, w2)) }).minBy(x => x._3._1.size + x._3._2.size)
         // TODO: could also do all paths instead of just the shortest
+        val dp = "DP.2="
+        val pos = fullPos
+        pos.annotation = fullPos.annotation.map(x => x.replaceAll("VB.*","VB").replaceAll("NN.*|PRP|FW","NN").replaceAll("JJ.*","JJ").replaceAll("RB.*","RB"))
         val (word1, word2) = (dependencies.tok(word1Index), dependencies.tok(word2Index))
-        if (path._1.size + path._2.size <= 4) {
-            val pathStr = dependencyPathString(path).mkString("_")
-            FeatureVector(Map(("C1="+node1.concept+"+C2="+node2.concept+"+DP.2="+pathStr+"+L="+label) -> 1.0,
-                              ("W1="+word1+"+W2="+word2+"+DP.2="+pathStr+"+L="+label) -> 1.0,
-                              ("W1="+word1+"+DP.2="+pathStr+"+L="+label) -> 1.0,
-                              ("W2="+word2+"+DP.2="+pathStr+"+L="+label) -> 1.0,
-                              ("DP.2="+pathStr+"+L="+label) -> 1.0
+        val feats = if (path._1.size + path._2.size <= 4) {
+            val pathStr = dependencyPathString(path, pos).mkString("_")
+            FeatureVector(Map(("C1="+node1.concept+"+C2="+node2.concept+"+"+dp+pathStr+"+L="+label) -> 1.0,
+                              ("W1="+word1+"+W2="+word2+"+"+dp+pathStr+"+L="+label) -> 1.0,
+                              ("W1="+word1+"+"+dp+pathStr+"+L="+label) -> 1.0,
+                              ("W2="+word2+"+"+dp+pathStr+"+L="+label) -> 1.0,
+                              (dp+pathStr+"+L="+label) -> 1.0
                               ))
-        } else {
-            FeatureVector()
-        }
+        } else { FeatureVector() }
+        return feats
+    }
+
+    def ffDependencyPathv3(node1: Node, node2: Node, label: String) : FeatureVector = {
+        val (word1Index, word2Index, path) = (for { w1 <- dependencySpan(node1)
+                                                    w2 <- dependencySpan(node2)
+                                             } yield { (w1, w2, dependencyPath(w1, w2)) }).minBy(x => x._3._1.size + x._3._2.size)
+        // TODO: could also do all paths instead of just the shortest
+        val dp = "DPv3="
+        val pos = fullPos
+        pos.annotation = fullPos.annotation.map(x => x.replaceAll("VB.*","VB").replaceAll("NN.*","NN"))
+        val (word1, word2) = (dependencies.tok(word1Index), dependencies.tok(word2Index))
+        val feats= if (path._1.size + path._2.size <= 4) {
+            val pathStr = dependencyPathString(path, pos).mkString("_")
+            FeatureVector(Map(//("C1="+node1.concept+"+C2="+node2.concept+"+"+dp+pathStr+"+L="+label) -> 1.0,
+                              //("W1="+word1+"+W2="+word2+"+"+dp+pathStr+"+L="+label) -> 1.0,
+                              ("C1="+node1.concept+"+"+dp+pathStr) -> 1.0,
+                              ("C2="+node2.concept+"+"+dp+pathStr) -> 1.0,
+                              ("W1="+word1+"+"+dp+pathStr) -> 1.0,
+                              ("W2="+word2+"+"+dp+pathStr) -> 1.0,
+                              (dp+pathStr+"+L="+label) -> 1.0,
+                              (dp+pathStr) -> 1.0
+                              ))
+        } else { FeatureVector(Map(dp+"NONE" -> 1.0)) }
+        return feats
     }
 
     // TODO: fDependencyAllPaths
@@ -119,7 +159,7 @@ class Features(featureNames: List[String]) {
         return (rootDependencyPaths(word1).drop(prefix-1).reverse, rootDependencyPaths(word2).drop(prefix-1))
     }
 
-    def dependencyPathString(path: (List[Int], List[Int])) : List[String] = {
+    def dependencyPathString(path: (List[Int], List[Int]), pos: Annotation[Array[String]]) : List[String] = {
         // Assumes that the POS tags use the same tokenization as the dependencies
         //logger(2, "path="+path.toString)
         var pathList : List[String] = List()

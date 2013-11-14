@@ -33,8 +33,8 @@ case class Input(graph: Graph, sentence: Array[String], dependencies: Annotation
                    conllx.split("\n").map(x => Dependency.fromConll(x))),
         Annotation(amrdata.sentence,
                    conllx.split("\n").map(x => x.split("\t")(1)),           // Field 2 is token
-                   conllx.split("\n").map(x =>                              // Field 5 is POS
-                      x.split("\t")(4).replaceAll("VB.*","VB").replaceAll("NN.*|PRP|FW","NN").replaceAll("JJ.*","JJ").replaceAll("RB.*","RB"))))
+                   conllx.split("\n").map(x => x.split("\t")(4))))          // Field 5 is POS
+                      //x.split("\t")(4).replaceAll("VB.*","VB").replaceAll("NN.*|PRP|FW","NN").replaceAll("JJ.*","JJ").replaceAll("RB.*","RB"))))
 
 /*
     def this(amrdata: AMRData, dependencies: String, oracle: Boolean, clearUnalignedNodes: Boolean = true) = this(
