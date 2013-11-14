@@ -42,6 +42,12 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
                       parseOptions(map ++ Map('labelset -> value), tail)
             case "--decoder" :: value :: tail =>
                       parseOptions(map ++ Map('decoder -> value), tail)
+            case "--loss" :: value :: tail =>
+                      parseOptions(map ++ Map('loss -> value), tail)
+            case "--optimizer" :: value :: tail =>
+                      parseOptions(map ++ Map('optimizer -> value), tail)
+            case "--stepsize" :: value :: tail =>
+                      parseOptions(map ++ Map('stepsize -> value), tail)
             case "--features" :: value :: tail =>
                       parseOptions(map ++ Map('features -> value), tail)
             case "--outputFormat" :: value :: tail =>
@@ -118,6 +124,15 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
 
         val oracle = new GraphDecoder.Oracle(features)
 
+        if (!options.contains('optimizer)) { System.err.println("Error: No optimizer specified"); sys.exit(1) }
+        val optimizer: Optimizer = options('optimizer).asInstanceOf[String] match {
+            case "SSGD" => new SSGD()
+            case "Adagrad" => new Adagrad()
+            case x => { System.err.println("Error: unknown optimizer " + x); sys.exit(1) }
+        }
+
+        val stepsize = options.getOrElse('stepsize, "1.0").asInstanceOf[String].toInt
+
         if (options contains 'train) {
 
             ////////////////// Training ////////////////
@@ -139,43 +154,43 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
             }
             System.err.println(" done")
 
-            val weights = Perceptron.learnParameters(
+            val weights = optimizer.learnParameters(
                 //i => decoder.decode(AMRData(training(i)).toInput).features,
-                i => { val amrdata = AMRData(training(i))
-                       logger(0, "Sentence:\n"+amrdata.sentence.mkString(" ")+"\n")
-                       val result = decoder.decode(new Input(amrdata, dependencies(i), oracle = false))
+                i => { val amrdata1 = AMRData(training(i))
+                       logger(0, "Sentence:\n"+amrdata1.sentence.mkString(" ")+"\n")
+                       val result1 = decoder.decode(new Input(amrdata1, dependencies(i), oracle = false))
                        logger(0, "AMR:")
                        if (outputFormat.contains("AMR")) {
-                           logger(0, result.graph.root.prettyString(detail = 1, pretty = true)+"\n")
+                           logger(0, result1.graph.root.prettyString(detail = 1, pretty = true)+"\n")
                        }
                        if (outputFormat.contains("triples")) {
                            //logger(0, result.graph.printTriples(detail = 1)+"\n")
-                           logger(0, "Oracle:\n"+result.graph.printTriples(
+                           logger(0, "Oracle:\n"+result1.graph.printTriples(
                                 detail = 1,
                                 extra = (node1, node2, relation) => {
                                     "\t"+decoder.features.ffDependencyPath(node1, node2, relation).toString.split("\n").filter(_.matches("^C1.*")).toList.toString})+"\n")
                        }
-                       result.features },
-                //i => oracle.decode(AMRData(training(i)).toOracle).features,
-                i => { val amrdata = AMRData(training(i))
-                       val result = oracle.decode(new Input(amrdata, dependencies(i), oracle = true))
+                       val amrdata2 = AMRData(training(i))
+                       val result2 = oracle.decode(new Input(amrdata2, dependencies(i), oracle = true))
                        logger(0, "Oracle:")
                        if (outputFormat.contains("AMR")) {
-                           val result2 = oracle.decode(new Input(amrdata, dependencies(i), oracle = true, clearUnalignedNodes = false))
-                           logger(0, result2.graph.root.prettyString(detail = 1, pretty = true)+"\n")
+                           val result3 = oracle.decode(new Input(amrdata2, dependencies(i), oracle = true, clearUnalignedNodes = false))
+                           logger(0, result3.graph.root.prettyString(detail = 1, pretty = true)+"\n")
                        }
                        if (outputFormat.contains("triples")) {
                            //logger(0, result.graph.printTriples(detail = 1)+"\n")
-                           logger(0, result.graph.printTriples(
+                           logger(0, result2.graph.printTriples(
                                 detail = 1,
                                 extra = (node1, node2, relation) => {
                                     "\t"+oracle.features.ffDependencyPath(node1, node2, relation).toString.split("\n").filter(_.matches("^C1.*")).toList.toString})+"\n")
                        }
                        logger(0, "Dependencies:\n"+dependencies(i)+"\n")
-                       result.features },
+                       result1.features -= result2.features
+                       result1.features },  // return gradient
                 decoder.features.weights,
                 training.size,
                 passes,
+                stepsize,
                 false)
 
             print(weights.unsorted)
