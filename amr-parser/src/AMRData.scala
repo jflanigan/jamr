@@ -22,6 +22,8 @@ case class AMRData(sentence: Array[String], graph: Graph, spans: ArrayBuffer[Str
         graph.clearEdges
         graph.normalizeInverseRelations
         graph.addVariableToSpans
+        logger(1, "InputGraph nodes = "+graph.nodes.map(x => x.concept).toList)
+        logger(1, "InputGraph triples: "+graph.printTriples(detail = 1))
         return graph
     }
     def toOracleGraph(clearUnalignedNodes : Boolean): Graph = {
@@ -33,6 +35,8 @@ case class AMRData(sentence: Array[String], graph: Graph, spans: ArrayBuffer[Str
         }
         graph.normalizeInverseRelations
         graph.addVariableToSpans
+        logger(1, "OracleGraph nodes = "+graph.nodes.map(x => x.concept).toList)
+        logger(1, "OracleGraph triples: "+graph.printTriples(detail = 1))
         return graph
     }
 }

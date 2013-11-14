@@ -116,7 +116,7 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
 
         // Add negative weights to the queue
         logger(1, "Adding negative edges")
-        val queue = new PriorityQueue[(Double, Int, Int, String)]()(Ordering.by(x => -x._1))
+        val queue = new PriorityQueue[(Double, Int, Int, String)]()(Ordering.by(x => x._1))
         if (connected && set.size != 0 && getSet(0).size != nodes.size) {
             for { (node1, index1) <- nodes.zipWithIndex
                   ((label, weight), index2) <- neighbors(index1).zipWithIndex

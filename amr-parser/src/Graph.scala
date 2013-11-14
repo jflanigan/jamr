@@ -52,11 +52,15 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         // WARNING: this can break the topological ordering
         for (node <- nodes) {
             if (node.spans.size == 0) { // Unaligned
+                logger(1, "clearUnalignedNodes():  removing unaligned node: "+node.name+" / "+node.concept)
                 getNodeById -= node.id
                 if (node.name != None) {
                     getNodeByName -= node.name.get
                 }
             }
+        }
+        if (nodes.filter(x => !getNodeById.contains(x.id)).size  > 0) {
+            logger(1, "clearUnalignedNodes() deleting relations to the following nodes: "+nodes.filter(x => !getNodeById.contains(x.id)).toList)
         }
         for (node <- nodes) {
             node.topologicalOrdering = node.topologicalOrdering.filter(x => getNodeById.contains(x._2.id)) // Warning this may break the topological ordering
@@ -68,6 +72,8 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
     def clearEdges() {
         // Initializes the graph from the spans (effectively clearing the edges)
         // Sets relations, but leaves topologicalOrdering and variableRelations blank
+        // As a side effect, it re-assigns ids to all the nodes in the graph.  TODO: why did I do it this way???  Couldn't I just keep the ids the same???  Maybe it was so I could simulate what it is like to have ids from stage 1
+        // TODO: CHANGE THIS SO IT DOESN'T RE-ASSIGN IDS
 
         var currentId = 0
         getNodeById.clear
@@ -75,7 +81,8 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
 
         def addRec(node: Node) : (Node, List[String]) = {
             var ids = List(currentId.toString)
-            val node2 = Node(node.id, node.name, node.concept, List(), List(), List(), node.alignment, node.spans)
+            //val node2 = Node(node.id, node.name, node.concept, List(), List(), List(), node.alignment, node.spans)
+            val node2 = Node(currentId.toString, node.name, node.concept, List(), List(), List(), node.alignment, node.spans)   // TODO: is this bugfix correct???
             var relations = List[(String, Node)]()
             getNodeById(currentId.toString) = node2
             node.name match {
