@@ -107,14 +107,14 @@ class Features(featureNames: List[String]) {
         val distance = min(Math.abs(graph.spans(node1.spans(0)).start - graph.spans(node2.spans(0)).end),
                            Math.abs(graph.spans(node1.spans(0)).end - graph.spans(node2.spans(0)).start))
         return FeatureVector(Map("d="+max(distance,12).toString -> 1.0,
-                                 "d="+max(distance,4).toString+"+L="+label -> log(distance)))
+                                 "d="+max(distance,4).toString+"+L="+label -> 1.0))
     }
 
     def fflogDistance(node1: Node, node2: Node, label: String) : FeatureVector = {
         val distance = min(Math.abs(graph.spans(node1.spans(0)).start - graph.spans(node2.spans(0)).end),
                            Math.abs(graph.spans(node1.spans(0)).end - graph.spans(node2.spans(0)).start))
-        return FeatureVector(Map("logD" -> log(distance),
-                                 "logD+L="+label -> log(distance)))
+        return FeatureVector(Map("logD" -> log(distance+1),
+                                 "logD+L="+label -> log(distance+1)))
     }
 
     def ffConceptBigram(node1: Node, node2: Node, label: String) : FeatureVector = {
