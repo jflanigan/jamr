@@ -85,7 +85,10 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
         logger(1, "Adding positive edges")
         val neighbors : Array[Array[(String, Double)]] = {
             for ((node1, index1) <- nodes.zipWithIndex) yield {
-                for ((node2, index2) <- nodes.zipWithIndex if (index1 != index2)) yield {
+                for ((node2, index2) <- nodes.zipWithIndex) yield {
+                    if (index1 == index2) {
+                        (":self", 0.0) // we won't add this to the queue anyway, so it's ok
+                    } else {
                     val (label, weight) = distinctLabels.map(x => (x._1, features.localScore(node1, node2, x._1))).maxBy(_._2)
                     logger(1,"distinctLabels = "+distinctLabels.map(x => (x._1, features.localScore(node1, node2, x._1))).sortBy(-_._2).toList.take(5)+"...")
                     logger(1,"label = "+label)
@@ -108,10 +111,18 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
                         }
                     } else {
                         logger(1, "neighbors("+node1.concept+","+node2.concept+")="+label)
+                        logger(1, "neighbors("+index1.toString+","+index2.toString+")="+label+" "+weight.toString)
                         (label, weight)
+                    }
                     }
                 }
             }
+        }
+
+        logger(1, "Neighbors matrix")
+        for { (node1, index1) <- nodes.zipWithIndex
+              ((label, weight), index2) <- neighbors(index1).zipWithIndex } {
+            logger(1,"neighbors("+index1.toString+","+index2.toString+")="+label+" "+weight.toString)
         }
 
         // Add negative weights to the queue
