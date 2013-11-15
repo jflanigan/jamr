@@ -144,7 +144,7 @@ class Features(featureNames: List[String]) {
                                                     w2 <- dependencySpan(node2)
                                              } yield { (w1, w2, dependencyPath(w1, w2)) }).minBy(x => x._3._1.size + x._3._2.size)
         // TODO: could also do all paths instead of just the shortest
-        val dp = "DP.2="
+        val dp = "DPv2="
         val pos = fullPos
         pos.annotation = fullPos.annotation.map(x => x.replaceAll("VB.*","VB").replaceAll("NN.*|PRP|FW","NN").replaceAll("JJ.*","JJ").replaceAll("RB.*","RB"))
         val (word1, word2) = (dependencies.tok(word1Index), dependencies.tok(word2Index))
