@@ -6,6 +6,7 @@ import java.io.FileOutputStream
 import java.io.PrintStream
 import java.io.BufferedOutputStream
 import java.io.OutputStreamWriter
+import java.lang.Math
 import java.lang.Math.abs
 import java.lang.Math.log
 import java.lang.Math.exp
@@ -47,7 +48,12 @@ class Features(featureNames: List[String]) {
     val ffTable = Map[String, FeatureFunction](
         "edgeId" -> ffEdgeId,
         "bias" -> ffBias,
+        "biasCSuf" -> ffBiasCSuf,
+        "self" -> ffSelf,
+        "fragHead" -> ffFragHead,
         "edgeCount" -> ffEdgeCount,
+        "distance" -> ffDistance,
+        "logDistance" -> fflogDistance,
         "conceptBigram" -> ffConceptBigram,
         "conceptUnigramWithLabel" -> ffConceptUnigramWithLabel,
         //"dependencyPathv1" -> ffDependencyPathv1,
@@ -74,8 +80,41 @@ class Features(featureNames: List[String]) {
         return FeatureVector(Map(("L="+label) -> 1.0))
     }
 
+    def ffBiasCSuf(node1: Node, node2: Node, label: String) : FeatureVector = {
+        val c1size = node1.concept.size
+        val c2size = node2.concept.size
+        return FeatureVector(Map(("C1Suf3="+node1.concept.slice(c1size-3, c1size)) -> 1.0,
+                                 ("C1Suf3="+node1.concept.slice(c1size-3, c1size)+"L="+label) -> 1.0,
+                                 ("C2Suf3="+node2.concept.slice(c2size-3, c2size)) -> 1.0,
+                                 ("C2Suf3="+node2.concept.slice(c2size-3, c2size)+"L="+label) -> 1.0))
+    }
+
+    def ffSelf(node1: Node, node2: Node, label: String) : FeatureVector = {
+        return FeatureVector(Map("Slf" -> { if (node1.spans(0) == node2.spans(0)) { 1.0 } else { 0.0 } } ))
+    }
+
+    def ffFragHead(node1: Node, node2: Node, label: String) : FeatureVector = {
+        // TODO: I'm assuming it is unlikely there are two identical concepts in a frag
+        return FeatureVector(Map("C1NotFragHead" -> { if (node1.concept != graph.spans(node1.spans(0)).amr.concept) { 1.0 } else { 0.0 } }, 
+                                 "C2NotFragHead" -> { if (node2.concept != graph.spans(node2.spans(0)).amr.concept) { 1.0 } else { 0.0 } }))
+    }
+
     def ffEdgeCount(node1: Node, node2: Node, label: String) : FeatureVector = {
         return FeatureVector(Map(("Edge") -> 1.0))
+    }
+
+    def ffDistance(node1: Node, node2: Node, label: String) : FeatureVector = {
+        val distance = min(Math.abs(graph.spans(node1.spans(0)).start - graph.spans(node2.spans(0)).end),
+                           Math.abs(graph.spans(node1.spans(0)).end - graph.spans(node2.spans(0)).start))
+        return FeatureVector(Map("d="+max(distance,12).toString -> 1.0,
+                                 "d="+max(distance,4).toString+"+L="+label -> log(distance)))
+    }
+
+    def fflogDistance(node1: Node, node2: Node, label: String) : FeatureVector = {
+        val distance = min(Math.abs(graph.spans(node1.spans(0)).start - graph.spans(node2.spans(0)).end),
+                           Math.abs(graph.spans(node1.spans(0)).end - graph.spans(node2.spans(0)).start))
+        return FeatureVector(Map("logD" -> log(distance),
+                                 "logD+L="+label -> log(distance)))
     }
 
     def ffConceptBigram(node1: Node, node2: Node, label: String) : FeatureVector = {
@@ -85,7 +124,6 @@ class Features(featureNames: List[String]) {
     }
 
     def ffConceptUnigramWithLabel(node1: Node, node2: Node, label: String) : FeatureVector = {
-        //logger(2, "ffConceptBigram: Node1 = " + node1.concept + " Node2 = " + node2.concept + " label = " + label)
         return FeatureVector(Map(("C1="+node1.concept+"+L="+label) -> 1.0,
                                  ("C2="+node2.concept+"+L="+label) -> 1.0))
     }
@@ -93,6 +131,7 @@ class Features(featureNames: List[String]) {
     var rootDependencyPaths : Array[List[Int]] = _
 
     def dependencySpan(node: Node) : Range = {
+        // Returns the node's span in the dependency parse
         //logger(1, "node.spans = "+node.spans)
         //logger(1, "node.spans(0) = "+node.spans(0).toString)
         //logger(1,"span = "+(graph.spans(node.spans(0)).start, graph.spans(node.spans(0)).end))
