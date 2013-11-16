@@ -106,8 +106,8 @@ class Features(featureNames: List[String]) {
     def ffDistance(node1: Node, node2: Node, label: String) : FeatureVector = {
         val distance = min(Math.abs(graph.spans(node1.spans(0)).start - graph.spans(node2.spans(0)).end),
                            Math.abs(graph.spans(node1.spans(0)).end - graph.spans(node2.spans(0)).start))
-        return FeatureVector(Map("d="+max(distance,12).toString -> 1.0,
-                                 "d="+max(distance,4).toString+"+L="+label -> 1.0))
+        return FeatureVector(Map("d="+min(distance,20).toString -> 1.0,
+                                 "d="+min(distance,20).toString+"+L="+label -> 1.0))
     }
 
     def fflogDistance(node1: Node, node2: Node, label: String) : FeatureVector = {
