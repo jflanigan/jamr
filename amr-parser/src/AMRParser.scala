@@ -159,6 +159,10 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
                 i => { val amrdata1 = AMRData(training(i))
                        logger(0, "Sentence:\n"+amrdata1.sentence.mkString(" ")+"\n")
                        val result1 = decoder.decode(new Input(amrdata1, dependencies(i), oracle = false))
+                        logger(0, "Spans:")
+                        for ((span, i) <- amrdata1.graph.spans.zipWithIndex) {
+                            logger(0, "Span "+(i+1).toString+":  "+span.words+" => "+span.amr)
+                        }
                        logger(0, "AMR:")
                        if (outputFormat.contains("AMR")) {
                            logger(0, result1.graph.root.prettyString(detail = 1, pretty = true)+"\n")
@@ -187,7 +191,10 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
                                 })+"\n")
                        }
                        logger(0, "Dependencies:\n"+dependencies(i)+"\n")
+                       logger(1, "Decoder features:\n"+result1.features+"\n")
+                       logger(1, "Oracle features:\n"+result2.features+"\n")
                        result1.features -= result2.features
+                       logger(1, "Gradient:\n"+result1.features+"\n")
                        result1.features },  // return gradient
                 decoder.features.weights,
                 training.size,

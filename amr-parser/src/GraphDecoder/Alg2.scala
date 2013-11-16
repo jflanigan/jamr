@@ -45,7 +45,7 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
         var feats = new FeatureVector()
         def addEdge(node1: Node, index1: Int, node2: Node, index2: Int, label: String, weight: Double, addRelation: Boolean = true) {
             if (!node1.relations.exists(x => ((x._1 == label) && (x._2.id == node2.id))) || !addRelation) { // Prevent adding an edge twice
-                logger(1, "Adding edge ("+node1.concept+", "+label +", "+node2.concept + ") with weight "+weight.toString)
+                logger(0, "Adding edge ("+node1.concept+", "+label +", "+node2.concept + ") with weight "+weight.toString)
                 if (addRelation) {
                     node1.relations = (label, node2) :: node1.relations
                 }
@@ -72,10 +72,16 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
         logger(1, "Adding edges already there")
         val nodeIds : Array[String] = nodes.map(_.id)
         for { (node1, index1) <- nodes.zipWithIndex
-              (label, node2) <- node1.relations
-              if nodeIds.indexWhere(_ == node2.id) != -1 } {
-            val index2 = nodeIds.indexWhere(_ == node2.id)
-            addEdge(node1, index1, node2, index2, label, features.localScore(node1, node2, label), addRelation=false)
+              (label, node2) <- node1.relations } {
+            logger(1, "1: node1 = "+node1.concept+" "+node1.id)
+            logger(1, "1: node2 = "+node2.concept+" "+node2.id)
+            if (nodeIds.indexWhere(_ == node2.id) != -1) {
+                val index2 = nodeIds.indexWhere(_ == node2.id)
+                addEdge(node1, index1, node2, index2, label, features.localScore(node1, node2, label), addRelation=false)
+            } else {
+                feats += features.localFeatures(node1, node2, label)
+                score += features.localScore(node1, node2, label)
+            }
         }
 
         logger(1, "set = " + set.toList)
