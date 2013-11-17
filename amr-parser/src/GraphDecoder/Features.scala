@@ -160,26 +160,26 @@ class Features(featureNames: List[String]) {
         val direction = if (graph.spans(node1.spans(0)).start < graph.spans(node2.spans(0)).start) { "+1" } else { "-1" }
         val dpStr = depPathStrv3(node1, node2)
         for ((unigram, count) <- unigrams) {
-            val ppStr = "C1PS="+posSet1+"C2PS="+posSet2+"+dir="+direction+"+"+pp+"U="+unigram
+            val ppStr = "C1PS="+posSet1+"+C2PS="+posSet2+"+dir="+direction+"+"+pp+"U="+unigram
             feats.fmap(ppStr) = count
             feats.fmap(ppStr+"+L="+label) = count
             feats.fmap(ppStr+"_"+count.toString) = 1.0
             feats.fmap(ppStr+"_"+count.toString+"+L="+label) = 1.0
-            feats.fmap(dpStr+ppStr) = count
-            feats.fmap(dpStr+ppStr+"+L="+label) = count
-            feats.fmap(dpStr+ppStr+"_"+count.toString) = 1.0
-            feats.fmap(dpStr+ppStr+"_"+count.toString+"+L="+label) = 1.0
+            feats.fmap(dpStr+"+"+ppStr) = count
+            feats.fmap(dpStr+"+"+ppStr+"+L="+label) = count
+            feats.fmap(dpStr+"+"+ppStr+"_"+count.toString) = 1.0
+            feats.fmap(dpStr+"+"+ppStr+"_"+count.toString+"+L="+label) = 1.0
         }
         for ((bigram1, bigram2, count) <- bigrams) {
-            val ppStr = "C1PS="+posSet1+"C2PS="+posSet2+"+dir="+direction+"+"+pp+"B="+bigram1+"_"+bigram2
+            val ppStr = "C1PS="+posSet1+"+C2PS="+posSet2+"+dir="+direction+"+"+pp+"B="+bigram1+"_"+bigram2
             feats.fmap(ppStr) = count
             feats.fmap(ppStr+"+L="+label) = count
             feats.fmap(ppStr+"_"+count.toString) = 1.0
             feats.fmap(ppStr+"_"+count.toString+"+L="+label) = 1.0
-            feats.fmap(dpStr+ppStr) = count
-            feats.fmap(dpStr+ppStr+"+L="+label) = count
-            feats.fmap(dpStr+ppStr+"_"+count.toString) = 1.0
-            feats.fmap(dpStr+ppStr+"_"+count.toString+"+L="+label) = 1.0
+            feats.fmap(dpStr+"+"+ppStr) = count
+            feats.fmap(dpStr+"+"+ppStr+"+L="+label) = count
+            feats.fmap(dpStr+"+"+ppStr+"_"+count.toString) = 1.0
+            feats.fmap(dpStr+"+"+ppStr+"_"+count.toString+"+L="+label) = 1.0
         }
         return feats
     }
