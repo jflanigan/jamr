@@ -58,6 +58,7 @@ class Features(featureNames: List[String]) {
         "logDistance" -> fflogDistance,
         "conceptBigram" -> ffConceptBigram,
         "conceptUnigramWithLabel" -> ffConceptUnigramWithLabel,
+        "posPathv1" -> ffPosPathUnigramBigramv1,
         //"dependencyPathv1" -> ffDependencyPathv1,
         "dependencyPathv2" -> ffDependencyPathv2,
         "dependencyPathv3" -> ffDependencyPathv3
@@ -190,7 +191,7 @@ class Features(featureNames: List[String]) {
         val posPath = fullPos.annotation.slice(start, end).toList   // posPath must be a list otherwise bigramCounts won't work (equality test fails when using arrays)
         val posPathBigrams = posPath.sliding(2).toList
         val unigramCounts = posPath.distinct.map(x => (x, posPath.count(_ == x)))
-        val bigramCounts = posPathBigrams.distinct.map(x => (x(0), x(1), posPathBigrams.count(_ == x)))
+        val bigramCounts = posPathBigrams.distinct.map(x => (x.getOrElse(0,"NONE"), x.getOrElse(1,"NONE"), posPathBigrams.count(_ == x)))
         return (unigramCounts, bigramCounts)
     }
 
