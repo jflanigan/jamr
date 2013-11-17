@@ -47,7 +47,7 @@ class Features(featureNames: List[String]) {
 
     val ffTable = Map[String, FeatureFunction](
         "edgeId" -> ffEdgeId,
-        "labelWithId" -> fflabelWithId,
+        "labelWithId" -> ffLabelWithId,
         "bias" -> ffBias,
         "biasCSuf" -> ffBiasCSuf,
         "self" -> ffSelf,

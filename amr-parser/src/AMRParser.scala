@@ -83,13 +83,13 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
         }
         val labelset: Array[(String, Int)] = Source.fromFile(options('labelset).asInstanceOf[String]).getLines().toArray.map(x => {
             val split = x.split(" +")
-            (split(0), if (split.size > 1) { split(1).toInt } else { 100 })
+            (split(0), if (split.size > 1) { split(1).toInt } else { 1000 })
         })
         //(x.split(" +")(0), x.split(" +").zipWithIndex.map(x => (x._2, x._2)).toMap.getOrElse(1,"100").toInt))
 
         var features = List("conceptBigram", "rootConcept")
         if (options.contains('features)) {
-            features = options('features).asInstanceOf[String].split(",").toList
+            features = options('features).asInstanceOf[String].split(",").toList.filter(x => x != "edgeId" && x != "labelWithId")
         }
         logger(0, "features = " + features)
 
@@ -115,6 +115,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
             case "Alg1a" => new Alg1(features, labelset, connectedConstraint = "and")
             case "Alg2" => new Alg2(features, labelset, connected)
             case "DD" => new DualDecomposition(features, labelset, 1)
+            case "LR" => new LagrangianRelaxation(features, labelset, 1, 50)
             case x => { System.err.println("Error: unknown decoder " + x); sys.exit(1) }
         }
         if (options('decoder).asInstanceOf[String] == "Alg1" && outputFormat.contains("AMR")) {
