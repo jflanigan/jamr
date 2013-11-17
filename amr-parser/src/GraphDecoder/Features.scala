@@ -125,8 +125,8 @@ class Features(featureNames: List[String]) {
         val pathStrv3 = depPathStrv3(node1, node2)
         return FeatureVector(Map("d="+min(distance,20).toString -> 1.0,
                                  "d="+min(distance,20).toString+"+L="+label -> 1.0,
-                                 "d="+min(distance,20).toString+"+DPv3="+pathStrv3 -> 1.0,
-                                 "d="+min(distance,20).toString+"+DPv3="+pathStrv3+"+L="+label -> 1.0))
+                                 "d="+min(distance,20).toString+"+"+pathStrv3 -> 1.0,
+                                 "d="+min(distance,20).toString+"+"+pathStrv3+"+L="+label -> 1.0))
     }
 
     def fflogDistance(node1: Node, node2: Node, label: String) : FeatureVector = {
@@ -135,8 +135,8 @@ class Features(featureNames: List[String]) {
         val pathStrv3 = depPathStrv3(node1, node2)
         return FeatureVector(Map("logD" -> log(distance+1),
                                  "logD+L="+label -> log(distance+1),
-                                 "logD+DPv3="+pathStrv3 -> log(distance+1),
-                                 "logD+DPv3="+pathStrv3+"L="+label -> log(distance+1)))
+                                 "logD+"+pathStrv3 -> log(distance+1),
+                                 "logD+"+pathStrv3+"L="+label -> log(distance+1)))
     }
 
     def ffConceptBigram(node1: Node, node2: Node, label: String) : FeatureVector = {
@@ -157,12 +157,17 @@ class Features(featureNames: List[String]) {
         val feats = FeatureVector()
         val pp = "PPv1"
         val direction = if (graph.spans(node1.spans(0)).start < graph.spans(node2.spans(0)).start) { "+1" } else { "-1" }
+        val dpStr = depPathStrv3(node1, node2)
         for ((unigram, count) <- unigrams) {
             val ppStr = "C1PS="+posSet1+"C2PS="+posSet2+"+dir="+direction+"+"+pp+"U="+unigram
             feats.fmap(ppStr) = count
             feats.fmap(ppStr+"+L="+label) = count
             feats.fmap(ppStr+"_"+count.toString) = 1.0
             feats.fmap(ppStr+"_"+count.toString+"+L="+label) = 1.0
+            feats.fmap(dpStr+ppStr) = count
+            feats.fmap(dpStr+ppStr+"+L="+label) = count
+            feats.fmap(dpStr+ppStr+"_"+count.toString) = 1.0
+            feats.fmap(dpStr+ppStr+"_"+count.toString+"+L="+label) = 1.0
         }
         for ((bigram1, bigram2, count) <- bigrams) {
             val ppStr = "C1PS="+posSet1+"C2PS="+posSet2+"+dir="+direction+"+"+pp+"B="+bigram1+"_"+bigram2
@@ -170,6 +175,10 @@ class Features(featureNames: List[String]) {
             feats.fmap(ppStr+"+L="+label) = count
             feats.fmap(ppStr+"_"+count.toString) = 1.0
             feats.fmap(ppStr+"_"+count.toString+"+L="+label) = 1.0
+            feats.fmap(dpStr+ppStr) = count
+            feats.fmap(dpStr+ppStr+"+L="+label) = count
+            feats.fmap(dpStr+ppStr+"_"+count.toString) = 1.0
+            feats.fmap(dpStr+ppStr+"_"+count.toString+"+L="+label) = 1.0
         }
         return feats
     }
@@ -258,11 +267,11 @@ class Features(featureNames: List[String]) {
                                              } yield { (w1, w2, dependencyPath(w1, w2)) }).minBy(x => x._3._1.size + x._3._2.size)
         val pos = fullPos
         pos.annotation = fullPos.annotation.map(x => x.replaceAll("VB.*","VB").replaceAll("NN.*","NN"))
-        if (path._1.size + path._2.size <= maxpath) {
+        "DPv3="+(if (path._1.size + path._2.size <= maxpath) {
             dependencyPathString(path, pos).mkString("_")
         } else {
             "NONE"
-        }
+        })
     }
 
     // TODO: fDependencyAllPaths
