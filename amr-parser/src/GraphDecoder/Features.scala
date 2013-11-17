@@ -122,15 +122,21 @@ class Features(featureNames: List[String]) {
     def ffDistance(node1: Node, node2: Node, label: String) : FeatureVector = {
         val distance = min(Math.abs(graph.spans(node1.spans(0)).start - graph.spans(node2.spans(0)).end),
                            Math.abs(graph.spans(node1.spans(0)).end - graph.spans(node2.spans(0)).start))
+        val pathStrv3 = depPathStrv3(node1, node2)
         return FeatureVector(Map("d="+min(distance,20).toString -> 1.0,
-                                 "d="+min(distance,20).toString+"+L="+label -> 1.0))
+                                 "d="+min(distance,20).toString+"+L="+label -> 1.0,
+                                 "d="+min(distance,20).toString+"+DPv3="+pathStrv3 -> 1.0,
+                                 "d="+min(distance,20).toString+"+DPv3="+pathStrv3+"+L="+label -> 1.0))
     }
 
     def fflogDistance(node1: Node, node2: Node, label: String) : FeatureVector = {
         val distance = min(Math.abs(graph.spans(node1.spans(0)).start - graph.spans(node2.spans(0)).end),
                            Math.abs(graph.spans(node1.spans(0)).end - graph.spans(node2.spans(0)).start))
+        val pathStrv3 = depPathStrv3(node1, node2)
         return FeatureVector(Map("logD" -> log(distance+1),
-                                 "logD+L="+label -> log(distance+1)))
+                                 "logD+L="+label -> log(distance+1),
+                                 "logD+DPv3="+pathStrv3 -> log(distance+1),
+                                 "logD+DPv3="+pathStrv3+"L="+label -> log(distance+1)))
     }
 
     def ffConceptBigram(node1: Node, node2: Node, label: String) : FeatureVector = {
@@ -142,6 +148,52 @@ class Features(featureNames: List[String]) {
     def ffConceptUnigramWithLabel(node1: Node, node2: Node, label: String) : FeatureVector = {
         return FeatureVector(Map(("C1="+node1.concept+"+L="+label) -> 1.0,
                                  ("C2="+node2.concept+"+L="+label) -> 1.0))
+    }
+
+    def ffPosPathUnigramBigramv1(node1: Node, node2: Node, label: String) : FeatureVector = {
+        val posSet1 = posSpanSet(node1).mkString("_")
+        val posSet2 = posSpanSet(node2).mkString("_")
+        val (unigrams, bigrams) = posPathUnigramAndBigramCounts(node1, node2)
+        val feats = FeatureVector()
+        val pp = "PPv1"
+        val direction = if (graph.spans(node1.spans(0)).start < graph.spans(node2.spans(0)).start) { "+1" } else { "-1" }
+        for ((unigram, count) <- unigrams) {
+            val ppStr = "C1PS="+posSet1+"C2PS="+posSet2+"+dir="+direction+"+"+pp+"U="+unigram
+            feats.fmap(ppStr) = count
+            feats.fmap(ppStr+"+L="+label) = count
+            feats.fmap(ppStr+"_"+count.toString) = 1.0
+            feats.fmap(ppStr+"_"+count.toString+"+L="+label) = 1.0
+        }
+        for ((bigram1, bigram2, count) <- bigrams) {
+            val ppStr = "C1PS="+posSet1+"C2PS="+posSet2+"+dir="+direction+"+"+pp+"B="+bigram1+"_"+bigram2
+            feats.fmap(ppStr) = count
+            feats.fmap(ppStr+"+L="+label) = count
+            feats.fmap(ppStr+"_"+count.toString) = 1.0
+            feats.fmap(ppStr+"_"+count.toString+"+L="+label) = 1.0
+        }
+        return feats
+    }
+
+    def posPathUnigramAndBigramCounts(node1: Node, node2: Node) : (List[(String, Int)], List[(String, String, Int)]) = {
+        val span1 = fullPos.annotationSpan((graph.spans(node1.spans(0)).start, graph.spans(node1.spans(0)).end))
+        val span2 = fullPos.annotationSpan((graph.spans(node2.spans(0)).start, graph.spans(node2.spans(0)).end))
+        val (start, end) = if (span2._1 - span1._2 >= 0) { (span1._2, span2._1) } else { (span2._2, span1._1) }
+        val posPath = fullPos.annotation.slice(start, end).toList   // posPath must be a list otherwise bigramCounts won't work (equality test fails when using arrays)
+        val posPathBigrams = posPath.sliding(2).toList
+        val unigramCounts = posPath.distinct.map(x => (x, posPath.count(_ == x)))
+        val bigramCounts = posPathBigrams.distinct.map(x => (x(0), x(1), posPathBigrams.count(_ == x)))
+        return (unigramCounts, bigramCounts)
+    }
+
+    def posSpan(node: Node) : List[String] = {
+        // The pos labels for the node's span
+        val span = fullPos.annotationSpan((graph.spans(node.spans(0)).start, graph.spans(node.spans(0)).end))
+        return fullPos.annotation.slice(span._1, span._2).toList
+    }
+
+    def posSpanSet(node: Node) : List[String] = {
+        // The set of pos labels for the node's span (as a sorted list)
+        return posSpan(node).sorted.distinct
     }
 
     var rootDependencyPaths : Array[List[Int]] = _
@@ -198,6 +250,19 @@ class Features(featureNames: List[String]) {
                               ))
         } else { FeatureVector(Map(dp+"NONE" -> 1.0)) }
         return feats
+    }
+
+    def depPathStrv3(node1: Node, node2: Node, maxpath: Int = 4) : String = {   // same code as above, just only computes pathStr
+        val (word1Index, word2Index, path) = (for { w1 <- dependencySpan(node1)
+                                                    w2 <- dependencySpan(node2)
+                                             } yield { (w1, w2, dependencyPath(w1, w2)) }).minBy(x => x._3._1.size + x._3._2.size)
+        val pos = fullPos
+        pos.annotation = fullPos.annotation.map(x => x.replaceAll("VB.*","VB").replaceAll("NN.*","NN"))
+        if (path._1.size + path._2.size <= maxpath) {
+            dependencyPathString(path, pos).mkString("_")
+        } else {
+            "NONE"
+        }
     }
 
     // TODO: fDependencyAllPaths
