@@ -40,6 +40,7 @@ class DualDecomposition(featureNames: List[String], labelSet: Array[(String, Int
     }
 
     def decode(input: Input) : DecoderResult = {
+        features.input = input
         alg1.features.weights = features.weights    // Weights shared across the decoders
         alg2.features.weights = features.weights
 
@@ -50,16 +51,16 @@ class DualDecomposition(featureNames: List[String], labelSet: Array[(String, Int
             logger(1, "multipliers: \n"+multipliers.toString)
             features.weights += multipliers
             logger(1, "weights1: \n"+features.weights)
-            result = alg1.decode(input)
-            logger(1, "features1: \n"+result.features.slice(x => IdFeature(x)))
+            val result1 = alg1.decode(input)
+            logger(1, "features1: \n"+result1.features.slice(x => IdFeature(x)))
             features.weights -= 2.0 * multipliers
             logger(1, "weights2: \n"+features.weights)
-            val result2 = alg2.decode(input)
-            logger(1, "features2: \n"+result2.features.slice(x => IdFeature(x)))
+            result = alg2.decode(input)
+            logger(1, "features2: \n"+result.features.slice(x => IdFeature(x)))
             features.weights += multipliers
 
-            delta = result.features.slice(x => IdFeature(x))
-            delta -= result2.features.slice(x => IdFeature(x))
+            delta = result1.features.slice(x => IdFeature(x))
+            delta -= result.features.slice(x => IdFeature(x))
             logger(1, "delta: \n"+delta.toString)
             multipliers -= stepsize * delta
         } while (delta.nonzero)
