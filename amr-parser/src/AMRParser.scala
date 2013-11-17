@@ -115,7 +115,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
             case "Alg1a" => new Alg1(features, labelset, connectedConstraint = "and")
             case "Alg2" => new Alg2(features, labelset, connected)
             case "DD" => new DualDecomposition(features, labelset, 1)
-            case "LR" => new LagrangianRelaxation(features, labelset, 1, 50)
+            case "LR" => new LagrangianRelaxation(features, labelset, 1, 30)
             case x => { System.err.println("Error: unknown decoder " + x); sys.exit(1) }
         }
         if (options('decoder).asInstanceOf[String] == "Alg1" && outputFormat.contains("AMR")) {
