@@ -140,7 +140,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
 
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 override def run() {
-                    System.err.print("Caught Ctr-C. Writing out weights... ")
+                    System.err.print("Caught Ctrl-C. Writing out weights... ")
                     print(decoder.features.weights.unsorted)
                     System.err.println("done")
                 }
