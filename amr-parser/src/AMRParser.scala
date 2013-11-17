@@ -138,6 +138,14 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
 
             ////////////////// Training ////////////////
 
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                override def run() {
+                    System.err.print("Caught Ctr-C. Writing out weights... ")
+                    print(decoder.features.weights.unsorted)
+                    System.err.println("done")
+                }
+            })
+
             var passes = 20
             if (options.contains('passes)) { passes = options('passes).asInstanceOf[Int] }
 
