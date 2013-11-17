@@ -50,6 +50,7 @@ class Features(featureNames: List[String]) {
         "labelWithId" -> ffLabelWithId,
         "bias" -> ffBias,
         "biasCSuf" -> ffBiasCSuf,
+        "typeBias" -> ffTypeBias,
         "self" -> ffSelf,
         "fragHead" -> ffFragHead,
         "edgeCount" -> ffEdgeCount,
@@ -92,6 +93,15 @@ class Features(featureNames: List[String]) {
                                  ("C1Suf3="+node1.concept.slice(c1size-3, c1size)+"L="+label) -> 1.0,
                                  ("C2Suf3="+node2.concept.slice(c2size-3, c2size)) -> 1.0,
                                  ("C2Suf3="+node2.concept.slice(c2size-3, c2size)+"L="+label) -> 1.0))
+    }
+
+    def ffTypeBias(node1: Node, node2: Node, label: String) : FeatureVector = {
+        def conceptType(x: String) : String = if (x.matches(".*-[0-9][0-9]")) { "E" } else { "O" }
+        def labelType(x: String) : String = if (x.startsWith(":ARG")) { "A" } else { "O" }
+        return FeatureVector(Map("C1T="+conceptType(node1.concept)+"LT="+labelType(label) -> 1.0,
+                                 "C2T="+conceptType(node2.concept)+"LT="+labelType(label) -> 1.0,
+                                 "C1T="+conceptType(node1.concept)+"L="+label -> 1.0,
+                                 "C2T="+conceptType(node2.concept)+"L="+label -> 1.0))
     }
 
     def ffSelf(node1: Node, node2: Node, label: String) : FeatureVector = {
