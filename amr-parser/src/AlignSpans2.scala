@@ -121,7 +121,7 @@ object AlignSpans2 {
         val minusPolarity = new SpanAligner(sentence, graph) {
             concept = "-"
             tabSentence = "\t"+sentence.mkString("\t").toLowerCase+"\t"
-            var word = List("no", "not", "non")
+            var word = List("no", "not", "non")     // TODO: Add anti, anti- Anti
             nodes = node => { if (sentence.exists(x=> word.contains(x))) {
                     List(("", node))
                 } else {
@@ -166,7 +166,7 @@ object AlignSpans2 {
         val argOf = new UnalignedConcept(sentence, graph, wordToSpan) { concept="person|thing"; label=":.*-of" } // ARG?-of, instrument-of 
         val personOf = new UnalignedConcept(sentence, graph, wordToSpan) { concept="person"; label=":.*"; num=1 } // Koreans = (person :poss ..)
         val governmentOrg = new UnalignedChild(sentence, graph, wordToSpan) { concept="government-organization"; label=":ARG.*-of" }
-        val polarityChild = new UnalignedChild(sentence, graph, wordToSpan) { concept=".*"; label=":polarity"; words="un.*|in.*|il.*" }  // il.* for illegal
+        val polarityChild = new UnalignedChild(sentence, graph, wordToSpan) { concept=".*"; label=":polarity"; words="un.*|in.*|il.*" }  // il.* for illegal // TODO:add anti(-)
         val est = new UnalignedChild(sentence, graph, wordToSpan) { concept=".*"; label=":degree"; words=".*est" }
         val er = new UnalignedChild(sentence, graph, wordToSpan) { concept=".*"; label=":degree"; words=".*er" }
         val US = new ConceptAndChildren(sentence, graph) {
