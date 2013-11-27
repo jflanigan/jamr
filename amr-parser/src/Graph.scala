@@ -174,6 +174,18 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         }
     }
 
+case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[String, Node], getNodeByName: Map[String, Node]) {
+
+    def addSpan(start: Int, end: Int, amrStr: String) { // This function is used by the ConceptInvoker
+        val amr : Node = parser.parseAll(parser.node, amrStr) match {
+            case parser.Success(node, _) => node
+            case _ => { assert(false, "Could not parse AMR: "+amrStr); Graph.empty.root }
+        }
+        val nodeIds : List[String] = // TODO: need to setup the rest of the nodes
+        val span = Span(start, end, nodeIds, sentence.slice(start, end).mkString(" "), amr, coRef = false)
+        addSpan(span)
+    }
+
     def addSpan(start: Int, end: Int, nodeIds: List[String], coRef: Boolean, sentence: Array[String]) {
         val span = Span(start, end, nodeIds, sentence.slice(start, end).mkString(" "), SpanLoader.getAmr(nodeIds, this), coRef)
         addSpan(span)
