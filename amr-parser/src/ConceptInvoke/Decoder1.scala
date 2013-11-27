@@ -16,12 +16,26 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.PriorityQueue
 import Double.{NegativeInfinity => minusInfty}
 
-class Decoder1(featureNames: List[String], labelSet: Array[(String, Int)], connected: Boolean = true)
+class Decoder1(featureNames: List[String],
+               phraseConceptPairs: Array[(List[String], String, PhraseFeatures)])
     extends Decoder(featureNames) {
     // Base class has defined:
     // val features: Features
 
+    val conceptTable: Map[String, List[(List[String], String, PhraseFeatures)]] = Map()   // maps the first word in the phrase to a list of phraseConceptPairs
+    for ((phrase, graphFragment, feats) <- phraseConceptPairs) {
+        val word = phrase(0)
+        conceptTable(word) = (phrase, graphFragment, feats) :: conceptTable.getOrElse(word, List())
+    }
+
     def decode(input: Input) : DecoderResult = {
+        val sentence = input.sentence
+        for (i <- Range(0, sentence.size)) {
+            var conceptList = conceptTable(sentence(i)).filter(x => x._1 == sentence.slice(i, i+x._1.size).toList)
+        }
+    }
+
+
         // Assumes that Node.relations has been setup correctly for the graph fragments
         val graph = input.graph.duplicate
         features.input = input

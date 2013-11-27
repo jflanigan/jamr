@@ -9,8 +9,8 @@ import scala.collection.mutable.ArrayBuffer
 case class PhraseFeatures(count: Double, conceptGivenPhrase: Double) {
 
     def this(string: String) = this(
-        string.split(" ")(0),
-        string.split(" ")(1))
+        string.split(" ").find(x => x.matches("Count=.*")).getOrElse("=0.0").split("=")(1).toDouble,
+        string.split(" ").find(x => x.matches("ConceptGivenPhrase=.*")).getOrElse("=0.0").split("=")(1).toDouble)
 
 }
 

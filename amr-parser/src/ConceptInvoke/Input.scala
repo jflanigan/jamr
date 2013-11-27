@@ -22,12 +22,12 @@ import scala.collection.mutable.ArrayBuffer
 case class Input(sentence: Array[String], notTokenized: Annotation[Nothing], dependencies: Annotation[Array[Dependency]], pos: Annotation[Array[String]], ner: Annotation[Array[String]]) {
 
     def this(amrdata: AMRData, conllx: String, oracle: Boolean, clearUnalignedNodes: Boolean = true) = this(
-        if (oracle) {
+        /*if (oracle) {
             amrdata.toOracleGraph(clearUnalignedNodes)
         } else {
             amrdata.toInputGraph
         },
-        amrdata.sentence,
+        amrdata.sentence,*/
         Annotation(amrdata.sentence,
                    conllx.split("\n").map(x => x.split("\t")(1)),           // Field 2 is token
                    conllx.split("\n").map(x => Dependency.fromConll(x))),
