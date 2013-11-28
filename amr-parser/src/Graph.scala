@@ -177,13 +177,26 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
 case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[String, Node], getNodeByName: Map[String, Node]) {
 
     def addSpan(start: Int, end: Int, amrStr: String) { // This function is used by the ConceptInvoker
-        val amr : Node = parser.parseAll(parser.node, amrStr) match {
-            case parser.Success(node, _) => node
-            case _ => { assert(false, "Could not parse AMR: "+amrStr); Graph.empty.root }
+        // This code sets up relations for each node but not topologicalOrdering or variableRelations
+        val graphFrag = Graph.parse(amrStr)
+        var currentId = getNodeById.size
+        var nodeIds : List[String] = List()
+        for ((_, node) <- graphFrag.getNodeById) {  // TODO: make this an in-order traversal (so variable names are nice)
+            node.id = currentId
+            nodeIds = nodeIds ::: List(currentId)
+            getNodeById(currentId) = node
+            if (!node.concept(0) != '"') {   // concepts always have size > 0 (enforced by GraphParser)
+                val varName = getNextVariableName(node.concept(0).lowercase)
+                getNodeByName(varName) = node
+                node.name = Some(varName)
+            }
+            node.alignment = None // alignment is only used in AlignSpans and AlignSpans2 (TODO: remove?)
+            node.spans = ArrayBuffer(spans.size)
+            node.topologicalOrdering = List()
+            node.variableRelations = List()
+            currentId += 1
         }
-        val nodeIds : List[String] = // TODO: need to setup the rest of the nodes
-        val span = Span(start, end, nodeIds, sentence.slice(start, end).mkString(" "), amr, coRef = false)
-        addSpan(span)
+        spans += Span(start, end, nodeIds, sentence.slice(start, end).mkString(" "), SpanLoader.getAmr(nodeIds, this), coRef = false)
     }
 
     def addSpan(start: Int, end: Int, nodeIds: List[String], coRef: Boolean, sentence: Array[String]) {
@@ -206,7 +219,7 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         }
         val span = Span(start, end, nodeIds, sentence.slice(start, end).mkString(" "), SpanLoader.getAmr(nodeIds, this), coRef)
         spans(spanIndex) = span
-        for (id <- nodeIds) {
+       for (id <- nodeIds) {
             getNodeById(id).addSpan(spanIndex, coRef)
             //println(getNodeById(id).spans)
         }
@@ -330,14 +343,14 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         node.variableRelations = List[(String, Var)]()
         for ((relation, child) <- relations) {
             // figure out if child is a node, or a variable
-            if (child.name == None && getNodeByName.contains(child.concept)) { // variables have concepts, but no names
+            if (child.name == None && getNodeByName.contains(child.concept) && child.topologicalOrdering.empty) { // variables have concepts, but no names
                 // child is a variable
                 val varName = child.concept
                 val actualNode = getNodeByName(varName)
                 node.relations = node.relations ::: List((relation, actualNode))
                 node.variableRelations = node.variableRelations ::: List((relation, Var(actualNode, varName)))
             } else {
-                // child is a legit node
+                // child is a legit node (not a variable)
                 node.relations = node.relations ::: List((relation, child))
                 node.topologicalOrdering = node.topologicalOrdering ::: List((relation, child))
                 unifyVariables(child)
@@ -442,10 +455,13 @@ object Graph {
         def internalNode : Parser[Node] = "("~>variable~"/"~concept~relations<~")" ^^ {
             case variable~"/"~concept~relations => Node("", Some(variable), concept, List[(String, Node)](), relations, List[(String, Var)](), None, ArrayBuffer[Int]())
         }
+        def unnamedInternalNode : Parser[Node] = "("~>concept~relations<~")" ^^ {
+            case concept~relations => Node("", None, concept, List[(String, Node)](), relations, List[(String, Var)](), None, ArrayBuffer[Int]())
+        }
         def terminalNode : Parser[Node] = concept ^^ { 
             case concept => Node("", None, concept, List[(String, Node)](), List[(String, Node)](), List[(String, Var)](), None, ArrayBuffer[Int]())
         }
-        def node : Parser[Node] = terminalNode | internalNode
+        def node : Parser[Node] = terminalNode | internalNode | unnamedInternalNode
     }
 
     private val parser = new GraphParser()
@@ -467,6 +483,6 @@ object Graph {
         return graph
     }
 
-    def empty() : Graph = { parse("(n / none)") }
+    def empty() : Graph = { parse("(n / none)"); getNodeById.clear; getNodeByName.clear }
 }
 

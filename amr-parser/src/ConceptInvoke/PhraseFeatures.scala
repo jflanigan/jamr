@@ -6,11 +6,14 @@ import scala.collection.mutable.Map
 import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 
-case class PhraseFeatures(count: Double, conceptGivenPhrase: Double) {
+case class PhraseConceptFeatures(count: Double,
+                                 conceptGivenPhrase: Double,
+                                 fromNER: Boolean) {
 
     def this(string: String) = this(
         string.split(" ").find(x => x.matches("Count=.*")).getOrElse("=0.0").split("=")(1).toDouble,
-        string.split(" ").find(x => x.matches("ConceptGivenPhrase=.*")).getOrElse("=0.0").split("=")(1).toDouble)
+        string.split(" ").find(x => x.matches("ConceptGivenPhrase=.*")).getOrElse("=0.0").split("=")(1).toDouble,
+        false)
 
 }
 
