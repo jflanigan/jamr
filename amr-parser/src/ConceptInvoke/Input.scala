@@ -21,7 +21,7 @@ import scala.collection.mutable.ArrayBuffer
 
 case class Entity(start: Int, end: Int, label: String)
 
-case class Input(sentence: Array[String], notTokenized: Annotation[Nothing], dependencies: Annotation[Array[Dependency]], pos: Annotation[Array[String]], ner: Annotation[Array[Entity]]) {
+case class Input(sentence: Array[String], notTokenized: Annotation[Array[String]], dependencies: Annotation[Array[Dependency]], pos: Annotation[Array[String]], ner: Annotation[Array[Entity]]) {
 
     def this(sent: Array[String], notTok: Array[String], conllDeps: String, conllNER: String) = this(
         /*if (oracle) {
@@ -30,17 +30,21 @@ case class Input(sentence: Array[String], notTokenized: Annotation[Nothing], dep
             amrdata.toInputGraph
         },*/
         sent,
-        Annotation(notTok, sent, null),
-        Annotation(amrdata.sentence,
+        Annotation(notTok, sent, notTok),
+        Annotation(sent,
                    conllDeps.split("\n").map(x => x.split("\t")(1)),           // Field 2 is token
                    conllDeps.split("\n").map(x => Dependency.fromConll(x))),
-        Annotation(amrdata.sentence,
+        Annotation(sent,
                    conllDeps.split("\n").map(x => x.split("\t")(1)),           // Field 2 is token
-                   conllDeps.split("\n").map(x => x.split("\t")(4)))           // Field 5 is POS
+                   conllDeps.split("\n").map(x => x.split("\t")(4))),           // Field 5 is POS
         Annotation(sent,
                    conllNER.split("\n").map(x => x.split("\t")(0)),            // Field 0 is token
-                   entitiesFromConll(conllNER)))
-    
+                   Input.entitiesFromConll(conllNER)))
+
+}
+
+object Input {
+
     def entitiesFromConll(conllStr: String, column: Int = 1) : Array[Entity] = {
         val conll = conllStr.split("\n").map(x => x.split("\t"))    // WARNING: conllStr should not end with a '\n' (otherwise our test for conll(i)(1) != "O" might be index out of bounds because the line is empty)
         var i = 0
@@ -60,6 +64,7 @@ case class Input(sentence: Array[String], notTokenized: Annotation[Nothing], dep
                 i += 1
             }
         }
+        return entities.toArray
     }
 
 }

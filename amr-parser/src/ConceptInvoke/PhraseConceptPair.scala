@@ -40,14 +40,18 @@ object PhraseConceptPair {
         }
         val (start, end) = ner.getSpan((entity.start, entity.end))    // start and end in ner.snt, which should be the unTokenized text
         val graphFrag = "(" + entityType + " :name (name " + ner.snt.slice(start, end).map(x => ":op \"" + x + "\"").mkString(" ") + "))"
-        val (tokStart, tokEnd) = notTokenixed.annotationSpan((start, end))
+        val (tokStart, tokEnd) = notTokenized.annotationSpan((start, end))
         return PhraseConceptPair(sentence.slice(tokStart, tokEnd).toList, graphFrag, PhraseConceptFeatures(0,0,true))
     }
 
+    var tokens : Array[String] = Array()
+
     def dateEntity(input: Input, start: Int) : List[PhraseConceptPair] = {
         var list : ArrayBuffer[PhraseConceptPair] = ArrayBuffer()
-        val tokens = input.sentence.drop(start)
+        tokens = input.sentence.drop(start)
         val string = tokens.mkString("\t")
+        var monthRegex = "January|February|March|April|May|June|July|August|September|October|November|December|(?:Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sept?|Oct|Nov|Dec)[.]?"
+        monthRegex = monthRegex + "|" + monthRegex.toLowerCase
 
         // 021114 => (date-entity :day 14 :month 11 :year 2002)
         val SixDigitDate = """(([0-9][0-9])([0-9][0-9])([0-9][0-9]))(?:\t.*)?""".r // (?: ) non-capturing group
@@ -55,21 +59,18 @@ object PhraseConceptPair {
             list += {
                 var SixDigitDate(matching, year, month, day) = string
                 if (year.toInt < 40) { year = "20"+year } else { year = "19"+year }
-                if (day == "00" && month == "00") { year(matching, year)    // 170000 => (date-entity :year 2017)
-                } else if (day == "00") { monthYear(matching, month, year)  // 021100 => (date-entity :month 11 :year 2002)
-                } else { dayMonthYear(matching, day, month, year) }         // 021114 => (date-entity :day 14 :month 11 :year 2002)
+                if (day == "00" && month == "00") { mkYear(matching, year)    // 170000 => (date-entity :year 2017)
+                } else if (day == "00") { mkMonthYear(matching, month, year)  // 021100 => (date-entity :month 11 :year 2002)
+                } else { mkDayMonthYear(matching, day, month, year) }         // 021114 => (date-entity :day 14 :month 11 :year 2002)
             }
         }
-
-        var monthRegex = "January|February|March|April|May|June|July|August|September|October|November|December|(?:Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sept?|Oct|Nov|Dec)[.]?"
-        var monthRegex = monthRegex + "|" + monthRegex.toLowerCase
 
         // 17 July 2003 => (date-entity :day 17 :month 7 :year 2003)
         val DayMonthYear = ("""(([0-9]?[0-9])\t("""+monthRegex+""")\t([0-9][0-9][0-9][0-9]))(?:\t.*)?""").r // (?: ) non-capturing group
         if (DayMonthYear.pattern.matcher(string).matches) {
             list += {
                 var DayMonthYear(matching, day, month, year) = string
-                dayMonthYear(matching, day, month, year)
+                mkDayMonthYear(matching, day, month, year)
             }
         }
 
@@ -78,7 +79,7 @@ object PhraseConceptPair {
         if (MonthYear.pattern.matcher(string).matches) {
             list += {
                 var MonthYear(matching, month, year) = string
-                monthYear(matching, month, year)
+                mkMonthYear(matching, month, year)
             }
         }
 
@@ -87,7 +88,7 @@ object PhraseConceptPair {
         if (MonthDayYear.pattern.matcher(string).matches) {
             list += {
                 var MonthDayYear(matching, month, day, year) = string
-                dayMonthYear(matching, day, month, year)
+                mkDayMonthYear(matching, day, month, year)
             }
         }
 
@@ -97,7 +98,7 @@ object PhraseConceptPair {
         if (EightDigitDate.pattern.matcher(string).matches) {
             list += {
                 var EightDigitDate(matching, year, month, day) = string
-                dayMonthYear(matching, day, month, year)
+                mkDayMonthYear(matching, day, month, year)
             }
         }
 
@@ -106,7 +107,7 @@ object PhraseConceptPair {
         if (Year.pattern.matcher(string).matches) {
             list += {
                 var Year(matching, year) = string
-                year(matching, year)
+                mkYear(matching, year)
             }
         }
 
@@ -115,55 +116,58 @@ object PhraseConceptPair {
         if (Month.pattern.matcher(string).matches) {
             list += {
                 var Month(matching, month) = string
-                month(matching, month)
+                mkMonth(matching, month)
             }
         }
 
-        def dayMonthYear(matching: String, day: String, month: String, year: String) : PhraseConceptPair = {
-            PhraseConceptPair(tokens.take(matching.count(_ == '\t')),
-                              "(date-entity :day "+day.toInt.toString+" :month "+monthStr(month)+" :year "+year+")",
-                              PhraseConceptFeatures(0, 0, false))
-        }
+        return list.toList
+    }
 
-        def monthYear(matching: String, month: String, year: String) : PhraseConceptPair = {
-            PhraseConceptPair(tokens.take(matching.count(_ == '\t')),
-                              "(date-entity :month "+monthStr(month)+" :year "+year+")",
-                              PhraseConceptFeatures(0, 0, false))
-        }
+    def mkDayMonthYear(matching: String, day: String, month: String, year: String) : PhraseConceptPair = {
+        PhraseConceptPair(tokens.take(matching.count(_ == '\t')).toList,
+                          "(date-entity :day "+day.toInt.toString+" :month "+monthStr(month)+" :year "+year+")",
+                          PhraseConceptFeatures(0, 0, false))
+    }
 
-        def month(matching: String, month: String) : PhraseConceptPair = {
-            PhraseConceptPair(tokens.take(matching.count(_ == '\t')),
-                              "(date-entity :month "+monthStr(month)+")",
-                              PhraseConceptFeatures(0, 0, false))
-        }
+    def mkMonthYear(matching: String, month: String, year: String) : PhraseConceptPair = {
+        PhraseConceptPair(tokens.take(matching.count(_ == '\t')).toList,
+                          "(date-entity :month "+monthStr(month)+" :year "+year+")",
+                          PhraseConceptFeatures(0, 0, false))
+    }
 
-        def year(matching: String, year: String) : PhraseConceptPair = {
-            PhraseConceptPair(tokens.take(matching.count(_ == '\t')),
-                              "(date-entity :year "+year+")",
-                              PhraseConceptFeatures(0, 0, false))
-        }
+    def mkMonth(matching: String, month: String) : PhraseConceptPair = {
+        PhraseConceptPair(tokens.take(matching.count(_ == '\t')).toList,
+                          "(date-entity :month "+monthStr(month)+")",
+                          PhraseConceptFeatures(0, 0, false))
+    }
 
-        def monthStr(month: String) : String = {
-            if (month.matches("[0-9]*")) {
-                month.toInt.toString
-            } else {
-                month.take(3).toLowerCase match {
-                    case "jan" => "1"
-                    case "feb" => "2"
-                    case "mar" => "3"
-                    case "apr" => "4"
-                    case "may" => "5"
-                    case "jun" => "6"
-                    case "jul" => "7"
-                    case "aug" => "8"
-                    case "sep" => "9"
-                    case "oct" => "10"
-                    case "nov" => "11"
-                    case "dec" => "12"
-                    case _ => month
-                }
+    def mkYear(matching: String, year: String) : PhraseConceptPair = {
+        PhraseConceptPair(tokens.take(matching.count(_ == '\t')).toList,
+                          "(date-entity :year "+year+")",
+                          PhraseConceptFeatures(0, 0, false))
+    }
+
+    def monthStr(month: String) : String = {
+        if (month.matches("[0-9]*")) {
+            month.toInt.toString
+        } else {
+            month.take(3).toLowerCase match {
+                case "jan" => "1"
+                case "feb" => "2"
+                case "mar" => "3"
+                case "apr" => "4"
+                case "may" => "5"
+                case "jun" => "6"
+                case "jul" => "7"
+                case "aug" => "8"
+                case "sep" => "9"
+                case "oct" => "10"
+                case "nov" => "11"
+                case "dec" => "12"
+                case _ => month
             }
         }
     }
+
 }
 
