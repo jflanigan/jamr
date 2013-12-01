@@ -47,11 +47,11 @@ case class Input(sentence: Array[String], notTokenized: Annotation[Nothing], dep
         val entities : ArrayBuffer[Entity] = ArrayBuffer()
         while (i < conll.size) {
             if (conll(i)(column) != "O") {
-                assert(conll(i)(column).beginsWith(".-"), "NER data is not in conll BIO tagging format")
+                assert(conll(i)(column).matches("(B|I|L|U)-.*"), "NER data is not in conll BIO tagging format")
                  val label = conll(i)(column).drop(2)
                  val start = i
                  i += 1
-                 while (conll(i)(column) == "I-"+label && i < conll.size) {
+                 while (conll(i)(column) == "I-"+label || conll(i)(column) == "L-"+label && i < conll.size) {
                     i +=1
                  }
                  val end = i
