@@ -19,7 +19,7 @@ import scala.collection.mutable.Map
 import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 
-case class Annotation[T](private val snt: Array[String], val tok: Array[String], var annotation: T) {
+case class Annotation[T](val snt: Array[String], val tok: Array[String], var annotation: T) {
     // This class can be used for annotations on the tokens of a sentence.
     // The annotations can use a different tokenization scheme, and getSpan can be used to convert
     // a span 'tok' to a span in 'snt'.

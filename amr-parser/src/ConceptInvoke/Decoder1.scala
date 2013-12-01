@@ -28,18 +28,18 @@ class Decoder1(featureNames: List[String],
     // val features: Features
 
     val conceptTable: Map[String, List[PhraseConceptPair]] = Map()  // maps the first word in the phrase to a list of phraseConceptPairs
-    for ((phrase, graphFragment, feats) <- phraseConceptPairs) {
-        val word = phrase(0)
-        conceptTable(word) = (phrase, graphFragment, feats) :: conceptTable.getOrElse(word, List())
+    for (pair <- phraseConceptPairs) {
+        val word = pair.words(0)
+        conceptTable(word) = pair :: conceptTable.getOrElse(word, List())
     }
 
     def decode(input: Input) : DecoderResult = {
         val sentence = input.sentence
         val bestState : Array[Option[(Double, PhraseConceptPair, Int)]] = sentence.map(x => None)    // (score, concept, backpointer)
         for (i <- Range(0, sentence.size)) {
-            var conceptList = conceptTable(sentence(i)).filter(x => x._1 == sentence.slice(i, i+x._1.size).toList)
+            var conceptList = conceptTable(sentence(i)).filter(x => x.words == sentence.slice(i, i+x.words.size).toList)
             if (useNER) {
-                conceptList = input.ner.annotation.filter(_.start == i).map(x => PhraseConceptPair.Entity(x)) ::: conceptList
+                conceptList = input.ner.annotation.filter(_.start == i).map(x => PhraseConceptPair.entity(input, x)).toList ::: conceptList
             }
             // WARNING: the code below assumes that anything in the conceptList will not extend beyond the end of the sentence (and it shouldn't based on the code above)
             for (concept <- conceptList) {
@@ -58,8 +58,8 @@ class Decoder1(featureNames: List[String],
         var i = bestState.size - 1
         while (i >= 0) {
             if (bestState(i) != None) {
-                val (localScore, concept, backpointer) = bestState(i)
-                graph.addSpan(sentence, backpointer, i+1, concept._2)
+                val (localScore, concept, backpointer) = bestState(i).get
+                graph.addSpan(sentence, backpointer, i+1, concept.graphFrag)
                 feats += features.localFeatures(input, concept)
                 score += localScore
                 i = backpointer
