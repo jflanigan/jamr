@@ -14,16 +14,29 @@ import scala.collection.mutable.Map
 import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 
-case class PhraseConceptPair(words: List[String], graphFrag: String, features: PhraseConceptFeatures)
+case class PhraseConceptPair(words: List[String], graphFrag: String, features: PhraseConceptFeatures) {
+
+/* The format of the phrase-concept table is
+expert ||| (person :ARG1-of expert-41) ||| Count=4 ConceptGivenPhrase=0.3077
+*/
+
+    def this(string: String) = this(
+        string.split(" ||| ")(0).split(" ").toList,
+        string.split(" ||| ")(1),
+        new PhraseConceptFeatures(string.split(" ||| ")(2))
+    )
+
+}
 
 object PhraseConceptPair {
+
     def entity(input: Input, entity: Entity) : PhraseConceptPair = {
         val Input(sentence, notTokenized, _, _, ner) = input
         val entityType : String = entity.label match {
             case "PER" => "person"          // also president
             case "ORG" => "organization"    // also company, government-organization, criminal-organization
             case "LOC" => "country"         // also city, world-region, continent, county
-            case "OTHER" => "thing"         // also treaty, publication, newspaper, product, war
+            case "MISC" => "thing"         // also treaty, publication, newspaper, product, war
         }
         val (start, end) = ner.getSpan((entity.start, entity.end))    // start and end in ner.snt, which should be the unTokenized text
         val graphFrag = "(" + entityType + " :name (name " + ner.snt.slice(start, end).map(x => ":op \"" + x + "\"").mkString(" ") + "))"
@@ -89,7 +102,7 @@ object PhraseConceptPair {
         }
 
         // 1713 => (date-entity :year 1713)
-        val Year = ("(([0-9][0-9][0-9][0-9]))(?:\t.*)?""").r
+        val Year = """(([0-9][0-9][0-9][0-9]))(?:\t.*)?""".r
         if (Year.pattern.matcher(string).matches) {
             list += {
                 var Year(matching, year) = string
@@ -131,7 +144,7 @@ object PhraseConceptPair {
         }
 
         def monthStr(month: String) : String = {
-            if (month.matches("[0-9]*") {
+            if (month.matches("[0-9]*")) {
                 month.toInt.toString
             } else {
                 month.take(3).toLowerCase match {

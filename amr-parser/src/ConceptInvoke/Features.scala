@@ -32,7 +32,7 @@ class Features(featureNames: List[String]) {
     val ffTable = Map[String, FeatureFunction](
         "length" -> ffLength,
         "conceptGivenPhrase" -> ffConceptGivenPhrase,
-        "fromNERTagger" -> ffFromNERTagger,
+        "fromNERTagger" -> ffFromNERTagger
     )
 
     def ffLength(input: Input, concept: PhraseConceptPair) : FeatureVector = {

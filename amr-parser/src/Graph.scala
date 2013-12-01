@@ -174,19 +174,17 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         }
     }
 
-case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[String, Node], getNodeByName: Map[String, Node]) {
-
-    def addSpan(start: Int, end: Int, amrStr: String) { // This function is used by the ConceptInvoker
+    def addSpan(sentence: Array[String], start: Int, end: Int, amrStr: String) { // This function is used by the ConceptInvoker
         // This code sets up relations for each node but not topologicalOrdering or variableRelations
         val graphFrag = Graph.parse(amrStr)
         var currentId = getNodeById.size
         var nodeIds : List[String] = List()
         for ((_, node) <- graphFrag.getNodeById) {  // TODO: make this an in-order traversal (so variable names are nice)
-            node.id = currentId
-            nodeIds = nodeIds ::: List(currentId)
-            getNodeById(currentId) = node
-            if (!node.concept(0) != '"') {   // concepts always have size > 0 (enforced by GraphParser)
-                val varName = getNextVariableName(node.concept(0).lowercase)
+            node.id = currentId.toString
+            nodeIds = nodeIds ::: List(currentId.toString)
+            getNodeById(currentId.toString) = node
+            if (node.concept(0) != '"') {   // concepts always have size > 0 (enforced by GraphParser)
+                val varName = getNextVariableName(node.concept.toLowerCase()(0))
                 getNodeByName(varName) = node
                 node.name = Some(varName)
             }
@@ -343,7 +341,7 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         node.variableRelations = List[(String, Var)]()
         for ((relation, child) <- relations) {
             // figure out if child is a node, or a variable
-            if (child.name == None && getNodeByName.contains(child.concept) && child.topologicalOrdering.empty) { // variables have concepts, but no names
+            if (child.name == None && getNodeByName.contains(child.concept) && child.topologicalOrdering.size == 0) { // variables have concepts, but no names
                 // child is a variable
                 val varName = child.concept
                 val actualNode = getNodeByName(varName)
@@ -483,6 +481,6 @@ object Graph {
         return graph
     }
 
-    def empty() : Graph = { parse("(n / none)"); getNodeById.clear; getNodeByName.clear }
+    def empty() : Graph = { val g = parse("(n / none)"); g.getNodeById.clear; g.getNodeByName.clear; return g }
 }
 

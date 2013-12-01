@@ -13,6 +13,8 @@ import java.lang.Math.floor
 import java.lang.Math.min
 import java.lang.Math.max
 import scala.io.Source
+import scala.io.Source.stdin
+import scala.io.Source.fromFile
 import scala.util.matching.Regex
 import scala.collection.mutable.Map
 import scala.collection.mutable.Set
@@ -20,13 +22,16 @@ import scala.collection.mutable.ArrayBuffer
 import scala.util.parsing.combinator._
 
 import edu.cmu.lti.nlp.amr.GraphDecoder._
+import edu.cmu.lti.nlp.amr.ConceptInvoke.PhraseConceptPair
 
 /****************************** Driver Program *****************************/
 object AMRParser {
 
     val usage = """Usage:
-scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -l labelset --train < trainfile > output_weights
-scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input > output"""
+    // TODO: remove --tok so that the parser calls the tokenizer
+scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage1-decode --stage1-weights weights --concept-table concepts --ner namedEntities --tok tokenized.txt < inputFile
+scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-train -l labelset < trainfile > output_weights
+scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l labelset < input > output"""
 //TODO: tagset option
     type OptionMap = Map[Symbol, Any]
 
@@ -34,6 +39,16 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
         def isSwitch(s : String) = (s(0) == '-')
         list match {
             case Nil => map
+            case "--stage1-decode" :: tail =>
+                      parseOptions(map ++ Map('stage1Only -> true), tail)
+            case "--stage1-features" :: value :: tail =>
+                      parseOptions(map ++ Map('stage1Features -> value), tail)
+            case "--stage1-weights" :: value :: tail =>
+                      parseOptions(map ++ Map('stage1Weights -> value), tail)
+            case "--concept-table" :: value :: tail =>
+                      parseOptions(map ++ Map('conceptTable -> value), tail)
+            case "--tok" :: value :: tail =>
+                      parseOptions(map ++ Map('tokenized -> value), tail)
             case "--train" :: tail =>
                       parseOptions(map ++ Map('train -> true), tail)
             case "-w" :: value :: tail =>
@@ -54,6 +69,8 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
                       parseOptions(map ++ Map('outputFormat -> value), tail)
             case "--dependencies" :: value :: tail =>
                       parseOptions(map ++ Map('dependencies -> value), tail)
+            case "--ner" :: value :: tail =>
+                      parseOptions(map ++ Map('ner -> value), tail)
             case "-nc" :: tail =>
                       parseOptions(map ++ Map('notConnected -> true), tail)
             case "-v" :: value :: tail =>
@@ -107,7 +124,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
         }
 
         if (!options.contains('decoder)) {
-            System.err.println("Error: No decoder specified")
+            System.err.println("Error: No stage2 decoder specified")
             sys.exit(1)
         }
         val decoder: Decoder = options('decoder).asInstanceOf[String] match {
@@ -145,7 +162,6 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
                     System.err.println("done")
                 }
             })
-
             var passes = 20
             if (options.contains('passes)) { passes = options('passes).asInstanceOf[Int] }
 
@@ -212,6 +228,50 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser -w weights -l labelset < input 
                 false)
 
             print(weights.unsorted)
+
+        } else if (options contains 'stage1Only) {
+
+            ////////////////// Stage1 Only /////////////
+            var stage1Features = List("length")
+            if (options.contains('stage1Features)) {
+                stage1Features = options('stage1Features).asInstanceOf[String].split(",").toList
+            }
+            logger(0, "Stage1 features = " + stage1Features)
+
+            if (!options.contains('conceptTable)) {
+                System.err.println("Error: No concept table specified")
+                sys.exit(1)
+            }
+            val conceptFile = options('conceptTable).asInstanceOf[String]
+            val conceptTable = Source.fromFile(conceptFile).getLines.map(x => new PhraseConceptPair(x)).toArray
+            val useNER = options contains 'ner
+            val stage1 = new ConceptInvoke.Decoder1(stage1Features, conceptTable, useNER)
+
+            if (!options.contains('stage1Weights)) {
+                System.err.println("Error: No stage1 weights file specified")
+                sys.exit(1)
+            }
+            stage1.features.weights.read(Source.fromFile(options('stage1Weights).asInstanceOf[String]).getLines())
+
+            val dependencies: Array[String] = if (options.contains('dependencies)) {
+                (for {
+                    block <- Corpus.splitOnNewline(Source.fromFile(options('dependencies).asInstanceOf[String]).getLines())
+                } yield block.replaceAllLiterally("-LRB-","(").replaceAllLiterally("-RRB-",")").replaceAllLiterally("""\/""","/")).toArray
+            } else {
+                new Array(0)
+            }
+
+            for ((((line, tok), ner), i) <- stdin.getLines.zip(fromFile(options('tokenized).asInstanceOf[String]).getLines).zip(Corpus.splitOnNewline(fromFile(options('ner).asInstanceOf[String]).getLines)).zipWithIndex) {
+                logger(0, "Sentence:\n"+line+"\n")
+                val stage1Result = stage1.decode(new ConceptInvoke.Input(tok.split(" "),
+                                                                         line.split(" "),
+                                                                         dependencies(i),
+                                                                         ner))
+                logger(0, "Spans:")
+                for ((span, i) <- stage1Result.graph.spans.zipWithIndex) {
+                    logger(0, "Span "+(i+1).toString+":  "+span.words+" => "+span.amr)
+                }
+            }
 
         } else {
 
