@@ -193,7 +193,7 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
                 val varName = getNextVariableName(node.concept.toLowerCase()(0))
                 getNodeByName(varName) = node
                 node.name = Some(varName)
-                node2.name =Some(varName)
+                node2.name = Some(varName)
             }
             node.alignment = None // alignment is only used in AlignSpans and AlignSpans2 (TODO: remove?)
             node.spans = ArrayBuffer(spans.size)
@@ -201,12 +201,10 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
             node.variableRelations = List()
             node2.alignment = None // alignment is only used in AlignSpans and AlignSpans2 (TODO: remove?)
             node2.spans = ArrayBuffer(spans.size)
-            node2.topologicalOrdering = List()
-            node2.variableRelations = List()
             currentId += 1
         }
-        logger(0, "nodeIds = "+nodeIds.reverse)
-        logger(0, "concepts = "+nodeIds.reverse.map(x => getNodeById(x).concept))
+        logger(1, "nodeIds = "+nodeIds.reverse)
+        logger(1, "concepts = "+nodeIds.reverse.map(x => getNodeById(x).concept))
         spans += Span(start, end, nodeIds, sentence.slice(start, end).mkString(" "), nodes2.reverse.apply(0), coRef = false)
     }
 
