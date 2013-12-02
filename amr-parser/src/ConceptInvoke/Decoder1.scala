@@ -38,25 +38,25 @@ class Decoder1(featureNames: List[String],
         val sentence = input.sentence
         val bestState : Array[Option[(Double, PhraseConceptPair, Int)]] = sentence.map(x => None)    // (score, concept, backpointer)
         for (i <- Range(0, sentence.size)) {
-            logger(0, "word = "+sentence(i))
+            logger(1, "word = "+sentence(i))
             var conceptList = conceptTable.getOrElse(sentence(i), List()).filter(x => x.words == sentence.slice(i, i+x.words.size).toList)
             if (useNER) {
                 conceptList = input.ner.annotation.filter(_.start == i).map(x => PhraseConceptPair.entity(input, x)).toList ::: conceptList
             }
-            logger(0, "Possible invoked concepts: "+conceptList)
+            logger(1, "Possible invoked concepts: "+conceptList)
             // WARNING: the code below assumes that anything in the conceptList will not extend beyond the end of the sentence (and it shouldn't based on the code above)
             for (concept <- conceptList) {
                 val score = features.localScore(input, concept)
                 val endpoint = i + concept.words.size - 1
-                logger(0, "score = "+score.toInt)
+                logger(1, "score = "+score.toInt)
                 if ((bestState(endpoint) == None && score >= 0) || bestState(endpoint).get._1 <= score) { // we use <= so that earlier concepts (i.e. ones our conceptTable) have higher priority
-                    logger(0, "adding concept:"+concept)
+                    logger(1, "adding concept:"+concept)
                     bestState(endpoint) = Some((score, concept, i))
                 }
             }
         }
 
-        logger(0, "viterbi = " + bestState.toList)
+        logger(1, "Chart = " + bestState.toList)
 
         // Follow backpointers
         val graph = Graph.empty
@@ -66,7 +66,7 @@ class Decoder1(featureNames: List[String],
         while (i >= 0) {
             if (bestState(i) != None) {
                 val (localScore, concept, backpointer) = bestState(i).get
-                logger(0, "Adding concept: "+concept.graphFrag)
+                logger(1, "Adding concept: "+concept.graphFrag)
                 graph.addSpan(sentence, backpointer, i+1, concept.graphFrag)
                 feats += features.localFeatures(input, concept)
                 score += localScore
