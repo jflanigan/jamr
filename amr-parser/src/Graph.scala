@@ -177,24 +177,37 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
     def addSpan(sentence: Array[String], start: Int, end: Int, amrStr: String) { // This function is used by the ConceptInvoker
         // This code sets up relations for each node but not topologicalOrdering or variableRelations
         val graphFrag = Graph.parse(amrStr)
+        val graphFrag2 = Graph.parse(amrStr)
         var currentId = getNodeById.size
         var nodeIds : List[String] = List()
-        for ((_, node) <- graphFrag.getNodeById) {  // TODO: make this an in-order traversal (so variable names are nice)
+        var nodes : List[Node] = List()
+        doRecursive(x => nodes = x :: nodes, graphFrag.root)    // in order traversal
+        var nodes2 : List[Node] = List() // copy of the nodes in the span (goes into span.amr)
+        doRecursive(x => nodes2 = x :: nodes2, graphFrag2.root)    // in order traversal
+        for ((node, node2) <- nodes.zip(nodes2).reverse) {
             node.id = currentId.toString
-            nodeIds = nodeIds ::: List(currentId.toString)
-            getNodeById(currentId.toString) = node
+            node2.id = node.id
+            nodeIds = node.id :: nodeIds
+            getNodeById(node.id) = node
             if (node.concept(0) != '"') {   // concepts always have size > 0 (enforced by GraphParser)
                 val varName = getNextVariableName(node.concept.toLowerCase()(0))
                 getNodeByName(varName) = node
                 node.name = Some(varName)
+                node2.name =Some(varName)
             }
             node.alignment = None // alignment is only used in AlignSpans and AlignSpans2 (TODO: remove?)
             node.spans = ArrayBuffer(spans.size)
             node.topologicalOrdering = List()
             node.variableRelations = List()
+            node2.alignment = None // alignment is only used in AlignSpans and AlignSpans2 (TODO: remove?)
+            node2.spans = ArrayBuffer(spans.size)
+            node2.topologicalOrdering = List()
+            node2.variableRelations = List()
             currentId += 1
         }
-        spans += Span(start, end, nodeIds, sentence.slice(start, end).mkString(" "), SpanLoader.getAmr(nodeIds, this), coRef = false)
+        logger(0, "nodeIds = "+nodeIds.reverse)
+        logger(0, "concepts = "+nodeIds.reverse.map(x => getNodeById(x).concept))
+        spans += Span(start, end, nodeIds, sentence.slice(start, end).mkString(" "), nodes2.reverse.apply(0), coRef = false)
     }
 
     def addSpan(start: Int, end: Int, nodeIds: List[String], coRef: Boolean, sentence: Array[String]) {
