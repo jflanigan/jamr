@@ -142,12 +142,6 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
 
         val oracle = new GraphDecoder.Oracle(features)
 
-        if (!options.contains('optimizer)) { System.err.println("Error: No optimizer specified"); sys.exit(1) }
-        val optimizer: Optimizer = options('optimizer).asInstanceOf[String] match {
-            case "SSGD" => new SSGD()
-            case "Adagrad" => new Adagrad()
-            case x => { System.err.println("Error: unknown optimizer " + x); sys.exit(1) }
-        }
 
         val stepsize = options.getOrElse('stepsize, "1.0").asInstanceOf[String].toDouble
 
@@ -164,6 +158,13 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             })
             var passes = 20
             if (options.contains('passes)) { passes = options('passes).asInstanceOf[Int] }
+
+            if (!options.contains('optimizer)) { System.err.println("Error: No optimizer specified"); sys.exit(1) }
+            val optimizer: Optimizer = options('optimizer).asInstanceOf[String] match {
+                case "SSGD" => new SSGD()
+                case "Adagrad" => new Adagrad()
+                case x => { System.err.println("Error: unknown optimizer " + x); sys.exit(1) }
+            }
 
             System.err.print("Loading training data...")
             val training: Array[String] = (for {
@@ -232,7 +233,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
         } else if (options contains 'stage1Only) {
 
             ////////////////// Stage1 Only /////////////
-            var stage1Features = List("length")
+            var stage1Features = List("length", "count")
             if (options.contains('stage1Features)) {
                 stage1Features = options('stage1Features).asInstanceOf[String].split(",").toList
             }
@@ -253,6 +254,8 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             }
             stage1.features.weights.read(Source.fromFile(options('stage1Weights).asInstanceOf[String]).getLines())
 
+            logger(0, "Stage1 weights:\n"+stage1.features.weights.toString)
+
             val dependencies: Array[String] = if (options.contains('dependencies)) {
                 (for {
                     block <- Corpus.splitOnNewline(Source.fromFile(options('dependencies).asInstanceOf[String]).getLines())
@@ -267,6 +270,10 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                                                                          line.split(" "),
                                                                          dependencies(i),
                                                                          ner))
+                logger(0, "Concepts:")
+                for ((id, node) <- stage1Result.graph.getNodeById) {
+                    logger(0, "id = "+id+" concept = "+node.concept)
+                }
                 logger(0, "Spans:")
                 for ((span, i) <- stage1Result.graph.spans.zipWithIndex) {
                     logger(0, "Span "+(i+1).toString+":  "+span.words+" => "+span.amr)

@@ -31,25 +31,32 @@ class Decoder1(featureNames: List[String],
     for (pair <- phraseConceptPairs) {
         val word = pair.words(0)
         conceptTable(word) = pair :: conceptTable.getOrElse(word, List())
+        //logger(2, "conceptTable("+word+") = "+conceptTable(word))
     }
 
     def decode(input: Input) : DecoderResult = {
         val sentence = input.sentence
         val bestState : Array[Option[(Double, PhraseConceptPair, Int)]] = sentence.map(x => None)    // (score, concept, backpointer)
         for (i <- Range(0, sentence.size)) {
-            var conceptList = conceptTable(sentence(i)).filter(x => x.words == sentence.slice(i, i+x.words.size).toList)
+            logger(0, "word = "+sentence(i))
+            var conceptList = conceptTable.getOrElse(sentence(i), List()).filter(x => x.words == sentence.slice(i, i+x.words.size).toList)
             if (useNER) {
                 conceptList = input.ner.annotation.filter(_.start == i).map(x => PhraseConceptPair.entity(input, x)).toList ::: conceptList
             }
+            logger(0, "Possible invoked concepts: "+conceptList)
             // WARNING: the code below assumes that anything in the conceptList will not extend beyond the end of the sentence (and it shouldn't based on the code above)
             for (concept <- conceptList) {
                 val score = features.localScore(input, concept)
                 val endpoint = i + concept.words.size - 1
-                if (score >= 0 || bestState(endpoint) == None || bestState(endpoint).get._1 <= score) { // we use <= so that earlier concepts (i.e. ones our conceptTable) have higher priority
+                logger(0, "score = "+score.toInt)
+                if ((bestState(endpoint) == None && score >= 0) || bestState(endpoint).get._1 <= score) { // we use <= so that earlier concepts (i.e. ones our conceptTable) have higher priority
+                    logger(0, "adding concept:"+concept)
                     bestState(endpoint) = Some((score, concept, i))
                 }
             }
         }
+
+        logger(0, "viterbi = " + bestState.toList)
 
         // Follow backpointers
         val graph = Graph.empty

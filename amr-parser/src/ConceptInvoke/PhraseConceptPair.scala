@@ -21,9 +21,9 @@ expert ||| (person :ARG1-of expert-41) ||| Count=4 ConceptGivenPhrase=0.3077
 */
 
     def this(string: String) = this(
-        string.split(" ||| ")(0).split(" ").toList,
-        string.split(" ||| ")(1),
-        new PhraseConceptFeatures(string.split(" ||| ")(2))
+        string.split(""" \|\|\| """)(0).split(" ").toList,
+        string.split(""" \|\|\| """)(1),
+        new PhraseConceptFeatures(string.split(""" \|\|\| """)(2))
     )
 
 }

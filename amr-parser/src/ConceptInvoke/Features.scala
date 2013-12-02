@@ -31,12 +31,17 @@ class Features(featureNames: List[String]) {
 
     val ffTable = Map[String, FeatureFunction](
         "length" -> ffLength,
+        "count" -> ffCount,
         "conceptGivenPhrase" -> ffConceptGivenPhrase,
         "fromNERTagger" -> ffFromNERTagger
     )
 
     def ffLength(input: Input, concept: PhraseConceptPair) : FeatureVector = {
         return FeatureVector(Map("len" -> concept.words.size))
+    }
+
+    def ffCount(input: Input, concept: PhraseConceptPair) : FeatureVector = {
+        return FeatureVector(Map("N" -> concept.features.count))
     }
 
     def ffConceptGivenPhrase(input: Input, concept: PhraseConceptPair) : FeatureVector = {
