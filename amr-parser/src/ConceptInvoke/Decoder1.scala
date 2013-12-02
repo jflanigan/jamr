@@ -66,6 +66,7 @@ class Decoder1(featureNames: List[String],
         while (i >= 0) {
             if (bestState(i) != None) {
                 val (localScore, concept, backpointer) = bestState(i).get
+                logger(0, "Adding concept: "+concept.graphFrag)
                 graph.addSpan(sentence, backpointer, i+1, concept.graphFrag)
                 feats += features.localFeatures(input, concept)
                 score += localScore
