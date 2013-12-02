@@ -40,7 +40,7 @@ object PhraseConceptPair {
         }
         val (start, end) = ner.getSpan((entity.start, entity.end))    // start and end in ner.snt, which should be the unTokenized text
         val graphFrag = "(" + entityType + " :name (name " + ner.snt.slice(start, end).map(x => ":op \"" + x + "\"").mkString(" ") + "))"
-        logger(1, "NER Entity: "+graphFrag)
+        logger(0, "NER Entity: "+graphFrag)
         //logger(1, "(start, end) = "+(start,end))
         //logger(1, "ner.snt = "+ner.snt.toList)
         //logger(1, "ner.tok = "+ner.tok.toList)

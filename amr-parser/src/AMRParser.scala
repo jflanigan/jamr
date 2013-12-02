@@ -67,6 +67,8 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                       parseOptions(map ++ Map('features -> value), tail)
             case "--outputFormat" :: value :: tail =>
                       parseOptions(map ++ Map('outputFormat -> value), tail)
+            case "--amr-data" :: value :: tail =>
+                      parseOptions(map ++ Map('amrData -> value), tail)
             case "--dependencies" :: value :: tail =>
                       parseOptions(map ++ Map('dependencies -> value), tail)
             case "--ner" :: value :: tail =>
@@ -230,9 +232,9 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
 
             print(weights.unsorted)
 
-        } else if (options contains 'stage1Only) {
+        } else {
 
-            ////////////////// Stage1 Only /////////////
+            ///////////////// Decoding //////////////
             var stage1Features = List("length", "count")
             if (options.contains('stage1Features)) {
                 stage1Features = options('stage1Features).asInstanceOf[String].split(",").toList
@@ -256,33 +258,6 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
 
             logger(0, "Stage1 weights:\n"+stage1.features.weights.toString)
 
-            val dependencies: Array[String] = if (options.contains('dependencies)) {
-                (for {
-                    block <- Corpus.splitOnNewline(Source.fromFile(options('dependencies).asInstanceOf[String]).getLines())
-                } yield block.replaceAllLiterally("-LRB-","(").replaceAllLiterally("-RRB-",")").replaceAllLiterally("""\/""","/")).toArray
-            } else {
-                new Array(0)
-            }
-
-            for ((((line, tok), ner), i) <- stdin.getLines.zip(fromFile(options('tokenized).asInstanceOf[String]).getLines).zip(Corpus.splitOnNewline(fromFile(options('ner).asInstanceOf[String]).getLines)).zipWithIndex) {
-                logger(0, "Sentence:\n"+line+"\n")
-                val stage1Result = stage1.decode(new ConceptInvoke.Input(tok.split(" "),
-                                                                         line.split(" "),
-                                                                         dependencies(i),
-                                                                         ner))
-                logger(0, "Concepts:")
-                for ((id, node) <- stage1Result.graph.getNodeById) {
-                    logger(0, "id = "+id+" concept = "+node.concept)
-                }
-                logger(0, "Spans:")
-                for ((span, i) <- stage1Result.graph.spans.zipWithIndex) {
-                    logger(0, "Span "+(i+1).toString+":  "+span.words+" => "+span.amr)
-                }
-            }
-
-        } else {
-
-            ///////////////// Decoding //////////////
 
             if (!options.contains('weights)) {
                 System.err.println("Error: No weights file specified")
@@ -302,7 +277,56 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                 new Array(0)
             }
 
-            for ((block, i) <- Corpus.splitOnNewline(io.Source.stdin.getLines()).filter(_.matches("(.|\n)*\n\\((.|\n)*")).zipWithIndex) {
+            val input = stdin.getLines.toArray
+            val tokenized = fromFile(options('tokenized).asInstanceOf[String]).getLines.toArray
+            val nerFile = Corpus.splitOnNewline(fromFile(options('ner).asInstanceOf[String]).getLines).toArray
+
+            for ((block, i) <- Corpus.splitOnNewline(fromFile(options('amrData).asInstanceOf[String]).getLines).filter(_.matches("(.|\n)*\n\\((.|\n)*")).zipWithIndex) {
+                val line = input(i)
+                logger(0, "Sentence:\n"+line+"\n")
+                val tok = tokenized(i)
+                val ner = nerFile(i)
+                val stage1Result = stage1.decode(new ConceptInvoke.Input(tok.split(" "),
+                                                                         line.split(" "),
+                                                                         dependencies(i),
+                                                                         ner))
+                logger(0, "Concepts:")
+                for ((id, node) <- stage1Result.graph.getNodeById) {
+                    logger(0, "id = "+id+" concept = "+node.concept)
+                }
+                logger(0, "Spans:")
+                for ((span, i) <- stage1Result.graph.spans.zipWithIndex) {
+                    logger(0, "Span "+(i+1).toString+":  "+span.words+" => "+span.amr)
+                }
+
+                //val amrdata = AMRData(block)
+                val amrdata2 = AMRData(block)   // 2nd copy for oracle
+                logger(0, "Dependencies:\n"+dependencies(i)+"\n")
+                val decoderResult = decoder.decode(new Input(stage1Result.graph,
+                                                             tok.split(" "),
+                                                             dependencies(i)))
+                val oracleResult = oracle.decode(new Input(amrdata2, dependencies(i), oracle = true))
+                logger(0, "Oracle Spans:")
+                for ((span, i) <- amrdata2.graph.spans.zipWithIndex) {
+                    logger(0, "Span "+(i+1).toString+":  "+span.words+" => "+span.amr)
+                }
+                logger(0, "")
+                logger(0, "Oracle:\n"+oracleResult.graph.printTriples(detail = 1, extra = (node1, node2, relation) => {
+                    "\t"+oracle.features.ffDependencyPathv2(node1, node2, relation).toString.split("\n").filter(_.matches("^C1.*")).toList.toString+"\t"+decoder.features.localScore(node1, node2, relation).toString
+                    //"\n"+oracle.features.ffDependencyPathv2(node1, node2, relation).toString.split("\n").filter(_.matches("^C1.*")).toList.toString+"\nScore = "+decoder.features.localScore(node1, node2, relation).toString+"  Relevent weights:\n"+decoder.features.weights.slice(decoder.features.localFeatures(node1, node2, relation)).toString
+                })+"\n")
+                logger(0, "AMR:\n"+decoderResult.graph.printTriples(detail = 1, extra = (node1, node2, relation) => {
+                    "\t"+decoder.features.ffDependencyPathv2(node1, node2, relation).toString.split("\n").filter(_.matches("^C1.*")).toList.toString+"\t"+decoder.features.localScore(node1, node2, relation).toString
+                    //"\n"+decoder.features.ffDependencyPathv2(node1, node2, relation).toString.split("\n").filter(_.matches("^C1.*")).toList.toString+"\nScore = "+decoder.features.localScore(node1, node2, relation).toString+"  Relevent weights:\n"+decoder.features.weights.slice(decoder.features.localFeatures(node1, node2, relation)).toString
+                })+"\n")
+                if (outputFormat.contains("AMR")) {
+                    println(decoderResult.graph.root.prettyString(detail=1, pretty=true) + '\n')
+                }
+                if (outputFormat.contains("triples")) {
+                    println(decoderResult.graph.printTriples(detail = 1)+"\n")
+                }
+
+/*
                 val amrdata = AMRData(block)
                 val amrdata2 = AMRData(block)   // 2nd copy for oracle
                 logger(0, "Sentence:\n"+amrdata.sentence.mkString(" ")+"\n")
@@ -327,7 +351,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                 }
                 if (outputFormat.contains("triples")) {
                     println(decoderResult.graph.printTriples(detail = 1)+"\n")
-                }
+                } */
             }
         }
     }
