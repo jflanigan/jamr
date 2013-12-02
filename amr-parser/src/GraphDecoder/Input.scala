@@ -21,6 +21,16 @@ import scala.collection.mutable.ArrayBuffer
 
 case class Input(graph: Graph, sentence: Array[String], dependencies: Annotation[Array[Dependency]], pos: Annotation[Array[String]]) {
 
+    def this(graph: Graph, sentence: Array[String], conllx: String) = this(
+        graph,
+        sentence,
+        Annotation(sentence,
+                   conllx.split("\n").map(x => x.split("\t")(1)),           // Field 2 is token
+                   conllx.split("\n").map(x => Dependency.fromConll(x))),
+        Annotation(sentence,
+                   conllx.split("\n").map(x => x.split("\t")(1)),           // Field 2 is token
+                   conllx.split("\n").map(x => x.split("\t")(4))))          // Field 5 is POS
+
     def this(amrdata: AMRData, conllx: String, oracle: Boolean, clearUnalignedNodes: Boolean = true) = this(
         if (oracle) {
             amrdata.toOracleGraph(clearUnalignedNodes)
