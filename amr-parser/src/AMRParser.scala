@@ -299,9 +299,11 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                     logger(0, "Span "+(i+1).toString+":  "+span.words+" => "+span.amr)
                 }
 
+                stage1Result.graph.normalizeInverseRelations
+                stage1Result.graph.addVariableToSpans
+
                 //val amrdata = AMRData(block)
                 val amrdata2 = AMRData(block)   // 2nd copy for oracle
-                logger(0, "Dependencies:\n"+dependencies(i)+"\n")
                 val decoderResult = decoder.decode(new Input(stage1Result.graph,
                                                              tok.split(" "),
                                                              dependencies(i)))
@@ -311,6 +313,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                     logger(0, "Span "+(i+1).toString+":  "+span.words+" => "+span.amr)
                 }
                 logger(0, "")
+                logger(0, "Dependencies:\n"+dependencies(i)+"\n")
                 logger(0, "Oracle:\n"+oracleResult.graph.printTriples(detail = 1, extra = (node1, node2, relation) => {
                     "\t"+oracle.features.ffDependencyPathv2(node1, node2, relation).toString.split("\n").filter(_.matches("^C1.*")).toList.toString+"\t"+decoder.features.localScore(node1, node2, relation).toString
                     //"\n"+oracle.features.ffDependencyPathv2(node1, node2, relation).toString.split("\n").filter(_.matches("^C1.*")).toList.toString+"\nScore = "+decoder.features.localScore(node1, node2, relation).toString+"  Relevent weights:\n"+decoder.features.weights.slice(decoder.features.localFeatures(node1, node2, relation)).toString
