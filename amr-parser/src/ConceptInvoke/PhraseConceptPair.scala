@@ -40,7 +40,13 @@ object PhraseConceptPair {
         }
         val (start, end) = ner.getSpan((entity.start, entity.end))    // start and end in ner.snt, which should be the unTokenized text
         val graphFrag = "(" + entityType + " :name (name " + ner.snt.slice(start, end).map(x => ":op \"" + x + "\"").mkString(" ") + "))"
-        val (tokStart, tokEnd) = notTokenized.annotationSpan((start, end))
+        logger(1, "NER Entity: "+graphFrag)
+        //logger(1, "(start, end) = "+(start,end))
+        //logger(1, "ner.snt = "+ner.snt.toList)
+        //logger(1, "ner.tok = "+ner.tok.toList)
+        //logger(1, "notTokenized.snt = "+notTokenized.snt.toList)
+        //logger(1, "notTokenized.tok = "+notTokenized.tok.toList)
+        val (tokStart, tokEnd) = notTokenized.getSpan((start, end))
         return PhraseConceptPair(sentence.slice(tokStart, tokEnd).toList, graphFrag, PhraseConceptFeatures(0,0,true))
     }
 
