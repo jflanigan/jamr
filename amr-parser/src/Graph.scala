@@ -492,6 +492,8 @@ object Graph {
         return graph
     }
 
-    def empty() : Graph = { val g = parse("(n / none)"); g.getNodeById.clear; g.getNodeByName.clear; return g }
+    //def empty() : Graph = { val g = parse("(n / none)"); g.getNodeById.clear; g.getNodeByName.clear; return g }
+    //def amrEmpty() : Graph = { parse("(a / amr-empty)") }
+    def empty() : Graph = { parse("(a / amr-empty)") }
 }
 
