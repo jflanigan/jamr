@@ -156,7 +156,8 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
                 }
             }
         }
-
+        
+        logger(1, "nodes = "+nodes.toList)
         if (features.rootFeatureFunctions.size != 0) {
             graph.root = nodes.map(x => (x, features.rootScore(x))).maxBy(_._2)._1
         } else {

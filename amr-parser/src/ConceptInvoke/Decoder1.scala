@@ -59,14 +59,12 @@ class Decoder1(featureNames: List[String],
         logger(1, "Chart = " + bestState.toList)
 
         // Follow backpointers
-        val graph = Graph.empty
+        var graph = Graph.empty
         var score = 0.0
         val feats = new FeatureVector()
         var i = bestState.size - 1
-        if (bestState(i) == None) {
-            graph.getNodeById.clear
-            graph.getNodeByName.clear
-        }
+        graph.getNodeById.clear
+        graph.getNodeByName.clear
         while (i >= 0) {
             if (bestState(i) != None) {
                 val (localScore, concept, backpointer) = bestState(i).get
@@ -77,6 +75,9 @@ class Decoder1(featureNames: List[String],
                 i = backpointer
             }
             i -= 1
+        }
+        if (graph.getNodeById.size == 0) {  // no invoked concepts
+            graph = Graph.empty
         }
         return DecoderResult(graph, feats, score)
     }
