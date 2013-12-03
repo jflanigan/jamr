@@ -267,6 +267,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
 
             logger(0, "Reading weights")
             decoder.features.weights.read(Source.fromFile(weightfile).getLines())
+            oracle.features.weights = decoder.features.weights
             logger(0, "done")
 
             val dependencies: Array[String] = if (options.contains('dependencies)) {
@@ -314,8 +315,12 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                 }
                 logger(0, "")
                 logger(0, "Dependencies:\n"+dependencies(i)+"\n")
+                logger(0, "Node.spans:")
+                for (node <- amrdata2.graph.nodes) {
+                    logger(0, node.concept+" "+node.spans.toList)
+                }
                 logger(0, "Oracle:\n"+oracleResult.graph.printTriples(detail = 1, extra = (node1, node2, relation) => {
-                    "\t"+oracle.features.ffDependencyPathv2(node1, node2, relation).toString.split("\n").filter(_.matches("^C1.*")).toList.toString+"\t"+decoder.features.localScore(node1, node2, relation).toString
+                    "\t"+oracle.features.ffDependencyPathv2(node1, node2, relation).toString.split("\n").filter(_.matches("^C1.*")).toList.toString+"\t"+oracle.features.localScore(node1, node2, relation).toString
                     //"\n"+oracle.features.ffDependencyPathv2(node1, node2, relation).toString.split("\n").filter(_.matches("^C1.*")).toList.toString+"\nScore = "+decoder.features.localScore(node1, node2, relation).toString+"  Relevent weights:\n"+decoder.features.weights.slice(decoder.features.localFeatures(node1, node2, relation)).toString
                 })+"\n")
                 logger(0, "AMR:\n"+decoderResult.graph.printTriples(detail = 1, extra = (node1, node2, relation) => {

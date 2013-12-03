@@ -114,6 +114,7 @@ class Features(featureNames: List[String]) {
     def ffFragHead(node1: Node, node2: Node, label: String) : FeatureVector = {
         // TODO: I'm assuming it is unlikely there are two identical concepts in a frag
         //logger(1,"fragHead node1.concept = "+node1.concept+" node2.concept = "+node2.concept)
+        //logger(1,"fragHead node1.spans = "+node1.spans.toList+" node2.spans = "+node2.spans.toList)
         return FeatureVector(Map("C1NotFragHead" -> { if (node1.concept != graph.spans(node1.spans(0)).amr.concept) { 1.0 } else { 0.0 } }, 
                                  "C2NotFragHead" -> { if (node2.concept != graph.spans(node2.spans(0)).amr.concept) { 1.0 } else { 0.0 } }))
     }
