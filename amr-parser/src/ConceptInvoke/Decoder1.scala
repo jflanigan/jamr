@@ -63,6 +63,10 @@ class Decoder1(featureNames: List[String],
         var score = 0.0
         val feats = new FeatureVector()
         var i = bestState.size - 1
+        if (bestState(i) == None) {
+            graph.getNodeById.clear
+            graph.getNodeByName.clear
+        }
         while (i >= 0) {
             if (bestState(i) != None) {
                 val (localScore, concept, backpointer) = bestState(i).get
