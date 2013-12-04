@@ -24,6 +24,7 @@ class Concepts(phraseConceptPairs: Array[PhraseConceptPair],
     for (pair <- phraseConceptPairs) {
         val word = pair.words(0)
         conceptTable(word) = pair :: conceptTable.getOrElse(word, List())
+        //logger(2, "conceptTable("+word+") = "+conceptTable(word))
     }
 
     private var tokens : Array[String] = Array()  // stores sentence.drop(i) (used in the dateEntity code to make it more concise)
@@ -31,12 +32,14 @@ class Concepts(phraseConceptPairs: Array[PhraseConceptPair],
     def invoke(input: Input, i: Int) : List[PhraseConceptPair] = {
         // returns a list of all concepts that can be invoke starting at 
         // position i in input.sentence (i.e. position i in the tokenized input)
+        // Note: none of the concepts returned have spans that go past the end of the sentence
         val sentence = input.sentence
 
         var conceptList = conceptTable.getOrElse(sentence(i), List()).filter(x => x.words == sentence.slice(i, i+x.words.size).toList)
         if (useNER) {
             val indexNER = input.ner.getSpan((i,i+1))._1
             conceptList = input.ner.annotation.filter(_.start == indexNER).map(x => namedEntity(input, x)).toList ::: conceptList
+            //conceptList = input.ner.annotation.filter(_.start == i).map(x => PhraseConceptPair.entity(input, x)).toList ::: conceptList
         }
 
         return conceptList

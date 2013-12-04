@@ -27,26 +27,16 @@ class Decoder1(featureNames: List[String],
     // Base class has defined:
     // val features: Features
 
-    val conceptTable: Map[String, List[PhraseConceptPair]] = Map()  // maps the first word in the phrase to a list of phraseConceptPairs
-    for (pair <- phraseConceptPairs) {
-        val word = pair.words(0)
-        conceptTable(word) = pair :: conceptTable.getOrElse(word, List())
-        //logger(2, "conceptTable("+word+") = "+conceptTable(word))
-    }
+    val conceptInvoker = new Concepts(phraseConceptPairs)
 
     def decode(input: Input) : DecoderResult = {
         val sentence = input.sentence
         val bestState : Array[Option[(Double, PhraseConceptPair, Int)]] = sentence.map(x => None)    // (score, concept, backpointer)
         for (i <- Range(0, sentence.size)) {
             logger(1, "word = "+sentence(i))
-            var conceptList = conceptTable.getOrElse(sentence(i), List()).filter(x => x.words == sentence.slice(i, i+x.words.size).toList)
-            if (useNER) {
-                val indexNER = input.ner.getSpan((i,i+1))._1
-                conceptList = input.ner.annotation.filter(_.start == indexNER).map(x => PhraseConceptPair.entity(input, x)).toList ::: conceptList
-                //conceptList = input.ner.annotation.filter(_.start == i).map(x => PhraseConceptPair.entity(input, x)).toList ::: conceptList
-            }
+            var conceptList = conceptInvoker.invoke(input, span.start)
             logger(1, "Possible invoked concepts: "+conceptList)
-            // WARNING: the code below assumes that anything in the conceptList will not extend beyond the end of the sentence (and it shouldn't based on the code above)
+            // WARNING: the code below assumes that anything in the conceptList will not extend beyond the end of the sentence (and it shouldn't based on the code in Concepts)
             for (concept <- conceptList) {
                 val score = features.localScore(input, concept)
                 val endpoint = i + concept.words.size - 1
@@ -72,8 +62,13 @@ class Decoder1(featureNames: List[String],
                 val (localScore, concept, backpointer) = bestState(i).get
                 logger(1, "Adding concept: "+concept.graphFrag)
                 graph.addSpan(sentence, backpointer, i+1, concept.graphFrag)
-                feats += features.localFeatures(input, concept)
-                score += localScore
+                for (c <- conceptInvoker.invoke(input, span.start).filter(x => x.words == concept.words && x.graphFrag == concept.graphFrag)) { // add features for all matching phraseConceptPairs (this is what the Oracle decoder does, so we do the same here)
+                    val f = features.localFeatures(input, c)
+                    feats += f
+                    score += features.weights.dot(f)
+                }
+                //feats += features.localFeatures(input, concept)
+                //score += localScore
                 i = backpointer
             }
             i -= 1
