@@ -19,8 +19,6 @@ import scala.collection.mutable.Map
 import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 
-case class DecoderResult(graph: Graph, features: FeatureVector, score: Double)
-
 abstract class Decoder(featureNames: List[String]) {
     val features = new Features(featureNames) // maybe this should be renamed ff?
 
