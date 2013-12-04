@@ -13,7 +13,7 @@ import scala.collection.mutable.Map
 import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 
-case class Input(graph: Option[Graph],
+case class Input(var graph: Option[Graph],  // var so we can update for the input to stage 2
                  sentence: Array[String],
                  notTokenized: Annotation[Array[String]],
                  dependencies: Annotation[Array[Dependency]],
