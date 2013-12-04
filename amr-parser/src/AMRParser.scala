@@ -138,7 +138,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
         return Some(decoder)
     }
 
-    def initStage1(options: OptionMap) : GraphDecoder.Decoder = {
+    def initStage1(options: OptionMap) : ConceptInvoke.Decoder = {
         val stage1Features = options.getOrElse('stage1Features,"length,count").split(",").toList
         logger(0, "Stage1 features = " + stage1Features)
 
@@ -148,9 +148,11 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
         val conceptFile = options('conceptTable)
         val conceptTable = Source.fromFile(conceptFile).getLines.map(x => new PhraseConceptPair(x)).toArray
         val useNER = options.contains('ner)
-        val decoder = new ConceptInvoke.Decoder1(stage1Features, conceptTable, useNER)
-
-        return decoder
+        if (oracle) {
+            new ConceptInvoke.Oracle(stage1Features, conceptTable, useNER)
+        } else {
+            new ConceptInvoke.Decoder1(stage1Features, conceptTable, useNER)
+        }
     }
 
     def main(args: Array[String]) {
@@ -163,10 +165,11 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
         val outputFormat = options.getOrElse('outputFormat,"triples").split(",").toList
 
         val stage1 : ConceptInvoke.Decoder = {
-            if (!options.contains('stage1Oracle) || options.contains('stage1Train)) {
-                initStage1(options)
+            if (!options.contains('stage1Oracle)) {
+                initStage1(options, oracle = false)
             } else {
-                initStage1Oracle(options)
+                assert(!options.contains('stage1Train), "Error: --stage1-oracle should not be specified with --stage1-train")
+                initStage1(options, oracle = true)
             }
         }
 
@@ -232,13 +235,22 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             if (options.contains('stage1Train) {
 
                 ////////////////// Stage1 Training ////////////////
+
+                val stage1Oracle = initStage1(options, oracle = true)
+
                 def gradient(i: Int) : FeatureVector = {
                     val snt = AMRData.getUlfString(training(i))("::snt").split(" ")
-                    val input = new ConceptInvoke.Input(tokenized(i).split(" "),
+                    val input = new ConceptInvoke.Input(None,
+                                                        tokenized(i).split(" "),
                                                         snt,
                                                         dependencies(i),
                                                         nerFile(i))
-                    stage1.decode(input).features -= stage1Oracle.decode().features
+
+                    //val feats = stage1.decode(input).features
+                    input.graph = AMRData(training(i)).toOracleGraph
+                    //feats -= stage1Oracle.decode().features
+                    //return feats
+                    return stage1.decode(input).features -= stage1Oracle.decode().features
                 }
 
                 val stage1Result = stage1.decode(new ConceptInvoke.Input(tok.split(" "),
