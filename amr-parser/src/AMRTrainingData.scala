@@ -51,7 +51,7 @@ object AMRTrainingData {
         return map
     }
 
-    def apply(input: String) : AMRData = {
+    def apply(input: String) : AMRTrainingData = {
         val lines = input.split("\n")
         val amrstr = lines.filterNot(_.matches("^#.*")).mkString(" ")
         val tokenized = lines.filter(_.matches("^# ::tok .*"))
@@ -74,13 +74,13 @@ object AMRTrainingData {
             annotators += ulfstr("::annotator")
             annotation_dates += ulfstr("::date")
         }
-        return AMRData(sentence, graph, spans, annotators, annotation_dates, lines.filterNot(_.matches("^#.*")).mkString("\n"), extras)
+        return AMRTrainingData(sentence, graph, spans, annotators, annotation_dates, lines.filterNot(_.matches("^#.*")).mkString("\n"), extras)
     }
 
-    class AMRDataTest /* extends Suite*/ {
+    class AMRTrainingDataTest /* extends Suite*/ {
         def testGetUlfString() {
-            val map1 = AMRData.getUlfString("# ::snt testing 1 2 3")
-            val map2 = AMRData.getUlfString("# ::date 12 15 2005 ::annotator Jeff ::preferred")
+            val map1 = AMRTrainingData.getUlfString("# ::snt testing 1 2 3")
+            val map2 = AMRTrainingData.getUlfString("# ::date 12 15 2005 ::annotator Jeff ::preferred")
             assert(map1 == Map("::snt" -> "testing 1 2 3"))
             assert(map2 == Map("::date" -> "12 15 2005", "::annotator" -> "Jeff", "::preferred" -> ""))
         }

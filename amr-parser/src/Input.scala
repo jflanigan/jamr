@@ -48,7 +48,7 @@ case class Input(graph: Option[Graph],
                    conllx.split("\n").map(x => x.split("\t")(4))))          // Field 5 is POS
 
     // This constructor is used for stage2 training
-    def this(amrdata: AMRData, conllx: String, oracle: Boolean, clearUnalignedNodes: Boolean = true) = this(
+    def this(amrdata: AMRTrainingData, conllx: String, oracle: Boolean, clearUnalignedNodes: Boolean = true) = this(
         if (oracle) {
             amrdata.toOracleGraph(clearUnalignedNodes)
         } else {

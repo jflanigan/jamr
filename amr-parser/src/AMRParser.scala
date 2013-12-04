@@ -232,42 +232,35 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             }
             System.err.println(" done")
 
-            if (options.contains('stage1Train) {
+            if (options.contains('stage1Train)) {
 
                 ////////////////// Stage1 Training ////////////////
 
                 val stage1Oracle = initStage1(options, oracle = true)
 
                 def gradient(i: Int) : FeatureVector = {
-                    val snt = AMRData.getUlfString(training(i))("::snt").split(" ")
-                    val input = new ConceptInvoke.Input(None,
-                                                        tokenized(i).split(" "),
-                                                        snt,
-                                                        dependencies(i),
-                                                        nerFile(i))
-
-                    //val feats = stage1.decode(input).features
-                    input.graph = AMRData(training(i)).toOracleGraph
-                    //feats -= stage1Oracle.decode().features
-                    //return feats
-                    return stage1.decode(input).features -= stage1Oracle.decode().features
+                    val snt = AMRTrainingData.getUlfString(training(i))("::snt").split(" ")
+                    val input = new ConceptInvoke.Input(None, tokenized(i).split(" "), snt, dependencies(i), nerFile(i))
+                    val feats = stage1.decode(input).features
+                    input.graph = AMRTrainingData(training(i)).toOracleGraph(clearUnalignedNodes = false)
+                    return feats -= stage1Oracle.decode(input).features
                 }
 
-                val stage1Result = stage1.decode(new ConceptInvoke.Input(tok.split(" "),
-                                                                         line.split(" "),
-                                                                         dependencies(i),
-                                                                         ner))
-
                 optimizer.learnParameters(
-                    i => stage1.decode(AMRData(training(i)).toInput).features,
+                    i => gradient(i),
+                    decoder.features.weights,
+                    training.size,
+                    passes,
+                    stepsize,
+                    avg = false)
 
             } else {
 
                 ////////////////// Stage2 Training ////////////////
 
             val weights = optimizer.learnParameters(
-                //i => decoder.decode(AMRData(training(i)).toInput).features,
-                i => { val amrdata1 = AMRData(training(i))
+                //i => decoder.decode(AMRTrainingData(training(i)).toInput).features,
+                i => { val amrdata1 = AMRTrainingData(training(i))
                        logger(0, "Sentence:\n"+amrdata1.sentence.mkString(" ")+"\n")
                        val result1 = decoder.decode(new Input(amrdata1, dependencies(i), oracle = false))
                         logger(0, "Spans:")
@@ -286,7 +279,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                                     "\t"+decoder.features.ffDependencyPathv2(node1, node2, relation).toString.split("\n").filter(_.matches("^C1.*")).toList.toString+"\t"+decoder.features.localScore(node1, node2, relation).toString
                                 })+"\n")
                        }
-                       val amrdata2 = AMRData(training(i))
+                       val amrdata2 = AMRTrainingData(training(i))
                        val result2 = oracle.decode(new Input(amrdata2, dependencies(i), oracle = true))
                        logger(0, "Oracle:")
                        if (outputFormat.contains("AMR")) {
@@ -371,8 +364,8 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                 stage1Result.graph.normalizeInverseRelations
                 stage1Result.graph.addVariableToSpans
 
-                //val amrdata = AMRData(block)
-                val amrdata2 = AMRData(block)   // 2nd copy for oracle
+                //val amrdata = AMRTrainingData(block)
+                val amrdata2 = AMRTrainingData(block)   // 2nd copy for oracle
                 val decoderResult = decoder.decode(new Input(stage1Result.graph,
                                                              tok.split(" "),
                                                              dependencies(i)))
