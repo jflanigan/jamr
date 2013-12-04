@@ -20,22 +20,24 @@ import Double.{NegativeInfinity => minusInfty}
 type PhraseConceptPair = (List[String], String, PhraseConceptFeatures)
 ********************************/
 
-class Decoder1(featureNames: List[String],
-               phraseConceptPairs: Array[PhraseConceptPair],
-               useNER: Boolean = true)
+class Oracle(featureNames: List[String],
+             phraseConceptPairs: Array[PhraseConceptPair],
+             useNER: Boolean = true)
     extends Decoder(featureNames) {
     // Base class has defined:
     // val features: Features
 
-    val conceptTable: Map[String, List[PhraseConceptPair]] = Map()  // maps the first word in the phrase to a list of phraseConceptPairs
-    for (pair <- phraseConceptPairs) {
-        val word = pair.words(0)
-        conceptTable(word) = pair :: conceptTable.getOrElse(word, List())
-        //logger(2, "conceptTable("+word+") = "+conceptTable(word))
-    }
+    val conceptInvoker = Concepts(phraseConcepPairs)
 
     def decode(input: Input) : DecoderResult = {
+        assert(input.graph != None, "Error: stage1 oracle decoder was not given a graph")
+        val graph = input.graph.get
         val sentence = input.sentence
+
+        for (spanIndex <- graph.spans) {
+            val conceptList = conceptInvoker.invoke(input, graph.spans(spanIndex).start)
+        }
+
         val bestState : Array[Option[(Double, PhraseConceptPair, Int)]] = sentence.map(x => None)    // (score, concept, backpointer)
         for (i <- Range(0, sentence.size)) {
             logger(1, "word = "+sentence(i))
@@ -43,7 +45,6 @@ class Decoder1(featureNames: List[String],
             if (useNER) {
                 val indexNER = input.ner.getSpan((i,i+1))._1
                 conceptList = input.ner.annotation.filter(_.start == indexNER).map(x => PhraseConceptPair.entity(input, x)).toList ::: conceptList
-                //conceptList = input.ner.annotation.filter(_.start == i).map(x => PhraseConceptPair.entity(input, x)).toList ::: conceptList
             }
             logger(1, "Possible invoked concepts: "+conceptList)
             // WARNING: the code below assumes that anything in the conceptList will not extend beyond the end of the sentence (and it shouldn't based on the code above)
