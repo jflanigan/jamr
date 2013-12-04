@@ -46,7 +46,7 @@ object AlignerTool extends SimpleSwingApplication {
 
     val colors = Array(Color.RED, Color.GREEN, Color.MAGENTA, Color.ORANGE, Color.PINK, Color.CYAN, Color.BLUE )
 
-    var corpus = LazyArray(Iterator[AMRData]())
+    var corpus = LazyArray(Iterator[AMRTrainingData]())
 
     def top = new MainFrame {
         /*---------------------- Initialization --------------------*/
@@ -464,7 +464,7 @@ object AlignerTool extends SimpleSwingApplication {
         var edited : Set[Int] = Set()
         def saveEdits() {
             val r = corpus(recordNumber)
-            val AMRData(_,_,annotations,annotators,annotation_date,_,_) = r
+            val AMRTrainingData(_,_,annotations,annotators,annotation_date,_,_) = r
             if (!edited.contains(recordNumber)) {
                 edited += recordNumber
                 annotations += graph.spans.map(x => x.format).mkString(" ")
@@ -520,7 +520,7 @@ object AlignerTool extends SimpleSwingApplication {
             for {
                 block <- splitOnNewline(file.getLines)
                 if block.matches("(.|\n)*\n\\((.|\n)*")     // needs to contain some AMR
-            } yield AMRData(block)
+            } yield AMRTrainingData(block)
         )
 
         super.main(args)    // Start GUI

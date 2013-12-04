@@ -48,7 +48,7 @@ object TestAMRCode {
 
         for (block <- Corpus.splitOnNewline(io.Source.stdin.getLines()) if block.matches("(.|\n)*\n\\((.|\n)*")) {
             println(block)
-            AMRData(block).toOracleGraph(clearUnalignedNodes = false).printTriples(0)
+            AMRTrainingData(block).toOracleGraph(clearUnalignedNodes = false).printTriples(0)
             println()
         }
     }

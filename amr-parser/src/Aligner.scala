@@ -75,7 +75,7 @@ object Aligner {
                 val Block(extrastr, amrstr) = block
                 println(extrastr)
                 val amr = Graph.parse(amrstr)
-                val extras = AMRData.getUlfString(extrastr)
+                val extras = AMRTrainingData.getUlfString(extrastr)
                 val tokenized = extras("::tok").split(" ")
                 val wordAlignments = AlignWords.alignWords(tokenized, amr)
                 val spanAlignments = if (aligner2) {
