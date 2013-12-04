@@ -126,7 +126,8 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             case x => { System.err.println("Error: unknown stage2 decoder " + x); sys.exit(1) }
         }
 
-        if (options.getOrElse('outputFormat,"triples").split(",").toList.contains("AMR") && !connected) {
+        val outputFormat = options.getOrElse('outputFormat,"triples").split(",").toList
+        if (outputFormat.contains("AMR") && !connected) {
             println("Cannot have both -stage2NotConnected flag and --outputFormat \"AMR\""); sys.exit(1)
         }
 
@@ -135,10 +136,10 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             sys.exit(1)
         }
 
-        return Some(decoder)
+        return decoder
     }
 
-    def initStage1(options: OptionMap) : ConceptInvoke.Decoder = {
+    def initStage1(options: OptionMap, oracle: Boolean = false) : ConceptInvoke.Decoder = {
         val stage1Features = options.getOrElse('stage1Features,"length,count").split(",").toList
         logger(0, "Stage1 features = " + stage1Features)
 
@@ -174,10 +175,10 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
         }
 
         val stage2 : Option[GraphDecoder.Decoder] = {
-            if(options.contains('stage1Only) || options.contains('stage1Train)) {
-                Some(initStage2(options))
-            } else {
+            if((options.contains('stage1Only) || options.contains('stage1Train)) && !options.contains('stage2Train)) {
                 None
+            } else {
+                Some(initStage2(options))
             }
         }
 
@@ -202,7 +203,11 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 override def run() {
                     System.err.print("Writing out weights... ")
-                    print(decoder.features.weights.unsorted)
+                    if (options.contains('stage1Train)) {
+                        print(stage1.features.weights.unsorted)
+                    } else {
+                        print(stage2.get.features.weights.unsorted)
+                    }
                     System.err.println("done")
                 }
             })
@@ -240,7 +245,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
 
                 def gradient(i: Int) : FeatureVector = {
                     val snt = AMRTrainingData.getUlfString(training(i))("::snt").split(" ")
-                    val input = new ConceptInvoke.Input(None, tokenized(i).split(" "), snt, dependencies(i), nerFile(i))
+                    val input = new Input(None, tokenized(i).split(" "), snt, dependencies(i), nerFile(i))
                     val feats = stage1.decode(input).features
                     input.graph = AMRTrainingData(training(i)).toOracleGraph(clearUnalignedNodes = false)
                     return feats -= stage1Oracle.decode(input).features
@@ -257,6 +262,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             } else {
 
                 ////////////////// Stage2 Training ////////////////
+            val decoder = stage2.get
 
             val weights = optimizer.learnParameters(
                 //i => decoder.decode(AMRTrainingData(training(i)).toInput).features,

@@ -27,7 +27,7 @@ class Oracle(featureNames: List[String],
     // Base class has defined:
     // val features: Features
 
-    val conceptInvoker = new Concepts(phraseConcepPairs)
+    val conceptInvoker = new Concepts(phraseConceptPairs)
 
     def decode(input: Input) : DecoderResult = {
         assert(input.graph != None, "Error: stage1 oracle decoder was not given a graph")
@@ -36,8 +36,7 @@ class Oracle(featureNames: List[String],
         var score = 0.0
         val feats = new FeatureVector()
 
-        for (spanIndex <- graph.spans) {
-            val span = graph.spans(spanIndex)
+        for (span <- graph.spans) {
             val words = span.words.split(" ")
             val conceptList = conceptInvoker.invoke(input, span.start)
             val matching = conceptList.filter(x => x.words == words)

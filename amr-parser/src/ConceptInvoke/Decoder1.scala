@@ -34,7 +34,7 @@ class Decoder1(featureNames: List[String],
         val bestState : Array[Option[(Double, PhraseConceptPair, Int)]] = sentence.map(x => None)    // (score, concept, backpointer)
         for (i <- Range(0, sentence.size)) {
             logger(1, "word = "+sentence(i))
-            var conceptList = conceptInvoker.invoke(input, span.start)
+            var conceptList = conceptInvoker.invoke(input,i)
             logger(1, "Possible invoked concepts: "+conceptList)
             // WARNING: the code below assumes that anything in the conceptList will not extend beyond the end of the sentence (and it shouldn't based on the code in Concepts)
             for (concept <- conceptList) {
@@ -62,7 +62,7 @@ class Decoder1(featureNames: List[String],
                 val (localScore, concept, backpointer) = bestState(i).get
                 logger(1, "Adding concept: "+concept.graphFrag)
                 graph.addSpan(sentence, backpointer, i+1, concept.graphFrag)
-                for (c <- conceptInvoker.invoke(input, span.start).filter(x => x.words == concept.words && x.graphFrag == concept.graphFrag)) { // add features for all matching phraseConceptPairs (this is what the Oracle decoder does, so we do the same here)
+                for (c <- conceptInvoker.invoke(input,i).filter(x => x.words == concept.words && x.graphFrag == concept.graphFrag)) { // add features for all matching phraseConceptPairs (this is what the Oracle decoder does, so we do the same here)
                     val f = features.localFeatures(input, c)
                     feats += f
                     score += features.weights.dot(f)

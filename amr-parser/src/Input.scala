@@ -20,49 +20,52 @@ case class Input(graph: Option[Graph],
                  pos: Annotation[Array[String]],
                  ner: Annotation[Array[Entity]]) {
 
+    // TODO: switch everything to this constructor (the others are unnessary)
     // This constructor is used for stage1 training and decoding
     def this(graph: Option[Graph], sent: Array[String], notTok: Array[String], conllDeps: String, conllNER: String) = this(
         graph,
         sent,
         Annotation(notTok, sent, notTok),
         Annotation(sent,
-                   conllDeps.split("\n").map(x => x.split("\t")(1)),           // Field 2 is token
+                   conllDeps.split("\n").map(x => x.split("\t")(1)),    // Field 2 is token
                    conllDeps.split("\n").map(x => Dependency.fromConll(x))),
         Annotation(sent,
-                   conllDeps.split("\n").map(x => x.split("\t")(1)),           // Field 2 is token
-                   conllDeps.split("\n").map(x => x.split("\t")(4))),          // Field 5 is POS
+                   conllDeps.split("\n").map(x => x.split("\t")(1)),    // Field 2 is token
+                   conllDeps.split("\n").map(x => x.split("\t")(4))),   // Field 5 is POS
         Annotation(sent,
-                   conllNER.split("\n").map(x => x.split("\t")(0)),            // Field 0 is token
-                   Input.entitiesFromConll(conllNER)))
+                   conllNER.split("\n").map(x => x.split("\t")(0)),     // Field 0 is token
+                   Entity.entitiesFromConll(conllNER)))
 
     // This constructor is used for stage2 decoding
     def this(graph: Graph, sentence: Array[String], conllx: String) = this(
-        graph,
+        Some(graph),
         sentence,
         Annotation(sentence, sentence, Array()),
         Annotation(sentence,
-                   conllx.split("\n").map(x => x.split("\t")(1)),           // Field 2 is token
+                   conllx.split("\n").map(x => x.split("\t")(1)),       // Field 2 is token
                    conllx.split("\n").map(x => Dependency.fromConll(x))),
         Annotation(sentence,
-                   conllx.split("\n").map(x => x.split("\t")(1)),           // Field 2 is token
-                   conllx.split("\n").map(x => x.split("\t")(4))))          // Field 5 is POS
+                   conllx.split("\n").map(x => x.split("\t")(1)),       // Field 2 is token
+                   conllx.split("\n").map(x => x.split("\t")(4))),      // Field 5 is POS
+        Annotation(sentence, sentence, Array()))
 
     // This constructor is used for stage2 training
     def this(amrdata: AMRTrainingData, conllx: String, oracle: Boolean, clearUnalignedNodes: Boolean = true) = this(
-        if (oracle) {
+        Some(if (oracle) {
             amrdata.toOracleGraph(clearUnalignedNodes)
         } else {
             amrdata.toInputGraph
-        },
+        }),
         amrdata.sentence,
-        Annotation(sentence, sentence, Array()),
+        Annotation(amrdata.sentence, amrdata.sentence, Array()),
         Annotation(amrdata.sentence,
-                   conllx.split("\n").map(x => x.split("\t")(1)),           // Field 2 is token
+                   conllx.split("\n").map(x => x.split("\t")(1)),       // Field 2 is token
                    conllx.split("\n").map(x => Dependency.fromConll(x))),
         Annotation(amrdata.sentence,
-                   conllx.split("\n").map(x => x.split("\t")(1)),           // Field 2 is token
-                   conllx.split("\n").map(x => x.split("\t")(4))))          // Field 5 is POS
+                   conllx.split("\n").map(x => x.split("\t")(1)),       // Field 2 is token
+                   conllx.split("\n").map(x => x.split("\t")(4))),      // Field 5 is POS
                       //x.split("\t")(4).replaceAll("VB.*","VB").replaceAll("NN.*|PRP|FW","NN").replaceAll("JJ.*","JJ").replaceAll("RB.*","RB"))))
+        Annotation(amrdata.sentence, amrdata.sentence, Array()))
 
 }
 
