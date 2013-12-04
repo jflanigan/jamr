@@ -21,7 +21,7 @@ object Entity {
                 val label = conll(i)(column).drop(2)
                 val start = i
                 i += 1
-                while (conll(i)(column) == "I-"+label || conll(i)(column) == "L-"+label && i < conll.size) {
+                while (i < conll.size && (conll(i)(column) == "I-"+label || conll(i)(column) == "L-"+label)) {
                     i +=1
                 }
                 val end = i
