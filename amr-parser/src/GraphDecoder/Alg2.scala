@@ -23,7 +23,7 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
 
     def decode(input: Input) : DecoderResult = {
         // Assumes that Node.relations has been setup correctly for the graph fragments
-        val graph = input.graph.duplicate
+        val graph = input.graph.get.duplicate
         features.input = input
         //val nodes : Array[Node] = graph.nodes.filter.toArray
         val nodes : Array[Node] = graph.nodes.filter(_.name != None).toArray

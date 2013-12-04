@@ -26,15 +26,17 @@ import scala.util.parsing.combinator._
 
 class Features(featureNames: List[String]) {
     var weights = FeatureVector()
+    private var inputSave: Input = _
     private var graph: Graph = _
     private var sentence: Array[String] = _
     private var dependencies: Annotation[Array[Dependency]] = _
     private var fullPos: Annotation[Array[String]] = _
     //private var pos: Annotation[Array[String]] = _
 
-    def input: Input = Input(graph, sentence, dependencies, fullPos)
+    def input: Input = inputSave
     def input_= (i: Input) {
-        graph = i.graph
+        inputSave = input
+        graph = i.graph.get
         sentence = i.sentence
         dependencies = i.dependencies
         //pos = i.pos

@@ -28,7 +28,7 @@ class Alg1(featureNames: List[String], labelSet: Array[(String, Int)], connected
     def decode(input: Input) : DecoderResult = {
         // Assumes that Node.relations has been setup correctly for the graph fragments
         features.input = input  // WARNING: This needs to be called before graphObj is created, because when graphObj is created we compute the features of the edges that are already present in the graph fragments
-        val graph = input.graph.duplicate
+        val graph = input.graph.get.duplicate
         logger(1, "graph.spans = "+graph.spans.toList)
         val nodes : List[Node] = graph.nodes.filter(_.name != None).toList    // TODO: test to see if a view is faster
         val graphObj = new GraphObj(graph, nodes.toArray, features)    // graphObj keeps track of the connectivity of the graph as we add edges

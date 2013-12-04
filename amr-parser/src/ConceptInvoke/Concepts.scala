@@ -46,7 +46,7 @@ class Concepts(phraseConceptPairs: Array[PhraseConceptPair],
     }
 
     def namedEntity(input: Input, entity: Entity) : PhraseConceptPair = {
-        val Input(sentence, notTokenized, _, _, ner) = input
+        val Input(_, sentence, notTokenized, _, _, ner) = input
         val entityType : String = entity.label match {
             case "PER" => "person"          // also president
             case "ORG" => "organization"    // also company, government-organization, criminal-organization
