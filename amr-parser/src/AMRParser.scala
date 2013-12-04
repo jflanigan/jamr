@@ -247,8 +247,9 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                     val snt = AMRTrainingData.getUlfString(training(i))("::snt").split(" ")
                     val input = new Input(None, tokenized(i).split(" "), snt, dependencies(i), nerFile(i))
                     val feats = stage1.decode(input).features
-                    input.graph = AMRTrainingData(training(i)).toOracleGraph(clearUnalignedNodes = false)
-                    return feats -= stage1Oracle.decode(input).features
+                    input.graph = Some(AMRTrainingData(training(i)).toOracleGraph(clearUnalignedNodes = false))
+                    feats -= stage1Oracle.decode(input).features
+                    return feats
                 }
 
                 optimizer.learnParameters(
@@ -354,10 +355,11 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                 logger(0, "Sentence:\n"+line+"\n")
                 val tok = tokenized(i)
                 val ner = nerFile(i)
-                val stage1Result = stage1.decode(new ConceptInvoke.Input(tok.split(" "),
-                                                                         line.split(" "),
-                                                                         dependencies(i),
-                                                                         ner))
+                val stage1Result = stage1.decode(new Input(None,
+                                                           tok.split(" "),
+                                                           line.split(" "),
+                                                           dependencies(i),
+                                                           ner))
                 logger(0, "Concepts:")
                 for ((id, node) <- stage1Result.graph.getNodeById) {
                     logger(0, "id = "+id+" concept = "+node.concept)
