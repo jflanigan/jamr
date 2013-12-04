@@ -6,13 +6,10 @@ import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 //import org.scalatest.Suite
 
-import edu.cmu.lti.nlp.amr.GraphDecoder.Input
-
-// TODO: A better name for this would be AMRData, or SpanData
-
-// AMRData holds the (possibly multiple) span annotations for a sentence and graph pair
+// AMRTrainingData holds the (possibly multiple) span annotations for a sentence and 
+// AMR graph pair
 // An element in spans is a span string (i.e. "1-2|0 0-1|0.0 2-3|0.1 4-5|0.2")
-case class AMRData(sentence: Array[String], graph: Graph, spans: ArrayBuffer[String], annotators: ArrayBuffer[String], annotation_dates: ArrayBuffer[String], amrStr: String, extras: String) {
+case class AMRTrainingData(sentence: Array[String], graph: Graph, spans: ArrayBuffer[String], annotators: ArrayBuffer[String], annotation_dates: ArrayBuffer[String], amrStr: String, extras: String) {
     def toInputGraph(): Graph = {
         // WARNING: this function modifies the graph
         val annotationIndex = annotators.size - 1
@@ -41,7 +38,7 @@ case class AMRData(sentence: Array[String], graph: Graph, spans: ArrayBuffer[Str
     }
 }
 
-object AMRData {
+object AMRTrainingData {
     def getUlfString(string: String) : Map[String,String] = {
         // returns a map representation of Ulf's weird string representation
         assert(string.matches("^# ::(.|\n)*"), "This is not a valid properties string")
