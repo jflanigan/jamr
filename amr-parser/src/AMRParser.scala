@@ -143,10 +143,10 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
         val stage1Features = options.getOrElse('stage1Features,"length,count").split(",").toList
         logger(0, "Stage1 features = " + stage1Features)
 
-        if (!options.contains('conceptTable)) {
+        if (!options.contains('stage1ConceptTable)) {
             System.err.println("Error: No concept table specified"); sys.exit(1)
         }
-        val conceptFile = options('conceptTable)
+        val conceptFile = options('stage1ConceptTable)
         val conceptTable = Source.fromFile(conceptFile).getLines.map(x => new PhraseConceptPair(x)).toArray
         val useNER = options.contains('ner)
         if (oracle) {
@@ -217,7 +217,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             if (!options.contains('trainingOptimizer)) {
                 System.err.println("Error: No training optimizer specified"); sys.exit(1)
             }
-            val optimizer: Optimizer = options('optimizer).asInstanceOf[String] match {
+            val optimizer: Optimizer = options('trainingOptimizer).asInstanceOf[String] match {
                 case "SSGD" => new SSGD()
                 case "Adagrad" => new Adagrad()
                 case x => { System.err.println("Error: unknown training optimizer " + x); sys.exit(1) }
@@ -235,8 +235,12 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             } else {
                 training.map(x => "")
             }
-            val tokenized = fromFile(options('tokenized).asInstanceOf[String]).getLines.toArray
-            val nerFile = Corpus.splitOnNewline(fromFile(options('ner).asInstanceOf[String]).getLines).toArray
+            val tokenized = fromFile(options('tokenized)).getLines.toArray
+            val nerFile = Corpus.splitOnNewline(fromFile(options('ner)).getLines).toArray
+            logger(0, "training.size = "+training.size.toInt)
+            logger(0, "tokenized.size = "+tokenized.size.toInt)
+            logger(0, "dependencies.size = "+dependencies.size.toInt)
+            logger(0, "ner.size = "+nerFile.size.toInt)
             System.err.println(" done")
 
             if (options.contains('stage1Train)) {
@@ -246,6 +250,8 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                 val stage1Oracle = initStage1(options, oracle = true)
 
                 def gradient(i: Int) : FeatureVector = {
+                    logger(0, "Sentence # "+i.toString)
+                    logger(0, "Sentence: "+tokenized(i))
                     val snt = AMRTrainingData.getUlfString(training(i))("::snt").split(" ")
                     val input = new Input(None, tokenized(i).split(" "), snt, dependencies(i), nerFile(i))
                     val feats = stage1.decode(input).features

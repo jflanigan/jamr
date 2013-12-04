@@ -26,7 +26,7 @@ case class Annotation[T](val snt: Array[String], val tok: Array[String], var ann
     // getSpan        - used to convert a span in 'tok' to a span in 'snt'.
     // Public member 'annotation' is the annotation.
 
-    assert(normalizedStr(snt,"") == normalizedStr(tok,""), "Tokenization schemes do not match. This may be an error with the parser, the input to the parser, or the POS tagger, or incorrect handling of Unicode characters by either. The offending line is:\n\n"+snt.mkString(" ")+" != "+tok.mkString(" ")+"\n"/*+"\nwhich was normalized to:\n"+normalizedStr(snt,"")+" != "+normalizedStr(tok,"")*/)
+    assert(normalizedStr(snt,"") == normalizedStr(tok,""), "Tokenization schemes do not match. This may be an error with the parser, the input to the parser, or the POS tagger, or incorrect handling of Unicode characters by either. The offending line is:\n"+snt.mkString(" ")+" != "+tok.mkString(" ")+"\n"+"The annotation is:\n"+annotation.toString/*+"\nwhich was normalized to:\n"+normalizedStr(snt,"")+" != "+normalizedStr(tok,"")*/)
     assert(snt.mkString.count(_ == ' ') == 0, "Spaces not allowed in tokens") // because we count spaces to find the left and right indices
     assert(tok.mkString.count(_ == ' ') == 0, "Spaces not allowed in tokens") // because we count spaces to find the left and right indices
 

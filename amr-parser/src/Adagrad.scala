@@ -34,7 +34,8 @@ class Adagrad extends Optimizer {
         var sumSq = FeatureVector()         // G_{i,i}
         for (i <- Range(1,passes+1)) {
             logger(0,"Pass "+i.toString)
-            for (t <- Random.shuffle(Range(0, trainingSize).toList)) {
+            //for (t <- Random.shuffle(Range(0, trainingSize).toList)) {
+            for (t <- Range(0, trainingSize)) {
                 // normally we would do weights -= stepsize * gradient(t)
                 // but instead we do this: (see equation 8 in SocherBauerManningNg_ACL2013.pdf)
                 for ((feat, value) <- gradient(t).fmap

@@ -37,8 +37,7 @@ class Concepts(phraseConceptPairs: Array[PhraseConceptPair],
 
         var conceptList = conceptTable.getOrElse(sentence(i), List()).filter(x => x.words == sentence.slice(i, i+x.words.size).toList)
         if (useNER) {
-            val indexNER = input.ner.getSpan((i,i+1))._1
-            conceptList = input.ner.annotation.filter(_.start == indexNER).map(x => namedEntity(input, x)).toList ::: conceptList
+            conceptList = input.ner.annotation.filter(_.start == i).map(x => namedEntity(input, x)).toList ::: conceptList
             //conceptList = input.ner.annotation.filter(_.start == i).map(x => PhraseConceptPair.entity(input, x)).toList ::: conceptList
         }
 

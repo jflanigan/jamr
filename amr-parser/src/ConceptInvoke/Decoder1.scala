@@ -41,7 +41,7 @@ class Decoder1(featureNames: List[String],
                 val score = features.localScore(input, concept)
                 val endpoint = i + concept.words.size - 1
                 logger(1, "score = "+score.toInt)
-                if ((bestState(endpoint) == None && score >= 0) || bestState(endpoint).get._1 <= score) { // we use <= so that earlier concepts (i.e. ones our conceptTable) have higher priority
+                if ((bestState(endpoint) == None && score >= 0) || (bestState(endpoint) != None && bestState(endpoint).get._1 <= score)) { // we use <= so that earlier concepts (i.e. ones our conceptTable) have higher priority
                     logger(1, "adding concept:"+concept)
                     bestState(endpoint) = Some((score, concept, i))
                 }
