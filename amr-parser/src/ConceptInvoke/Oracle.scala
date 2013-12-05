@@ -45,7 +45,7 @@ class Oracle(featureNames: List[String],
             //logger(1, "conceptList = "+conceptList.toString)
             val matching = conceptList.filter(x => x.words == words)
             for (concept <- matching) {
-                val f = features.localFeatures(input, concept)
+                val f = features.localFeatures(input, concept, span.start, span.end)
                 feats += f
                 score += features.weights.dot(f)
             }
