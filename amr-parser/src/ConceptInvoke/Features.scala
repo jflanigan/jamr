@@ -23,51 +23,78 @@ import scala.util.parsing.combinator._
 
 
 /**************************** Feature Functions *****************************/
+// TODO: Would this be faster if the ffTable was replaced with boolean variables and 
+// lots of if statements?
+
+// TODO: the input to the feature function is just Input and Span.  Change to use Span?
 
 class Features(featureNames: List[String]) {
     var weights = FeatureVector()
 
-    type FeatureFunction = (Input, PhraseConceptPair) => FeatureVector
+    type FeatureFunction = (Input, PhraseConceptPair, Int, Int) => FeatureVector
 
     val ffTable = Map[String, FeatureFunction](
+        "bias" -> ffBias,
         "length" -> ffLength,
         "count" -> ffCount,
         "conceptGivenPhrase" -> ffConceptGivenPhrase,
-        "fromNERTagger" -> ffFromNERTagger
+        "fromNERTagger" -> ffFromNERTagger,
+        "phraseConceptPair" -> ffPhraseConceptPair,
+        "pairWith2WordContext" -> ffPairWith2WordContext
     )
 
-    def ffLength(input: Input, concept: PhraseConceptPair) : FeatureVector = {
+    def ffBias(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
+        return FeatureVector(Map("bias" -> 1.0))
+    }
+
+    def ffLength(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
         return FeatureVector(Map("len" -> concept.words.size))
     }
 
-    def ffCount(input: Input, concept: PhraseConceptPair) : FeatureVector = {
+    def ffCount(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
         return FeatureVector(Map("N" -> concept.features.count))
     }
 
-    def ffConceptGivenPhrase(input: Input, concept: PhraseConceptPair) : FeatureVector = {
+    def ffConceptGivenPhrase(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
         return FeatureVector(Map("c|p" -> concept.features.conceptGivenPhrase))
     }
 
-    def ffFromNERTagger(input: Input, concept: PhraseConceptPair) : FeatureVector = {
+    def ffFromNERTagger(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
         if (concept.features.fromNER) { FeatureVector(Map("ner" -> 1.0))
         } else { FeatureVector(Map("ner" -> 0.0)) }
     }
 
-    var featureFunctions : List[FeatureFunction] = featureNames.map(x => ffTable(x)) // TODO: error checking on lookup
+    def ffPhraseConceptPair(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
+        return FeatureVector(Map("CP="+concept.words.mkString("_")+"=>"+concept.graphFrag.replaceAllLiterally(" ","_") -> 1.0))
+    }
 
-    def localFeatures(input: Input, concept: PhraseConceptPair) : FeatureVector = {
-        // Calculate the local features
-        val feats = FeatureVector()
-        for (ff <- featureFunctions) {
-            feats += ff(input, concept)
+    def ffPairWith2WordContext(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
+        val cp = "CP="+concept.words.mkString("_")+"=>"+concept.graphFrag.replaceAllLiterally(" ","_")
+        val feats = new FeatureVector()
+        if (start > 0) {
+            feats.fmap(cp+"+"+"W-1="+input.sentence(start-1)) = 1.0
+        }
+        if (end < input.sentence.size) {
+            feats.fmap(cp+"+"+"W+1="+input.sentence(end)) = 1.0
         }
         return feats
     }
 
-    def localScore(input: Input, concept: PhraseConceptPair) : Double = {
+    var featureFunctions : List[FeatureFunction] = featureNames.map(x => ffTable(x)) // TODO: error checking on lookup
+
+    def localFeatures(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
+        // Calculate the local features
+        val feats = FeatureVector()
+        for (ff <- featureFunctions) {
+            feats += ff(input, concept, start, end)
+        }
+        return feats
+    }
+
+    def localScore(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : Double = {
         var score = 0.0
         for (ff <- featureFunctions) {
-            score += weights.dot(ff(input, concept))
+            score += weights.dot(ff(input, concept, start, end))
         }
         return score
     }
