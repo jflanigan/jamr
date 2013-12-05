@@ -38,8 +38,8 @@ class Decoder1(featureNames: List[String],
             logger(1, "Possible invoked concepts: "+conceptList)
             // WARNING: the code below assumes that anything in the conceptList will not extend beyond the end of the sentence (and it shouldn't based on the code in Concepts)
             for (concept <- conceptList) {
+                val score = features.localScore(input, concept, i, i + concept.words.size)
                 val endpoint = i + concept.words.size - 1
-                val score = features.localScore(input, concept, i, endpoint)
                 logger(1, "score = "+score.toInt)
                 if ((bestState(endpoint) == None && score >= 0) || (bestState(endpoint) != None && bestState(endpoint).get._1 <= score)) { // we use <= so that earlier concepts (i.e. ones our conceptTable) have higher priority
                     logger(1, "adding concept:"+concept)
@@ -63,8 +63,7 @@ class Decoder1(featureNames: List[String],
                 logger(1, "Adding concept: "+concept.graphFrag)
                 graph.addSpan(sentence, backpointer, i+1, concept.graphFrag)
                 for (c <- conceptInvoker.invoke(input,i).filter(x => x.words == concept.words && x.graphFrag == concept.graphFrag)) { // add features for all matching phraseConceptPairs (this is what the Oracle decoder does, so we do the same here)
-                    val endpoint = i + concept.words.size - 1
-                    val f = features.localFeatures(input, c, i, endpoint)
+                    val f = features.localFeatures(input, c, i, i + concept.words.size)
                     feats += f
                     score += features.weights.dot(f)
                 }
