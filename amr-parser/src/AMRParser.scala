@@ -257,6 +257,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                     val feats = stage1.decode(input).features
                     input.graph = Some(AMRTrainingData(training(i)).toOracleGraph(clearUnalignedNodes = false))
                     feats -= stage1Oracle.decode(input).features
+                    logger(0, "Gradient:\n"+feats.toString)
                     return feats
                 }
 

@@ -36,9 +36,13 @@ class Oracle(featureNames: List[String],
         var score = 0.0
         val feats = new FeatureVector()
 
+        //logger(1, "Spans: "+graph.spans.toList)
+
         for (span <- graph.spans) {
-            val words = span.words.split(" ")
+            val words = span.words.split(" ").toList
             val conceptList = conceptInvoker.invoke(input, span.start)
+            //logger(1, "words = "+words.toString)
+            //logger(1, "conceptList = "+conceptList.toString)
             val matching = conceptList.filter(x => x.words == words)
             for (concept <- matching) {
                 val f = features.localFeatures(input, concept)
@@ -46,6 +50,8 @@ class Oracle(featureNames: List[String],
                 score += features.weights.dot(f)
             }
         }
+
+        //logger(1, "feats:\n"+feats.toString)
 
         return DecoderResult(graph, feats, score)
     }
