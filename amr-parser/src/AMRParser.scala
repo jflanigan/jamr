@@ -117,7 +117,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             System.err.println("Error: No stage2 decoder specified"); sys.exit(1)
         }
 
-        val decoder: Decoder = options('decoder) match {
+        val decoder: Decoder = options('stage2Decoder) match {
             case "Alg1" => new Alg1(features, labelset)
             case "Alg1a" => new Alg1(features, labelset, connectedConstraint = "and")
             case "Alg2" => new Alg2(features, labelset, connected)
@@ -341,11 +341,11 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                 System.err.println("Error: No stage2 weights file specified")
                 sys.exit(1)
             }
-            val weightfile : String = options('weights)
+            val stage2weightfile : String = options('stage2Weights)
 
             logger(0, "Reading weights")
             if (stage2 != None) {
-                stage2.get.features.weights.read(Source.fromFile(weightfile).getLines())
+                stage2.get.features.weights.read(Source.fromFile(stage2weightfile).getLines())
                 if (stage2Oracle != None) {
                     stage2Oracle.get.features.weights = stage2.get.features.weights
                 }
