@@ -364,7 +364,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                 new Array(0)
             }
 
-            for ((block, i) <- Corpus.splitOnNewline(fromFile(options('amrData).asInstanceOf[String]).getLines).filter(_.matches("(.|\n)*\n\\((.|\n)*")).zipWithIndex) {
+            for ((block, i) <- Corpus.splitOnNewline(fromFile(options('amrOracleData)).getLines).filter(_.matches("(.|\n)*\n\\((.|\n)*")).zipWithIndex) {
                 val line = input(i)
                 logger(0, "Sentence:\n"+line+"\n")
                 val tok = tokenized(i)
