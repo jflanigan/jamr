@@ -15,7 +15,8 @@ import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 
 class Concepts(phraseConceptPairs: Array[PhraseConceptPair],
-               useNER: Boolean = true) {
+               useNER: Boolean = true,
+               useDateExpr: Boolean = true) {
 
 // This class contains the code used to invoke concepts.
 // Concepts are invoked by calling the invoke() method, which returns a list of all
@@ -41,6 +42,9 @@ class Concepts(phraseConceptPairs: Array[PhraseConceptPair],
             conceptList = input.ner.annotation.filter(_.start == i).map(x => namedEntity(input, x)).toList ::: conceptList
             //conceptList = input.ner.annotation.filter(_.start == i).map(x => PhraseConceptPair.entity(input, x)).toList ::: conceptList
         }
+        if (useDateExpr) {
+            conceptList = dateEntities(input, i) ::: conceptList
+        }
 
         return conceptList
     }
@@ -65,7 +69,7 @@ class Concepts(phraseConceptPairs: Array[PhraseConceptPair],
         return PhraseConceptPair(sentence.slice(tokStart, tokEnd).toList, graphFrag, PhraseConceptFeatures(0,0,true))
     }
 
-    def dateEntity(input: Input, start: Int) : List[PhraseConceptPair] = {
+    def dateEntities(input: Input, start: Int) : List[PhraseConceptPair] = {
         var list : ArrayBuffer[PhraseConceptPair] = ArrayBuffer()
         tokens = input.sentence.drop(start)
         val string = tokens.mkString("\t")
