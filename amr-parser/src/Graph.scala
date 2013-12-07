@@ -203,8 +203,8 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
             node2.spans = ArrayBuffer(spans.size)
             currentId += 1
         }
-        logger(1, "nodeIds = "+nodeIds.reverse)
-        logger(1, "concepts = "+nodeIds.reverse.map(x => getNodeById(x).concept))
+        logger(2, "nodeIds = "+nodeIds.reverse)
+        logger(2, "concepts = "+nodeIds.reverse.map(x => getNodeById(x).concept))
         spans += Span(start, end, nodeIds, sentence.slice(start, end).mkString(" "), nodes2.reverse.apply(0), coRef = false)
     }
 

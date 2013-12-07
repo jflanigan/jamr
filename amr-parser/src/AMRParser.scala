@@ -375,11 +375,11 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                                                            line.split(" "),
                                                            dependencies(i),
                                                            ner))
-                logger(0, "Concepts:")
+                logger(1, "Concepts:")
                 for ((id, node) <- stage1Result.graph.getNodeById) {
-                    logger(0, "id = "+id+" concept = "+node.concept)
+                    logger(1, "id = "+id+" concept = "+node.concept)
                 }
-                logger(0, "\nSpans:")
+                logger(0, "Spans:")
                 for ((span, i) <- stage1Result.graph.spans.zipWithIndex) {
                     logger(0, "Span "+(i+1).toString+":  "+span.words+" => "+span.amr)
                 }
@@ -411,7 +411,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                 if (options.contains('amrOracleData)) {
                 val oracle = stage2Oracle.get
                 val oracleResult = oracle.decode(new Input(amrdata2, dependencies(i), oracle = true))
-                logger(0, "Oracle Spans:")
+                logger(0, "\nOracle Spans:")
                 for ((span, i) <- amrdata2.graph.spans.zipWithIndex) {
                     logger(0, "Span "+(i+1).toString+":  "+span.words+" => "+span.amr)
                 }
