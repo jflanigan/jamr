@@ -40,6 +40,7 @@ class Decoder1(featureNames: List[String],
             // WARNING: the code below assumes that anything in the conceptList will not extend beyond the end of the sentence (and it shouldn't based on the code in Concepts)
             for (concept <- conceptList) {
                 val score = features.localScore(input, concept, i, i + concept.words.size)
+                logger(1, "concept = "+concept.toString)
                 val endpoint = i + concept.words.size - 1
                 logger(2, "score = "+score.toInt)
                 if ((bestState(endpoint) == None && score >= 0) || (bestState(endpoint) != None && bestState(endpoint).get._1 <= score)) { // we use <= so that earlier concepts (i.e. ones our conceptTable) have higher priority

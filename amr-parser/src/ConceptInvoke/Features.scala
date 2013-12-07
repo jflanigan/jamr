@@ -39,6 +39,7 @@ class Features(featureNames: List[String]) {
         "count" -> ffCount,
         "conceptGivenPhrase" -> ffConceptGivenPhrase,
         "fromNERTagger" -> ffFromNERTagger,
+        "fromDateExpr" -> ffFromDateExpr,
         "phraseConceptPair" -> ffPhraseConceptPair,
         "pairWith2WordContext" -> ffPairWith2WordContext
     )
@@ -62,6 +63,11 @@ class Features(featureNames: List[String]) {
     def ffFromNERTagger(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
         if (concept.features.fromNER) { FeatureVector(Map("ner" -> 1.0))
         } else { FeatureVector(Map("ner" -> 0.0)) }
+    }
+
+    def ffFromDateExpr(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
+        if (concept.features.fromDateExpr) { FeatureVector(Map("datex" -> 1.0))
+        } else { FeatureVector(Map("datex" -> 0.0)) }
     }
 
     def ffPhraseConceptPair(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {

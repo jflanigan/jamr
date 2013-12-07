@@ -8,11 +8,13 @@ import scala.collection.mutable.ArrayBuffer
 
 case class PhraseConceptFeatures(count: Double,
                                  conceptGivenPhrase: Double,
-                                 fromNER: Boolean) {
+                                 fromNER: Boolean,
+                                 fromDateExpr: Boolean) {
 
     def this(string: String) = this(
         string.split(" ").find(x => x.matches("N=.*")).getOrElse("=0.0").split("=")(1).toDouble,
         string.split(" ").find(x => x.matches("""c\|p=.*""")).getOrElse("=0.0").split("=")(1).toDouble,
+        false,
         false)
 
 }
