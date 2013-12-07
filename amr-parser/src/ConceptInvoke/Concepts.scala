@@ -66,16 +66,18 @@ class Concepts(phraseConceptPairs: Array[PhraseConceptPair],
         //logger(1, "notTokenized.snt = "+notTokenized.snt.toList)
         //logger(1, "notTokenized.tok = "+notTokenized.tok.toList)
         val (tokStart, tokEnd) = notTokenized.getSpan((start, end))
-        return PhraseConceptPair(sentence.slice(tokStart, tokEnd).toList, graphFrag, PhraseConceptFeatures(0,0,true))
+        return PhraseConceptPair(sentence.slice(tokStart, tokEnd).toList, graphFrag, PhraseConceptFeatures(0,0,true,false))
     }
 
     def dateEntities(input: Input, start: Int) : List[PhraseConceptPair] = {
+        logger(2, "Finding date entities")
         var list : ArrayBuffer[PhraseConceptPair] = ArrayBuffer()
         tokens = input.sentence.drop(start)
         val string = tokens.mkString("\t")
         var monthRegex = "January|February|March|April|May|June|July|August|September|October|November|December|(?:Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sept?|Oct|Nov|Dec)[.]?"
         monthRegex = monthRegex + "|" + monthRegex.toLowerCase
 
+        logger(2, "Finding date entities 1")
         // 021114 => (date-entity :day 14 :month 11 :year 2002)
         val SixDigitDate = """(([0-9][0-9])([0-9][0-9])([0-9][0-9]))(?:\t.*)?""".r // (?: ) non-capturing group
         if (SixDigitDate.pattern.matcher(string).matches) {
@@ -88,6 +90,7 @@ class Concepts(phraseConceptPairs: Array[PhraseConceptPair],
             }
         }
 
+        logger(2, "Finding date entities 2")
         // 17 July 2003 => (date-entity :day 17 :month 7 :year 2003)
         val DayMonthYear = ("""(([0-9]?[0-9])\t("""+monthRegex+""")\t([0-9][0-9][0-9][0-9]))(?:\t.*)?""").r // (?: ) non-capturing group
         if (DayMonthYear.pattern.matcher(string).matches) {
@@ -97,6 +100,7 @@ class Concepts(phraseConceptPairs: Array[PhraseConceptPair],
             }
         }
 
+        logger(2, "Finding date entities 3")
         // July 2003 => (date-entity :month 7 :year 2003)
         val MonthYear = ("(("+monthRegex+""")\t([0-9][0-9][0-9][0-9]))(?:\t.*)?""").r
         if (MonthYear.pattern.matcher(string).matches) {
@@ -106,8 +110,9 @@ class Concepts(phraseConceptPairs: Array[PhraseConceptPair],
             }
         }
 
+        logger(2, "Finding date entities 4")
         // July 18 , 2008 => (date-entity :day 18 :month 7 :year 2008)
-        val MonthDayYear = ("(("+monthRegex+""")\t?,?\t([0-9][0-9][0-9][0-9]))(?:\t.*)?""").r
+        val MonthDayYear = ("(("+monthRegex+""")\t?([0-9][0-9]?)\t?,?\t([0-9][0-9][0-9][0-9]))(?:\t.*)?""").r
         if (MonthDayYear.pattern.matcher(string).matches) {
             list += {
                 var MonthDayYear(matching, month, day, year) = string
@@ -115,6 +120,7 @@ class Concepts(phraseConceptPairs: Array[PhraseConceptPair],
             }
         }
 
+        logger(2, "Finding date entities 5")
         // 2007-02-27 => (date-entity :day 27 :month 2 :year 2007)
         // 20030106 => (date-entity :day 6 :month 1 :year 2003)
         val EightDigitDate = ("""(([0-9]?[0-9][0-9]?[0-9])\t?[.-]?\t?([0-9][0-9])\t?[.-]?\t?([0-9][0-9]))(?:\t.*)?""").r // (?: ) non-capturing group
@@ -125,6 +131,7 @@ class Concepts(phraseConceptPairs: Array[PhraseConceptPair],
             }
         }
 
+        logger(2, "Finding date entities 6")
         // 1713 => (date-entity :year 1713)
         val Year = """(([0-9][0-9][0-9][0-9]))(?:\t.*)?""".r
         if (Year.pattern.matcher(string).matches) {
@@ -134,6 +141,7 @@ class Concepts(phraseConceptPairs: Array[PhraseConceptPair],
             }
         }
 
+        logger(2, "Finding date entities 7")
         // March => (date-entity :month 3)
         val Month = ("(("+monthRegex+"""))(?:\t.*)?""").r
         if (Month.pattern.matcher(string).matches) {
@@ -147,27 +155,28 @@ class Concepts(phraseConceptPairs: Array[PhraseConceptPair],
     }
 
     def mkDayMonthYear(matching: String, day: String, month: String, year: String) : PhraseConceptPair = {
-        PhraseConceptPair(tokens.take(matching.count(_ == '\t')).toList,
+        logger(0, "mkDayMonthYear("+matching+","+day+","+month+","+year+")")
+        PhraseConceptPair(tokens.take(matching.count(_ == '\t')+1).toList,
                           "(date-entity :day "+day.toInt.toString+" :month "+monthStr(month)+" :year "+year+")",
-                          PhraseConceptFeatures(0, 0, false))
+                          PhraseConceptFeatures(0, 0, false, true))
     }
 
     def mkMonthYear(matching: String, month: String, year: String) : PhraseConceptPair = {
-        PhraseConceptPair(tokens.take(matching.count(_ == '\t')).toList,
+        PhraseConceptPair(tokens.take(matching.count(_ == '\t')+1).toList,
                           "(date-entity :month "+monthStr(month)+" :year "+year+")",
-                          PhraseConceptFeatures(0, 0, false))
+                          PhraseConceptFeatures(0, 0, false, true))
     }
 
     def mkMonth(matching: String, month: String) : PhraseConceptPair = {
-        PhraseConceptPair(tokens.take(matching.count(_ == '\t')).toList,
+        PhraseConceptPair(tokens.take(matching.count(_ == '\t')+1).toList,
                           "(date-entity :month "+monthStr(month)+")",
-                          PhraseConceptFeatures(0, 0, false))
+                          PhraseConceptFeatures(0, 0, false, true))
     }
 
     def mkYear(matching: String, year: String) : PhraseConceptPair = {
-        PhraseConceptPair(tokens.take(matching.count(_ == '\t')).toList,
+        PhraseConceptPair(tokens.take(matching.count(_ == '\t')+1).toList,
                           "(date-entity :year "+year+")",
-                          PhraseConceptFeatures(0, 0, false))
+                          PhraseConceptFeatures(0, 0, false, true))
     }
 
     def monthStr(month: String) : String = {
