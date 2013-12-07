@@ -32,8 +32,8 @@ case class AMRTrainingData(sentence: Array[String], graph: Graph, spans: ArrayBu
         }
         graph.normalizeInverseRelations
         graph.addVariableToSpans
-        logger(1, "OracleGraph nodes = "+graph.nodes.map(x => x.concept).toList)
-        logger(1, "OracleGraph triples: "+graph.printTriples(detail = 1))
+        logger(2, "OracleGraph nodes = "+graph.nodes.map(x => x.concept).toList)
+        logger(2, "OracleGraph triples: "+graph.printTriples(detail = 1))
         return graph
     }
 }
