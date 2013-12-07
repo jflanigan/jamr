@@ -11,8 +11,8 @@ case class PhraseConceptFeatures(count: Double,
                                  fromNER: Boolean) {
 
     def this(string: String) = this(
-        string.split(" ").find(x => x.matches("Count=.*")).getOrElse("=0.0").split("=")(1).toDouble,
-        string.split(" ").find(x => x.matches("ConceptGivenPhrase=.*")).getOrElse("=0.0").split("=")(1).toDouble,
+        string.split(" ").find(x => x.matches("N=.*")).getOrElse("=0.0").split("=")(1).toDouble,
+        string.split(" ").find(x => x.matches("""c\|p=.*""")).getOrElse("=0.0").split("=")(1).toDouble,
         false)
 
 }

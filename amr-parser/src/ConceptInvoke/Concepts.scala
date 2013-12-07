@@ -18,7 +18,8 @@ class Concepts(phraseConceptPairs: Array[PhraseConceptPair],
                useNER: Boolean = true) {
 
 // This class contains the code used to invoke concepts.
-// Concepts are invoked by calling the invoke() method.
+// Concepts are invoked by calling the invoke() method, which returns a list of all
+// the concepts that match a span starting at index i of the tokenized sentence.
 
     val conceptTable: Map[String, List[PhraseConceptPair]] = Map()  // maps the first word in the phrase to a list of phraseConceptPairs
     for (pair <- phraseConceptPairs) {
