@@ -272,6 +272,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             } else {
 
                 ////////////////// Stage2 Training ////////////////
+
             val decoder = stage2.get
             val oracle = stage2Oracle.get
 
