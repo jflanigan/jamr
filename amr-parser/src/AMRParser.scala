@@ -380,7 +380,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                     logger(1, "id = "+id+" concept = "+node.concept)
                 }
                 logger(0, "Spans:")
-                for ((span, i) <- stage1Result.graph.spans.zipWithIndex) {
+                for ((span, i) <- stage1Result.graph.spans.sortBy(x => x.words.toLowerCase).zipWithIndex) {
                     logger(0, "Span "+(i+1).toString+":  "+span.words+" => "+span.amr)
                 }
                 logger(0, "")
@@ -391,7 +391,6 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
 
                 //val amrdata = AMRTrainingData(block)
                 val amrdata2 = AMRTrainingData(block)   // 2nd copy for oracle
-                logger(0, "Dependencies:\n"+dependencies(i)+"\n")
                 logger(1, "Node.spans:")
                 for (node <- amrdata2.graph.nodes) {
                     logger(1, node.concept+" "+node.spans.toList)
@@ -412,10 +411,11 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                 val oracle = stage2Oracle.get
                 val oracleResult = oracle.decode(new Input(amrdata2, dependencies(i), oracle = true))
                 logger(0, "\nOracle Spans:")
-                for ((span, i) <- amrdata2.graph.spans.zipWithIndex) {
+                for ((span, i) <- amrdata2.graph.spans.sortBy(x => x.words.toLowerCase).zipWithIndex) {
                     logger(0, "Span "+(i+1).toString+":  "+span.words+" => "+span.amr)
                 }
                 logger(0, "")
+                logger(0, "Dependencies:\n"+dependencies(i)+"\n")
                 logger(0, "Oracle:\n"+oracleResult.graph.printTriples(detail = 1, extra = (node1, node2, relation) => {
                     "\t"+oracle.features.ffDependencyPathv2(node1, node2, relation).toString.split("\n").filter(_.matches("^C1.*")).toList.toString+"\t"+oracle.features.localScore(node1, node2, relation).toString
                     //"\n"+oracle.features.ffDependencyPathv2(node1, node2, relation).toString.split("\n").filter(_.matches("^C1.*")).toList.toString+"\nScore = "+decoder.features.localScore(node1, node2, relation).toString+"  Relevent weights:\n"+decoder.features.weights.slice(decoder.features.localFeatures(node1, node2, relation)).toString
