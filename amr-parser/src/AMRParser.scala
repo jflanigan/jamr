@@ -168,7 +168,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
         val outputFormat = options.getOrElse('outputFormat,"triples").split(",").toList
 
         val stage1 : ConceptInvoke.Decoder = {
-            if (!options.contains('stage1Oracle)) {
+            if (!options.contains('stage1Oracle) && !options.contains('stage2Train)) {
                 initStage1(options, oracle = false)
             } else {
                 assert(!options.contains('stage1Train), "Error: --stage1-oracle should not be specified with --stage1-train")
