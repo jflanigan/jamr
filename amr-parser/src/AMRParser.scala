@@ -427,7 +427,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                     logger(0, "")
                     if (options.contains('stage1Eval)) {
                         for (span <- stage1Result.graph.spans) {
-                            if (oracleResult.graph.spans.count(x => x.start == span.start && x.end == span.end && x.amr.prettyString(detail = 0, pretty = false) == span.amr.prettyString(detail = 0, pretty = false)) > 0) {
+                            if (oracleResult.graph.spans.count(x => x.start == span.start && x.end == span.end /*&& x.amr.prettyString(detail = 0, pretty = false).replaceAll("""\([^ ]* :name ""","") == span.amr.prettyString(detail = 0, pretty = false).replaceAll("""\([^ ]* :name ""","")*/) > 0) {
                                 spanF1.correct += 1
                             }
                         }
