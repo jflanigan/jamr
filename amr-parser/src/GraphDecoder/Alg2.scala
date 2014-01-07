@@ -21,10 +21,45 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
     // Base class has defined:
     // val features: Features
 
-    def decode(input: Input) : DecoderResult = {
+    private var inputSave: Input = _
+    def input : Input = inputSave
+    def input_= (i: Input) {
+        inputSave = i
+        features.input = i
+        precomputeEdgeWeights
+    }
+
+    private var edgeWeights : Array[Array[Array[(String, Double)]]] = Array()
+
+    def precomputeEdgeWeights() {
+        // WARNING: THIS CODE ASSUMES THAT THE LAGRANGE MULTIPLIERS ARE SET TO ZERO
+        // TODO: fix this so errors don't occur
+        var graph = input.graph.get.duplicate
+        val nodes : Array[Node] = graph.nodes.filter(_.name != None).toArray
+        //val nonDistinctLabels = labelSet.toList.filter(x => x._2 > 1) // TODO: remove
+        //val distinctLabels = labelSet.filter(x => x._2 == 1)  // TODO: remove
+        //val nonDistinctLabels : Array[(String, Int)] = new Array(0)
+        //val distinctLabels = labelSet
+        //edgeWeightsDistict = weightMatrix(nodes, distinctLabels)
+        //edgeWeightsND = weightMatrix(nodes, nonDistinctLabels)
+        edgeWeights = weightMatrix(nodes, labelSet)
+    }
+
+    def weightMatrix(nodes: Array[Node], labels: Array[(String, Int)]) : Array[Array[Array[(String, Double)]]] = {
+        for ((node1, index1) <- nodes.zipWithIndex) yield {
+            for ((node2, index2) <- nodes.zipWithIndex) yield {
+                if (index1 == index2) {
+                    Array((":self", 0.0)) // we won't add this to the queue anyway, so it's ok
+                } else {
+                    labels.map(x => (x._1, features.localScore(node1, node2, x._1)))
+                }
+            }
+        }
+    }
+
+    def decode() : DecoderResult = {
         // Assumes that Node.relations has been setup correctly for the graph fragments
         var graph = input.graph.get.duplicate
-        features.input = input
         //val nodes : Array[Node] = graph.nodes.filter.toArray
         val nodes : Array[Node] = graph.nodes.filter(_.name != None).toArray
         //val nonDistinctLabels = labelSet.toList.filter(x => x._2 > 1) // TODO: remove
@@ -90,6 +125,21 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
 
         //logger(1, "Adding positive edges")
         val neighbors : Array[Array[(String, Double)]] = {
+            for ((nodes2, index1) <- edgeWeights.zipWithIndex) yield {
+                val node1 = nodes(index1)
+                for ((labelWeights, index2) <- nodes2.zipWithIndex) yield {
+                    val node2 = nodes(index2)
+                    val (label, weight) = labelWeights.map(x => (x._1, x._2 + features.weights.dot(features.ffLabelWithId(node1, node2, x._1)))).maxBy(_._2)
+                    if (weight > 0) {   // Add if positive
+                        addEdge(node1, index1, node2, index2, label, weight)
+                    }
+                    (label, weight)
+                }
+            }
+        }
+
+/*
+        val neighbors : Array[Array[(String, Double)]] = {
             for ((node1, index1) <- nodes.zipWithIndex) yield {
                 for ((node2, index2) <- nodes.zipWithIndex) yield {
                     if (index1 == index2) {
@@ -123,13 +173,14 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
                     }
                 }
             }
-        }
+        } */
 
-        //logger(1, "Neighbors matrix")
+        // Uncomment to print neighbors matrix
+        /*logger(1, "Neighbors matrix")
         for { (node1, index1) <- nodes.zipWithIndex
               ((label, weight), index2) <- neighbors(index1).zipWithIndex } {
-            //logger(1,"neighbors("+index1.toString+","+index2.toString+")="+label+" "+weight.toString)
-        }
+            logger(1,"neighbors("+index1.toString+","+index2.toString+")="+label+" "+weight.toString)
+        }*/
 
         // Add negative weights to the queue
         //logger(1, "Adding negative edges")
