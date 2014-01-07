@@ -10,8 +10,14 @@ class Oracle(featureNames: List[String])
     // Base class has defined:
     // val features: Features
 
-    def decode(input: Input) : DecoderResult = {
-        features.input = input
+    private var inputSave: Input = _
+    def input : Input = inputSave
+    def input_= (i: Input) {
+        inputSave = i
+        features.input = i
+    }
+
+    def decode() : DecoderResult = {
         val graph = input.graph.get
         var feats = new FeatureVector()
 

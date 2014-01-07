@@ -39,11 +39,18 @@ class DualDecomposition(featureNames: List[String], labelSet: Array[(String, Int
         }
     }
 
-    def decode(input: Input) : DecoderResult = {
-        features.input = input
+    private var inputSave: Input = _
+    def input : Input = inputSave
+    def input_= (i: Input) {
+        inputSave = i
+        features.input = i
         alg1.features.weights = features.weights    // Weights shared across the decoders
         alg2.features.weights = features.weights
+        alg1.input = i
+        alg2.input = i
+    }
 
+    def decode() : DecoderResult = {
         var result = DecoderResult(Graph.empty(), FeatureVector(), 0.0)
         var delta = FeatureVector()
         do {

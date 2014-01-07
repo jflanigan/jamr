@@ -30,10 +30,17 @@ class LagrangianRelaxation(featureNames: List[String], labelSet: Array[(String, 
     val labelConstraint = labelSet.toMap
     val IdLabel = """Id1.*[+]L=(.*)""".r
 
-    def decode(input: Input) : DecoderResult = {
-        features.input = input
-        alg2.features.weights = features.weights    // Set alg2's weights same our weights (shared weights)
+    private var inputSave: Input = _
+    def input : Input = inputSave
+    def input_= (i: Input) {
+        inputSave = i
+        features.input = i
+        alg2.features.weights = features.weights    // Set alg2's weights same our weights (shared weights) (This must be done before we set alg2.input, because it precomputes edge weights using its feature weights)
+        alg2.input = i
+    }
 
+
+    def decode() : DecoderResult = {
         var result = DecoderResult(Graph.empty(), FeatureVector(), 0.0)
 
         val multipliers = FeatureVector()
@@ -44,7 +51,7 @@ class LagrangianRelaxation(featureNames: List[String], labelSet: Array[(String, 
             logger(1, "multipliers: \n"+multipliers.toString)
             features.weights -= multipliers
             //logger(2, "alg2 weights: \n"+features.weights)
-            result = alg2.decode(input)
+            result = alg2.decode
             logger(1, "id features: \n"+result.features.slice(x => x.startsWith("Id1=")))
             features.weights += multipliers // undo our adjustment to the weights
 

@@ -35,7 +35,7 @@ class Features(featureNames: List[String]) {
 
     def input: Input = inputSave
     def input_= (i: Input) {
-        inputSave = input
+        inputSave = i
         graph = i.graph.get
         sentence = i.sentence
         dependencies = i.dependencies
