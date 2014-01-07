@@ -124,7 +124,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             case "Alg1a" => new Alg1(features, labelset, connectedConstraint = "and")
             case "Alg2" => new Alg2(features, labelset, connected)
             case "DD" => new DualDecomposition(features, labelset, 1)
-            case "LR" => new LagrangianRelaxation(features, labelset, 1, 30)
+            case "LR" => new LagrangianRelaxation(features, labelset, 1, 100)
             case x => { System.err.println("Error: unknown stage2 decoder " + x); sys.exit(1) }
         }
 
@@ -380,7 +380,8 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                 logger(0, "Sentence:\n"+line+"\n")
                 val tok = tokenized(i)
                 val ner = nerFile(i)
-                val stage1Result = stage1.decode(new Input(None,
+                val inputGraph = if (options.contains('stage1Oracle)) { Some(AMRTrainingData(block).toInputGraph) } else { None }
+                val stage1Result = stage1.decode(new Input(inputGraph,
                                                            tok.split(" "),
                                                            line.split(" "),
                                                            dependencies(i),
