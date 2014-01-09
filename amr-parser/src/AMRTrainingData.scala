@@ -10,7 +10,7 @@ import scala.collection.mutable.ArrayBuffer
 // AMR graph pair
 // An element in spans is a span string (i.e. "1-2|0 0-1|0.0 2-3|0.1 4-5|0.2")
 case class AMRTrainingData(sentence: Array[String], graph: Graph, spans: ArrayBuffer[String], annotators: ArrayBuffer[String], annotation_dates: ArrayBuffer[String], amrStr: String, extras: String) {
-    def toInputGraph(): Graph = {
+    def toInputGraph(): Graph = { // Input to stage 2
         // WARNING: this function modifies the graph
         val annotationIndex = annotators.size - 1
         logger(1,"Sentence = " + sentence.toList)
@@ -23,7 +23,7 @@ case class AMRTrainingData(sentence: Array[String], graph: Graph, spans: ArrayBu
         logger(1, "InputGraph triples: "+graph.printTriples(detail = 1))
         return graph
     }
-    def toOracleGraph(clearUnalignedNodes : Boolean): Graph = {
+    def toOracleGraph(clearUnalignedNodes : Boolean): Graph = { // Stage2 oracle
         // WARNING: this function modifies the graph
         val annotationIndex = annotators.size - 1
         graph.loadSpans(spans(annotationIndex), sentence)

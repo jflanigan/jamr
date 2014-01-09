@@ -124,7 +124,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             case "Alg1a" => new Alg1(features, labelset, connectedConstraint = "and")
             case "Alg2" => new Alg2(features, labelset, connected)
             case "DD" => new DualDecomposition(features, labelset, 1)
-            case "LR" => new LagrangianRelaxation(features, labelset, 1, 100)
+            case "LR" => new LagrangianRelaxation(features, labelset, 1, 500)
             case x => { System.err.println("Error: unknown stage2 decoder " + x); sys.exit(1) }
         }
 
