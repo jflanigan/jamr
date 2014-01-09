@@ -37,7 +37,7 @@ class Concepts(phraseConceptPairs: Array[PhraseConceptPair],
         // Note: none of the concepts returned have spans that go past the end of the sentence
         val sentence = input.sentence
 
-        var conceptList = conceptTable.getOrElse(sentence(i), List()).filter(x => x.words == sentence.slice(i, i+x.words.size).toList)
+        var conceptList = conceptTable.getOrElse(sentence(i), List()).filter(x => x.words == sentence.slice(i, i+x.words.size).toList) // TODO: this this case insensitive??
         if (useNER) {
             conceptList = input.ner.annotation.filter(_.start == i).map(x => namedEntity(input, x)).toList ::: conceptList
             //conceptList = input.ner.annotation.filter(_.start == i).map(x => PhraseConceptPair.entity(input, x)).toList ::: conceptList
