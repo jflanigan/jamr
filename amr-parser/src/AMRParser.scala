@@ -93,6 +93,14 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
       }
     }
 
+    def time[A](a: => A) = {
+       val now = System.nanoTime
+       val result = a
+       val micros = (System.nanoTime - now) / 1000
+       System.err.println("Decoded in %,d microseconds".format(micros))
+       result
+    }
+
     def stage2Features(options: OptionMap) : List[String] = {
         options.getOrElse('stage2Features, "conceptBigram,rootConcept").split(",").toList.filter(x => x != "edgeId" && x != "labelWithId")
     }
@@ -376,6 +384,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             val spanF1 = F1(0,0,0)
 
             for ((block, i) <- Corpus.splitOnNewline(fromFile(options('amrOracleData)).getLines).filter(_.matches("(.|\n)*\n\\((.|\n)*"))/*.take(877)*/.zipWithIndex) {
+            time {
                 val line = input(i)
                 logger(0, "Sentence:\n"+line+"\n")
                 val tok = tokenized(i)
@@ -456,6 +465,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                 if (outputFormat.contains("triples")) {
                     println(decoderResult.graph.printTriples(detail = 1)+"\n")
                 }
+            }
             }
             
             if (options.contains('stage1Eval)) {
