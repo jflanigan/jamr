@@ -54,6 +54,30 @@ object CheckAMR {
                 } else {
                     println("No cycle")
                 }
+                var simple = true
+                for (node1 <- graph.nodes) {
+                    for ((_,node2) <- node1.relations) {
+                        var count = 0
+                        for ((_,node3) <- node1.relations) {
+                            if (node3.id == node2.id) {
+                                count += 1
+                            }
+                        }
+                        for ((_,node3) <- node2.relations) {
+                            if (node3.id == node1.id) {
+                                count += 1
+                            }
+                        }
+                        if (count > 1) {
+                            simple = false
+                        }
+                    }
+                }
+                if (simple) {
+                    println("Graph simple")
+                } else {
+                    println("Graph not simple")
+                }
                 i += 1
             //} else {
             //    println(block+"\n")
