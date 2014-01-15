@@ -1,8 +1,8 @@
 package edu.cmu.lti.nlp.amr
 
-import scala.annotation.tailrec
-
 // Written by Sam Thomsom
+
+import scala.annotation.tailrec
 
 object CycleTester {
   /**
