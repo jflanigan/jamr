@@ -1,6 +1,5 @@
+// Copyright (c) 2014, Sam Thomson
 package edu.cmu.lti.nlp.amr
-
-// Written by Sam Thomsom
 
 import scala.annotation.tailrec
 
