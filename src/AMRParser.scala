@@ -427,7 +427,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                                                              dependencies(i)))
                 }//endif (!options.contains('stage1Only))
 
-                if (options.contains('amrOracleData)) {
+                if (false && options.contains('amrOracleData)) {
                     val oracle = stage2Oracle.get
                     val oracleResult = oracle.decode(new Input(amrdata2, dependencies(i), oracle = true))
                     logger(0, "\nOracle Spans:")
