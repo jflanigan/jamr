@@ -24,17 +24,17 @@ import scala.math.sqrt
 /******************************** Training **********************************/
 
 class SSGD extends Optimizer {
-    def learnParameters(gradient: Int => FeatureVector,
+    def learnParameters(gradient: (Int, Int) => FeatureVector,
                         weights: FeatureVector,
                         trainingSize: Int,
                         passes: Int,
                         stepsize: Double,
                         avg: Boolean) : FeatureVector = {
         var avg_weights = FeatureVector()
-        for (i <- Range(1,passes+1)) {
-            logger(0,"Pass "+i.toString)
+        for (i <- Range(0,passes)) {
+            logger(0,"Pass "+(i+1).toString)
             for (t <- Random.shuffle(Range(0, trainingSize).toList)) {
-                weights -= stepsize * gradient(t)
+                weights -= stepsize * gradient(i, t)
             }
             avg_weights += weights
         }

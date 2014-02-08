@@ -24,7 +24,7 @@ import scala.math.sqrt
 /******************************** Training **********************************/
 
 abstract class Optimizer {
-    def learnParameters(gradient: Int => FeatureVector,
+    def learnParameters(gradient: (Int, Int) => FeatureVector,  // (pass, i)
                         weights: FeatureVector,
                         trainingSize: Int,
                         passes: Int,
