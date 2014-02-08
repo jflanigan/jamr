@@ -50,7 +50,8 @@ class Features(featureNames: List[String]) {
     val ffTable = Map[String, FeatureFunction](
         "edgeId" -> ffEdgeId,
         "labelWithId" -> ffLabelWithId,
-        "bias" -> ffBias,
+        "bias1" -> ffBias1,
+        "bias" -> ffBias,   // TODO: should be renamed to "biaslabel"
         "biasCSuf" -> ffBiasCSuf,
         "typeBias" -> ffTypeBias,
         "self" -> ffSelf,
@@ -85,6 +86,10 @@ class Features(featureNames: List[String]) {
 
     def ffLabelWithId(node1: Node, node2: Node, label: String) : FeatureVector = {  // Used for Langragian Relaxation
         return FeatureVector(Map(("Id1="+node1.id+"+L="+label) -> 1.0))
+    }
+
+    def ffBias1(node1: Node, node2: Node, label: String) : FeatureVector = {
+        return FeatureVector(Map("Bias" -> 1.0))
     }
 
     def ffBias(node1: Node, node2: Node, label: String) : FeatureVector = {
