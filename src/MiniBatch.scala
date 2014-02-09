@@ -27,12 +27,15 @@ class MiniBatch(optimizer: Optimizer, miniBatchSize: Int) extends Optimizer {
         val numMiniBatches = ceil(trainingSize.toDouble / miniBatchSize.toDouble).toInt
         val trainShuffle : Array[Array[Int]] = Range(0, passes).map(x => Random.shuffle(Range(0, trainingSize).toList).toArray).toArray
         val miniGradient : (Int, Int) => FeatureVector = (pass, i) => {
-            var grad = FeatureVector()
+            //var grad = FeatureVector()
             assert(i < numMiniBatches, "MiniBatch optimizer mini-batch index too large")
-            for (j <- Range(i*miniBatchSize, min((i+1)*miniBatchSize, trainingSize))) {
-                grad += gradient(0, trainShuffle(pass)(j))
-            }
-            return grad
+            //for (j <- Range(i*miniBatchSize, min((i+1)*miniBatchSize, trainingSize))) {
+            //    grad += gradient(0, trainShuffle(pass)(j))
+            //}
+            //return grad
+            val par = Range(i*miniBatchSize, min((i+1)*miniBatchSize, trainingSize)).par
+            val grad = par.map(x => gradient(0, trainShuffle(pass)(x)))
+            return grad.reduce((a, b) => { a += b; a})
         }
         return optimizer.learnParameters(miniGradient,
                                          weights,
