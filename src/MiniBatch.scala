@@ -34,8 +34,8 @@ class MiniBatch(optimizer: Optimizer, miniBatchSize: Int) extends Optimizer {
             //}
             //return grad
             val par = Range(i*miniBatchSize, min((i+1)*miniBatchSize, trainingSize)).par
-            val grad = par.map(x => gradient(0, trainShuffle(pass)(x)))
-            return grad.reduce((a, b) => { a += b; a})
+            val grad = par.map(x => gradient(0, trainShuffle(pass)(x))).seq // TODO: if FeatureVector was immutable, wouldn't need to do convert to non-parallel collection...
+            return grad.reduce((a, b) => { a += b; a })
         }
         return optimizer.learnParameters(miniGradient,
                                          weights,
