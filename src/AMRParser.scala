@@ -101,71 +101,6 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
        result
     }
 
-    def stage2Features(options: OptionMap) : List[String] = {
-        options.getOrElse('stage2Features, "conceptBigram,rootConcept").split(",").toList.filter(x => x != "edgeId" && x != "labelWithId")
-    }
-
-    def initStage2(options: OptionMap) : GraphDecoder.Decoder = {
-        if (!options.contains('stage2Labelset)) {
-            System.err.println("Error: No labelset file specified"); sys.exit(1)
-        }
-
-        val labelset: Array[(String, Int)] = { 
-            Source.fromFile(options('stage2Labelset)).getLines().toArray.map(x => {
-                val split = x.split(" +")
-                (split(0), if (split.size > 1) { split(1).toInt } else { 1000 })
-            })
-        }
-
-        val features = stage2Features(options)
-        logger(0, "features = " + features)
-
-        val connected = !options.contains('stage2NotConnected)
-        logger(0, "connected = " + connected)
-
-        if (!options.contains('stage2Decoder)) {
-            System.err.println("Error: No stage2 decoder specified"); sys.exit(1)
-        }
-
-        val decoder: Decoder = options('stage2Decoder) match {
-            case "Alg1" => new Alg1(features, labelset)
-            case "Alg1a" => new Alg1(features, labelset, connectedConstraint = "and")
-            case "Alg2" => new Alg2(features, labelset, connected)
-            case "DD" => new DualDecomposition(features, labelset, 1)
-            case "LR" => new LagrangianRelaxation(features, labelset, 1, 500)
-            case x => { System.err.println("Error: unknown stage2 decoder " + x); sys.exit(1) }
-        }
-
-        val outputFormat = options.getOrElse('outputFormat,"triples").split(",").toList
-        if (outputFormat.contains("AMR") && !connected) {
-            println("Cannot have both -stage2NotConnected flag and --outputFormat \"AMR\""); sys.exit(1)
-        }
-
-        if (options('stage2Decoder) == "Alg1" && outputFormat.contains("AMR")) {
-            println("Cannot have --outputFormat \"AMR\" for stage2 Alg1 (graph may not be connected!)")
-            sys.exit(1)
-        }
-
-        return decoder
-    }
-
-    def initStage1(options: OptionMap, oracle: Boolean = false) : ConceptInvoke.Decoder = {
-        val stage1Features = options.getOrElse('stage1Features,"length,count").split(",").toList
-        logger(0, "Stage1 features = " + stage1Features)
-
-        if (!options.contains('stage1ConceptTable)) {
-            System.err.println("Error: No concept table specified"); sys.exit(1)
-        }
-        val conceptFile = options('stage1ConceptTable)
-        val conceptTable = Source.fromFile(conceptFile).getLines.map(x => new PhraseConceptPair(x)).toArray
-        val useNER = options.contains('ner)
-        if (oracle) {
-            new ConceptInvoke.Oracle(stage1Features, conceptTable, useNER)
-        } else {
-            new ConceptInvoke.Decoder1(stage1Features, conceptTable, useNER)
-        }
-    }
-
     def main(args: Array[String]) {
 
         if (args.length == 0) { println(usage); sys.exit(1) }
@@ -177,10 +112,10 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
 
         val stage1 : ConceptInvoke.Decoder = {
             if (!options.contains('stage1Oracle) && !options.contains('stage2Train)) {
-                initStage1(options, oracle = false)
+                ConceptInvoke.init(options, oracle = false)
             } else {
                 assert(!options.contains('stage1Train), "Error: --stage1-oracle should not be specified with --stage1-train")
-                initStage1(options, oracle = true)
+                ConceptInvoke.init(options, oracle = true)
             }
         }
 
@@ -188,18 +123,17 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             if((options.contains('stage1Only) || options.contains('stage1Train)) && !options.contains('stage2Train)) {
                 None
             } else {
-                Some(initStage2(options))
+                Some(GraphDecoder.init(options))
             }
         }
 
         val stage2Oracle : Option[GraphDecoder.Decoder] = {
             if(options.contains('amrOracleData) || options.contains('stage2Train)) {
-                Some(new GraphDecoder.Oracle(stage2Features(options)))
+                Some(new GraphDecoder.Oracle(GraphDecoder.getFeatures(options)))
             } else {
                 None
             }
         }
-
 
         if (options.contains('stage1Train) || options.contains('stage2Train)) {
 
@@ -257,7 +191,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
 
                 ////////////////// Stage1 Training ////////////////
 
-                val stage1Oracle = initStage1(options, oracle = true)
+                val stage1Oracle = ConceptInvoke.init(options, oracle = true)
 
                 def gradient(i: Int) : FeatureVector = {
                     logger(0, "Sentence # "+i.toString)
