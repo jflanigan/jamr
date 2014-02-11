@@ -39,54 +39,31 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
         def isSwitch(s : String) = (s(0) == '-')
         list match {
             case Nil => map
-            case "--stage1-only" :: tail =>
-                      parseOptions(map ++ Map('stage1Only -> "true"), tail)
-            case "--stage1-oracle" :: tail =>
-                      parseOptions(map ++ Map('stage1Oracle -> "true"), tail)
-            case "--stage1-train" :: tail =>
-                      parseOptions(map ++ Map('stage1Train -> "true"), tail)
-            case "--stage1-eval" :: tail =>
-                      parseOptions(map ++ Map('stage1Eval -> "true"), tail)
-            case "--stage1-features" :: value :: tail =>
-                      parseOptions(map ++ Map('stage1Features -> value), tail)
-            case "--stage1-weights" :: value :: tail =>
-                      parseOptions(map ++ Map('stage1Weights -> value), tail)
-            case "--stage1-concept-table" :: value :: tail =>
-                      parseOptions(map ++ Map('stage1ConceptTable -> value), tail)
-            case "--stage2-decoder" :: value :: tail =>
-                      parseOptions(map ++ Map('stage2Decoder -> value), tail)
-            case "--stage2-train" :: tail =>
-                      parseOptions(map ++ Map('stage2Train -> "true"), tail)
-            case "--stage2-features" :: value :: tail =>
-                      parseOptions(map ++ Map('stage2Features -> value), tail)
-            case "--stage2-weights" :: value :: tail =>
-                      parseOptions(map ++ Map('stage2Weights -> value), tail)
-            case "--stage2-labelset" :: value :: tail =>
-                      parseOptions(map ++ Map('stage2Labelset -> value), tail)
-            case "--stage2-not-connected" :: tail =>
-                      parseOptions(map ++ Map('stage2NotConnected -> "true"), tail)
-            case "--training-loss" :: value :: tail =>
-                      parseOptions(map ++ Map('trainingLoss -> value), tail)
-            case "--training-optimizer" :: value :: tail =>
-                      parseOptions(map ++ Map('trainingOptimizer -> value), tail)
-            case "--training-stepsize" :: value :: tail =>
-                      parseOptions(map ++ Map('trainingStepsize -> value), tail)
-            case "--training-passes" :: value :: tail =>
-                      parseOptions(map ++ Map('trainingPasses -> value), tail)
-            case "--output-format" :: value :: tail =>
-                      parseOptions(map ++ Map('outputFormat -> value), tail)
-            case "--amr-oracle-data" :: value :: tail =>
-                      parseOptions(map ++ Map('amrOracleData -> value), tail)
-            case "--dependencies" :: value :: tail =>
-                      parseOptions(map ++ Map('dependencies -> value), tail)
-            case "--ner" :: value :: tail =>
-                      parseOptions(map ++ Map('ner -> value), tail)
-            case "--tok" :: value :: tail =>
-                      parseOptions(map ++ Map('tokenized -> value), tail)
-            case "-v" :: value :: tail =>
-                      parseOptions(map ++ Map('verbosity -> value), tail)
-            case string :: opt2 :: tail if isSwitch(opt2) => 
-                      parseOptions(map ++ Map('infile -> string), list.tail)
+            case "--stage1-only" :: l =>                 parseOptions(map + ('stage1Only -> "true"), l)
+            case "--stage1-oracle" :: l =>               parseOptions(map + ('stage1Oracle -> "true"), l)
+            case "--stage1-train" :: l =>                parseOptions(map + ('stage1Train -> "true"), l)
+            case "--stage1-eval" :: l =>                 parseOptions(map + ('stage1Eval -> "true"), l)
+            case "--stage1-features" :: value :: l =>    parseOptions(map + ('stage1Features -> value), l)
+            case "--stage1-weights" :: value :: l =>     parseOptions(map + ('stage1Weights -> value), l)
+            case "--stage1-concept-table" :: v :: l =>   parseOptions(map + ('stage1ConceptTable -> v), l)
+            case "--stage2-decoder" :: value :: l =>     parseOptions(map + ('stage2Decoder -> value), l)
+            case "--stage2-train" :: l =>                parseOptions(map + ('stage2Train -> "true"), l)
+            case "--stage2-features" :: value :: l =>    parseOptions(map + ('stage2Features -> value), l)
+            case "--stage2-weights" :: value :: l =>     parseOptions(map + ('stage2Weights -> value), l)
+            case "--stage2-labelset" :: value :: l =>    parseOptions(map + ('stage2Labelset -> value), l)
+            case "--stage2-not-connected" :: l =>        parseOptions(map + ('stage2NotConnected -> "true"), l)
+            case "--training-loss" :: value :: l =>      parseOptions(map + ('trainingLoss -> value), l)
+            case "--training-optimizer" :: value :: l => parseOptions(map + ('trainingOptimizer -> value), l)
+            case "--training-stepsize" :: value :: l =>  parseOptions(map + ('trainingStepsize -> value), l)
+            case "--training-passes" :: value :: l =>    parseOptions(map + ('trainingPasses -> value), l)
+            case "--output-format" :: value :: l =>      parseOptions(map + ('outputFormat -> value), l)
+            case "--amr-oracle-data" :: value :: tail => parseOptions(map + ('amrOracleData -> value), tail)
+            case "--dependencies" :: value :: tail =>    parseOptions(map + ('dependencies -> value), tail)
+            case "--ner" :: value :: tail =>             parseOptions(map + ('ner -> value), tail)
+            case "--tok" :: value :: tail =>             parseOptions(map ++ Map('tokenized -> value), tail)
+            case "-v" :: value :: tail =>                parseOptions(map ++ Map('verbosity -> value), tail)
+
+            case string :: opt2 :: tail if isSwitch(opt2) => parseOptions(map ++ Map('infile -> string), list.tail)
             case string :: Nil =>  parseOptions(map ++ Map('infile -> string), list.tail)
             case option :: tail => println("Error: Unknown option "+option) 
                                    sys.exit(1) 
