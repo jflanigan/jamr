@@ -66,6 +66,5 @@ package object GraphDecoder {
 
         return decoder
     }
-
 }
 
