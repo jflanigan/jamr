@@ -130,6 +130,12 @@ class Features(featureNames: List[String]) {
         return FeatureVector(Map(("Edge") -> 1.0))
     }
 
+    def ffDistancev0(node1: Node, node2: Node, label: String) : FeatureVector = {
+        val distance = min(Math.abs(graph.spans(node1.spans(0)).start - graph.spans(node2.spans(0)).end),
+                           Math.abs(graph.spans(node1.spans(0)).end - graph.spans(node2.spans(0)).start))
+        return FeatureVector(Map("dist" -> distance))
+    }
+
     def ffDistance(node1: Node, node2: Node, label: String) : FeatureVector = {
         val distance = min(Math.abs(graph.spans(node1.spans(0)).start - graph.spans(node2.spans(0)).end),
                            Math.abs(graph.spans(node1.spans(0)).end - graph.spans(node2.spans(0)).start))
@@ -148,6 +154,35 @@ class Features(featureNames: List[String]) {
                                  "logD+L="+label -> log(distance+1),
                                  "logD+"+pathStrv3 -> log(distance+1),
                                  "logD+"+pathStrv3+"L="+label -> log(distance+1)))
+    }
+
+    def ffDistancev2(node1: Node, node2: Node, label: String) : FeatureVector = {
+        val distance = min(Math.abs(graph.spans(node1.spans(0)).start - graph.spans(node2.spans(0)).end),
+                           Math.abs(graph.spans(node1.spans(0)).end - graph.spans(node2.spans(0)).start))
+        val pathStrv3 = depPathStrv3(node1, node2)
+        val feats = FeatureVector()
+        for (i <- Range(0, distance-1)) {
+            feats.fmap += ("d_v2="+i.toString -> 1.0)
+            feats.fmap += ("d_v2="+i.toString+"+L="+label -> 1.0)
+            feats.fmap += ("d_v2="+i.toString+"+"+pathStrv3 -> 1.0)
+            feats.fmap += ("d_v2="+i.toString+"+"+pathStrv3+"+L="+label -> 1.0)
+        }
+        return feats
+    }
+
+    def fflogDistancev2(node1: Node, node2: Node, label: String) : FeatureVector = {
+        val distance = min(Math.abs(graph.spans(node1.spans(0)).start - graph.spans(node2.spans(0)).end),
+                           Math.abs(graph.spans(node1.spans(0)).end - graph.spans(node2.spans(0)).start))
+        val pathStrv3 = depPathStrv3(node1, node2)
+        val feats = FeatureVector()
+        feats.fmap += ("logDv2" -> log(distance+1))
+        for (i <- Range(0, Math.floor(log(distance+1)/log(1.39)).toInt - 1)) {
+            feats.fmap += ("logDv2="+i.toString -> 1.0)
+            feats.fmap += ("logDv2="+i.toString+"+L="+label -> 1.0)
+            feats.fmap += ("logDv2="+i.toString+"+"+pathStrv3 -> 1.0)
+            feats.fmap += ("logDv2="+i.toString+"+"+pathStrv3+"L="+label -> 1.0)
+        }
+        return feats
     }
 
     def ffConceptBigram(node1: Node, node2: Node, label: String) : FeatureVector = {
