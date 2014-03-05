@@ -24,13 +24,6 @@ import scala.math.sqrt
 /******************************** Training **********************************/
 
 abstract class Optimizer {
-    def learnParameters(gradient: (Int, Int) => FeatureVector,  // (pass, i)
-                        weights: FeatureVector,
-                        trainingSize: Int,
-                        passes: Int,
-                        stepsize: Double,
-                        avg: Boolean) : FeatureVector
-
     def learnParameters(gradient: Int => FeatureVector,
                         weights: FeatureVector,
                         trainingSize: Int,
@@ -40,5 +33,12 @@ abstract class Optimizer {
         val myGrad : (Int, Int) => FeatureVector = (pass, i) => gradient(i)
         return learnParameters(myGrad, weights, trainingSize, passes, stepsize, avg)
     }
+
+    def learnParameters(gradient: (Int, Int) => FeatureVector,  // (pass, i)
+                        weights: FeatureVector,
+                        trainingSize: Int,
+                        passes: Int,
+                        stepsize: Double,
+                        avg: Boolean) : FeatureVector
 }
 

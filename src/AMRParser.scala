@@ -56,17 +56,19 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             case "--training-optimizer" :: value :: l => parseOptions(map + ('trainingOptimizer -> value), l)
             case "--training-stepsize" :: value :: l =>  parseOptions(map + ('trainingStepsize -> value), l)
             case "--training-passes" :: value :: l =>    parseOptions(map + ('trainingPasses -> value), l)
+            case "--training-data" :: value :: tail =>   parseOptions(map + ('trainingData -> value), tail) // used to be "--amr-oracle-data"
             case "--output-format" :: value :: l =>      parseOptions(map + ('outputFormat -> value), l)
-            case "--amr-oracle-data" :: value :: tail => parseOptions(map + ('amrOracleData -> value), tail)
+            //case "--amr-oracle-data" :: value :: tail => parseOptions(map + ('amrOracleData -> value), tail)
             case "--dependencies" :: value :: tail =>    parseOptions(map + ('dependencies -> value), tail)
             case "--ner" :: value :: tail =>             parseOptions(map + ('ner -> value), tail)
+            case "--snt" :: value :: tail =>             parseOptions(map ++ Map('notTokenized -> value), tail)
             case "--tok" :: value :: tail =>             parseOptions(map ++ Map('tokenized -> value), tail)
             case "-v" :: value :: tail =>                parseOptions(map ++ Map('verbosity -> value), tail)
 
             case string :: opt2 :: tail if isSwitch(opt2) => parseOptions(map ++ Map('infile -> string), list.tail)
             case string :: Nil =>  parseOptions(map ++ Map('infile -> string), list.tail)
             case option :: tail => println("Error: Unknown option "+option) 
-                                   sys.exit(1) 
+                                   sys.exit(1)
       }
     }
 
@@ -89,10 +91,10 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
 
         val stage1 : ConceptInvoke.Decoder = {
             if (!options.contains('stage1Oracle) && !options.contains('stage2Train)) {
-                ConceptInvoke.init(options, oracle = false)
+                ConceptInvoke.initDecoder(options, oracle = false)
             } else {
                 assert(!options.contains('stage1Train), "Error: --stage1-oracle should not be specified with --stage1-train")
-                ConceptInvoke.init(options, oracle = true)
+                ConceptInvoke.initDecoder(options, oracle = true)
             }
         }
 
@@ -100,7 +102,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             if((options.contains('stage1Only) || options.contains('stage1Train)) && !options.contains('stage2Train)) {
                 None
             } else {
-                Some(GraphDecoder.init(options))
+                Some(GraphDecoder.initDecoder(options))
             }
         }
 
@@ -114,144 +116,31 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
 
         if (options.contains('stage1Train) || options.contains('stage2Train)) {
 
-                ////////////////// Training Setup ////////////////
+            ////////////////// Training  ////////////////
 
             if (options.contains('stage1Train) && options.contains('stage2Train)) {
                 System.err.println("Error: please specify either stage1 training or stage2 training (not both)")
                 sys.exit(1)
             }
 
-            Runtime.getRuntime().addShutdownHook(new Thread() {
-                override def run() {
-                    System.err.print("Writing out weights... ")
-                    if (options.contains('stage1Train)) {
-                        print(stage1.features.weights.unsorted)
-                    } else {
-                        print(stage2.get.features.weights.unsorted)
-                    }
-                    System.err.println("done")
-                }
-            })
-
-            val passes = options.getOrElse('trainingPasses, "20").toInt
-            val stepsize = options.getOrElse('trainingStepsize, "1.0").toDouble
-            if (!options.contains('trainingOptimizer)) {
-                System.err.println("Error: No training optimizer specified"); sys.exit(1)
-            }
-            val optimizer: Optimizer = options('trainingOptimizer).asInstanceOf[String] match {
-                case "SSGD" => new SSGD()
-                case "Adagrad" => new Adagrad()
-                case x => { System.err.println("Error: unknown training optimizer " + x); sys.exit(1) }
-            }
-
-            System.err.print("Loading training data...")
-            val training: Array[String] = (for {
-                block <- Corpus.splitOnNewline(io.Source.stdin.getLines())
-                if block.matches("(.|\n)*\n\\((.|\n)*")     // needs to contain some AMR
-            } yield block).toArray
-            val dependencies = if (options.contains('dependencies)) {
-                (for {
-                    block <- Corpus.splitOnNewline(Source.fromFile(options('dependencies).asInstanceOf[String]).getLines())
-                } yield block.replaceAllLiterally("-LRB-","(").replaceAllLiterally("-RRB-",")").replaceAllLiterally("""\/""","/")).toArray
-            } else {
-                training.map(x => "")
-            }
-            val tokenized = fromFile(options('tokenized)).getLines.toArray
-            val nerFile = Corpus.splitOnNewline(fromFile(options('ner)).getLines).toArray
-            logger(0, "training.size = "+training.size.toInt)
-            logger(0, "tokenized.size = "+tokenized.size.toInt)
-            logger(0, "dependencies.size = "+dependencies.size.toInt)
-            logger(0, "ner.size = "+nerFile.size.toInt)
-            System.err.println(" done")
-
             if (options.contains('stage1Train)) {
 
-                ////////////////// Stage1 Training ////////////////
+                val stage1 = new ConceptInvoke.TrainObj(options)
+                stage1.train
 
-                val stage1Oracle = ConceptInvoke.init(options, oracle = true)
+            }
 
-                def gradient(i: Int) : FeatureVector = {
-                    logger(0, "Sentence # "+i.toString)
-                    logger(0, "Sentence: "+tokenized(i))
-                    val snt = AMRTrainingData.getUlfString(training(i))("::snt").split(" ")
-                    val input = new Input(None, tokenized(i).split(" "), snt, dependencies(i), nerFile(i))
-                    val feats = stage1.decode(input).features
-                    input.graph = Some(AMRTrainingData(training(i)).toOracleGraph(clearUnalignedNodes = true))
-                    feats -= stage1Oracle.decode(input).features
-                    logger(0, "Gradient:\n"+feats.toString)
-                    return feats
-                }
+            if (options.contains('stage2Train)) {
 
-                optimizer.learnParameters(
-                    i => gradient(i),
-                    stage1.features.weights,
-                    training.size,
-                    passes,
-                    stepsize,
-                    avg = false)
-
-            } else {
-
-                ////////////////// Stage2 Training ////////////////
-
-            val decoder = stage2.get
-            val oracle = stage2Oracle.get
-
-            val weights = optimizer.learnParameters(
-                //i => decoder.decode(AMRTrainingData(training(i)).toInput).features,
-                i => { val amrdata1 = AMRTrainingData(training(i))
-                       logger(0, "Sentence:\n"+amrdata1.sentence.mkString(" ")+"\n")
-                       val result1 = decoder.decode(new Input(amrdata1, dependencies(i), oracle = false))
-                        logger(0, "Spans:")
-                        for ((span, i) <- amrdata1.graph.spans.zipWithIndex) {
-                            logger(0, "Span "+(i+1).toString+":  "+span.words+" => "+span.amr)
-                        }
-                       logger(0, "AMR:")
-                       if (outputFormat.contains("AMR")) {
-                           logger(0, result1.graph.root.prettyString(detail = 1, pretty = true)+"\n")
-                       }
-                       if (outputFormat.contains("triples")) {
-                           //logger(0, result.graph.printTriples(detail = 1)+"\n")
-                           logger(0, result1.graph.printTriples(
-                                detail = 1,
-                                extra = (node1, node2, relation) => {
-                                    "\t"+decoder.features.ffDependencyPathv2(node1, node2, relation).toString.split("\n").filter(_.matches("^C1.*")).toList.toString+"\t"+decoder.features.localScore(node1, node2, relation).toString
-                                })+"\n")
-                       }
-                       val amrdata2 = AMRTrainingData(training(i))
-                       val result2 = oracle.decode(new Input(amrdata2, dependencies(i), oracle = true))
-                       logger(0, "Oracle:")
-                       if (outputFormat.contains("AMR")) {
-                           val result3 = oracle.decode(new Input(amrdata2, dependencies(i), oracle = true, clearUnalignedNodes = false))
-                           logger(0, result3.graph.root.prettyString(detail = 1, pretty = true)+"\n")
-                       }
-                       if (outputFormat.contains("triples")) {
-                           //logger(0, result.graph.printTriples(detail = 1)+"\n")
-                           logger(0, result2.graph.printTriples(
-                                detail = 1,
-                                extra = (node1, node2, relation) => {
-                                    "\t"+oracle.features.ffDependencyPathv2(node1, node2, relation).toString.split("\n").filter(_.matches("^C1.*")).toList.toString+"\t"+decoder.features.localScore(node1, node2, relation).toString
-                                })+"\n")
-                       }
-                       logger(0, "Dependencies:\n"+dependencies(i)+"\n")
-                       logger(1, "Decoder features:\n"+result1.features+"\n")
-                       logger(1, "Oracle features:\n"+result2.features+"\n")
-                       result1.features -= result2.features
-                       logger(1, "Gradient:\n"+result1.features+"\n")
-                       result1.features },  // return gradient
-                decoder.features.weights,
-                training.size,
-                passes,
-                stepsize,
-                false)
-
-                //print(weights.unsorted)   // TODO: remove (not needed anymore because of shutdown hook)
+                val stage2 = new GraphDecoder.TrainObj(options)
+                stage2.train
 
             }
 
         } else {
 
-            ///////////////// Decoding //////////////
+            /////////////////// Decoding /////////////////
+
             if (!options.contains('stage1Weights)) {
                 System.err.println("Error: No stage1 weights file specified"); sys.exit(1)
             }

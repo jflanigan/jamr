@@ -23,7 +23,7 @@ package object GraphDecoder {
         options.getOrElse('stage2Features, "conceptBigram,rootConcept").split(",").toList.filter(x => x != "edgeId" && x != "labelWithId")
     }
 
-    def init(options: OptionMap) : GraphDecoder.Decoder = {
+    def initDecoder(options: OptionMap) : GraphDecoder.Decoder = {
         if (!options.contains('stage2Labelset)) {
             System.err.println("Error: No labelset file specified"); sys.exit(1)
         }
