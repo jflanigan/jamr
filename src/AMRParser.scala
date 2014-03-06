@@ -1,10 +1,5 @@
 package edu.cmu.lti.nlp.amr
 
-import java.io.File
-import java.io.FileOutputStream
-import java.io.PrintStream
-import java.io.BufferedOutputStream
-import java.io.OutputStreamWriter
 import java.lang.Math.abs
 import java.lang.Math.log
 import java.lang.Math.exp
@@ -19,7 +14,6 @@ import scala.util.matching.Regex
 import scala.collection.mutable.Map
 import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
-import scala.util.parsing.combinator._
 
 import edu.cmu.lti.nlp.amr.GraphDecoder._
 import edu.cmu.lti.nlp.amr.ConceptInvoke.PhraseConceptPair
@@ -91,10 +85,10 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
 
         val stage1 : ConceptInvoke.Decoder = {
             if (!options.contains('stage1Oracle) && !options.contains('stage2Train)) {
-                ConceptInvoke.initDecoder(options, oracle = false)
+                ConceptInvoke.Decoder(options, oracle = false)
             } else {
                 assert(!options.contains('stage1Train), "Error: --stage1-oracle should not be specified with --stage1-train")
-                ConceptInvoke.initDecoder(options, oracle = true)
+                ConceptInvoke.Decoder(options, oracle = true)
             }
         }
 
@@ -102,7 +96,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             if((options.contains('stage1Only) || options.contains('stage1Train)) && !options.contains('stage2Train)) {
                 None
             } else {
-                Some(GraphDecoder.initDecoder(options))
+                Some(GraphDecoder.Decoder(options))
             }
         }
 

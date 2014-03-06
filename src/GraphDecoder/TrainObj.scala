@@ -25,7 +25,7 @@ import scala.util.parsing.combinator._
 
 class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.TrainObj(options) {
 
-    val decoder = initDecoder(options)
+    val decoder = Decoder(options)
     val oracle = new Oracle(getFeatures(options))
     val weights = decoder.features.weights
     oracle.features.weights = weights

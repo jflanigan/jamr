@@ -37,16 +37,6 @@ case class Input(var graph: Option[Graph],  // var so we can update for the inpu
                    Entity.entitiesFromConll(conllNER))
     )
 
-    /*def this(amrdata: AMRTrainingData, input: Input, oracle: Boolean, clearUnalignedNodes: Boolean = true) = this(
-        Some(if (oracle) {
-            amrdata.toOracleGraph(clearUnalignedNodes)
-        } else {
-            amrdata.toInputGraph
-        }),
-        input.sentence, input.notTokenized, input.dependencies, input.pos, input.ner
-    )*/
-
-// TODO: Can delete other constructors I think
     // This constructor is used for stage2 decoding
     def this(graph: Graph, sentence: Array[String], conllx: String) = this(
         Some(graph),
