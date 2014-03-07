@@ -21,7 +21,7 @@ class CostAugmented(val decoder: Decoder, costScale: Double) extends Decoder {
     decoder.features.addFeatureFunction("rootCostAug")
 
     def decode(input: Input) : DecoderResult = {
-        val oracleDecoder = new Oracle("CostAugEdgeId" :: "rootCostAug" :: decoder.features.featureNames)
+        val oracleDecoder = new Oracle(decoder.features.featureNames)   // "CostAugEdgeId" and "rootCostAug" already in featureNames
         val oracle = oracleDecoder.decode(input)
         features.weights -= costScale * oracle.features.slice(x => x.startsWith("CA:"))
         val result = decoder.decode(input)

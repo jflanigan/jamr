@@ -1,12 +1,6 @@
 package edu.cmu.lti.nlp.amr.GraphDecoder
 import edu.cmu.lti.nlp.amr._
-import edu.cmu.lti.nlp.amr.Input.Input
 
-import java.io.File
-import java.io.FileOutputStream
-import java.io.PrintStream
-import java.io.BufferedOutputStream
-import java.io.OutputStreamWriter
 import java.lang.Math.abs
 import java.lang.Math.log
 import java.lang.Math.exp
@@ -22,14 +16,16 @@ import scala.collection.mutable.Map
 import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 import scala.util.parsing.combinator._
+import edu.cmu.lti.nlp.amr.Input.Input
 
 class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.TrainObj(options) {
 
     val decoder = Decoder(options)
     val oracle = new Oracle(getFeatures(options))
+    val costAug = new CostAug(Decoder(options))
     val weights = decoder.features.weights
     oracle.features.weights = weights
-    //costAugDecoder.features.weights = weights
+    costAug.features.weights = weights
 
     val outputFormat = options.getOrElse('outputFormat,"triples").split(",").toList
 
@@ -79,8 +75,27 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
     }
 
     def costAugmented(i: Int) : FeatureVector = {
-        assert(false, "Need to implement stage1 cost augmented decoding")
-        return decoder.decode(input(i)).features
+        val amrdata1 = AMRTrainingData(training(i))
+        logger(0, "Sentence:\n"+amrdata1.sentence.mkString(" ")+"\n")
+        val result = costAug.decode(Input(amrdata1, input(i), oracle = false))
+        logger(0, "Spans:")
+        for ((span, i) <- amrdata1.graph.spans.zipWithIndex) {
+            logger(0, "Span "+(i+1).toString+":  "+span.words+" => "+span.amr)
+        }
+        logger(0, "AMR:")
+        if (outputFormat.contains("AMR")) {
+            logger(0, result.graph.root.prettyString(detail = 1, pretty = true)+"\n")
+        }
+        if (outputFormat.contains("triples")) {
+            //logger(0, result.graph.printTriples(detail = 1)+"\n")
+            logger(0, result.graph.printTriples(
+                detail = 1,
+                extra = (node1, node2, relation) => {
+                    "\t"+costAug.features.ffDependencyPathv2(node1, node2, relation).toString.split("\n").filter(_.matches("^C1.*")).toList.toString+"\t"+costAug.features.localScore(node1, node2, relation).toString
+                })+"\n")
+        }
+        logger(1, "Decoder features:\n"+result.features+"\n")
+        return result.features
     }
 }
 
