@@ -5,19 +5,11 @@ import scala.collection.mutable.Map
 import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 
-class Oracle(featureNames: List[String])
-    extends Decoder(featureNames) {
-    // Base class has defined:
-    // val features: Features
+class Oracle(featureNames: List[String]) extends Decoder {
+    val features = new Features(featureNames)
 
-    private var inputSave: Input = _
-    def input : Input = inputSave
-    def input_= (i: Input) {
-        inputSave = i
-        features.input = i
-    }
-
-    def decode() : DecoderResult = {
+    def decode(input: Input) : DecoderResult = {
+        features.input = input
         val graph = input.graph.get
         var feats = new FeatureVector()
 

@@ -20,21 +20,14 @@ import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 import Double.{NegativeInfinity => minusInfty}
 
-class Alg1(featureNames: List[String], labelSet: Array[(String, Int)], connectedConstraint: String = "none")
-    extends Decoder(featureNames) {
+class Alg1(featureNames: List[String], labelSet: Array[(String, Int)], connectedConstraint: String = "none") extends Decoder {
     // Base class has defined:
     // val features: Features
+    val features = new Features(featureNames)
 
-    private var inputSave: Input = _
-    def input : Input = inputSave
-    def input_= (i: Input) {
-        inputSave = i
-        features.input = i
-    }
-
-    def decode() : DecoderResult = {
+    def decode(input: Input) : DecoderResult = {
         // Assumes that Node.relations has been setup correctly for the graph fragments
-        //features.input = input  // WARNING: This needs to be called before graphObj is created, because when graphObj is created we compute the features of the edges that are already present in the graph fragments
+        features.input = input  // WARNING: This needs to be called before graphObj is created, because when graphObj is created we compute the features of the edges that are already present in the graph fragments
         var graph = input.graph.get.duplicate
         logger(1, "graph.spans = "+graph.spans.toList)
         val nodes : List[Node] = graph.nodes.filter(_.name != None).toList    // TODO: test to see if a view is faster

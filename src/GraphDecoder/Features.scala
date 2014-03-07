@@ -25,7 +25,7 @@ import scala.util.parsing.combinator._
 
 /**************************** Feature Functions *****************************/
 
-class Features(featureNames: List[String]) {
+class Features(var featureNames: List[String]) {
     var weights = FeatureVector()
     private var inputSave: Input = _
     private var graph: Graph = _
@@ -49,8 +49,9 @@ class Features(featureNames: List[String]) {
     type RootFeatureFunction = (Node) => FeatureVector
 
     val ffTable = Map[String, FeatureFunction](
-        "edgeId" -> ffEdgeId,
-        "labelWithId" -> ffLabelWithId,
+        "CostAugEdgeId" -> ffCostAugEdgeId,
+        "DDEdgeId" -> ffDDEdgeId,
+        "LRLabelWithId" -> ffLRLabelWithId,
         "bias1" -> ffBias1,
         "bias" -> ffBias,   // TODO: should be renamed to "biaslabel"
         "biasCSuf" -> ffBiasCSuf,
@@ -71,7 +72,8 @@ class Features(featureNames: List[String]) {
     )
 
     val rootFFTable = Map[String, RootFeatureFunction](
-        "rootConcept" -> ffRootConcept
+        "rootConcept" -> ffRootConcept,
+        "rootCostAug" -> ffRootCostAug
     )
 
     def precompute() {
@@ -81,12 +83,16 @@ class Features(featureNames: List[String]) {
 
     // node1 is always the tail, and node2 the head
 
-    def ffEdgeId(node1: Node, node2: Node, label: String) : FeatureVector = {       // Used for Dual Decomposition
-        return FeatureVector(Map(("Id1="+node1.id+"+Id2="+node2.id+"+L="+label) -> 1.0))
+    def ffCostAugEdgeId(node1: Node, node2: Node, label: String) : FeatureVector = {        // Used for cost augmented decoding
+        return FeatureVector(Map(("CA:Id1="+node1.id+"+Id2="+node2.id+"+L="+label) -> 1.0))
     }
 
-    def ffLabelWithId(node1: Node, node2: Node, label: String) : FeatureVector = {  // Used for Langragian Relaxation
-        return FeatureVector(Map(("Id1="+node1.id+"+L="+label) -> 1.0))
+    def ffDDEdgeId(node1: Node, node2: Node, label: String) : FeatureVector = {             // Used for Dual Decomposition
+        return FeatureVector(Map(("DD:Id1="+node1.id+"+Id2="+node2.id+"+L="+label) -> 1.0))
+    }
+
+    def ffLRLabelWithId(node1: Node, node2: Node, label: String) : FeatureVector = {        // Used for Langragian Relaxation
+        return FeatureVector(Map(("LR:Id1="+node1.id+"+L="+label) -> 1.0))
     }
 
     def ffBias1(node1: Node, node2: Node, label: String) : FeatureVector = {
@@ -420,6 +426,10 @@ class Features(featureNames: List[String]) {
         return FeatureVector(Map(("C="+node.concept+"+L=<ROOT>") -> 1.0))
     }
 
+    def ffRootCostAug(node: Node) : FeatureVector = {        // Used for cost augmented decoding
+        return FeatureVector(Map(("CA:Id1="+node.id+"L=<ROOT>") -> 1.0))
+    }
+
     // TODO: ffRootDependencyPath
 
     val rootFeature = List("rootConcept","rootPath")
@@ -450,6 +460,17 @@ class Features(featureNames: List[String]) {
               if rootFeature.contains(feature)
         } yield rootFFTable(feature)
     } // TODO: error checking on lookup
+
+    def addFeatureFunction(featureName: String) {
+        if (!featureNames.contains(featureName)) {
+            featureNames = featureName :: featureNames
+            if (rootFeature.contains(featureName)) {
+                rootFeatureFunctions = rootFFTable(featureName) :: rootFeatureFunctions
+            } else {
+                featureFunctions = ffTable(featureName) :: featureFunctions
+            }
+        }
+    }
 
     def setFeatures(featureNames: List[String]) {
         featureFunctions = featureNames.filter(x => !notFast.contains(x)).map(x => ffTable(x))

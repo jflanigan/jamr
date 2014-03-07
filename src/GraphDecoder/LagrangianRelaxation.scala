@@ -21,30 +21,22 @@ import scala.collection.mutable.ArrayBuffer
 import Double.{NegativeInfinity => minusInfty}
 
 class LagrangianRelaxation(featureNames: List[String], labelSet: Array[(String, Int)], stepsize: Double, maxIterations: Int)
-    extends Decoder(featureNames) {
+        extends Decoder {
     // Base class has defined:
     // val features: Features
-
-    val alg2 = new Alg2("labelWithId" :: featureNames, labelSet)
+    val features = new Features("LRLabelWithId" :: featureNames)
+    val alg2 = new Alg2(List(), labelSet)
+    alg2.features.weights = features.weights    // Set alg2's weights same our weights (shared weights)
 
     val labelConstraint = labelSet.toMap
-    val IdLabel = """Id1.*[+]L=(.*)""".r
+    val IdLabel = """LR:Id1.*[+]L=(.*)""".r
 
-    private var inputSave: Input = _
-    def input : Input = inputSave
-    def input_= (i: Input) {
-        inputSave = i
-        features.input = i
-        alg2.features.weights = features.weights    // Set alg2's weights same our weights (shared weights) (This must be done before we set alg2.input, because it precomputes edge weights using its feature weights)
-        alg2.input = i
-    }
-
-
-    def decode() : DecoderResult = {
+    def decode(input: Input) : DecoderResult = {
+        alg2.input = input      // (this also sets features.input)
         var result = DecoderResult(Graph.empty(), FeatureVector(), 0.0)
 
         val multipliers = FeatureVector()
-        var delta = 0.0     // so we know when we have converged
+        var delta = 0.0         // so we know when we have converged
         var counter = 0
         do {
             //logger(2, "weights: \n"+features.weights)
@@ -52,11 +44,11 @@ class LagrangianRelaxation(featureNames: List[String], labelSet: Array[(String, 
             features.weights -= multipliers
             //logger(2, "alg2 weights: \n"+features.weights)
             result = alg2.decode
-            logger(1, "id features: \n"+result.features.slice(x => x.startsWith("Id1=")))
+            logger(1, "id features: \n"+result.features.slice(x => x.startsWith("LR:Id1=")))
             features.weights += multipliers // undo our adjustment to the weights
 
             delta = 0.0
-            for ((feat, value) <- result.features.fmap if feat.startsWith("Id1=")) {
+            for ((feat, value) <- result.features.fmap if feat.startsWith("LR:Id1=")) {
                 val multiplier = multipliers.fmap.getOrElse(feat, 0.0)
                 val IdLabel(label) = feat
                 val newMultiplier = max(0.0, multiplier - stepsize * (labelConstraint(label) - value))
@@ -72,7 +64,7 @@ class LagrangianRelaxation(featureNames: List[String], labelSet: Array[(String, 
             logger(0, "Langrangian relaxation converged after "+counter.toString+" iterations. Delta = "+delta.toString)
         }
 
-        val feats = result.features.slice(x => !x.startsWith("Id1="))
+        val feats = result.features.slice(x => !x.startsWith("LR:Id1="))
         return DecoderResult(result.graph, feats, features.weights.dot(feats))
     }
 }

@@ -20,37 +20,29 @@ import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 import Double.{NegativeInfinity => minusInfty}
 
-class DualDecomposition(featureNames: List[String], labelSet: Array[(String, Int)], stepsize: Double)
-    extends Decoder(featureNames) {
+class DualDecomposition(featureNames: List[String], labelSet: Array[(String, Int)], stepsize: Double) extends Decoder {
     // Base class has defined:
     // val features: Features
+    val features = new Features("DDEdgeId" :: featureNames)
 
-    val alg1 = new Alg1(featureNames, labelSet)
-    val alg2 = new Alg2(featureNames, labelSet)
+    val alg1 = new Alg1("DDEdgeId" :: featureNames, labelSet)
+    val alg2 = new Alg2("DDEdgeId" :: featureNames, labelSet)
+    alg1.features.weights = features.weights    // Weights shared across the decoders
+    alg2.features.weights = features.weights
 
     val multipliers = FeatureVector()
 
-    val regex = "Id1=.*".r
+    val regex = "DD:Id1=.*".r
     def IdFeature(feat: String) : Boolean = {
-        if (feat.matches("Id1=.*")) {
+        if (feat.matches("DD:Id1=.*")) {
             true
         } else {
             false
         }
     }
 
-    private var inputSave: Input = _
-    def input : Input = inputSave
-    def input_= (i: Input) {
-        inputSave = i
-        features.input = i
-        alg1.features.weights = features.weights    // Weights shared across the decoders
-        alg2.features.weights = features.weights
-        alg1.input = i
-        alg2.input = i
-    }
-
-    def decode() : DecoderResult = {
+    def decode(input: Input) : DecoderResult = {
+        features.input = input
         var result = DecoderResult(Graph.empty(), FeatureVector(), 0.0)
         var delta = FeatureVector()
         do {
