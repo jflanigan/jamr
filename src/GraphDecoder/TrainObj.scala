@@ -22,7 +22,7 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
 
     val decoder = Decoder(options)
     val oracle = new Oracle(getFeatures(options))
-    val costAug = new CostAug(Decoder(options))
+    val costAug = new CostAugmented(Decoder(options), options.getOrElse('trainingCostScale,"10.0").toDouble)
     val weights = decoder.features.weights
     oracle.features.weights = weights
     costAug.features.weights = weights

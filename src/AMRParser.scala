@@ -47,6 +47,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             case "--stage2-labelset" :: value :: l =>    parseOptions(map + ('stage2Labelset -> value), l)
             case "--stage2-not-connected" :: l =>        parseOptions(map + ('stage2NotConnected -> "true"), l)
             case "--training-loss" :: value :: l =>      parseOptions(map + ('trainingLoss -> value), l)
+            case "--training-cost-scale" :: value :: l =>parseOptions(map + ('trainingCostScale -> value), l)
             case "--training-optimizer" :: value :: l => parseOptions(map + ('trainingOptimizer -> value), l)
             case "--training-stepsize" :: value :: l =>  parseOptions(map + ('trainingStepsize -> value), l)
             case "--training-passes" :: value :: l =>    parseOptions(map + ('trainingPasses -> value), l)
