@@ -24,15 +24,16 @@ class LagrangianRelaxation(featureNames: List[String], labelSet: Array[(String, 
         extends Decoder {
     // Base class has defined:
     // val features: Features
-    val features = new Features("LRLabelWithId" :: featureNames)
-    val alg2 = new Alg2(List(), labelSet)
+    val features = new Features(featureNames)
+    val alg2 = new Alg2("LRLabelWithId" :: featureNames, labelSet)
     alg2.features.weights = features.weights    // Set alg2's weights same our weights (shared weights)
 
     val labelConstraint = labelSet.toMap
     val IdLabel = """LR:Id1.*[+]L=(.*)""".r
 
     def decode(input: Input) : DecoderResult = {
-        alg2.input = input      // (this also sets features.input)
+        features.input = input
+        alg2.input = input
         var result = DecoderResult(Graph.empty(), FeatureVector(), 0.0)
 
         val multipliers = FeatureVector()

@@ -102,7 +102,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
         }
 
         val stage2Oracle : Option[GraphDecoder.Decoder] = {
-            if(options.contains('amrOracleData) || options.contains('stage2Train)) {
+            if(options.contains('trainingData) || options.contains('stage2Train)) {
                 Some(new GraphDecoder.Oracle(GraphDecoder.getFeatures(options)))
             } else {
                 None
@@ -178,7 +178,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             }
             val spanF1 = F1(0,0,0)
 
-            for ((block, i) <- Corpus.splitOnNewline(fromFile(options('amrOracleData)).getLines).filter(_.matches("(.|\n)*\n\\((.|\n)*"))/*.take(877)*/.zipWithIndex) {
+            for ((block, i) <- Corpus.splitOnNewline(fromFile(options('trainingData)).getLines).filter(_.matches("(.|\n)*\n\\((.|\n)*"))/*.take(877)*/.zipWithIndex) {
             time {
                 val line = input(i)
                 logger(0, "Sentence:\n"+line+"\n")
@@ -222,7 +222,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                                                              dependencies(i)))
                 }//endif (!options.contains('stage1Only))
 
-                if (false && options.contains('amrOracleData)) {
+                if (false && options.contains('trainingData)) {
                     val oracle = stage2Oracle.get
                     val oracleResult = oracle.decode(new Input(amrdata2, dependencies(i), oracle = true))
                     logger(0, "\nOracle Spans:")
@@ -248,6 +248,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
 
                 if (!options.contains('stage1Only)) {
                     val decoder = stage2.get
+                    logger(0, decoder.features.input)
                     logger(0, "AMR:\n"+decoderResult.graph.printTriples(detail = 1, extra = (node1, node2, relation) => {
                         "\t"+decoder.features.ffDependencyPathv2(node1, node2, relation).toString.split("\n").filter(_.matches("^C1.*")).toList.toString+"\t"+decoder.features.localScore(node1, node2, relation).toString
                         //"\n"+decoder.features.ffDependencyPathv2(node1, node2, relation).toString.split("\n").filter(_.matches("^C1.*")).toList.toString+"\nScore = "+decoder.features.localScore(node1, node2, relation).toString+"  Relevent weights:\n"+decoder.features.weights.slice(decoder.features.localFeatures(node1, node2, relation)).toString
