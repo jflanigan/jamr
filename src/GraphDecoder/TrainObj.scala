@@ -77,7 +77,7 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
     def costAugmented(i: Int) : FeatureVector = {
         val amrdata1 = AMRTrainingData(training(i))
         logger(0, "Sentence:\n"+amrdata1.sentence.mkString(" ")+"\n")
-        val result = costAug.decode(Input(amrdata1, input(i), oracle = false))
+        val result = costAug.decode(Input(amrdata1, input(i), oracle = true))
         logger(0, "Spans:")
         for ((span, i) <- amrdata1.graph.spans.zipWithIndex) {
             logger(0, "Span "+(i+1).toString+":  "+span.words+" => "+span.amr)

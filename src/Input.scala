@@ -76,7 +76,7 @@ object Input {
         val notTokenized = fromFile(options('notTokenized)).getLines.toArray
         val dependencies = if (options.contains('dependencies)) {
             (for {
-                block <- Corpus.splitOnNewline(fromFile(options('dependencies).asInstanceOf[String]).getLines())
+                block <- Corpus.splitOnNewline(fromFile(options('dependencies)).getLines())
             } yield block.replaceAllLiterally("-LRB-","(").replaceAllLiterally("-RRB-",")").replaceAllLiterally("""\/""","/")).toArray
         } else {
             tokenized.map(x => "")
@@ -99,7 +99,7 @@ object Input {
             Some(if (oracle) {
                 amrdata.toOracleGraph(clearUnalignedNodes)
             } else {
-            amrdata.toInputGraph
+                amrdata.toInputGraph
             }),
             input.sentence, input.notTokenized, input.dependencies, input.pos, input.ner)
     }
