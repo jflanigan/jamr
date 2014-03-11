@@ -25,7 +25,7 @@ class CostAugmented(val decoder: Decoder, costScale: Double) extends Decoder {
         val oracle = oracleDecoder.decode(input)
         features.weights -= costScale * oracle.features.slice(x => x.startsWith("CA:"))
         val saveGraph = input.graph.get
-        input.graph = Some(saveGraph.duplicate.clearEges)
+        input.graph = Some(saveGraph.duplicate.clearEdges)
         val result = decoder.decode(input)
         input.graph = Some(saveGraph)
         features.weights += costScale * oracle.features.slice(x => x.startsWith("CA:"))

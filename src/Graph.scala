@@ -69,7 +69,7 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         }
     }
 
-    def clearEdges() {
+    def clearEdges() : Graph = {
         // Initializes the graph from the spans (effectively clearing the edges)
         // Sets relations, but leaves topologicalOrdering and variableRelations blank
         // As a side effect, it re-assigns ids to all the nodes in the graph.  TODO: why did I do it this way???  Couldn't I just keep the ids the same???  Maybe it was so I could simulate what it is like to have ids from stage 1
@@ -117,6 +117,7 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
                 span.nodeIds = span.nodeIds ::: List(id)
             }
         }
+        return this
     }
 
     def printTriples(detail: Int = 1,
