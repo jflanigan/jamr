@@ -51,6 +51,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             case "--training-optimizer" :: value :: l => parseOptions(map + ('trainingOptimizer -> value), l)
             case "--training-stepsize" :: value :: l =>  parseOptions(map + ('trainingStepsize -> value), l)
             case "--training-passes" :: value :: l =>    parseOptions(map + ('trainingPasses -> value), l)
+            case "--training-save-interval"::value::l => parseOptions(map + ('trainingSaveInterval -> value), l)
             case "--training-data" :: value :: tail =>   parseOptions(map + ('trainingData -> value), tail) // used to be "--amr-oracle-data"
             case "--output-format" :: value :: l =>      parseOptions(map + ('outputFormat -> value), l)
             //case "--amr-oracle-data" :: value :: tail => parseOptions(map + ('amrOracleData -> value), tail)

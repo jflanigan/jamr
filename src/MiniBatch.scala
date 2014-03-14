@@ -23,6 +23,7 @@ class MiniBatch(optimizer: Optimizer, miniBatchSize: Int) extends Optimizer {
                         trainingSize: Int,
                         passes: Int,
                         stepsize: Double,
+                        trainingObserver: Int => Boolean,
                         avg: Boolean) : FeatureVector = {
         val numMiniBatches = ceil(trainingSize.toDouble / miniBatchSize.toDouble).toInt
         val trainShuffle : Array[Array[Int]] = Range(0, passes).map(x => Random.shuffle(Range(0, trainingSize).toList).toArray).toArray
@@ -42,6 +43,7 @@ class MiniBatch(optimizer: Optimizer, miniBatchSize: Int) extends Optimizer {
                                          numMiniBatches,
                                          passes,
                                          stepsize * miniBatchSize,
+                                         trainingObserver,
                                          avg)
     }
 }

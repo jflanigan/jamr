@@ -31,6 +31,9 @@ abstract class TrainObj(options: Map[Symbol, String])  {
         System.err.println("Error: No training loss specified"); sys.exit(1)
     }
     val loss = options('trainingLoss)
+    if (options.contains('trainingSaveInterval) && !options.contains('trainingWeightsFile)) {
+        System.err.println("Error: trainingSaveInterval specified but output weights filename given"); sys.exit(1)
+    }
     if (!options.contains('trainingOptimizer)) {
         System.err.println("Error: No training optimizer specified"); sys.exit(1)
     }
@@ -50,7 +53,13 @@ abstract class TrainObj(options: Map[Symbol, String])  {
     Runtime.getRuntime().addShutdownHook(new Thread() {
         override def run() {
             System.err.print("Writing out weights... ")
-            print(weights.unsorted)
+            if (options.contains('trainingWeightsFile)) {
+                val file = new java.io.PrintWriter(new java.io.File(options('trainingWeightsFile), "UTF-8"))
+                try { file.print(weights.toString) }
+                finally { file.close }
+            } else {
+                print(weights.unsorted)
+            }
             System.err.println("done")
         }
     })
@@ -72,6 +81,15 @@ abstract class TrainObj(options: Map[Symbol, String])  {
         }
     }
 
+    def trainingObserver(pass: Int) : Boolean = {
+        if (options.contains('trainingSaveInterval) && pass % options('trainingSaveInterval).toInt == 0 && pass > 0) {
+            val file = new java.io.PrintWriter(new java.io.File(options('trainingWeightsFile) + ".iter" + pass.toString, "UTF-8"))
+            try { file.print(weights.toString) } 
+            finally { file.close }
+        }
+        return true
+    }
+
     def train() {
         optimizer.learnParameters(
             i => gradient(i),
@@ -79,6 +97,7 @@ abstract class TrainObj(options: Map[Symbol, String])  {
             training.size,
             passes,
             stepsize,
+            trainingObserver,
             avg = false)
     }
 }

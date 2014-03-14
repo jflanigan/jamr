@@ -23,13 +23,14 @@ class Adagrad extends Optimizer {
                         trainingSize: Int,
                         passes: Int,
                         stepsize: Double,
+                        trainingObserver: Int => Boolean,
                         avg: Boolean) : FeatureVector = {
         var avg_weights = FeatureVector()
         var sumSq = FeatureVector()         // G_{i,i}
-        for (pass <- Range(0,passes)) {
+        var pass = 0
+        while (pass < passes && trainingObserver(pass)) {
             logger(0,"Pass "+(pass+1).toString)
             for (t <- Random.shuffle(Range(0, trainingSize).toList)) {
-            //for (t <- Range(0, trainingSize)) {
                 // normally we would do weights -= stepsize * gradient(t)
                 // but instead we do this: (see equation 8 in SocherBauerManningNg_ACL2013.pdf)
                 for ((feat, value) <- gradient(pass, t).fmap
@@ -39,6 +40,7 @@ class Adagrad extends Optimizer {
                 }
             }
             avg_weights += weights
+            pass += 1
         }
         if(avg) { avg_weights } else { weights }
     }
