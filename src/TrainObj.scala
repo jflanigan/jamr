@@ -54,7 +54,7 @@ abstract class TrainObj(options: Map[Symbol, String])  {
         override def run() {
             System.err.print("Writing out weights... ")
             if (options.contains('trainingWeightsFile)) {
-                val file = new java.io.PrintWriter(new java.io.File(options('trainingWeightsFile), "UTF-8"))
+                val file = new java.io.PrintWriter(new java.io.File(options('trainingWeightsFile)), "UTF-8")
                 try { file.print(weights.toString) }
                 finally { file.close }
             } else {
@@ -83,7 +83,7 @@ abstract class TrainObj(options: Map[Symbol, String])  {
 
     def trainingObserver(pass: Int) : Boolean = {
         if (options.contains('trainingSaveInterval) && pass % options('trainingSaveInterval).toInt == 0 && pass > 0) {
-            val file = new java.io.PrintWriter(new java.io.File(options('trainingWeightsFile) + ".iter" + pass.toString, "UTF-8"))
+            val file = new java.io.PrintWriter(new java.io.File(options('trainingWeightsFile) + ".iter" + pass.toString), "UTF-8")
             try { file.print(weights.toString) } 
             finally { file.close }
         }
