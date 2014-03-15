@@ -23,6 +23,7 @@ class MiniBatch(optimizer: Optimizer, miniBatchSize: Int) extends Optimizer {
                         trainingSize: Int,
                         passes: Int,
                         stepsize: Double,
+                        l2reg: Double,
                         trainingObserver: Int => Boolean,
                         avg: Boolean) : FeatureVector = {
         val numMiniBatches = ceil(trainingSize.toDouble / miniBatchSize.toDouble).toInt
@@ -42,7 +43,8 @@ class MiniBatch(optimizer: Optimizer, miniBatchSize: Int) extends Optimizer {
                                          weights,
                                          numMiniBatches,
                                          passes,
-                                         stepsize * miniBatchSize,
+                                         stepsize / miniBatchSize.toDouble,
+                                         l2reg * miniBatchSize,
                                          trainingObserver,
                                          avg)
     }

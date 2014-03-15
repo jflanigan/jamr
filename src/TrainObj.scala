@@ -26,7 +26,7 @@ abstract class TrainObj(options: Map[Symbol, String])  {
 
     val passes = options.getOrElse('trainingPasses, "20").toInt
     val stepsize = options.getOrElse('trainingStepsize, "1.0").toDouble
-    val regularizerStrength = options.getOrElse('trainingRegularizerStrength, "0.0").toDouble
+    val l2RegularizerStrength = options.getOrElse('trainingL2RegularizerStrength, "0.0").toDouble
     if (!options.contains('trainingLoss)) {
         System.err.println("Error: No training loss specified"); sys.exit(1)
     }
@@ -97,6 +97,7 @@ abstract class TrainObj(options: Map[Symbol, String])  {
             training.size,
             passes,
             stepsize,
+            l2RegularizerStrength,
             trainingObserver,
             avg = false)
     }

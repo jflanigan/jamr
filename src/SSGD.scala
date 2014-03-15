@@ -29,6 +29,7 @@ class SSGD extends Optimizer {
                         trainingSize: Int,
                         passes: Int,
                         stepsize: Double,
+                        l2reg: Double,
                         trainingObserver: Int => Boolean,
                         avg: Boolean) : FeatureVector = {
         var avg_weights = FeatureVector()
@@ -37,6 +38,9 @@ class SSGD extends Optimizer {
             logger(0,"Pass "+(i+1).toString)
             for (t <- Random.shuffle(Range(0, trainingSize).toList)) {
                 weights -= stepsize * gradient(i, t)
+                if (l2reg != 0.0) {
+                    weights -= (stepsize * l2reg) * weights
+                }
             }
             avg_weights += weights
             i += 1
