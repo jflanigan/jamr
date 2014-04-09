@@ -1,23 +1,8 @@
 package edu.cmu.lti.nlp.amr
 
-import java.io.File
-import java.io.FileOutputStream
-import java.io.PrintStream
-import java.io.BufferedOutputStream
-import java.io.OutputStreamWriter
-import java.lang.Math.abs
-import java.lang.Math.log
-import java.lang.Math.exp
-import java.lang.Math.random
-import java.lang.Math.floor
-import java.lang.Math.min
-import java.lang.Math.max
 import java.util.regex.Pattern
-import scala.io.Source
 import scala.util.matching.Regex
-import scala.collection.mutable.Map
-import scala.collection.mutable.Set
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.{Map, Set, ArrayBuffer}
 
 case class Annotation[T](val snt: Array[String], val tok: Array[String], var annotation: T) {
     // This class can be used for annotations on the tokens of a sentence.

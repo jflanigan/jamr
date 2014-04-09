@@ -20,6 +20,7 @@ import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 import Double.{NegativeInfinity => minusInfty}
 
+/*
 class DualDecomposition(featureNames: List[String], labelSet: Array[(String, Int)], stepsize: Double) extends Decoder {
     // Base class has defined:
     // val features: Features
@@ -71,4 +72,5 @@ class DualDecomposition(featureNames: List[String], labelSet: Array[(String, Int
         return DecoderResult(result.graph, feats, features.weights.dot(feats))
     }
 }
+*/
 

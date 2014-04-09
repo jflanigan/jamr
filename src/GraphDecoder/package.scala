@@ -1,20 +1,10 @@
 package edu.cmu.lti.nlp.amr
 import edu.cmu.lti.nlp.amr._
+import edu.cmu.lti.nlp.amr.Train._
+import edu.cmu.lti.nlp.amr.FastFeatureVector._
 
-import java.lang.Math.abs
-import java.lang.Math.log
-import java.lang.Math.exp
-import java.lang.Math.random
-import java.lang.Math.floor
-import java.lang.Math.min
-import java.lang.Math.max
-import scala.io.Source
-import scala.io.Source.stdin
-import scala.io.Source.fromFile
 import scala.util.matching.Regex
-import scala.collection.mutable.Map
-import scala.collection.mutable.Set
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.{Map, Set, ArrayBuffer}
 
 package object GraphDecoder {
     type OptionMap = Map[Symbol, String]
@@ -23,17 +13,23 @@ package object GraphDecoder {
         options.getOrElse('stage2Features, "conceptBigram,rootConcept").split(",").toList.filter(x => x != "edgeId" && x != "labelWithId")
     }
 
+    def loadLabelset(filename: String) : Array[(String, Int)] = {
+        Source.fromFile(filename).getLines().toArray.map(x => {
+            val split = x.split(" +")
+            (split(0), if (split.size > 1) { split(1).toInt } else { 1000 })
+        })
+    }
+
+    def getLabelset(options: OptionMap) : Array[(String, Int)] = {
+        return loadLabelset(options('stage2Labelset))   // TODO: check for errors
+    }
+
     def Decoder(options: OptionMap) : GraphDecoder.Decoder = {
         if (!options.contains('stage2Labelset)) {
             System.err.println("Error: No labelset file specified"); sys.exit(1)
         }
 
-        val labelset: Array[(String, Int)] = {
-            Source.fromFile(options('stage2Labelset)).getLines().toArray.map(x => {
-                val split = x.split(" +")
-                (split(0), if (split.size > 1) { split(1).toInt } else { 1000 })
-            })
-        }
+        val labelset: Array[(String, Int)] = getLabelset(options)
 
         val features = getFeatures(options)
         logger(0, "features = " + features)
@@ -49,7 +45,7 @@ package object GraphDecoder {
             case "Alg1" => new Alg1(features, labelset)
             case "Alg1a" => new Alg1(features, labelset, connectedConstraint = "and")
             case "Alg2" => new Alg2(features, labelset, connected)
-            case "DD" => new DualDecomposition(features, labelset, 1)
+            //case "DD" => new DualDecomposition(features, labelset, 1)
             case "LR" => new LagrangianRelaxation(features, labelset, 1, 500)
             case x => { System.err.println("Error: unknown stage2 decoder " + x); sys.exit(1) }
         }
@@ -65,6 +61,10 @@ package object GraphDecoder {
         }
 
         return decoder
+    }
+
+    def Oracle(options: OptionMap) : GraphDecoder.Decoder = {
+        return new Oracle(getFeatures(options), getLabelset(options).map(x => x._1))
     }
 }
 

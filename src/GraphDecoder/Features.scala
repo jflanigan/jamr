@@ -1,5 +1,6 @@
 package edu.cmu.lti.nlp.amr.GraphDecoder
-import edu.cmu.lti.nlp.amr._
+import edu.cmu.lti.nlp.amr._  
+import edu.cmu.lti.nlp.amr.FastFeatureVector._
 
 import java.io.File
 import java.io.FileOutputStream
@@ -22,17 +23,19 @@ import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 import scala.util.parsing.combinator._
 
-
 /**************************** Feature Functions *****************************/
 
-class Features(var featureNames: List[String]) {
-    var weights = FeatureVector()
+class Features(var featureNames: List[String], labelSet: Array[String]) {
+    var weights = FeatureVector(labelSet: Array[String])    // TODO: maybe weights should be passed in to the constructor
     private var inputSave: Input = _
     private var graph: Graph = _
     private var sentence: Array[String] = _
     private var dependencies: Annotation[Array[Dependency]] = _
     private var fullPos: Annotation[Array[String]] = _
     //private var pos: Annotation[Array[String]] = _
+    private var node1 : Node = _
+    private var node2 : Node = _
+    private var feats : List[(String, Value)] = _
 
     def input: Input = inputSave
     def input_= (i: Input) {
@@ -45,35 +48,35 @@ class Features(var featureNames: List[String]) {
         precompute
     }
 
-    type FeatureFunction = (Node, Node, String) => FeatureVector
-    type RootFeatureFunction = (Node) => FeatureVector
+    type FeatureFunction = () => Unit           // function with no arguments and no return value
 
     val ffTable = Map[String, FeatureFunction](
-        "CostAugEdgeId" -> ffCostAugEdgeId,
-        "DDEdgeId" -> ffDDEdgeId,
-        "LRLabelWithId" -> ffLRLabelWithId,
-        "bias1" -> ffBias1,
-        "bias" -> ffBias,   // TODO: should be renamed to "biaslabel"
-        "biasCSuf" -> ffBiasCSuf,
-        "typeBias" -> ffTypeBias,
-        "self" -> ffSelf,
-        "fragHead" -> ffFragHead,
-        "edgeCount" -> ffEdgeCount,
-        "distance" -> ffDistance,
-        "logDistance" -> fflogDistance,
-        "conceptBigram" -> ffConceptBigram,
-        "conceptUnigramWithLabel" -> ffConceptUnigramWithLabel,
-        "posPathv1" -> ffPosPathUnigramBigramv1,
-        "posPathv2" -> ffPosPathUnigramBigramv2,
-        "posPathv3" -> ffPosPathUnigramBigramv3,
-        //"dependencyPathv1" -> ffDependencyPathv1,
-        "dependencyPathv2" -> ffDependencyPathv2,
-        "dependencyPathv3" -> ffDependencyPathv3
+        "CostAugEdgeId" -> ffCostAugEdgeId _,   // trailing _ for partially applied function
+        "DDEdgeId" -> ffDDEdgeId _,
+        "LRLabelWithId" -> ffLRLabelWithId _,
+        "bias" -> ffBias _,
+        "biasScaled" -> ffBiasScaled _,
+        "biasCSuf" -> ffBiasCSuf _,
+        //"typeBias" -> ffTypeBias _,  // TODO
+        "self" -> ffSelf _,
+        "fragHead" -> ffFragHead _,
+        "edgeCount" -> ffEdgeCount _,
+        "distance" -> ffDistance _,
+        "logDistance" -> fflogDistance _,
+        "conceptBigram" -> ffConceptBigram _,
+        "conceptUnigramWithLabel" -> ffConceptUnigramWithLabel _,
+        "posPathv1" -> ffPosPathUnigramBigramv1 _,
+        "posPathv2" -> ffPosPathUnigramBigramv2 _,
+        "posPathv3" -> ffPosPathUnigramBigramv3 _,
+        //"dependencyPathv1" -> ffDependencyPathv1 _,
+        "dependencyPathv2" -> ffDependencyPathv2 _,
+        "dependencyPathv3" -> ffDependencyPathv3 _,
+        "dependencyPathv4" -> ffDependencyPathv4 _
     )
 
-    val rootFFTable = Map[String, RootFeatureFunction](
-        "rootConcept" -> ffRootConcept,
-        "rootCostAug" -> ffRootCostAug
+    val rootFFTable = Map[String, FeatureFunction](
+        "rootConcept" -> ffRootConcept _,
+        "rootCostAug" -> ffRootCostAug _
     )
 
     def precompute() {
@@ -83,192 +86,190 @@ class Features(var featureNames: List[String]) {
 
     // node1 is always the tail, and node2 the head
 
-    def ffCostAugEdgeId(node1: Node, node2: Node, label: String) : FeatureVector = {        // Used for cost augmented decoding
-        return FeatureVector(Map(("CA:Id1="+node1.id+"+Id2="+node2.id+"+L="+label) -> 1.0))
+    def addFeature(feat: String, unconjoined: Double, conjoined: Double) {
+        feats = (feat, Value(unconjoined, conjoined)) :: feats
     }
 
-    def ffDDEdgeId(node1: Node, node2: Node, label: String) : FeatureVector = {             // Used for Dual Decomposition
-        return FeatureVector(Map(("DD:Id1="+node1.id+"+Id2="+node2.id+"+L="+label) -> 1.0))
+    def ffCostAugEdgeId(n1: Node, n2: Node) : List[(String, Value)] = {
+        node1 = n1
+        node2 = n2
+        feats = List()
+        ffCostAugEdgeId
+        return feats
     }
 
-    def ffLRLabelWithId(node1: Node, node2: Node, label: String) : FeatureVector = {        // Used for Langragian Relaxation
-        return FeatureVector(Map(("LR:Id1="+node1.id+"+L="+label) -> 1.0))
+    def ffCostAugEdgeId {     // Used for cost augmented decoding
+        addFeature("CA:Id1="+node1.id+"+Id2="+node2.id, 0.0, 1.0)
     }
 
-    def ffBias1(node1: Node, node2: Node, label: String) : FeatureVector = {
-        return FeatureVector(Map("Bias" -> 1.0))
+    def ffDDEdgeId {          // Used for Dual Decomposition
+        addFeature("DD:Id1="+node1.id, 0.0, 1.0)
+        //return FeatureVector(Map(("DD:Id1="+node1.id+"+Id2="+node2.id+"+L="+label) -> 1.0))
     }
 
-    def ffBias(node1: Node, node2: Node, label: String) : FeatureVector = {
-        return FeatureVector(Map(("L="+label) -> 1.0))
+    def ffLRLabelWithId(n1: Node, n2: Node) : List[(String, Value)] = {
+        node1 = n1
+        node2 = n2
+        feats = List()
+        ffLRLabelWithId
+        return feats
     }
 
-    def ffBiasCSuf(node1: Node, node2: Node, label: String) : FeatureVector = {
+    def ffLRLabelWithId {     // Used for Langragian Relaxation
+        addFeature("LR:Id1="+node1.id, 0.0, 1.0)
+        //return FeatureVector(Map(("LR:Id1="+node1.id+"+L="+label) -> 1.0))
+    }
+
+    def ffBias {              // TODO: after testing, adjust back to 0.01
+        // Bias features are unregularized.  Adjusting these values only adjusts the condition number of the optimization problem. 
+        addFeature("Bias", 1.0, 1.0)
+        //return FeatureVector(Map(("L="+label) -> 1.0))
+    }
+
+    def ffBiasScaled {
+        // Bias features are unregularized.  Adjusting these values only adjusts the condition number of the optimization problem. 
+        addFeature("Bias.01", 0.01, 0.01)
+    }
+
+    // TODO: remove (legacy feature for reproducable results, same as ffBias)
+    def ffEdgeCount {
+        addFeature("Edge", 1.0, 0.0)
+    }
+
+    def ffBiasCSuf {
         val c1size = node1.concept.size
         val c2size = node2.concept.size
-        return FeatureVector(Map(("C1Suf3="+node1.concept.slice(c1size-3, c1size)) -> 1.0,
-                                 ("C1Suf3="+node1.concept.slice(c1size-3, c1size)+"L="+label) -> 1.0,
-                                 ("C2Suf3="+node2.concept.slice(c2size-3, c2size)) -> 1.0,
-                                 ("C2Suf3="+node2.concept.slice(c2size-3, c2size)+"L="+label) -> 1.0))
+        addFeature("C1Suf3="+node1.concept.slice(c1size-3, c1size), 1.0, 1.0)
+        addFeature("C2Suf3="+node2.concept.slice(c2size-3, c2size), 1.0, 1.0)
     }
 
-    def ffTypeBias(node1: Node, node2: Node, label: String) : FeatureVector = {
+    // TODO
+/*    def ffTypeBias {
         def conceptType(x: String) : String = if (x.matches(".*-[0-9][0-9]")) { "E" } else { "O" }
         def labelType(x: String) : String = if (x.startsWith(":ARG")) { "A" } else { "O" }
         return FeatureVector(Map("C1T="+conceptType(node1.concept)+"LT="+labelType(label) -> 1.0,
                                  "C2T="+conceptType(node2.concept)+"LT="+labelType(label) -> 1.0,
                                  "C1T="+conceptType(node1.concept)+"L="+label -> 1.0,
                                  "C2T="+conceptType(node2.concept)+"L="+label -> 1.0))
+    } */
+
+    def ffSelf {
+        addFeature("Slf", if (node1.spans(0) == node2.spans(0)) { 1.0 } else { 0.0 }, 0.0)
+        //return FeatureVector(Map("Slf" -> { if (node1.spans(0) == node2.spans(0)) { 1.0 } else { 0.0 } } ))
     }
 
-    def ffSelf(node1: Node, node2: Node, label: String) : FeatureVector = {
-        return FeatureVector(Map("Slf" -> { if (node1.spans(0) == node2.spans(0)) { 1.0 } else { 0.0 } } ))
-    }
-
-    def ffFragHead(node1: Node, node2: Node, label: String) : FeatureVector = {
+    def ffFragHead {
         // TODO: I'm assuming it is unlikely there are two identical concepts in a frag
         //logger(1,"fragHead node1.concept = "+node1.concept+" node2.concept = "+node2.concept)
         //logger(1,"fragHead node1.spans = "+node1.spans.toList+" node2.spans = "+node2.spans.toList)
-        return FeatureVector(Map("C1NotFragHead" -> { if (node1.concept != graph.spans(node1.spans(0)).amr.concept) { 1.0 } else { 0.0 } }, 
-                                 "C2NotFragHead" -> { if (node2.concept != graph.spans(node2.spans(0)).amr.concept) { 1.0 } else { 0.0 } }))
+        addFeature("C1NotFragHead", if (node1.concept != graph.spans(node1.spans(0)).amr.concept) { 1.0 } else { 0.0 }, 0.0)
+        addFeature("C2NotFragHead", if (node2.concept != graph.spans(node2.spans(0)).amr.concept) { 1.0 } else { 0.0 }, 0.0)
     }
 
-    def ffEdgeCount(node1: Node, node2: Node, label: String) : FeatureVector = {
-        return FeatureVector(Map(("Edge") -> 1.0))
-    }
-
-    def ffDistancev0(node1: Node, node2: Node, label: String) : FeatureVector = {
+    def ffDistancev0 {
         val distance = min(Math.abs(graph.spans(node1.spans(0)).start - graph.spans(node2.spans(0)).end),
                            Math.abs(graph.spans(node1.spans(0)).end - graph.spans(node2.spans(0)).start))
         val direction = signum(graph.spans(node1.spans(0)).start - graph.spans(node2.spans(0)).end)
-        return FeatureVector(Map("abs(dist)" -> distance,
-                                 "dist" -> (direction*distance)))
+        addFeature("abs(dist)", distance, 0.0)
+        addFeature("dist", direction*distance, 0.0)
     }
 
-    def ffDistance(node1: Node, node2: Node, label: String) : FeatureVector = {
+    def ffDistance {
         val distance = min(Math.abs(graph.spans(node1.spans(0)).start - graph.spans(node2.spans(0)).end),
                            Math.abs(graph.spans(node1.spans(0)).end - graph.spans(node2.spans(0)).start))
         val pathStrv3 = depPathStrv3(node1, node2)
-        return FeatureVector(Map("d="+min(distance,20).toString -> 1.0,
-                                 "d="+min(distance,20).toString+"+L="+label -> 1.0,
-                                 "d="+min(distance,20).toString+"+"+pathStrv3 -> 1.0,
-                                 "d="+min(distance,20).toString+"+"+pathStrv3+"+L="+label -> 1.0))
+        addFeature("d="+min(distance,20).toString, 1.0, 1.0)
+        addFeature("d="+min(distance,20).toString+"+"+pathStrv3, 1.0, 1.0)
     }
 
-    def fflogDistance(node1: Node, node2: Node, label: String) : FeatureVector = {
+    def fflogDistance {
         val distance = min(Math.abs(graph.spans(node1.spans(0)).start - graph.spans(node2.spans(0)).end),
                            Math.abs(graph.spans(node1.spans(0)).end - graph.spans(node2.spans(0)).start))
         val pathStrv3 = depPathStrv3(node1, node2)
-        return FeatureVector(Map("logD" -> log(distance+1),
-                                 "logD+L="+label -> log(distance+1),
-                                 "logD+"+pathStrv3 -> log(distance+1),
-                                 "logD+"+pathStrv3+"L="+label -> log(distance+1)))
+        addFeature("logD", log(distance+1), log(distance+1))
+        addFeature("logD+"+pathStrv3, log(distance+1), log(distance+1))
     }
 
-    def ffDistanceIntervals(node1: Node, node2: Node, label: String) : FeatureVector = {
+    def ffDistanceIntervals {
         val distance = min(Math.abs(graph.spans(node1.spans(0)).start - graph.spans(node2.spans(0)).end),
                            Math.abs(graph.spans(node1.spans(0)).end - graph.spans(node2.spans(0)).start))
         val direction = signum(graph.spans(node1.spans(0)).start - graph.spans(node2.spans(0)).end).toInt
         val pathStrv3 = depPathStrv3(node1, node2)
-        val feats = FeatureVector()
         for (i <- Range(1, distance-1)) {
-            feats.fmap += ("dint="+(direction*i).toString -> 1.0)
-            feats.fmap += ("dint="+(direction*i).toString+"+L="+label -> 1.0)
-            feats.fmap += ("dint="+(direction*i).toString+"+"+pathStrv3 -> 1.0)
-            feats.fmap += ("dint="+(direction*i).toString+"+"+pathStrv3+"+L="+label -> 1.0)
+            addFeature("dint="+(direction*i).toString, 1.0, 1.0)
+            addFeature("dint="+(direction*i).toString+"+"+pathStrv3, 1.0, 1.0)
         }
-        return feats
     }
 
-    def fflogDistanceIntervals(node1: Node, node2: Node, label: String) : FeatureVector = {
+    def fflogDistanceIntervals {
         val distance = min(Math.abs(graph.spans(node1.spans(0)).start - graph.spans(node2.spans(0)).end),
                            Math.abs(graph.spans(node1.spans(0)).end - graph.spans(node2.spans(0)).start))
         val direction = signum(graph.spans(node1.spans(0)).start - graph.spans(node2.spans(0)).end).toInt
         val pathStrv3 = depPathStrv3(node1, node2)
-        val feats = FeatureVector()
-        feats.fmap += ("logDv2" -> log(distance+1))
         for (i <- Range(1, Math.floor(log(distance+1)/log(1.39)).toInt - 1)) {
-            feats.fmap += ("logDi="+(direction*i).toString -> 1.0)
-            feats.fmap += ("logDi="+(direction*i).toString+"+L="+label -> 1.0)
-            feats.fmap += ("logDi="+(direction*i).toString+"+"+pathStrv3 -> 1.0)
-            feats.fmap += ("logDi="+(direction*i).toString+"+"+pathStrv3+"L="+label -> 1.0)
+            addFeature("logDi="+(direction*i).toString, 1.0, 1.0)
+            addFeature("logDi="+(direction*i).toString+"+"+pathStrv3, 1.0, 1.0)
         }
-        return feats
     }
 
-    def ffDirection(node1: Node, node2: Node, label: String) : FeatureVector = {
-        return FeatureVector(Map("dir" -> signum(graph.spans(node1.spans(0)).start - graph.spans(node2.spans(0)).end + .01)))
+    def ffDirection {
+        val dir = signum(graph.spans(node1.spans(0)).start - graph.spans(node2.spans(0)).end + .01)
+        addFeature("dir", dir, dir)
     }
 
-    def ffConceptBigram(node1: Node, node2: Node, label: String) : FeatureVector = {
+    def ffConceptBigram {
         //logger(2, "ffConceptBigram: Node1 = " + node1.concept + " Node2 = " + node2.concept + " label = " + label)
-        return FeatureVector(Map(/*("C1="+node1.concept+":C2="+node2.concept) -> 1.0,*/
-                                 ("C1="+node1.concept+"+C2="+node2.concept+"+L="+label) -> 1.0))
+        addFeature("C1="+node1.concept+"+C2="+node2.concept, /*1.0*/ 0.0, 1.0)  // TODO: check that adding no label helps
     }
 
-    def ffConceptUnigramWithLabel(node1: Node, node2: Node, label: String) : FeatureVector = {
-        return FeatureVector(Map(("C1="+node1.concept+"+L="+label) -> 1.0,
-                                 ("C2="+node2.concept+"+L="+label) -> 1.0))
+    def ffConceptUnigramWithLabel {
+        addFeature("C1="+node1.concept, 0.0, 1.0)
+        addFeature("C2="+node2.concept, 0.0, 1.0)
     }
 
-    def ffPosPathUnigramBigramv1(node1: Node, node2: Node, label: String) : FeatureVector = {
+    def ffPosPathUnigramBigramv1 {
         val posSet1 = posSpanSet(node1).mkString("_")
         val posSet2 = posSpanSet(node2).mkString("_")
         val (unigrams, bigrams) = posPathUnigramAndBigramCounts(node1, node2)
-        val feats = FeatureVector()
         val pp = "PPv1"
         val direction = if (graph.spans(node1.spans(0)).start < graph.spans(node2.spans(0)).start) { "+1" } else { "-1" }
         val dpStr = depPathStrv3(node1, node2)
         for ((unigram, count) <- unigrams) {
             val ppStr = "C1PS="+posSet1+"+C2PS="+posSet2+"+dir="+direction+"+"+pp+"U="+unigram
-            feats.fmap(ppStr) = count
-            feats.fmap(ppStr+"+L="+label) = count
-            feats.fmap(ppStr+"_"+count.toString) = 1.0
-            feats.fmap(ppStr+"_"+count.toString+"+L="+label) = 1.0
-            feats.fmap(dpStr+"+"+ppStr) = count
-            feats.fmap(dpStr+"+"+ppStr+"+L="+label) = count
-            feats.fmap(dpStr+"+"+ppStr+"_"+count.toString) = 1.0
-            feats.fmap(dpStr+"+"+ppStr+"_"+count.toString+"+L="+label) = 1.0
+            addFeature(ppStr, count, count)
+            addFeature(ppStr+"_"+count.toString, 1.0, 1.0)
+            addFeature(dpStr+"+"+ppStr, count, count)
+            addFeature(dpStr+"+"+ppStr+"_"+count.toString, 1.0, 1.0)
         }
         for ((bigram1, bigram2, count) <- bigrams) {
             val ppStr = "C1PS="+posSet1+"+C2PS="+posSet2+"+dir="+direction+"+"+pp+"B="+bigram1+"_"+bigram2
-            feats.fmap(ppStr) = count
-            feats.fmap(ppStr+"+L="+label) = count
-            feats.fmap(ppStr+"_"+count.toString) = 1.0
-            feats.fmap(ppStr+"_"+count.toString+"+L="+label) = 1.0
-            feats.fmap(dpStr+"+"+ppStr) = count
-            feats.fmap(dpStr+"+"+ppStr+"+L="+label) = count
-            feats.fmap(dpStr+"+"+ppStr+"_"+count.toString) = 1.0
-            feats.fmap(dpStr+"+"+ppStr+"_"+count.toString+"+L="+label) = 1.0
+            addFeature(ppStr, count, count)
+            addFeature(ppStr+"_"+count.toString, 1.0, 1.0)
+            addFeature(dpStr+"+"+ppStr, count, count)
+            addFeature(dpStr+"+"+ppStr+"_"+count.toString, 1.0, 1.0)
         }
-        return feats
     }
 
-    def ffPosPathUnigramBigramv2(node1: Node, node2: Node, label: String) : FeatureVector = {
+    def ffPosPathUnigramBigramv2 {
         val posSet1 = posSpanSet(node1).mkString("_")
         val posSet2 = posSpanSet(node2).mkString("_")
         val (unigrams, bigrams) = posPathUnigramAndBigramCounts(node1, node2)
-        val feats = FeatureVector()
         val pp = "PPv2"
         val direction = if (graph.spans(node1.spans(0)).start < graph.spans(node2.spans(0)).start) { "+1" } else { "-1" }
         val dpStr = depPathStrv3(node1, node2)
         for ((unigram, count) <- unigrams) {
             val ppStr = "C1PS="+posSet1+"+C2PS="+posSet2+"+dir="+direction+"+"+pp+"U="+unigram
-            feats.fmap(ppStr+"_"+count.toString) = 1.0
-            feats.fmap(ppStr+"_"+count.toString+"+L="+label) = 1.0
+            addFeature(ppStr+"_"+count.toString, 1.0, 1.0)
         }
         for ((bigram1, bigram2, count) <- bigrams) {
             val ppStr = "C1PS="+posSet1+"+C2PS="+posSet2+"+dir="+direction+"+"+pp+"B="+bigram1+"_"+bigram2
-            feats.fmap(ppStr+"_"+count.toString) = 1.0
-            feats.fmap(ppStr+"_"+count.toString+"+L="+label) = 1.0
+            addFeature(ppStr+"_"+count.toString, 1.0, 1.0)
         }
-        return feats
     }
 
-    def ffPosPathUnigramBigramv3(node1: Node, node2: Node, label: String) : FeatureVector = {
+    def ffPosPathUnigramBigramv3 {
         val posSet1 = posSpanSet(node1).mkString("_")
         val posSet2 = posSpanSet(node2).mkString("_")
-        val feats = FeatureVector()
         val pp = "PPv3"
         val direction = if (graph.spans(node1.spans(0)).start < graph.spans(node2.spans(0)).start) { "+1" } else { "-1" }
         val dpStr = depPathStrv3(node1, node2)
@@ -280,15 +281,11 @@ class Features(var featureNames: List[String]) {
         val ppStr1 = "C1PS="+posSet1+"+C2PS="+posSet2+"+dir="+direction+"+"+pp+".1="+posPath.mkString("_")
         val ppStr2 = "C1PS="+posSet1+"+C2PS="+posSet2+"+dir="+direction+"+"+pp+".2="+posPath.distinct.mkString("_")
 
-        return FeatureVector(Map(ppStr1 -> 1.0,
-                                 ppStr1+"L="+label -> 1.0,
-                                 ppStr1+dpStr -> 1.0,
-                                 ppStr1+dpStr+"L="+label -> 1.0,
-                                 ppStr2 -> 1.0,
-                                 ppStr2+"L="+label -> 1.0,
-                                 ppStr2+dpStr -> 1.0,
-                                 ppStr2+dpStr+"L="+label -> 1.0))
-     }
+        addFeature(ppStr1, 1.0, 1.0)
+        addFeature(ppStr1+dpStr, 1.0, 1.0)
+        addFeature(ppStr2, 1.0, 1.0)
+        addFeature(ppStr2+dpStr, 1.0, 1.0)
+    }
 
     def posPathUnigramAndBigramCounts(node1: Node, node2: Node) : (List[(String, Int)], List[(String, String, Int)]) = {
         val span1 = fullPos.annotationSpan((graph.spans(node1.spans(0)).start, graph.spans(node1.spans(0)).end))
@@ -323,7 +320,7 @@ class Features(var featureNames: List[String]) {
         return Range(span._1, span._2)
     }
 
-    def ffDependencyPathv2(node1: Node, node2: Node, label: String) : FeatureVector = {
+    def ffDependencyPathv2 {
         val (word1Index, word2Index, path) = (for { w1 <- dependencySpan(node1)
                                                     w2 <- dependencySpan(node2)
                                              } yield { (w1, w2, dependencyPath(w1, w2)) }).minBy(x => x._3._1.size + x._3._2.size)
@@ -332,40 +329,64 @@ class Features(var featureNames: List[String]) {
         val pos = fullPos
         pos.annotation = fullPos.annotation.map(x => x.replaceAll("VB.*","VB").replaceAll("NN.*|PRP|FW","NN").replaceAll("JJ.*","JJ").replaceAll("RB.*","RB"))
         val (word1, word2) = (dependencies.tok(word1Index), dependencies.tok(word2Index))
-        val feats = if (path._1.size + path._2.size <= 4) {
+        if (path._1.size + path._2.size <= 4) {
             val pathStr = dependencyPathString(path, pos).mkString("_")
-            FeatureVector(Map(("C1="+node1.concept+"+C2="+node2.concept+"+"+dp+pathStr+"+L="+label) -> 1.0,
-                              ("W1="+word1+"+W2="+word2+"+"+dp+pathStr+"+L="+label) -> 1.0,
-                              ("W1="+word1+"+"+dp+pathStr+"+L="+label) -> 1.0,
-                              ("W2="+word2+"+"+dp+pathStr+"+L="+label) -> 1.0,
-                              (dp+pathStr+"+L="+label) -> 1.0
-                              ))
-        } else { FeatureVector() }
-        return feats
+            addFeature("C1="+node1.concept+"+C2="+node2.concept+"+"+dp+pathStr, 0.0, 1.0)
+            addFeature("W1="+word1+"+W2="+word2+"+"+dp+pathStr, 0.0, 1.0)
+            addFeature("W1="+word1+"+"+dp+pathStr, 0.0, 1.0)
+            addFeature("W2="+word2+"+"+dp+pathStr, 0.0, 1.0)
+            addFeature(dp+pathStr, 0.0, 1.0)
+        }
     }
 
-    def ffDependencyPathv3(node1: Node, node2: Node, label: String) : FeatureVector = {
-        val (word1Index, word2Index, path) = (for { w1 <- dependencySpan(node1)
-                                                    w2 <- dependencySpan(node2)
-                                             } yield { (w1, w2, dependencyPath(w1, w2)) }).minBy(x => x._3._1.size + x._3._2.size)
+    def ffDependencyPathv3 {
+        val (word1Index, word2Index, path) = (
+            for { w1 <- dependencySpan(node1)
+                  w2 <- dependencySpan(node2)
+                } yield { (w1, w2, dependencyPath(w1, w2)) }).minBy(x => x._3._1.size + x._3._2.size)
+
         // TODO: could also do all paths instead of just the shortest
         val dp = "DPv3="
         val pos = fullPos
         pos.annotation = fullPos.annotation.map(x => x.replaceAll("VB.*","VB").replaceAll("NN.*","NN"))
         val (word1, word2) = (dependencies.tok(word1Index), dependencies.tok(word2Index))
-        val feats= if (path._1.size + path._2.size <= 4) {
+        if (path._1.size + path._2.size <= 4) {  // TODO: max path longer
             val pathStr = dependencyPathString(path, pos).mkString("_")
-            FeatureVector(Map(//("C1="+node1.concept+"+C2="+node2.concept+"+"+dp+pathStr+"+L="+label) -> 1.0,
+                              //("C1="+node1.concept+"+C2="+node2.concept+"+"+dp+pathStr+"+L="+label) -> 1.0,
                               //("W1="+word1+"+W2="+word2+"+"+dp+pathStr+"+L="+label) -> 1.0,
-                              ("C1="+node1.concept+"+"+dp+pathStr) -> 1.0,
-                              ("C2="+node2.concept+"+"+dp+pathStr) -> 1.0,
-                              ("W1="+word1+"+"+dp+pathStr) -> 1.0,
-                              ("W2="+word2+"+"+dp+pathStr) -> 1.0,
-                              (dp+pathStr+"+L="+label) -> 1.0,
-                              (dp+pathStr) -> 1.0
-                              ))
-        } else { FeatureVector(Map(dp+"NONE" -> 1.0)) }
-        return feats
+            addFeature("C1="+node1.concept+"+"+dp+pathStr, 1.0, 0.0) // TODO: add conjoined
+            addFeature("C2="+node2.concept+"+"+dp+pathStr, 1.0, 0.0)
+            addFeature("W1="+word1+"+"+dp+pathStr, 1.0, 0.0)
+            addFeature("W2="+word2+"+"+dp+pathStr, 1.0, 0.0)
+            addFeature(dp+pathStr, 1.0, 1.0)
+        } else { 
+            addFeature(dp+"NONE", 1.0, 0.0)     // TODO: change to 1.0 for conjoined
+        }
+    }
+
+    def ffDependencyPathv4 {
+        val (word1Index, word2Index, path) = (
+            for { w1 <- dependencySpan(node1)
+                  w2 <- dependencySpan(node2)
+                } yield { (w1, w2, dependencyPath(w1, w2)) }).minBy(x => x._3._1.size + x._3._2.size)
+
+        // TODO: could also do all paths instead of just the shortest
+        val dp = "DPv4="
+        val pos = fullPos
+        pos.annotation = fullPos.annotation.map(x => x.replaceAll("VB.*","VB").replaceAll("NN.*","NN"))
+        val (word1, word2) = (dependencies.tok(word1Index), dependencies.tok(word2Index))
+        if (path._1.size + path._2.size <= 4) {  // TODO: max path longer
+            val pathStr = dependencyPathString(path, pos).mkString("_")
+                              //("C1="+node1.concept+"+C2="+node2.concept+"+"+dp+pathStr+"+L="+label) -> 1.0,
+                              //("W1="+word1+"+W2="+word2+"+"+dp+pathStr+"+L="+label) -> 1.0,
+            addFeature(dp+pathStr, 1.0, 1.0)
+            addFeature("C1="+node1.concept+"+"+dp+pathStr, 1.0, 1.0)
+            addFeature("C2="+node2.concept+"+"+dp+pathStr, 1.0, 1.0)
+            addFeature("W1="+word1+"+"+dp+pathStr, 1.0, 1.0)
+            addFeature("W2="+word2+"+"+dp+pathStr, 1.0, 1.0)
+        } else { 
+            addFeature(dp+"NONE", 1.0, 1.0)
+        }
     }
 
     def depPathStrv3(node1: Node, node2: Node, maxpath: Int = 4) : String = {   // same code as above, just only computes pathStr
@@ -381,7 +402,7 @@ class Features(var featureNames: List[String]) {
         })
     }
 
-    // TODO: fDependencyAllPaths
+    // TODO: ffDependencyAllPaths
 
     def dependencyPath(word1: Int, word2: Int) : (List[Int], List[Int]) = {
         // List one is path from word1 to common head
@@ -421,99 +442,90 @@ class Features(var featureNames: List[String]) {
         }
     }
 
-    def ffRootConcept(node: Node) : FeatureVector = {
-        logger(2, "ffRootConcept: Node = " + node.concept)
-        return FeatureVector(Map(("C="+node.concept+"+L=<ROOT>") -> 1.0))
+    /* *********************** Note ***********************
+
+        All root features should add "+L=<ROOT" to the string
+        and do addFeature(featstring, 1.0, 0.0) 
+        (i.e. leave the unconjoined features blank)
+
+       ************************************************** */
+
+    def ffRootConcept = {
+        logger(2, "ffRootConcept: Node = " + node1.concept)
+        addFeature("C="+node1.concept+"+L=<ROOT>", 1.0, 0.0)
     }
 
-    def ffRootCostAug(node: Node) : FeatureVector = {        // Used for cost augmented decoding
-        return FeatureVector(Map(("CA:Id1="+node.id+"L=<ROOT>") -> 1.0))
+    def ffRootCostAug {         // Used for cost augmented decoding
+        addFeature("CA:Id1="+node1.id+"L=<ROOT>", 1.0, 0.0)
     }
 
     // TODO: ffRootDependencyPath
 
-    val rootFeature = List("rootConcept","rootPath")
-    val notFast = List()  // ff that don't support fast lookup
-
-/*    var prev_t : Int = -1       // For fast features
-    var prev_input = Array[Token]()
-    var prev_sPrev = ""
-    var saved = FeatureVector() */
-
     var featureFunctions : List[FeatureFunction] = {
-        for { feature <- featureNames
-              if !rootFeature.contains(feature)
-              if !notFast.contains(feature)
-        } yield ffTable(feature)
-    } // TODO: error checking on lookup
-
-/*    val featureFunctionsNotFast : List[FeatureFunction] = {
-        for { feature <- feature_names
-              if nofast.contains(feature)
-        } yield fftable(feature)
+        featureNames.filter(x => !rootFFTable.contains(x)).map(x => ffTable(x))     // TODO: error checking on lookup
     }
-    //logger(0,feature_names)
-*/
 
-    var rootFeatureFunctions : List[RootFeatureFunction] = {
-        for { feature <- featureNames
-              if rootFeature.contains(feature)
-        } yield rootFFTable(feature)
-    } // TODO: error checking on lookup
+    var rootFeatureFunctions : List[FeatureFunction] = {
+        featureNames.filter(x => rootFFTable.contains(x)).map(x => rootFFTable(x))
+    }
 
     def addFeatureFunction(featureName: String) {
         if (!featureNames.contains(featureName)) {
             featureNames = featureName :: featureNames
-            if (rootFeature.contains(featureName)) {
+            if (rootFFTable.contains(featureName)) {
                 rootFeatureFunctions = rootFFTable(featureName) :: rootFeatureFunctions
             } else {
-                featureFunctions = ffTable(featureName) :: featureFunctions
+                featureFunctions = ffTable(featureName) :: featureFunctions         // TODO: error checking on lookup
             }
         }
     }
 
     def setFeatures(featureNames: List[String]) {
-        featureFunctions = featureNames.filter(x => !notFast.contains(x)).map(x => ffTable(x))
-        //featureFunctionsNotFast = featureNames.filter(x => notFast.contains(x)).map(x => ffTable(x))
+        featureNames.filter(x => !rootFFTable.contains(x)).map(x => ffTable(x))     // TODO: error checking on lookup
+        featureNames.filter(x => rootFFTable.contains(x)).map(x => rootFFTable(x))
     }
 
-    def localFeatures(node1: Node, node2: Node, label: String) : FeatureVector = {
+    def localFeatures(n1: Node, n2: Node) : List[(String, Value)] = {
         // Calculate the local features
-        val feats = FeatureVector()
+        node1 = n1
+        node2 = n2
+        feats = List()
         for (ff <- featureFunctions) {
-            feats += ff(node1, node2, label)
+            ff()
         }
         return feats
+    }
+
+    def localFeatures(node1: Node, node2: Node, label: Int) : List[(String, ValuesList)] = {
+        return localFeatures(node1, node2).map(
+            x => (x._1, ValuesList(x._2.unconjoined, List(Conjoined(label, x._2.conjoined)))))
+    }
+
+    def localFeatures(node1: Node, node2: Node, label: String) : List[(String, ValuesList)] = {
+        if(weights.labelToIndex.contains(label)) {
+            localFeatures(node1, node2, weights.labelToIndex(label))
+        } else {
+            logger(0, "************* WARNING: Cannot find label = "+label+" in the labelset")
+            localFeatures(node1, node2).map(x => (x._1, ValuesList(x._2.unconjoined, List())))
+        }
     }
 
     def localScore(node1: Node, node2: Node, label: String) : Double = {
-        var score = 0.0
-        for (ff <- featureFunctions) {
-            //logger(2, ff.toString)
-            //logger(2, ff(node1, node2, label))
-            score += weights.dot(ff(node1, node2, label))
-        }
-        return score
+        return weights.dot(localFeatures(node1, node2, label))
     }
 
-    def rootFeatures(node: Node) : FeatureVector = {
+    def rootFeatures(node: Node) : List[(String, ValuesList)] = {
         // Calculate the local features
-        val feats = FeatureVector()
+        node1 = node
+        feats = List()
         for (ff <- rootFeatureFunctions) {
-            feats += ff(node)
+            ff()
         }
-        return feats
+        return feats.map(x => (x._1, ValuesList(x._2.unconjoined, List())))
     }
 
     def rootScore(node: Node) : Double = {
-        var score = 0.0
-        for (ff <- rootFeatureFunctions) {
-            //logger(1, ff.toString)
-            //logger(1, ff(node))
-            score += weights.dot(ff(node))
-        }
-        return score
+        return weights.dot(rootFeatures(node))
     }
-
 }
 

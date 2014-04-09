@@ -1,5 +1,7 @@
 package edu.cmu.lti.nlp.amr.ConceptInvoke
 import edu.cmu.lti.nlp.amr._
+import edu.cmu.lti.nlp.amr.Train._
+import edu.cmu.lti.nlp.amr.BasicFeatureVector._
 
 import java.lang.Math.abs
 import java.lang.Math.log

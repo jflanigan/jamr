@@ -1,5 +1,5 @@
 #!/bin/bash
 
 #fsc -classpath "../wordnet/edu.mit.jwi_2.3.0_jdk.jar" *.scala
-fsc -classpath "/disk2/work/amr/wordnet/edu.mit.jwi_2.3.0_jdk.jar" *.scala GraphDecoder/*.scala ConceptInvoke/*.scala
+fsc -classpath "/disk2/work/amr/wordnet/edu.mit.jwi_2.3.0_jdk.jar" *.scala GraphDecoder/*.scala ConceptInvoke/*.scala FastFeatureVector/*.scala Train/*.scala BasicFeatureVector/*.scala
 #fsc -classpath "../wordnet/edu.mit.jwi_2.3.0_jdk.jar" -optimize -Yinline-warnings *.scala GraphDecoder/*.scala

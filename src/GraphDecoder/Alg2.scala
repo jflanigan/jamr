@@ -1,5 +1,6 @@
 package edu.cmu.lti.nlp.amr.GraphDecoder
 import edu.cmu.lti.nlp.amr._
+import edu.cmu.lti.nlp.amr.FastFeatureVector._
 
 import java.lang.Math.abs
 import java.lang.Math.log
@@ -14,12 +15,11 @@ import scala.collection.mutable.Map
 import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.PriorityQueue
-import Double.{NegativeInfinity => minusInfty}
 
 class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected: Boolean = true) extends Decoder {
     // Base class has defined:
     // val features: Features
-    val features = new Features(featureNames)
+    val features = new Features(featureNames, labelSet.map(_._1))
 
     private var inputSave: Input = _
     def input : Input = inputSave
@@ -46,15 +46,21 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
     }
 
     def weightMatrix(nodes: Array[Node], labels: Array[(String, Int)]) : Array[Array[Array[(String, Double)]]] = {
-        for ((node1, index1) <- nodes.zipWithIndex) yield {
-            for ((node2, index2) <- nodes.zipWithIndex) yield {
-                if (index1 == index2) {
-                    Array((":self", 0.0)) // we won't add this to the queue anyway, so it's ok
+        val edgeWeights : Array[Array[Array[(String, Double)]]] = nodes.map(x => Array.fill(0)(Array.fill(0)("",0.0)))
+        for (i <- 0 until nodes.size) {
+            edgeWeights(i) = nodes.map(x => Array.fill(0)(("",0.0)))
+            for (j <- 0 until nodes.size) {
+                if (i == j) {
+                    edgeWeights(i)(j) = Array((":self", 0.0)) // we won't add this to the queue anyway, so it's ok
                 } else {
-                    labels.map(x => (x._1, features.localScore(node1, node2, x._1)))
+                    edgeWeights(i)(j) = Array.fill(labelSet.size)(("", 0.0))
+                    val feats = features.localFeatures(nodes(i), nodes(j))
+                    features.weights.iterateOverLabels(feats,
+                        x => edgeWeights(i)(j)(x.labelIndex) = (features.weights.labelset(x.labelIndex), x.value))
                 }
             }
         }
+        return edgeWeights
     }
 
     def decode(i: Input) : DecoderResult = { 
@@ -82,14 +88,14 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
         def getSet(nodeIndex : Int) : Set[Int] = { setArray(set(nodeIndex)) }
 
         var score = 0.0
-        var feats = new FeatureVector()
+        var feats = new FeatureVector(features.weights.labelset)
         def addEdge(node1: Node, index1: Int, node2: Node, index2: Int, label: String, weight: Double, addRelation: Boolean = true) {
             if (!node1.relations.exists(x => ((x._1 == label) && (x._2.id == node2.id))) || !addRelation) { // Prevent adding an edge twice
                 logger(1, "Adding edge ("+node1.concept+", "+label +", "+node2.concept + ") with weight "+weight.toString)
                 if (addRelation) {
                     node1.relations = (label, node2) :: node1.relations
                 }
-                feats += features.localFeatures(node1, node2, label)
+                feats += features.localFeatures(node1, node2, features.weights.labelToIndex(label))  // TODO: could speed this up (not use String for label)
                 score += weight
             }
             //logger(1, "set = " + set.toList)
@@ -117,10 +123,11 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
             //logger(1, "1: node2 = "+node2.concept+" "+node2.id)
             if (nodeIds.indexWhere(_ == node2.id) != -1) {
                 val index2 = nodeIds.indexWhere(_ == node2.id)
-                addEdge(node1, index1, node2, index2, label, features.localScore(node1, node2, label), addRelation=false)
+                addEdge(node1, index1, node2, index2, label, features.weights.dot(features.localFeatures(node1, node2, label)), addRelation=false)
             } else {
-                feats += features.localFeatures(node1, node2, label)
-                score += features.localScore(node1, node2, label)
+                val temp = features.localFeatures(node1, node2, label)
+                feats += temp
+                score += features.weights.dot(temp)
             }
         }
 
@@ -134,7 +141,12 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
                 val node1 = nodes(index1)
                 for ((labelWeights, index2) <- nodes2.zipWithIndex) yield {
                     val node2 = nodes(index2)
-                    val (label, weight) = labelWeights.map(x => (x._1, x._2 + features.weights.dot(features.ffLRLabelWithId(node1, node2, x._1)))).maxBy(_._2)
+                    // For node1 and node2, we will find the label with the highest weight
+                    // However, to support LR decoding we will also add features.weights.dot(features.ffLRLabelWithId(node1, node2, x._1))
+                    // The code used to be:
+                    // val (label, weight) = labelWeights.map(x => (x._1, x._2 + features.weights.dot(features.ffLRLabelWithId(node1, node2, x._1)))).maxBy(_._2)
+                    // but now with FastFeatureVector it is:
+                    val (label, weight) = labelWeights.view.zipWithIndex.map(x => (x._1._1, x._1._2 + { val (f,v) = features.ffLRLabelWithId(node1, node2)(0); features.weights(f, Some(x._2)) * v.conjoined } )).maxBy(_._2)
                     if (weight > 0) {   // Add if positive
                         addEdge(node1, index1, node2, index2, label, weight)
                     }
@@ -143,7 +155,7 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
             }
         }
 
-/*
+/* ******** This code used to support nonDistinctLabels ************
         val neighbors : Array[Array[(String, Double)]] = {
             for ((node1, index1) <- nodes.zipWithIndex) yield {
                 for ((node2, index2) <- nodes.zipWithIndex) yield {
@@ -178,7 +190,7 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
                     }
                 }
             }
-        } */
+        } ************************************************** */
 
         // Uncomment to print neighbors matrix
         /*logger(1, "Neighbors matrix")
@@ -222,6 +234,7 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
                 graph.root = nodes(0)
             }
             feats += features.rootFeatures(graph.root)
+            score += features.rootScore(graph.root)
 
             nodes.map(node => { node.relations = node.relations.reverse })
             if (connected) {

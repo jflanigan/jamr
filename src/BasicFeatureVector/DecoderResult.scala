@@ -1,4 +1,5 @@
-package edu.cmu.lti.nlp.amr
+package edu.cmu.lti.nlp.amr.BasicFeatureVector
+import edu.cmu.lti.nlp.amr._
 
 case class DecoderResult(graph: Graph, features: FeatureVector, score: Double)
 

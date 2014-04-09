@@ -1,5 +1,6 @@
 package edu.cmu.lti.nlp.amr.GraphDecoder
 import edu.cmu.lti.nlp.amr._
+import edu.cmu.lti.nlp.amr.FastFeatureVector._
 
 import java.lang.Math.abs
 import java.lang.Math.log
@@ -18,11 +19,7 @@ import Double.{NegativeInfinity => minusInfty}
 
 case class GraphObj(graph: Graph,
                     nodes: Array[Node], // usually 'nodes' is graph.nodes.filter(_.name != None).toArray
-                    features: Features,
-                    var set: Array[Int],
-                    var setArray: Array[Set[Int]],
-                    var score: Double = 0.0,
-                    var feats: FeatureVector = new FeatureVector()) {
+                    features: Features) {
 
     // GraphObj is an object to keep track of the connectivity of the graph as edges are added to the graph.
     // It is code that was factored out of Alg2.  It is now also used in Alg1.
@@ -36,7 +33,12 @@ case class GraphObj(graph: Graph,
     // 'set' contains the index of the set that each node is assigned to
     // At the start each node is in its own set
 
-    def this(graph: Graph, nodes: Array[Node], features: Features) = this(graph, nodes, features, nodes.zipWithIndex.map(_._2).toArray, nodes.zipWithIndex.map(x => Set(x._2)).toArray)
+    var set: Array[Int] = nodes.zipWithIndex.map(_._2).toArray
+    var setArray: Array[Set[Int]] = nodes.zipWithIndex.map(x => Set(x._2)).toArray
+    var score: Double = 0.0
+    var feats: FeatureVector = FeatureVector(features.weights.labelset)
+    val edgeWeights : Array[Array[Array[(String, Double)]]] = computeWeightMatrix
+
 
     def getSet(nodeIndex : Int) : Set[Int] = { setArray(set(nodeIndex)) }
 
@@ -66,6 +68,28 @@ case class GraphObj(graph: Graph,
         //logger(1, "set = " + set.toList)
         //logger(1, "nodes = " + nodes.map(x => x.concept).toList)
         //logger(1, "setArray = " + setArray.toList)
+    }
+
+    def localScore(nodeIndex1: Int, nodeIndex2: Int, label: Int) : Double = {
+        return edgeWeights(nodeIndex1)(nodeIndex2)(label)._2
+    }
+
+    private def computeWeightMatrix : Array[Array[Array[(String, Double)]]] = {
+        val edgeWeights : Array[Array[Array[(String, Double)]]] = nodes.map(x => Array.fill(0)(Array.fill(0)("",0.0)))
+        for (i <- 0 until nodes.size) {
+            edgeWeights(i) = nodes.map(x => Array.fill(0)(("",0.0)))
+            for (j <- 0 until nodes.size) {
+                if (i == j) {
+                    edgeWeights(i)(j) = Array((":self", 0.0)) // we won't add this to the queue anyway, so it's ok
+                } else {
+                    edgeWeights(i)(j) = Array.fill(features.weights.labelset.size)(("", 0.0))
+                    val feats = features.localFeatures(nodes(i), nodes(j))
+                    features.weights.iterateOverLabels(feats,
+                        x => edgeWeights(i)(j)(x.labelIndex) = (features.weights.labelset(x.labelIndex), x.value))
+                }
+            }
+        }
+        return edgeWeights
     }
 
     def log {

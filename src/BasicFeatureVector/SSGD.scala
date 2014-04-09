@@ -1,4 +1,6 @@
-package edu.cmu.lti.nlp.amr
+package edu.cmu.lti.nlp.amr.BasicFeatureVector
+import edu.cmu.lti.nlp.amr._
+import edu.cmu.lti.nlp.amr.Train._
 
 import java.io.File
 import java.io.FileOutputStream
@@ -23,21 +25,22 @@ import scala.math.sqrt
 
 /******************************** Training **********************************/
 
-class SSGD extends Optimizer {
-    def learnParameters(gradient: (Int, Int) => FeatureVector,
+class SSGD extends Optimizer[FeatureVector] {
+    def learnParameters(gradient: (Option[Int], Int, FeatureVector) => (FeatureVector, Double),
                         weights: FeatureVector,
                         trainingSize: Int,
                         passes: Int,
                         stepsize: Double,
                         l2reg: Double,
-                        trainingObserver: Int => Boolean,
+                        noreg: List[String],  // TODO: implement
+                        trainingObserver: (Int, FeatureVector) => Boolean,
                         avg: Boolean) : FeatureVector = {
         var avg_weights = FeatureVector()
         var i = 0
-        while (i < passes && trainingObserver(i)) {
+        while (i < passes && trainingObserver(i, weights)) {
             logger(0,"Pass "+(i+1).toString)
             for (t <- Random.shuffle(Range(0, trainingSize).toList)) {
-                weights -= stepsize * gradient(i, t)
+                weights -= stepsize * gradient(Some(i), t, weights)._1
                 if (l2reg != 0.0) {
                     weights -= (stepsize * l2reg) * weights
                 }

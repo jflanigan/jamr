@@ -1,4 +1,5 @@
-package edu.cmu.lti.nlp.amr
+package edu.cmu.lti.nlp.amr.BasicFeatureVector
+import edu.cmu.lti.nlp.amr.Train.AbstractFeatureVector
 
 import java.io.File
 import java.io.FileOutputStream
@@ -27,7 +28,7 @@ case class MulAssoc(x: Double) { def * (v: FeatureVector) = mul(x, v) }
 // in package.scala:
 // implicit def doubleToMulAssoc(x: Double) = new MulAssoc(x)
 
-case class FeatureVector(fmap : Map[String, Double] = Map[String, Double]()) {
+case class FeatureVector(fmap : Map[String, Double] = Map[String, Double]()) extends AbstractFeatureVector(Array()) {
 //    def copy(v: FeatureVector) = { FeatureVector(v.fmap.clone()) }
     def dot(v: FeatureVector) : Double = {
         if (fmap.size <= v.fmap.size) {
@@ -47,6 +48,8 @@ case class FeatureVector(fmap : Map[String, Double] = Map[String, Double]()) {
             fmap(feat) = fmap.getOrElse(feat,0.0) + scale * value
         }
     }
+    def += (v: AbstractFeatureVector) = { this.+=(v.asInstanceOf[FeatureVector]) }
+    def -= (v: AbstractFeatureVector) = { this.+=(v.asInstanceOf[FeatureVector]) }
     def -= (v: FeatureVector) : Unit = this += -1.0 * v
     def -= (m: mul) : Unit = this += mul(-m.scale, m.v)
     def * (scale: Double) = mul(scale, this)

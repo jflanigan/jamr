@@ -1,27 +1,12 @@
 package edu.cmu.lti.nlp.amr
 
-import java.io.File
-import java.io.FileOutputStream
-import java.io.PrintStream
-import java.io.BufferedOutputStream
-import java.io.OutputStreamWriter
-import java.lang.Math.abs
-import java.lang.Math.log
-import java.lang.Math.exp
-import java.lang.Math.random
-import java.lang.Math.floor
-import java.lang.Math.min
-import java.lang.Math.max
-import scala.io.Source
 import scala.util.matching.Regex
-import scala.collection.mutable.Map
-import scala.collection.mutable.Set
-import scala.collection.mutable.ArrayBuffer
-import scala.util.parsing.combinator._
+import scala.collection.mutable.{Map, Set, ArrayBuffer}
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._ // see http://stackoverflow.com/questions/16162090/how-to-convert-java-util-list-to-scala-list
 
 import java.net.URL
+import java.io.File
 
 import edu.mit.jwi.RAMDictionary
 import edu.mit.jwi.IRAMDictionary

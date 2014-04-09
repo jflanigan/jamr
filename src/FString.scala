@@ -1,6 +1,5 @@
 package edu.cmu.lti.nlp.amr
 
-import scala.io.Source
 import scala.util.matching.Regex
 import scala.collection.mutable.Map
 import scala.collection.mutable.Set
