@@ -2,26 +2,9 @@ package edu.cmu.lti.nlp.amr.GraphDecoder
 import edu.cmu.lti.nlp.amr._  
 import edu.cmu.lti.nlp.amr.FastFeatureVector._
 
-import java.io.File
-import java.io.FileOutputStream
-import java.io.PrintStream
-import java.io.BufferedOutputStream
-import java.io.OutputStreamWriter
-import java.lang.Math
-import java.lang.Math.abs
-import java.lang.Math.log
-import java.lang.Math.exp
-import java.lang.Math.random
-import java.lang.Math.floor
-import java.lang.Math.min
-import java.lang.Math.max
-import java.lang.Math.signum
-import scala.io.Source
 import scala.util.matching.Regex
-import scala.collection.mutable.Map
-import scala.collection.mutable.Set
-import scala.collection.mutable.ArrayBuffer
-import scala.util.parsing.combinator._
+import scala.collection.mutable.{Map, Set, ArrayBuffer}
+import scala.collection.immutable
 
 /**************************** Feature Functions *****************************/
 
@@ -35,7 +18,7 @@ class Features(var featureNames: List[String], labelSet: Array[String]) {
     //private var pos: Annotation[Array[String]] = _
     private var node1 : Node = _
     private var node2 : Node = _
-    private var feats : List[(String, Value)] = _
+    private var feats : List[(String, Value, immutable.Map[Int, Double])] = _
 
     def input: Input = inputSave
     def input_= (i: Input) {
@@ -57,7 +40,7 @@ class Features(var featureNames: List[String], labelSet: Array[String]) {
         "bias" -> ffBias _,
         "biasScaled" -> ffBiasScaled _,
         "biasCSuf" -> ffBiasCSuf _,
-        //"typeBias" -> ffTypeBias _,  // TODO
+        "typeBias" -> ffTypeBias _,
         "self" -> ffSelf _,
         "fragHead" -> ffFragHead _,
         "edgeCount" -> ffEdgeCount _,
@@ -87,10 +70,14 @@ class Features(var featureNames: List[String], labelSet: Array[String]) {
     // node1 is always the tail, and node2 the head
 
     def addFeature(feat: String, unconjoined: Double, conjoined: Double) {
-        feats = (feat, Value(unconjoined, conjoined)) :: feats
+        feats = (feat, Value(unconjoined, conjoined), immutable.Map.empty[Int,Double]) :: feats
     }
 
-    def ffCostAugEdgeId(n1: Node, n2: Node) : List[(String, Value)] = {
+    def addFeature(feat: String, unconjoined: Double, conjoined: Double, conjoinedMap: immutable.Map[Int, Double]) {
+        feats = (feat, Value(unconjoined, conjoined), conjoinedMap) :: feats
+    }
+
+    def ffCostAugEdgeId(n1: Node, n2: Node) : List[(String, Value, immutable.Map[Int, Double])] = {
         node1 = n1
         node2 = n2
         feats = List()
@@ -107,7 +94,7 @@ class Features(var featureNames: List[String], labelSet: Array[String]) {
         //return FeatureVector(Map(("DD:Id1="+node1.id+"+Id2="+node2.id+"+L="+label) -> 1.0))
     }
 
-    def ffLRLabelWithId(n1: Node, n2: Node) : List[(String, Value)] = {
+    def ffLRLabelWithId(n1: Node, n2: Node) : List[(String, Value, immutable.Map[Int, Double])] = {
         node1 = n1
         node2 = n2
         feats = List()
@@ -144,14 +131,20 @@ class Features(var featureNames: List[String], labelSet: Array[String]) {
     }
 
     // TODO
-/*    def ffTypeBias {
+    def ffTypeBias {
         def conceptType(x: String) : String = if (x.matches(".*-[0-9][0-9]")) { "E" } else { "O" }
         def labelType(x: String) : String = if (x.startsWith(":ARG")) { "A" } else { "O" }
-        return FeatureVector(Map("C1T="+conceptType(node1.concept)+"LT="+labelType(label) -> 1.0,
+        addFeature("C1T="+conceptType(node1.concept), 1.0, 1.0)
+        addFeature("C2T="+conceptType(node2.concept), 1.0, 1.0)
+        addFeature("C1T="+conceptType(node1.concept)+"LT=A", 0.0, 0.0, weights.labelToIndex.toMap.filter(x => x._1.startsWith(":ARG")).map(x => (x._2, 1.0)))
+        addFeature("C2T="+conceptType(node2.concept)+"LT=A", 0.0, 0.0, weights.labelToIndex.toMap.filter(x => x._1.startsWith(":ARG")).map(x => (x._2, 1.0)))
+        addFeature("C1T="+conceptType(node1.concept)+"LT=O", 0.0, 0.0, weights.labelToIndex.toMap.filter(x => !x._1.startsWith(":ARG")).map(x => (x._2, 1.0)))
+        addFeature("C2T="+conceptType(node2.concept)+"LT=O", 0.0, 0.0, weights.labelToIndex.toMap.filter(x => !x._1.startsWith(":ARG")).map(x => (x._2, 1.0)))
+        /*return FeatureVector(Map("C1T="+conceptType(node1.concept)+"LT="+labelType(label) -> 1.0,
                                  "C2T="+conceptType(node2.concept)+"LT="+labelType(label) -> 1.0,
                                  "C1T="+conceptType(node1.concept)+"L="+label -> 1.0,
-                                 "C2T="+conceptType(node2.concept)+"L="+label -> 1.0))
-    } */
+                                 "C2T="+conceptType(node2.concept)+"L="+label -> 1.0))*/
+    }
 
     def ffSelf {
         addFeature("Slf", if (node1.spans(0) == node2.spans(0)) { 1.0 } else { 0.0 }, 0.0)
@@ -213,7 +206,7 @@ class Features(var featureNames: List[String], labelSet: Array[String]) {
     }
 
     def ffDirection {
-        val dir = signum(graph.spans(node1.spans(0)).start - graph.spans(node2.spans(0)).end + .01)
+        val dir = signum(graph.spans(node1.spans(0)).start - graph.spans(node2.spans(0)).end + .01f)
         addFeature("dir", dir, dir)
     }
 
@@ -375,7 +368,7 @@ class Features(var featureNames: List[String], labelSet: Array[String]) {
         val pos = fullPos
         pos.annotation = fullPos.annotation.map(x => x.replaceAll("VB.*","VB").replaceAll("NN.*","NN"))
         val (word1, word2) = (dependencies.tok(word1Index), dependencies.tok(word2Index))
-        if (path._1.size + path._2.size <= 4) {  // TODO: max path longer
+        if (path._1.size + path._2.size <= 6) {  // TODO: max path longer
             val pathStr = dependencyPathString(path, pos).mkString("_")
                               //("C1="+node1.concept+"+C2="+node2.concept+"+"+dp+pathStr+"+L="+label) -> 1.0,
                               //("W1="+word1+"+W2="+word2+"+"+dp+pathStr+"+L="+label) -> 1.0,
@@ -462,7 +455,13 @@ class Features(var featureNames: List[String], labelSet: Array[String]) {
     // TODO: ffRootDependencyPath
 
     var featureFunctions : List[FeatureFunction] = {
-        featureNames.filter(x => !rootFFTable.contains(x)).map(x => ffTable(x))     // TODO: error checking on lookup
+        featureNames.filter(x => !rootFFTable.contains(x)).map(x =>
+            if(ffTable.contains(x)) {
+                ffTable(x)
+            } else {
+                System.err.println("Error: Unknown feature "+x)
+                sys.exit(1).asInstanceOf[Nothing]
+            })
     }
 
     var rootFeatureFunctions : List[FeatureFunction] = {
@@ -470,7 +469,7 @@ class Features(var featureNames: List[String], labelSet: Array[String]) {
     }
 
     def addFeatureFunction(featureName: String) {
-        if (!featureNames.contains(featureName)) {
+        if (!featureNames.contains(featureName) || !rootFeatureFunctions.contains(featureName)) {
             featureNames = featureName :: featureNames
             if (rootFFTable.contains(featureName)) {
                 rootFeatureFunctions = rootFFTable(featureName) :: rootFeatureFunctions
@@ -485,7 +484,7 @@ class Features(var featureNames: List[String], labelSet: Array[String]) {
         featureNames.filter(x => rootFFTable.contains(x)).map(x => rootFFTable(x))
     }
 
-    def localFeatures(n1: Node, n2: Node) : List[(String, Value)] = {
+    def localFeatures(n1: Node, n2: Node) : List[(String, Value, immutable.Map[Int, Double])] = {
         // Calculate the local features
         node1 = n1
         node2 = n2
@@ -498,14 +497,14 @@ class Features(var featureNames: List[String], labelSet: Array[String]) {
 
     def localFeatures(node1: Node, node2: Node, label: Int) : List[(String, ValuesList)] = {
         return localFeatures(node1, node2).map(
-            x => (x._1, ValuesList(x._2.unconjoined, List(Conjoined(label, x._2.conjoined)))))
+            x => (x._1, ValuesList(x._2.unconjoined, List(Conjoined(label, x._2.conjoined + x._3.getOrElse(label, 0.0))))))
     }
 
     def localFeatures(node1: Node, node2: Node, label: String) : List[(String, ValuesList)] = {
         if(weights.labelToIndex.contains(label)) {
             localFeatures(node1, node2, weights.labelToIndex(label))
         } else {
-            logger(0, "************* WARNING: Cannot find label = "+label+" in the labelset")
+            logger(0, "************* WARNING: Cannot find label = "+label+" in the labelset ***************")
             localFeatures(node1, node2).map(x => (x._1, ValuesList(x._2.unconjoined, List())))
         }
     }

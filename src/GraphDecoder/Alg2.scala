@@ -55,7 +55,7 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
                 } else {
                     edgeWeights(i)(j) = Array.fill(labelSet.size)(("", 0.0))
                     val feats = features.localFeatures(nodes(i), nodes(j))
-                    features.weights.iterateOverLabels(feats,
+                    features.weights.iterateOverLabels2(feats,
                         x => edgeWeights(i)(j)(x.labelIndex) = (features.weights.labelset(x.labelIndex), x.value))
                 }
             }
@@ -146,7 +146,7 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
                     // The code used to be:
                     // val (label, weight) = labelWeights.map(x => (x._1, x._2 + features.weights.dot(features.ffLRLabelWithId(node1, node2, x._1)))).maxBy(_._2)
                     // but now with FastFeatureVector it is:
-                    val (label, weight) = labelWeights.view.zipWithIndex.map(x => (x._1._1, x._1._2 + { val (f,v) = features.ffLRLabelWithId(node1, node2)(0); features.weights(f, Some(x._2)) * v.conjoined } )).maxBy(_._2)
+                    val (label, weight) = labelWeights.view.zipWithIndex.map(x => (x._1._1, x._1._2 + { val (f,v,_) = features.ffLRLabelWithId(node1, node2)(0); features.weights(f, Some(x._2)) * v.conjoined } )).maxBy(_._2)
                     if (weight > 0) {   // Add if positive
                         addEdge(node1, index1, node2, index2, label, weight)
                     }

@@ -9,6 +9,7 @@ package object amr {
     def random = java.lang.Math.random _
     def floor = java.lang.Math.floor _
     def ceil = java.lang.Math.ceil _
+    def signum = java.lang.Math.signum _
     def pow = java.lang.Math.pow _
     def min = java.lang.Math.min _
     def max = java.lang.Math.max _

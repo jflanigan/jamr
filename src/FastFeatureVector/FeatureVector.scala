@@ -5,6 +5,7 @@ import edu.cmu.lti.nlp.amr.Train.AbstractFeatureVector
 import scala.math.sqrt
 //import scala.collection.mutable.Map
 import scala.collection.concurrent.{TrieMap => Map}
+import scala.collection.immutable
 import scala.io.Source
 
 case class fastmul(scale: Double, v: List[(String, ValuesList)])
@@ -41,6 +42,26 @@ case class FeatureVector(labelset : Array[String],
         for ((feature, value) <- v if fmap.contains(feature)) {
             val myValues : ValuesMap = fmap(feature)
             unconjoinedTotal += myValues.unconjoined * value.unconjoined
+            for (myValue <- myValues.conjoined) {
+                conjoinedTotal(myValue._1) += myValue._2 * value.conjoined
+            }
+        }
+        for (i <- 0 until labelset.size) {
+            f(Conjoined(i, unconjoinedTotal + conjoinedTotal(i)))
+        }
+    }
+    def iterateOverLabels2(v: List[(String, Value, immutable.Map[Int, Double])], f: (Conjoined) => Unit) {
+        var unconjoinedTotal : Double = 0.0
+        val conjoinedTotal : Array[Double] = labelset.map(x => 0.0)
+        for ((feature, value, conjoinedMap) <- v if fmap.contains(feature)) {
+            val myValues : ValuesMap = fmap(feature)
+            unconjoinedTotal += myValues.unconjoined * value.unconjoined
+            for ((labelIndex, value) <- conjoinedMap) {   // reusing value name, but it's ok
+                if (myValues.conjoined.contains(labelIndex)) {
+                    val myValue : Double = myValues.conjoined(labelIndex)
+                    conjoinedTotal(labelIndex) += myValue * value
+                }
+            }
             for (myValue <- myValues.conjoined) {
                 conjoinedTotal(myValue._1) += myValue._2 * value.conjoined
             }
@@ -139,7 +160,7 @@ case class FeatureVector(labelset : Array[String],
             }
         }
         return total
-    } 
+    }
     def dot(v: FeatureVector) : Double = {
         var total : Double = 0.0
         for ((feature, value) <- v.fmap if fmap.contains(feature)) {
