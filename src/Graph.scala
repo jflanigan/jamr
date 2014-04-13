@@ -436,7 +436,28 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
     def prettyString(detail: Int, pretty: Boolean) : String = {
         val vars = Set.empty[String]
         doRecursive(node => vars ++= node.relations.map(_._1))
+        assignOpN
         return root.prettyString(detail, pretty, vars)
+    }
+
+    def assignOpN {
+        def numberOps(relations: List[(String, Node)]) : List[(String, Node)] = {
+            val ops = relations.filter(x => x._1 == ":op")
+            val opNs = ops.sortBy(x => spans(x._2.spans(0)).start).zipWithIndex.map(x => (x._1._1 + (x._2+1).toString, x._1._2))
+            val notOps = relations.filter(x => x._1 != ":op")
+            return opNs ::: notOps
+        }
+        def numberOpsVar(relations: List[(String, Var)]) : List[(String, Var)] = {
+            val ops = relations.filter(x => x._1 == ":op")
+            val opNs = ops.sortBy(x => spans(x._2.node.spans(0)).start).zipWithIndex.map(x => (x._1._1 + (x._2+1).toString, x._1._2))
+            val notOps = relations.filter(x => x._1 != ":op")
+            return opNs ::: notOps
+        }
+        doRecursive(node => {
+            node.relations = numberOps(node.relations)
+            node.topologicalOrdering = numberOps(node.topologicalOrdering)
+            node.variableRelations = numberOpsVar(node.variableRelations)
+        })
     }
 }
 
