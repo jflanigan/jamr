@@ -109,7 +109,7 @@ class Features(var featureNames: List[String], labelSet: Array[String]) {
 
     def ffBias {              // TODO: after testing, adjust back to 0.01
         // Bias features are unregularized.  Adjusting these values only adjusts the condition number of the optimization problem. 
-        addFeature("Bias", 1.0, 1.0)
+        addFeature("Bias", 0.0, 1.0)
         //return FeatureVector(Map(("L="+label) -> 1.0))
     }
 
@@ -492,12 +492,13 @@ class Features(var featureNames: List[String], labelSet: Array[String]) {
         for (ff <- featureFunctions) {
             ff()
         }
+        logger(1, "localFeatures("+n1.id.toString+","+n2.id.toString+") = \n"+feats.sortBy(_._1).mkString("\n"))
         return feats
     }
 
     def localFeatures(node1: Node, node2: Node, label: Int) : List[(String, ValuesList)] = {
         return localFeatures(node1, node2).map(
-            x => (x._1, ValuesList(x._2.unconjoined, List(Conjoined(label, x._2.conjoined + x._3.getOrElse(label, 0.0))))))
+            x => (x._1, ValuesList(x._2.unconjoined + x._3.getOrElse(label, 0.0), List(Conjoined(label, x._2.conjoined)))))
     }
 
     def localFeatures(node1: Node, node2: Node, label: String) : List[(String, ValuesList)] = {
