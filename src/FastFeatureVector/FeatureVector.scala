@@ -57,10 +57,7 @@ case class FeatureVector(labelset : Array[String],
             val myValues : ValuesMap = fmap(feature)
             unconjoinedTotal += myValues.unconjoined * value.unconjoined
             for ((labelIndex, value) <- conjoinedMap) {   // reusing value name, but it's ok
-                if (myValues.conjoined.contains(labelIndex)) {
-                    val myValue : Double = myValues.conjoined(labelIndex)
-                    conjoinedTotal(labelIndex) += myValue * value
-                }
+                conjoinedTotal(labelIndex) += myValues.unconjoined * value
             }
             for (myValue <- myValues.conjoined) {
                 conjoinedTotal(myValue._1) += myValue._2 * value.conjoined
@@ -162,12 +159,15 @@ case class FeatureVector(labelset : Array[String],
         return total
     }
     def dot(v: FeatureVector) : Double = {
+        logger(1, "Computing dot product")
         var total : Double = 0.0
         for ((feature, value) <- v.fmap if fmap.contains(feature)) {
             val myValues : ValuesMap = fmap(feature)
             total += myValues.unconjoined * value.unconjoined
+            logger(1, feature + " "+myValues.unconjoined.toString+" * "+value.unconjoined.toString)
             for (conjoined <- value.conjoined if myValues.conjoined.contains(conjoined._1)) {
                 total += myValues.conjoined(conjoined._1) * conjoined._2
+                logger(1, feature + "+L="+labelset(conjoined._1)+" "+myValues.conjoined(conjoined._1).toString+" * "+conjoined._2.toString)
             }
         }
         return total

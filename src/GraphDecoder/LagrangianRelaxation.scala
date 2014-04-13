@@ -81,6 +81,7 @@ class LagrangianRelaxation(featureNames: List[String], labelSet: Array[(String, 
         }
 
         val feats = result.features.filter(x => !x.startsWith("LR:Id1="))
+        logger(1, "LR returning with score = " + features.weights.dot(feats).toString)
         return DecoderResult(result.graph, feats, features.weights.dot(feats))
     }
 }

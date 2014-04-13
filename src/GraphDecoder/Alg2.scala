@@ -56,7 +56,10 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
                     edgeWeights(i)(j) = Array.fill(labelSet.size)(("", 0.0))
                     val feats = features.localFeatures(nodes(i), nodes(j))
                     features.weights.iterateOverLabels2(feats,
-                        x => edgeWeights(i)(j)(x.labelIndex) = (features.weights.labelset(x.labelIndex), x.value))
+                        x => { logger(1, "These should be equal: " + x.value.toString + " " + features.localScore(nodes(i), nodes(j), features.weights.labelset(x.labelIndex).toString));
+                        //edgeWeights(i)(j)(x.labelIndex) = (features.weights.labelset(x.labelIndex), features.localScore(nodes(i), nodes(j), features.weights.labelset(x.labelIndex))) })
+                        edgeWeights(i)(j)(x.labelIndex) = (features.weights.labelset(x.labelIndex), x.value) })
+                    logger(1, "edgeWeights("+i.toString+")("+j.toString+") = "+edgeWeights(i)(j).toList)
                 }
             }
         }
@@ -78,6 +81,7 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
         //logger(2,"ndLabels = "+nonDistinctLabels.toList)
         //val distinctLabels = labelSet.filter(x => x._2 == 1)  // TODO: remove
         val distinctLabels = labelSet
+        logger(1, "labelSet = "+labelSet.toList.toString)
 
         // Each node is numbered by its index in 'nodes'
         // Each set is numbered by its index in 'setArray'
@@ -95,6 +99,7 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
                 if (addRelation) {
                     node1.relations = (label, node2) :: node1.relations
                 }
+                logger(1, "looking up label "+label)
                 feats += features.localFeatures(node1, node2, features.weights.labelToIndex(label))  // TODO: could speed this up (not use String for label)
                 score += weight
             }
@@ -244,6 +249,8 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
             graph = Graph.empty()
         }
 
+        logger(1, "Alg2 returning score = " + score.toString)
+        logger(1, "equals = "+features.weights.dot(feats))
         return DecoderResult(graph, feats, score)
     }
 }
