@@ -492,7 +492,7 @@ class Features(var featureNames: List[String], labelSet: Array[String]) {
         for (ff <- featureFunctions) {
             ff()
         }
-        logger(1, "localFeatures("+n1.id.toString+","+n2.id.toString+") = \n"+feats.sortBy(_._1).mkString("\n"))
+        //logger(1, "localFeatures("+n1.id.toString+","+n2.id.toString+") = \n"+feats.sortBy(_._1).mkString("\n"))
         return feats
     }
 
