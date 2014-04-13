@@ -432,6 +432,12 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
             }
         }
     }
+
+    def prettyString(detail: Int, pretty: Boolean) : String = {
+        val vars = Set.empty[String]
+        doRecursive(node => vars ++= node.relations.map(_._1))
+        return root.prettyString(detail, pretty, vars)
+    }
 }
 
 object Graph {

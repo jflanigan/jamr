@@ -232,7 +232,7 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
         //logger(1, "nodes = "+nodes.toList)
         if(nodes.size > 0) {
             if (features.rootFeatureFunctions.size != 0) {
-                graph.root = nodes.map(x => (x, features.rootScore(x))).maxBy(_._2)._1
+                graph.root = nodes.filter(node => !node.concept.startsWith("\"") && !node.concept.matches("[0-9].*")).map(x => (x, features.rootScore(x))).maxBy(_._2)._1
             } else {
                 //logger(1, "Setting root to "+nodes(0).id)
                 graph.root = nodes(0)

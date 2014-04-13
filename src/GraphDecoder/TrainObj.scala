@@ -49,7 +49,7 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
         }
         logger(0, "AMR:")
         if (outputFormat.contains("AMR")) {
-            logger(0, result.graph.root.prettyString(detail = 1, pretty = true)+"\n")
+            logger(0, result.graph.prettyString(detail = 1, pretty = true)+"\n")
         }
         if (outputFormat.contains("triples")) {
             //logger(0, result.graph.printTriples(detail = 1)+"\n")
@@ -60,7 +60,7 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
                 })+"\n")
         }
         logger(1, "Decoder features:\n"+result.features+"\n")
-        return (result.features, result.score, if (outputFormat.contains("AMR")) { result.graph.root.prettyString(detail = 1, pretty = true) } else { "" })
+        return (result.features, result.score, if (outputFormat.contains("AMR")) { result.graph.prettyString(detail = 1, pretty = true) } else { "" })
     }
 
     def oracle(i: Int, weights: FeatureVector) : (FeatureVector, Double) = {
@@ -72,7 +72,7 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
         logger(0, "Oracle:")
         if (outputFormat.contains("AMR")) {
            val result2 = oracle.decode(Input(amrdata, input(i), oracle = true, clearUnalignedNodes = false))
-           logger(0, result2.graph.root.prettyString(detail = 1, pretty = true)+"\n")
+           logger(0, result2.graph.prettyString(detail = 1, pretty = true)+"\n")
         }
         if (outputFormat.contains("triples")) {
            //logger(0, result.graph.printTriples(detail = 1)+"\n")
@@ -102,7 +102,7 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
         }
         logger(0, "AMR:")
         if (outputFormat.contains("AMR")) {
-            logger(0, result.graph.root.prettyString(detail = 1, pretty = true)+"\n")
+            logger(0, result.graph.prettyString(detail = 1, pretty = true)+"\n")
         }
         if (outputFormat.contains("triples")) {
             //logger(0, result.graph.printTriples(detail = 1)+"\n")

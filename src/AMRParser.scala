@@ -249,7 +249,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                 }
 
                 if (outputFormat.contains("AMR")) {
-                    println(decoderResultGraph.root.prettyString(detail=1, pretty=true) + '\n')
+                    println(decoderResultGraph.prettyString(detail=1, pretty=true) + '\n')
                 }
                 if (outputFormat.contains("triples")) {
                     println(decoderResultGraph.printTriples(detail = 1)+"\n")

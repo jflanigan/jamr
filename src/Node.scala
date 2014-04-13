@@ -38,10 +38,10 @@ case class Node(var id: String, var name: Option[String], concept: String, var r
     }
 
     override def toString() : String = {
-        prettyString(0, false)
+        prettyString(0, false, Set.empty[String])
     }
 
-    def prettyString(detail: Int, pretty: Boolean, indent: String = "") : String = {
+    def prettyString(detail: Int, pretty: Boolean, vars: Set[String], indent: String = "") : String = {
     // detail = 0: Least detail. No variables names or node ids.
     //             (date-entity :day 5 :month 1 :year 2002)
 
@@ -64,21 +64,26 @@ case class Node(var id: String, var name: Option[String], concept: String, var r
             if ((topologicalOrdering.size +variableRelations.size) != 0) {      // Concept with name and children
                 detail match {
                     case 0 =>
-                "("+concept+" "+(topologicalOrdering.map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, nextIndent)) :::
+                "("+concept+" "+(topologicalOrdering.map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, vars, nextIndent)) :::
                                  variableRelations.map(x => prefix+x._1+" "+x._2.node.concept)).sorted.mkString(" ")+")"
                     case 1 =>
-                "("+n+" / "+concept+" "+(topologicalOrdering.map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, nextIndent)) :::
+                "("+n+" / "+concept+" "+(topologicalOrdering.map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, vars, nextIndent)) :::
                                  variableRelations.map(x => prefix+x._1+" "+x._2.name)).sorted.mkString(" ")+")"
                     case 2 =>
-                "(["+id+"] "+n+" / "+concept+" "+(topologicalOrdering.map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, nextIndent)) :::
+                "(["+id+"] "+n+" / "+concept+" "+(topologicalOrdering.map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, vars, nextIndent)) :::
                                  variableRelations.map(x => prefix+x._1+" ["+x._2.node.id+"] "+x._2.name)).sorted.mkString(" ")+")"
                 }
             } else {                        // Concept with name, but no children
                 detail match {
                     case 0 =>
                         concept
-                    case 1 =>
-                        "("+n+" / "+concept+")"
+                    case 1 => {
+                        if (concept.startsWith("\"") || concept.matches("[0-9].*") && !vars.contains(name.get)) {       // WARNING: If you change this filter for concepts that get variable names, be sure also change the code that selects the root in Alg1 and Alg2 (change the filter)
+                            concept
+                        } else {
+                            "("+n+" / "+concept+")"
+                        }
+                    }
                     case 2 =>
                         "(["+id+"] "+n+" / "+concept+")"
                 }
@@ -91,13 +96,13 @@ case class Node(var id: String, var name: Option[String], concept: String, var r
             }
         } else {                            // Concept with no name but has children
             if (detail == 0) {
-                "("+concept+" "+(topologicalOrdering.map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, nextIndent)) :::
+                "("+concept+" "+(topologicalOrdering.map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, vars, nextIndent)) :::
                                  variableRelations.map(x => prefix+x._1+" "+x._2.node.concept)).sorted.mkString(" ")+")"
             } else if (detail == 1) {
-                "("+concept+" "+(topologicalOrdering.map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, nextIndent)) :::
+                "("+concept+" "+(topologicalOrdering.map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, vars, nextIndent)) :::
                                  variableRelations.map(x => prefix+x._1+" "+x._2.name)).sorted.mkString(" ")+")"
             } else {
-                "(["+id+"] "+concept+" "+(topologicalOrdering.map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, nextIndent)) :::
+                "(["+id+"] "+concept+" "+(topologicalOrdering.map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, vars, nextIndent)) :::
                             variableRelations.map(x => prefix+x._1+" ["+x._2.node.id+"] "+x._2.name)).sorted.mkString(" ")+")"
             }
         }
