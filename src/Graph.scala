@@ -434,8 +434,11 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
     }
 
     def prettyString(detail: Int, pretty: Boolean) : String = {
-        val vars = Set.empty[String]
-        doRecursive(node => vars ++= node.relations.map(_._1))
+        val vars = Set.empty[String]        // set of variable names to be sure to keep in output 
+        if (root.name != None) {
+            vars += root.name.get
+        }
+        doRecursive(node => vars ++= node.variableRelations.map(_._2.name))
         assignOpN
         return root.prettyString(detail, pretty, vars)
     }
