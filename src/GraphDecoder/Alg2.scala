@@ -74,6 +74,8 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
     def decode() : DecoderResult = {
         // Assumes that Node.relations has been setup correctly for the graph fragments
         var graph = input.graph.get.duplicate
+        //logger(1, "Alg2 input graph: ")
+        //logger(1, graph.printTriples(detail = 1)+"\n")
         //val nodes : Array[Node] = graph.nodes.filter.toArray
         val nodes : Array[Node] = graph.nodes.filter(_.name != None).toArray
         //val nonDistinctLabels = labelSet.toList.filter(x => x._2 > 1) // TODO: remove
@@ -225,11 +227,15 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
                 val (weight, index1, index2, label) = queue.dequeue
                 if (set(index1) != set(index2)) {
                     addEdge(nodes(index1), index1, nodes(index2), index2, label, weight)
+                    //logger(1, "set = " + set.toList)
+                    //logger(1, "getSet(0)" + getSet(0))
                 }
             }
         }
-        
+
         //logger(1, "nodes = "+nodes.toList)
+        //logger(1, "Alg2 returning graph: ")
+        //logger(1, graph.printTriples(detail = 1)+"\n")
         if(nodes.size > 0) {
             if (features.rootFeatureFunctions.size != 0) {
                 graph.root = nodes.filter(node => !node.concept.startsWith("\"") && !node.concept.matches("[0-9].*")).map(x => (x, features.rootScore(x))).maxBy(_._2)._1

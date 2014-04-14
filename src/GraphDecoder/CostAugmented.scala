@@ -41,7 +41,9 @@ class CostAugmented(val decoder: Decoder, costScale: Double, precRecTradeoff: Do
         //val result = decoder.decode(Input(input.inputAnnotatedSentence, input.graph.duplicate.clearEdges))
         // Instead we do this:
         val saveGraph = input.graph.get
-        input.graph = Some(saveGraph.duplicate.clearEdges)
+        input.graph = Some(saveGraph.duplicate.clearEdges)  // WARNING: this code should follow what AMRTrainingData.toInputGraph() does
+        input.graph.get.normalizeInverseRelations           // need to call this because clearEdges resets the edges
+        input.graph.get.addVariableToSpans                  // need to call this because clearEdges resets the variables
         val result = decoder.decode(input)
         input.graph = Some(saveGraph)
 
