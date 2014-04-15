@@ -1,4 +1,5 @@
-##JAMR - Jeff and sAM's abstract meaning Revelator
+JAMR
+====
 
 JAMR is a semantic parser for the [Abstract Meaning Representation](http://amr.isi.edu/).
 
