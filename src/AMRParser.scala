@@ -40,6 +40,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             case "--training-cost-scale" :: value ::l => parseOptions(map + ('trainingCostScale -> value), l)
             case "--training-l2-strength" :: value::l => parseOptions(map + ('trainingL2RegularizerStrength -> value), l)
             case "--training-optimizer" :: value :: l => parseOptions(map + ('trainingOptimizer -> value), l)
+            case "--training-output" :: value :: l =>    parseOptions(map + ('trainingOutputFile -> value), l)
             case "--training-stepsize" :: value :: l =>  parseOptions(map + ('trainingStepsize -> value), l)
             case "--training-passes" :: value :: l =>    parseOptions(map + ('trainingPasses -> value), l)
             case "--training-avg-weights" :: l =>        parseOptions(map + ('trainingAvgWeights -> "true"), l)
@@ -210,7 +211,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
 
                 if (!options.contains('stage1Only)) {
                     val decoder = stage2.get
-                    decoderResultGraph = decoder.decode(new Input(stage1Result.graph,
+                    decoderResultGraph = decoder.decode(new Input(stage1Result.graph,   // TODO: what about stage1Oracle
                                                              tok.split(" "),
                                                              dependencies(i))).graph
                 }//endif (!options.contains('stage1Only))

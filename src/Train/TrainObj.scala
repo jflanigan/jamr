@@ -22,14 +22,15 @@ abstract class TrainObj[FeatureVector <: AbstractFeatureVector](options: Map[Sym
     def oracle(i: Int, weights: FeatureVector) : (FeatureVector, Double)
     def costAugmented(i: Int, weights: FeatureVector, scale: Double) : (FeatureVector, Double)
     def train : Unit
+    def evalDev(options: Map[Symbol, String], pass: Int, weights: FeatureVector) : Unit
 
     ////////////////// Training Setup ////////////////
 
     val passes = options.getOrElse('trainingPasses, "20").toInt
     val stepsize = options.getOrElse('trainingStepsize, "1.0").toDouble
     val l2RegularizerStrength = options.getOrElse('trainingL2RegularizerStrength, "0.0").toDouble
-    val loss = options.getOrElse('trainingLoss, "SVM")
-    if (options.contains('trainingSaveInterval) && !options.contains('trainingWeightsFile)) {
+    val loss = options.getOrElse('trainingLoss, "Perceptron")
+    if (options.contains('trainingSaveInterval) && !options.contains('trainingOutputFile)) {
         System.err.println("Error: trainingSaveInterval specified but output weights filename given"); sys.exit(1)
     }
 
@@ -96,11 +97,11 @@ abstract class TrainObj[FeatureVector <: AbstractFeatureVector](options: Map[Sym
 
     def trainingObserver(pass: Int, weights: FeatureVector) : Boolean = {
         if (options.contains('trainingSaveInterval) && pass % options('trainingSaveInterval).toInt == 0 && pass > 0) {
-            val file = new java.io.PrintWriter(new java.io.File(options('trainingWeightsFile) + ".iter" + pass.toString), "UTF-8")
+            val file = new java.io.PrintWriter(new java.io.File(options('trainingOutputFile) + ".iter" + pass.toString), "UTF-8")
             try { file.print(weights.toString) }
             finally { file.close }
+            evalDev(options, pass, weights)
         }
-        //evalDev(pass, weights)
         return true
     }
 

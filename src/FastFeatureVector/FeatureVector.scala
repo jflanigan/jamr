@@ -91,7 +91,7 @@ case class FeatureVector(labelset : Array[String],
         }
     }
     def += (v: AbstractFeatureVector) = { this.+=(v.asInstanceOf[FeatureVector]) }
-    def -= (v: AbstractFeatureVector) = { this.+=(v.asInstanceOf[FeatureVector]) }
+    def -= (v: AbstractFeatureVector) = { this.-=(v.asInstanceOf[FeatureVector]) }
     def += (v: List[(String, ValuesList)]) = updateList(v, (feat, label, x, y) => x + y)
     def -= (v: List[(String, ValuesList)]) = updateList(v, (feat, label, x, y) => x - y)
     def updateAll(f: (String, Option[Int], Double) => Double) {

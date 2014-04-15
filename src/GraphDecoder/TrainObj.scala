@@ -19,6 +19,7 @@ import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 import scala.util.parsing.combinator._
 import edu.cmu.lti.nlp.amr.Input.Input
+import scala.sys.process._
 
 class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Train.TrainObj[FeatureVector](options) {
 
@@ -118,6 +119,33 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
 
     def train {
         train(FeatureVector(getLabelset(options).map(x => x._1)))
+    }
+
+    def evalDev(options: Map[Symbol, String], pass: Int, weights: FeatureVector) {
+        val devDecode = options('trainingOutputFile)+".iter"+pass.toString+".decode_dev"
+        val dev = "/disk2/work/amr/data/LDC-2013-Sep/dev_one/amr-release-proxy.dev-small" // assumes .aligned, .aligned.no_opN, .snt, .tok, .snt.deps, .snt.IllinoisNER
+
+        val snt = fromFile(dev+".aligned.no_opN").getLines.toArray // aka 'input' in AMRParser decode
+        val tokenized = fromFile(dev+".snt.tok").getLines.toArray
+        val nerFile = Corpus.splitOnNewline(fromFile(dev+".snt.IllinoisNER").getLines).toArray
+        val dependencies = Corpus.splitOnNewline(fromFile(dev+".snt.deps").getLines).map(block => block.replaceAllLiterally("-LRB-","(").replaceAllLiterally("-RRB-",")").replaceAllLiterally("""\/""","/")).toArray
+
+        val file = new java.io.PrintWriter(new java.io.File(devDecode), "UTF-8")
+        for((block, i) <- Corpus.splitOnNewline(fromFile(dev+".aligned.no_opN").getLines).zipWithIndex) {
+            val inputGraph = AMRTrainingData(block).toInputGraph
+            val stage2 = GraphDecoder.Decoder(options)
+            stage2.features.weights = weights
+            val decoderResult = stage2.decode(new Input(inputGraph, tokenized(i).split(" "), dependencies(i)))
+            file.println(decoderResult.graph.prettyString(detail=1, pretty=true) + '\n')
+        }
+        file.close
+
+        try {
+            val externalEval = stringToProcess("python /disk2/work/amr/smatch/code/smatch.py -f "+devDecode+" "+dev+".aligned").lines.toList
+            logger(0, "--- Performance on Dev ---\n" + externalEval.mkString("\n") + "\n")
+        } catch {
+            case _ : Throwable => 
+        }
     }
 
 /*  TODO: port back from SDP

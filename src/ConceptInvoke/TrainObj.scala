@@ -51,5 +51,8 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
     def train {
         train(FeatureVector())
     }
+
+    def evalDev(options: Map[Symbol, String], pass: Int, weights: FeatureVector) { }
+
 }
 
