@@ -59,7 +59,8 @@ class Features(var featureNames: List[String], labelSet: Array[String]) {
 
     val rootFFTable = Map[String, FeatureFunction](
         "rootConcept" -> ffRootConcept _,
-        "rootCostAug" -> ffRootCostAug _
+        "rootCostAug" -> ffRootCostAug _,
+        "rootDependencyPathv1" -> ffRootDependencyPathv1 _
     )
 
     def precompute() {
@@ -444,7 +445,6 @@ class Features(var featureNames: List[String], labelSet: Array[String]) {
        ************************************************** */
 
     def ffRootConcept = {
-        logger(2, "ffRootConcept: Node = " + node1.concept)
         addFeature("C="+node1.concept+"+L=<ROOT>", 1.0, 0.0)
     }
 
@@ -452,7 +452,12 @@ class Features(var featureNames: List[String], labelSet: Array[String]) {
         addFeature("CA:Id1="+node1.id+"L=<ROOT>", 1.0, 0.0)
     }
 
-    // TODO: ffRootDependencyPath
+    def ffRootDependencyPathv1 = {
+        if (graph.spans.size > 0 && node1.spans.size > 0) {
+            val path = dependencyPathString((List(), dependencySpan(node1).map(w => rootDependencyPaths(w)).minBy(x => x.size)), fullPos).mkString("_")
+            addFeature("DPRv1="+path+"+L=<ROOT>", 1.0, 0.0)
+        }
+    }
 
     var featureFunctions : List[FeatureFunction] = {
         featureNames.filter(x => !rootFFTable.contains(x)).map(x =>
