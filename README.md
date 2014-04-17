@@ -1,4 +1,4 @@
-JAMR
+JAMR - AMR Parser
 ====
 
 JAMR is a semantic parser for the [Abstract Meaning Representation](http://amr.isi.edu/).
