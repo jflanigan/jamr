@@ -46,6 +46,8 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             case "--training-avg-weights" :: l =>        parseOptions(map + ('trainingAvgWeights -> "true"), l)
             case "--training-save-interval"::value::l => parseOptions(map + ('trainingSaveInterval -> value), l)
             case "--training-data" :: value :: tail =>   parseOptions(map + ('trainingData -> value), tail) // used to be "--amr-oracle-data"
+            case "--training-dev" :: value :: tail =>    parseOptions(map + ('trainingDev -> value), tail)
+            case "--smatch-eval" :: value :: tail =>     parseOptions(map + ('smatchEval -> value), tail)
             case "--output-format" :: value :: l =>      parseOptions(map + ('outputFormat -> value), l)
             //case "--amr-oracle-data" :: value :: tail => parseOptions(map + ('amrOracleData -> value), tail)
             case "--dependencies" :: value :: tail =>    parseOptions(map + ('dependencies -> value), tail)
