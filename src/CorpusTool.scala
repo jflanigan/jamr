@@ -1,12 +1,7 @@
 package edu.cmu.lti.nlp.amr
 
-import scala.swing._
-import scala.swing.event._
 
-import scala.util.matching.Regex
 import scala.collection.mutable.Map
-import scala.collection.mutable.Set
-import scala.collection.mutable.ArrayBuffer
 
 import Corpus._
 
