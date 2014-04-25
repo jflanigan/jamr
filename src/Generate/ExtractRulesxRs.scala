@@ -76,9 +76,15 @@ object ExtractRulesxRs {
 
             // The rule is prefix.mkString(" ")+" "+rest.map(x => x._1+" "+x._2.mkString(" ")).mkString(" ")
             val concept = node.concept.replaceAll("""\(""", "-LBR-").replaceAll("""\)""", "-RBR-")
-            val labels = node.children.sortBy(_._1).map(x => "["+x._1.drop(1).toUpperCase.replaceAll("-","_")+"]").mkString(" ")
-            println("([X] ([X] "+concept+") "+labels+") ||| "+(prefix ::: (rest.toList ::: List(end)).map(x => "["+x._1.drop(1).toUpperCase.replaceAll("-","")+"] "+x._2.mkString(" ")).toList).mkString(" "))
+            val labels = children.sortBy(_.label).map(x => "["+x.label.drop(1).toUpperCase.replaceAll("-","")+"]").mkString(" ")
+            val ruleARGS = (prefix ::: (rest.toList ::: List(end)).map(x => "["+x._1.drop(1).toUpperCase.replaceAll("-","")+"] "+x._2.mkString(" ")).toList).mkString(" ")
+            val rule = (prefix ::: (rest.toList ::: List(end)).zipWithIndex.sortBy(_._1._1).zipWithIndex.sortBy(_._1._2).map(x => "["+(x._2+1).toString+"] "+x._1._1._2.mkString(" ")).toList).mkString(" ")
+            println("(X (X "+concept+") "+labels+") ||| "+ruleARGS+" ||| "+rule)
         }
+
+        /*def extracRecursive(prefix: List[String], children: List[Child]) {
+            
+        }*/
     }
 
     def computeSpans(graph: Graph, node: Node, spans: Map[String, (Option[Int], Option[Int])], spanArray: Array[List[Node]]) : (Option[Int], Option[Int]) = {
