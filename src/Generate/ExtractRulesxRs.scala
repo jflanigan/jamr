@@ -38,28 +38,32 @@ object ExtractRulesxRs {
             val data = AMRTrainingData(block)
             val graph = data.toOracleGraph(clearUnalignedNodes = false)
             val sentence = data.sentence    // Tokenized sentence
-            val spanArray : Array[List[Node]] = sentence.map(x => List())   // stores the projected spans on the sentence
             val spans : Map[String, (Option[Int], Option[Int])] = Map()     // stores the projected spans for each node
+            val spanArray : Array[Boolean] = sentence.map(x => false)    // stores the endpoints of the spans
             computeSpans(graph, graph.root, spans, spanArray)
             extractRules(graph.root, sentence, spans, spanArray)
         }
     }
 
-    def extractRules(node: Node, sent: Array[String], spans: Map[String, (Option[Int], Option[Int])], spanArray: Array[List[Node]]) {
+    def extractRules(node: Node, sent: Array[String], spans: Map[String, (Option[Int], Option[Int])], spanArray: Array[Boolean]) {
         val (myStart, myEnd) = spans(node.id)
         case class Child(label: String, node: Node, start: Int, end: Int)
         val children : List[Child] = node.children.filter(x => spans(x._2.id)._1 != None).map(x => {val (start, end) = spans(x._2.id); Child(x._1, x._2, start.get, end.get)}).sortBy(x => x.start)
         if (myStart != None && children.size > 0 && !(0 until children.size-1).exists(i => children(i).start > children(i+1).end)) { // check for no overlapping child spans (if so, no rule can be extracted)
             var outsideLower = myStart.get
-            do { outsideLower -= 1 } while (outsideLower >= 0 && spanArray(outsideLower).size == 0)
+            do { outsideLower -= 1 } while (outsideLower >= 0 && !spanArray(outsideLower))
             outsideLower += 1
             var outsideUpper = myEnd.get
-            do { outsideUpper += 1 } while (outsideUpper < sent.size && spanArray(outsideUpper).size == 0)
+            do { outsideUpper += 1 } while (outsideUpper < sent.size && !spanArray(outsideUpper))
             outsideUpper -= 1
 
             // We will extract the largest rule (with the most lexical items)
             // and delete spans of lexical items to get the other rules
-            val prefix : List[String] = sent.slice(outsideLower, myStart.get).toList
+            val prefix : List[String] = if (children.size > 0) {
+                sent.slice(outsideLower, children(0).start).toList
+            } else {
+                sent.slice(outsideLower, outsideUpper).toList
+            }
             var rest : Array[(String, List[String])] = (0 until children.size-1).map(
                 i => (children(i).label, sent.slice(children(i).end, children(i+1).start).toList)).toArray
             val end : (String, List[String]) = if (children.size > 0) {
@@ -77,27 +81,19 @@ object ExtractRulesxRs {
             println("(X (X "+concept+") "+labels+") ||| "+rule)
         }
 
-/*
-        for (i <- myStart.get until myEnd.get) {
-            spanArray(i) = spanArray(i).filter(_.id != node.id)
+        for (child <- children) {
+            extractRules(child.node, sent, spans, spanArray)
         }
-
-        for (i <- node.spans(0).start until node.spans(0).end) {    // spans.size > 0 because myStart != None
-            spanArray(i) = node :: spanArray(i)
-        } */
-
-
-        /*def extracRecursive(prefix: List[String], children: List[Child]) {
-            
-        }*/
     }
 
-    def computeSpans(graph: Graph, node: Node, spans: Map[String, (Option[Int], Option[Int])], spanArray: Array[List[Node]]) : (Option[Int], Option[Int]) = {
+    def computeSpans(graph: Graph, node: Node, spans: Map[String, (Option[Int], Option[Int])], spanArray: Array[Boolean]) : (Option[Int], Option[Int]) = {
         var myStart : Option[Int] = None
         var myEnd : Option[Int] = None
         if (node.spans.size > 0) {
             myStart = Some(graph.spans(node.spans(0)).start)
             myEnd = Some(graph.spans(node.spans(0)).end)
+            spanArray(myStart.get) = true
+            spanArray(myEnd.get - 1) = true
         }
         for ((_, child) <- node.topologicalOrdering) {
             val (start, end) = computeSpans(graph, child, spans, spanArray)
@@ -109,11 +105,6 @@ object ExtractRulesxRs {
             } else {
                 myStart = start
                 myEnd = end
-            }
-        }
-        if (myStart != None && myEnd != None) {
-            for (i <- myStart.get until myEnd.get) {
-                spanArray(i) = node :: spanArray(i)
             }
         }
         spans(node.id) = (myStart, myEnd)
