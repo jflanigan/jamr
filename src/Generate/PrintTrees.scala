@@ -31,7 +31,7 @@ object PrintTrees {
         }
 
         for { block <- Corpus.splitOnNewline(Source.stdin.getLines)
-              if (block matches "(.|\n)*\n\\((.|\n)*") } {
+              if (block.split("\n").exists(_.startsWith("("))) } {
             logger(1,"**** Processsing Block *****")
             logger(1,block)
             logger(1,"****************************")

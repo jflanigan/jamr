@@ -49,7 +49,7 @@ object ExtractRulesxRs {
         val (myStart, myEnd) = spans(node.id)
         case class Child(label: String, node: Node, start: Int, end: Int)
         val children : List[Child] = node.children.filter(x => spans(x._2.id)._1 != None).map(x => {val (start, end) = spans(x._2.id); Child(x._1, x._2, start.get, end.get)}).sortBy(x => x.start)
-        if (myStart != None && !(0 until children.size-1).exists(i => children(i).start > children(i+1).end)) { // check for no overlapping child spans (if so, no rule can be extracted)
+        if (myStart != None && children.size > 0 && !(0 until children.size-1).exists(i => children(i).start > children(i+1).end)) { // check for no overlapping child spans (if so, no rule can be extracted)
             var outsideLower = myStart.get
             do { outsideLower -= 1 } while (outsideLower >= 0 && spanArray(outsideLower).size == 0)
             outsideLower += 1
@@ -60,12 +60,6 @@ object ExtractRulesxRs {
             // We will extract the largest rule (with the most lexical items)
             // and delete spans of lexical items to get the other rules
             val prefix : List[String] = sent.slice(outsideLower, myStart.get).toList
-            /*for (i <- myStart.get until myEnd.get) {
-                spanArray(i) = spanArray(i).filter(_.id != node.id)
-            }
-            for (i <- node.spans(0).start until node.spans(0).end) {    // spans.size > 0 because myStart != None
-                spanArray(i) = node :: spanArray(i)
-            }*/
             var rest : Array[(String, List[String])] = (0 until children.size-1).map(
                 i => (children(i).label, sent.slice(children(i).end, children(i+1).start).toList)).toArray
             val end : (String, List[String]) = if (children.size > 0) {
@@ -79,8 +73,19 @@ object ExtractRulesxRs {
             val labels = children.sortBy(_.label).map(x => "["+x.label.drop(1).toUpperCase.replaceAll("-","")+"]").mkString(" ")
             val ruleARGS = (prefix ::: (rest.toList ::: List(end)).map(x => "["+x._1.drop(1).toUpperCase.replaceAll("-","")+"] "+x._2.mkString(" ")).toList).mkString(" ")
             val rule = (prefix ::: (rest.toList ::: List(end)).zipWithIndex.sortBy(_._1._1).zipWithIndex.sortBy(_._1._2).map(x => "["+(x._2+1).toString+"] "+x._1._1._2.mkString(" ")).toList).mkString(" ")
-            println("(X (X "+concept+") "+labels+") ||| "+ruleARGS+" ||| "+rule)
+            logger(0, "(X (X "+concept+") "+labels+") ||| "+ruleARGS+" ||| "+rule)
+            println("(X (X "+concept+") "+labels+") ||| "+rule)
         }
+
+/*
+        for (i <- myStart.get until myEnd.get) {
+            spanArray(i) = spanArray(i).filter(_.id != node.id)
+        }
+
+        for (i <- node.spans(0).start until node.spans(0).end) {    // spans.size > 0 because myStart != None
+            spanArray(i) = node :: spanArray(i)
+        } */
+
 
         /*def extracRecursive(prefix: List[String], children: List[Child]) {
             
