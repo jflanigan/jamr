@@ -32,15 +32,16 @@ object ExtractRulesxRs {
 
         for { block <- Corpus.splitOnNewline(Source.stdin.getLines)
               if (block matches "(.|\n)*\n\\((.|\n)*") } {
-            logger(1,"**** Processsing Block *****")
-            logger(1,block)
-            logger(1,"****************************")
+            logger(0,"**** Processsing Block *****")
+            logger(0,block)
+            logger(0,"****************************")
             val data = AMRTrainingData(block)
             val graph = data.toOracleGraph(clearUnalignedNodes = false)
             val sentence = data.sentence    // Tokenized sentence
             val spans : Map[String, (Option[Int], Option[Int])] = Map()     // stores the projected spans for each node
             val spanArray : Array[Boolean] = sentence.map(x => false)    // stores the endpoints of the spans
             computeSpans(graph, graph.root, spans, spanArray)
+            logger(0,"spanArray = "+spanArray.zip(sentence).toList.toString)
             extractRules(graph.root, sentence, spans, spanArray)
         }
     }
@@ -48,19 +49,21 @@ object ExtractRulesxRs {
     def extractRules(node: Node, sent: Array[String], spans: Map[String, (Option[Int], Option[Int])], spanArray: Array[Boolean]) {
         val (myStart, myEnd) = spans(node.id)
         case class Child(label: String, node: Node, start: Int, end: Int)
-        val children : List[Child] = node.children.filter(x => spans(x._2.id)._1 != None).map(x => {val (start, end) = spans(x._2.id); Child(x._1, x._2, start.get, end.get)}).sortBy(x => x.start)
+        val children : List[Child] = node.children.filter(x => spans(x._2.id)._1 != None).map(x => {val (start, end) = spans(x._2.id); Child(x._1, x._2, start.get, end.get)}).sortBy(x => x.end)
+        logger(1, "children = "+children.toString)
         if (myStart != None && children.size > 0 && !(0 until children.size-1).exists(i => children(i).start > children(i+1).end)) { // check for no overlapping child spans (if so, no rule can be extracted)
             var outsideLower = myStart.get
-            do { outsideLower -= 1 } while (outsideLower >= 0 && !spanArray(outsideLower))
-            outsideLower += 1
+            //do { outsideLower -= 1 } while (outsideLower >= 0 && !spanArray(outsideLower))
+            //outsideLower += 1
             var outsideUpper = myEnd.get
-            do { outsideUpper += 1 } while (outsideUpper < sent.size && !spanArray(outsideUpper))
-            outsideUpper -= 1
+            //while (outsideUpper < sent.size && !spanArray(outsideUpper)) {
+            //    outsideUpper += 1
+            //}
 
             // We will extract the largest rule (with the most lexical items)
             // and delete spans of lexical items to get the other rules
             val prefix : List[String] = if (children.size > 0) {
-                sent.slice(outsideLower, children(0).start).toList
+                sent.slice(outsideLower, children.map(x => x.start).min).toList
             } else {
                 sent.slice(outsideLower, outsideUpper).toList
             }
@@ -71,6 +74,9 @@ object ExtractRulesxRs {
             } else {
                 ("", List())
             }
+            logger(1, "prefix = "+prefix.toString)
+            logger(1, "rest = "+rest.toList.toString)
+            logger(1, "end = "+end.toString)
 
             // The rule is prefix.mkString(" ")+" "+rest.map(x => x._1+" "+x._2.mkString(" ")).mkString(" ")
             val concept = node.concept.replaceAll("""\(""", "-LBR-").replaceAll("""\)""", "-RBR-")
