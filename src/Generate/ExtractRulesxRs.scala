@@ -34,15 +34,16 @@ object ExtractRulesxRs {
               if (block matches "(.|\n)*\n\\((.|\n)*") } {
             logger(0,"**** Processsing Block *****")
             logger(0,block)
-            logger(0,"****************************")
             val data = AMRTrainingData(block)
             val graph = data.toOracleGraph(clearUnalignedNodes = false)
             val sentence = data.sentence    // Tokenized sentence
             val spans : Map[String, (Option[Int], Option[Int])] = Map()     // stores the projected spans for each node
             val spanArray : Array[Boolean] = sentence.map(x => false)    // stores the endpoints of the spans
             computeSpans(graph, graph.root, spans, spanArray)
-            logger(0,"spanArray = "+spanArray.zip(sentence).toList.toString)
+            //logger(0,"spanArray = "+spanArray.zip(sentence).toList.toString)
+            logger(0,"****** Extracted rules ******")
             extractRules(graph.root, sentence, spans, spanArray)
+            logger(0,"")
         }
     }
 
@@ -50,7 +51,7 @@ object ExtractRulesxRs {
         val (myStart, myEnd) = spans(node.id)
         case class Child(label: String, node: Node, start: Int, end: Int)
         val children : List[Child] = node.children.filter(x => spans(x._2.id)._1 != None).map(x => {val (start, end) = spans(x._2.id); Child(x._1, x._2, start.get, end.get)}).sortBy(x => x.end)
-        logger(1, "children = "+children.toString)
+        //logger(1, "children = "+children.toString)
         if (myStart != None && children.size > 0 && !(0 until children.size-1).exists(i => children(i).start > children(i+1).end)) { // check for no overlapping child spans (if so, no rule can be extracted)
             var outsideLower = myStart.get
             //do { outsideLower -= 1 } while (outsideLower >= 0 && !spanArray(outsideLower))
@@ -74,16 +75,17 @@ object ExtractRulesxRs {
             } else {
                 ("", List())
             }
-            logger(1, "prefix = "+prefix.toString)
-            logger(1, "rest = "+rest.toList.toString)
-            logger(1, "end = "+end.toString)
+            //logger(1, "prefix = "+prefix.toString)
+            //logger(1, "rest = "+rest.toList.toString)
+            //logger(1, "end = "+end.toString)
 
             // The rule is prefix.mkString(" ")+" "+rest.map(x => x._1+" "+x._2.mkString(" ")).mkString(" ")
             val concept = node.concept.replaceAll("""\(""", "-LBR-").replaceAll("""\)""", "-RBR-")
             val labels = children.sortBy(_.label).map(x => "["+x.label.drop(1).toUpperCase.replaceAll("-","")+"]").mkString(" ")
             val ruleARGS = (prefix ::: (rest.toList ::: List(end)).map(x => "["+x._1.drop(1).toUpperCase.replaceAll("-","")+"] "+x._2.mkString(" ")).toList).mkString(" ")
             val rule = (prefix ::: (rest.toList ::: List(end)).zipWithIndex.sortBy(_._1._1).zipWithIndex.sortBy(_._1._2).map(x => "["+(x._2+1).toString+"] "+x._1._1._2.mkString(" ")).toList).mkString(" ")
-            logger(0, "(X (X "+concept+") "+labels+") ||| "+ruleARGS+" ||| "+rule)
+            //logger(0, "(X (X "+concept+") "+labels+") ||| "+ruleARGS+" ||| "+rule)
+            logger(0, "(X (X "+concept+") "+labels+") ||| "+ruleARGS)
             println("(X (X "+concept+") "+labels+") ||| "+rule)
         }
 
