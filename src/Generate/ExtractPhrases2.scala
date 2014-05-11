@@ -4,9 +4,9 @@ import edu.cmu.lti.nlp.amr._
 import scala.util.matching.Regex
 import scala.collection.mutable.{Map, Set, ArrayBuffer}
 
-object PrintTrees {
+object ExtractPhrases2 {
 
-    val usage = """Usage: scala -classpath . edu.cmu.lti.nlp.amr.Generate.PrintTrees < amr_file > outfile"""
+    val usage = """Usage: scala -classpath . edu.cmu.lti.nlp.amr.Generate.ExtractPhrases < amr_file > outfile"""
     type OptionMap = Map[Symbol, Any]
 
     def parseOptions(map : OptionMap, list: List[String]) : OptionMap = {
@@ -31,29 +31,34 @@ object PrintTrees {
         }
 
         for { block <- Corpus.splitOnNewline(Source.stdin.getLines)
-              if (block.split("\n").exists(_.startsWith("("))) } {
+              if (block matches "(.|\n)*\n\\((.|\n)*") } {
             logger(1,"**** Processsing Block *****")
             logger(1,block)
             logger(1,"****************************")
             val data = AMRTrainingData(block)
             val graph = data.toOracleGraph(clearUnalignedNodes = false)
-
-            println(printRecursive(graph.root))
-        }
-    }
-
-    def printRecursive(node: Node) : String = {
-        val concept = node.concept.replaceAll("""\(""", "-LBR-").replaceAll("""\)""", "-RBR-")
-        if (node.children.size == 0) {
-            if (node.concept.startsWith("\"")) {
-                "(S "+concept.slice(1,concept.size-1)+")"
-            } else {
-                "(C "+concept+")"
+            val sentence = data.sentence    // Tokenized sentence
+            val spans = graph.spans.sortBy(x => x.start)
+            val getSpan : Array[Option[Span]] = sentence.map(x => None).toArray
+            for { span <- spans
+                  i <- span.start until span.end } {
+                getSpan(i) = Some(span)
             }
-        } else {
-            // Example: (X (X hit-01) (ARG0 ___) (ARG1 ___))
-            val list = node.children.sortBy(_._1).map(x => "("+x._1.drop(1).toUpperCase.replaceAll("-","_")+" "+printRecursive(x._2)+")")
-            "(X (X "+concept+") "+list.mkString(" ")+")"
+            for (span <- spans) {
+                var start = span.start
+                do {
+                    var end = span.end
+                    do {
+                        var amr = PrintTrees.printRecursive(span.amr)
+                        if (!amr.startsWith("(")) {
+                            amr = "(C "+amr+")"
+                        }
+                        println(amr  + " ||| " + sentence.slice(start,end).mkString(" "))
+                        end += 1
+                    } while (end < sentence.size && getSpan(end) == None)
+                    start -= 1
+                } while (start >= 0 && getSpan(start) == None)
+            }
         }
     }
 }

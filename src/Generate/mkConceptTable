@@ -1,0 +1,41 @@
+#!/bin/bash
+exec scala "$0" "$@"
+!#
+
+import java.lang.Math.log
+import scala.io.Source.stdin
+import scala.io.Source.fromFile
+import scala.collection.mutable.Map
+
+val Line = """(.*) \|\|\| (.*)""".r
+
+System.err.println("Reading in phrase table")
+
+val phraseCounts : Map[String, Int] = Map()
+val conceptTable: Map[String, List[(String, String, Int)]] = Map()  // map from first word in the phrase to list of (phrase, concept, count) triples
+for (Line(phrase, concept) <- stdin.getLines()) {
+    val word = phrase.split(" ")(0)
+    //println(word)
+    conceptTable(word) = (phrase, concept) :: conceptTable.getOrElse(phrase, List())
+    phraseCounts(phrase) = 0
+}
+
+System.err.println("Counting phrases in corpus: "+args(0))
+
+for (line <- fromFile(args(0)).getLines) {
+    val sentence = line.split(" ")
+    for ((word, i) <- sentence.zipWithIndex) {
+        val matching = conceptTable.getOrElse(word, List()).filter(x => x._1 == sentence.slice(i, i+x._1.split(" ").size).mkString(" "))
+        for ((phrase, _, _) <- matching) {
+            phraseCounts(phrase) = phraseCounts(phrase) + 1
+        }
+    }
+}
+
+System.err.println("Writing out concept table")
+
+for { (_, list) <- conceptTable
+      (phrase, concept, count) <- list } {
+    println(phrase + " ||| " + concept + " ||| " + "N=" + count.toString + " c|p=" + log(count.toDouble/phraseCounts(phrase).toDouble).toString)
+}
+
