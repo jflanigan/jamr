@@ -39,7 +39,7 @@ case class AMRTrainingData(sentence: Array[String], graph: Graph, spans: ArrayBu
 
 object AMRTrainingData {
     def getUlfString(string: String) : Map[String,String] = {
-        // returns a map representation of Ulf's weird string representation
+        // returns a map representation of Ulf's string representation
         assert(string.matches("^# ::(.|\n)*"), "This is not a valid properties string")
         val split = string.replaceAll("\n","").replaceAll("""#""","").split(" ::")
         val map = Map[String,String]()
