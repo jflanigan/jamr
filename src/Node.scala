@@ -10,6 +10,9 @@ case class Node(var id: String, var name: Option[String], concept: String, var r
     def span : Option[Int] = {  // returns the primary span, if exists (span(0) is always the primary)
         return if (spans.size > 0) { Some(spans(0)) } else { None }
     }
+    def conceptStr : String = {
+        return concept.replaceAll("""\(""", "-LBR-").replaceAll("""\)""", "-RBR-")
+    }
 
     def children: List[(String, Node)] = topologicalOrdering    // property (see Ch 18.2 stairway book)
     def children_= (c: List[(String, Node)]) {

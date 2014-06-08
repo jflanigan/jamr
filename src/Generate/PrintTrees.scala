@@ -48,7 +48,7 @@ object PrintTrees {
             if (node.concept.startsWith("\"")) {
                 "(S "+concept.slice(1,concept.size-1)+")"
             } else {
-                "(C "+concept+")"
+                "(X "+concept+")"
             }
         } else {
             // Example: (X (X hit-01) (ARG0 ___) (ARG1 ___))
