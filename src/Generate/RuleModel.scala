@@ -4,38 +4,13 @@ import edu.cmu.lti.nlp.amr._
 import scala.util.matching.Regex
 import scala.collection.mutable.{Map, Set, ArrayBuffer}
 
-case class Rule(lhs: List[String],
-                args: Vector[String],
-                prefix: String,
-                left: List[(String, Int, String)],      // left realization
-                lex: String,                            // lexical content
-                right: List[(String, Int, String)],     // right realization
-                end: String,
-                pos: String) {
-    def mkRule : String =
-        "(X "+(lhs.head :: lhs.tail.sorted).mkString(" ")+") ||| "+rhs
-    }
-    def rhs : String = {
-        (prefix+" "+left.map(x => argStr(x))+" "+lex+" "+right.map(x => argStr(x))+" "+end).replaceAll("^ | $","")
-    }
-    def argStr(arg: (String, Int, String)) : String = {
-        (arg._1+" ["+args(arg._2)"] "+arg._3).replaceAll("^ | $","")
-    }
-}
-
-case class Phrase(lhs: List[String], words: String, pos: String) {
-    def mkRule : String = {
-        "(X "+(lhs.head :: lhs.tail.sorted).mkString(" ")+") ||| "+words
-    }
-}
-
 class RuleModel(options: Map[Symbol, String]) {
 
     val phraseTable : MultiMapCount[String, Phrase] = new MultiMapCount()       // Map from concept to phrases with counts
-    val lexRules : MultiMapCount[String, Rule] = new MultiMapCount()            // Map from concept to rules with counts
-    val absRules : MultiMapCount[String, Rule] = new MultiMapCount()            // Map from pos to rules with counts
-    val argTableLeft : Map[String, MultiMapCount[String, (String, String)]] = MultiMapCount()  // Map from pos to map of args to realizations with counts
-    val argTableRight : Map[String, MultiMapCount[String, (String, String)]] = MultiMapCount() // Map from pos to map of args to realizations with counts
+    val lexRules : MultiMapCount[String, Rule] = new MultiMapCount()            // Map from concept to lexicalized rules with counts
+    val abstractRules : MultiMapCount[String, Rule] = new MultiMapCount()       // Map from pos to abstract rules with counts
+    val argTableLeft : Map[String, MultiMapCount[String, (String, String)]] = new MultiMapCount()  // Map from pos to map of args to realizations with counts
+    val argTableRight : Map[String, MultiMapCount[String, (String, String)]] = new MultiMapCount() // Map from pos to map of args to realizations with counts
 
     def trainModel() {
         
@@ -82,15 +57,27 @@ class RuleModel(options: Map[Symbol, String]) {
         }
     }
 
-    def syntheticRules(lhs: List[String]) : List[Rule] = {
-        return List()
+    def getRealizations(node: Node) : List[(Phrase, List[(String, Node)])] = {   // phrase, children
+        return phraseTable.get.getOrElse(node.concept, List()).map(x => (x, node.children))   // TODO: should produce a possible realization if not found
+    }
+
+    def syntheticRules(node: Node, args: List[String]) : List[Rule] = {
+        var rules : List[Rule] = List()
+        for ((phrase, children) <- getRealizations(node)) {
+            for (child <- children) {
+                
+            }
+        }
+        return rules
     }
 
     def createArgTables {
+        // Populates argTableLeft and argTableRight
+        // Must call extractRules before calling this function
         for ((pos, rules) <- abstractRules) {
             val tableLeft = MultiMapCount()
             val tableRight = MultiMapCount()
-            for ((rule, count) <- rules if ruleOk(rule)) {
+            for ((rule, count) <- rules if ruleOk(rule, count)) {
                 for (x <- rule.left) {
                     val arg = rule.args(x._2)
                     tableLeft.add(arg -> (x._1, x._3), count)
@@ -105,27 +92,15 @@ class RuleModel(options: Map[Symbol, String]) {
         }
     }
 
-    def ruleOk(rule : Rule) : Boolean = {
-        true
+    def ruleOk(rule : Rule, count: Int) : Boolean = {
+        return count > 1    // TODO
     }
 
     def extractPhrases(graph: Graph, sentence: Array[String], pos: Array[String]) {
+        // Populates phraseTable
         for (span <- graph.spans) {
-            val node = span.amr
-            val phrase = Phrase(mkLhs(node),
-                                span.words,
-                                pos.slice(span.start, span.end).mkString(" "))
-            if (conceptTable.contains(node.concept)) {
-                val phrases = conceptTable(node.concept).phrases
-                phrases(phrase) = phrases.getOrElse(phrase) + 1
-            } else {
-                conceptTable(node.concept) = ConceptTableEntry(Map(phrase -> 1), Map())
-            }
+            phraseTable.add(span.amr.concept -> Phrase(span, pos)
         }
-    }
-
-    def mkLhs(node: Node) : List[String] = {
-        return "(X " + node.concept + " )" :: node.children.filter(x => x.span == node.span).sortBy(_._1).map(x => "("+x._1.drop(1).toUpperCase.replaceAll("-","_")+" "+printTrees.printRecurseive(x._2)+")")
     }
 
     def extractRules(graph: Graph,
@@ -134,6 +109,8 @@ class RuleModel(options: Map[Symbol, String]) {
                      spans: Map[String, (Option[Int], Option[Int])],    // map from nodeId to (start, end) in sent
                      spanArray: Array[Boolean],
                      rules : Map[String, Rule]) {
+
+        // Populates lexRules and abstractRules
 
         case class Child(label: String, node: Node, start: Int, end: Int)
 
@@ -166,65 +143,14 @@ class RuleModel(options: Map[Symbol, String]) {
                 var right = (1 until upperChildren.size).map(
                     i => (sentence.slice(upperChildren(i-1)._2.end, upperChildren(i)._2.start)), x._2, "").toList
                 right = (sentence.slice(span.end, upperChilren.head._1.end), uppserChilren.last._2, "") :: right
+                val lhs = Rule.mkLhs(node, includeArgs=true)
 
-                val rule = Rule(mkLhs(node), argsList, prefix, left, lex, right, end, pos)
-                lexicalizedRules.add(node.concept, rule)
+                val rule = Rule(lhs, argsList, prefix, left, lex, right, end, pos)
+                lexRules.add(node.concept -> rule)
 
-                val abstractRule = Rule(mkLhs(node), argsList, prefix, left, "", right, end, pos)
-                abstractRules.add(pos, abstractRule)
-
-/*
-                if (conceptTable.contains(node.concept)) {
-                    val rules = conceptTable(node.concept).rules
-                    rules(rule) = rules.getOrElse(rule) + 1
-                } else {
-                    conceptTable(node.concept) = ConceptTableEntry(Map(), Map(rule -> 1))
-                }
-
-                if (abstractRules.contains(pos)) {
-                    val rules = conceptTable(pos)
-                    rules(abstractRule) = rules.getOrElse(abstractRule) + 1
-                } else {
-                    abstractRules(pos) = Map(abstractRule -> 1)
-                } */
-
-/*
-                // We will extract the tightest rule (no extra lexical items on either side)
-                // and delete spans of lexical items
-                val mySpan = graph.spans(node.spans(0))
-                val save : Array[String] = sent.slice(mySpan.start, mySpan.end)
-                for (i <- Range(mySpan.start, mySpan.end)) {
-                    sent(i) = if (i < pos.size) { pos(i) } else { "****" }
-                }
-                val prefix : List[String] = if (children.size > 0) {
-                    sent.slice(outsideLower, children.map(x => x.start).min).toList
-                } else {
-                    sent.slice(outsideLower, outsideUpper).toList
-                }
-                var rest : Array[(String, List[String])] = (0 until children.size-1).map(
-                    i => (children(i).label, sent.slice(children(i).end, children(i+1).start).toList)).toArray
-                val end : (String, List[String]) = if (children.size > 0) {
-                    (children(children.size-1).label, sent.slice(children(children.size-1).end, outsideUpper).toList)
-                } else {
-                    ("", List())
-                }
-                //logger(1, "prefix = "+prefix.toString)
-                //logger(1, "rest = "+rest.toList.toString)
-                //logger(1, "end = "+end.toString)
-
-                // The rule is prefix.mkString(" ")+" "+rest.map(x => x._1+" "+x._2.mkString(" ")).mkString(" ")
-                val concept = node.concept.replaceAll("""\(""", "-LBR-").replaceAll("""\)""", "-RBR-")
-                val labels = children.sortBy(_.label).map(x => "["+x.label.drop(1).toUpperCase.replaceAll("-","")+"]").mkString(" ")
-                val ruleARGS = (prefix ::: (rest.toList ::: List(end)).map(x => "["+x._1.drop(1).toUpperCase.replaceAll("-","")+"] "+x._2.mkString(" ")).toList).mkString(" ")
-                val rule = (prefix ::: (rest.toList ::: List(end)).zipWithIndex.sortBy(_._1._1).zipWithIndex.sortBy(_._1._2).map(x => "["+(x._2+1).toString+"] "+x._1._1._2.mkString(" ")).toList).mkString(" ")
-                //logger(0, "(X (X "+concept+") "+labels+") ||| "+ruleARGS+" ||| "+rule)
-                logger(0, "(X (X "+concept+") "+labels+") ||| "+ruleARGS+" ||| "+concept+" ||| "+save.mkString(" ").toLowerCase)
-                println("(X (X "+concept+") "+labels+") ||| "+rule)
-
-                for (i <- Range(0, save.size)) {
-                    sent(i + mySpan_start) = save(i)
-                }
-            } */
+                val abstractRule = Rule(lhs, argsList, prefix, left, "", right, end, pos)
+                abstractRules.add(pos -> abstractRule)
+            }
         }
     }
 

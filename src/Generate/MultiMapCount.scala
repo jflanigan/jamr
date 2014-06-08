@@ -5,8 +5,9 @@ import scala.util.matching.Regex
 import scala.collection.mutable.{Map, Set, ArrayBuffer}
 
 class MultiMapCount[A,B] {
-    val map : Map[A,Map[B,Int]] = Map()
-    def add(x: (A,B), count: Int) {
+    private val map : Map[A,Map[B,Int]] = Map()
+    def get = map
+    def add(x: (A,B), count: Int = 1) {
         val (a, b) = x
         if (map.contains(a)) {
             val m = map(a)
