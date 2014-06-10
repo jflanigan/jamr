@@ -174,7 +174,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             }
             val spanF1 = F1(0,0,0)
 
-            for ((block, i) <- Corpus.splitOnNewline(fromFile(options('trainingData)).getLines()).filter(_.split("\n").exists(_.startsWith("("))).zipWithIndex) {
+            for ((block, i) <- Corpus.getAmrBlocks(fromFile(options('trainingData)).getLines()).zipWithIndex) {
             time {
                 val line = input(i)
                 logger(0, "Sentence:\n"+line+"\n")
