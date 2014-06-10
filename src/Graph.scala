@@ -467,13 +467,13 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
 object Graph {
     private class GraphParser extends JavaTokenParsers {
         // Parser implementation for parsing AMR graphs
-        def variable : Parser[String] = """[a-zA-Z0-9]+""".r
-        def concept : Parser[String] = """([a-zA-Z0-9.-]+)|("[^"]+")""".r
-        //def concept : Parser[String] = """\S+""".r
-        def relationStr : Parser[String] = """:[a-zA-Z0-9-]+""".r
-        //def variable : Parser[String] = """\S+""".r
-        //def concept : Parser[String] = """\S+""".r
-        //def relationStr : Parser[String] = """:\S+""".r
+        def variable : Parser[String] = """[^ \t\n()":]+""".r
+        def concept : Parser[String] = """([^ \t\n()":]+)|("[^"]+")""".r
+        def relationStr : Parser[String] = """:[^ \t\n()":]+""".r
+        // The expressions below work correctly, but are more strict
+        //def variable : Parser[String] = """[a-zA-Z0-9]+""".r
+        //def concept : Parser[String] = """([a-zA-Z0-9.-]+)|("[^"]+")""".r
+        //def relationStr : Parser[String] = """:[a-zA-Z0-9-]+""".r
         def relation : Parser[(String, Node)] = relationStr~node ^^ {
             case relationStr~node => (relationStr, node)
         }

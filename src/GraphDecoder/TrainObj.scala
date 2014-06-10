@@ -123,7 +123,7 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
 
     def evalDev(options: Map[Symbol, String], pass: Int, weights: FeatureVector) {
         val devDecode = options('trainingOutputFile)+".iter"+pass.toString+".decode_dev"
-        val dev = "/disk2/work/amr/data/LDC-2013-Sep/amr-release-proxy.dev" // assumes .aligned, .aligned.no_opN, .snt, .tok, .snt.deps, .snt.IllinoisNER
+        val dev = options('trainingDev) // assumes .aligned, .aligned.no_opN, .snt, .tok, .snt.deps, .snt.IllinoisNER
 
         val snt = fromFile(dev+".aligned.no_opN").getLines.toArray // aka 'input' in AMRParser decode
         val tokenized = fromFile(dev+".snt.tok").getLines.toArray
@@ -141,7 +141,7 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
         file.close
 
         try {
-            val externalEval = stringToProcess("python /disk2/work/amr/smatch/code/smatch.py -f "+devDecode+" "+dev+".aligned").lines.toList
+            val externalEval = stringToProcess("python "+options('smatchEval)+" -f "+devDecode+" "+dev+".aligned").lines.toList
             logger(0, "--- Performance on Dev ---\n" + externalEval.mkString("\n") + "\n")
         } catch {
             case _ : Throwable => 
