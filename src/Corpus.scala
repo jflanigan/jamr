@@ -14,6 +14,15 @@ object Corpus {
         } yield p
     }
 
+    /**
+     * Takes an iterator of lines, splits on empty lines, and yields only
+     * blocks of lines that contain some AMR content
+     */
+    def getAmrBlocks(iterator: Iterator[String]) : Iterator[String] = for (
+      block <- splitOnNewline(iterator)
+      if block.split("\n").exists(_.startsWith("(")) // needs to contain some AMR
+    ) yield block
+
 /*
     def getUlfString(string: String) : Map[String,String] = {
         // returns a map representation of Ulf's weird string representation

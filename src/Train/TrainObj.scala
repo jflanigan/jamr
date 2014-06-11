@@ -42,10 +42,7 @@ abstract class TrainObj[FeatureVector <: AbstractFeatureVector](options: Map[Sym
     }
 
     val input = Input.loadInputfiles(options)
-    val training: Array[String] = (for {
-        block <- Corpus.splitOnNewline(io.Source.stdin.getLines())
-        if block.matches("(.|\n)*\n\\((.|\n)*")     // needs to contain some AMR
-    } yield block).toArray
+    val training: Array[String] = Corpus.getAmrBlocks(io.Source.stdin.getLines()).toArray
 
 /*  Runtime.getRuntime().addShutdownHook(new Thread() {
         override def run() {
