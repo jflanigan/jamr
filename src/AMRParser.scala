@@ -177,7 +177,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             for ((block, i) <- Corpus.splitOnNewline(fromFile(options('trainingData)).getLines()).filter(_.split("\n").exists(_.startsWith("("))).zipWithIndex) {
             time {
                 val line = input(i)
-                logger(0, "Sentence:\n"+line+"\n")
+                logger(0, "Sentence: "+line+"\n")
                 val tok = tokenized(i)
                 val ner = nerFile(i)
                 val inputGraph = if (options.contains('stage1Oracle)) { Some(AMRTrainingData(block).toInputGraph) } else { None }
@@ -218,18 +218,30 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                                                              dependencies(i))).graph
                 }//endif (!options.contains('stage1Only))
 
-                if (false && options.contains('trainingData)) {
+                if (options.contains('trainingData)) {
                     val oracle = stage2Oracle.get
                     val oracleResult = oracle.decode(new Input(amrdata2, dependencies(i), oracle = true))
-                    logger(0, "\nOracle Spans:")
                     for ((span, i) <- amrdata2.graph.spans.sortBy(x => x.words.toLowerCase).zipWithIndex) {
-                        logger(0, "Span "+(i+1).toString+":  "+span.words+" => "+span.amr)
+                        logger(0, "Oracle Span "+(i+1).toString+":  "+span.words+" => "+span.amr)
                     }
                     logger(0, "")
                     if (options.contains('stage1Eval)) {
                         for (span <- stage1Result.graph.spans) {
-                            if (oracleResult.graph.spans.count(x => x.start == span.start && x.end == span.end /*&& x.amr.prettyString(detail = 0, pretty = false).replaceAll("""\([^ ]* :name ""","") == span.amr.prettyString(detail = 0, pretty = false).replaceAll("""\([^ ]* :name ""","")*/) > 0) {
+                            //if (oracleResult.graph.spans.count(x => x.start == span.start && x.end == span.end /*&& x.amr.prettyString(detail = 0, pretty = false).replaceAll("""\([^ ]* :name ""","") == span.amr.prettyString(detail = 0, pretty = false).replaceAll("""\([^ ]* :name ""","")*/) > 0) {
+                            //if (oracleResult.graph.spans.count(x => x.start == span.start && x.end == span.end && x.amr.prettyString(detail = 0, pretty = false, vars = Set()).replaceAll("""\([^ ]* :name ""","") == span.amr.prettyString(detail = 0, pretty = false, vars = Set()).replaceAll("""\([^ ]* :name ""","")) > 0) {
+                            if (oracleResult.graph.spans.count(x => x.start == span.start && x.end == span.end && x.amr.toString == span.amr.toString) > 0) {
                                 spanF1.correct += 1
+                            } else {
+                                if (oracleResult.graph.spans.count(x => x.start == span.start && x.end == span.end) > 0) {
+                                    logger(0, "Incorrect span: "+span.words+" => "+span.amr)
+                                } else {
+                                    logger(0, "Extra span: "+span.words+" => "+span.amr)
+                                }
+                            }
+                        }
+                        for (span <- oracleResult.graph.spans) {
+                            if (stage1Result.graph.spans.count(x => x.start == span.start && x.end == span.end && x.amr.toString == span.amr.toString) == 0) {
+                                logger(0, "Missing span: "+span.words+" => "+span.amr)
                             }
                         }
                         spanF1.predicted += stage1Result.graph.spans.size
