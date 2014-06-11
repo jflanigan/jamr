@@ -30,7 +30,7 @@ object TestAMRCode {
             verbosity = options('verbosity).asInstanceOf[Int]
         }
 
-        for (block <- Corpus.splitOnNewline(io.Source.stdin.getLines()) if block.matches("(.|\n)*\n\\((.|\n)*")) {
+        for (block <- Corpus.getAmrBlocks(io.Source.stdin.getLines())) {
             println(block)
             AMRTrainingData(block).toOracleGraph(clearUnalignedNodes = false).printTriples(0)
             println()
