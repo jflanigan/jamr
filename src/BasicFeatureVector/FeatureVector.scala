@@ -49,7 +49,7 @@ case class FeatureVector(fmap : Map[String, Double] = Map[String, Double]()) ext
         }
     }
     def += (v: AbstractFeatureVector) = { this.+=(v.asInstanceOf[FeatureVector]) }
-    def -= (v: AbstractFeatureVector) = { this.+=(v.asInstanceOf[FeatureVector]) }
+    def -= (v: AbstractFeatureVector) = { this.-=(v.asInstanceOf[FeatureVector]) }
     def -= (v: FeatureVector) : Unit = this += -1.0 * v
     def -= (m: mul) : Unit = this += mul(-m.scale, m.v)
     def * (scale: Double) = mul(scale, this)
