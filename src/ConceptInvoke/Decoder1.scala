@@ -33,6 +33,7 @@ class Decoder1(featureNames: List[String],
 
     def decode(input: Input) : DecoderResult = {
         logger(1, "\n--- Decoder1 ---\n")
+        //logger(1, "Weights:\n"+features.weights.toString)
         val sentence = input.sentence
         val bestState : Array[Option[(Double, PhraseConceptPair, Int)]] = sentence.map(x => None)    // (score, concept, backpointer)
         for (i <- Range(0, sentence.size)) {
@@ -83,7 +84,10 @@ class Decoder1(featureNames: List[String],
         if (graph.getNodeById.size == 0) {  // no invoked concepts
             graph = Graph.empty
         }
-        logger(1, "Spans: "+graph.spans.toList)
+        logger(0, "Decoder1 Spans:")
+        for ((span, i) <- graph.spans.sortBy(x => x.words.toLowerCase).zipWithIndex) {
+            logger(0, "Span "+(i+1).toString+":  "+span.words+" => "+span.amr)
+        }
         logger(1, "Decoder1 feats:\n"+feats.toString)
         return DecoderResult(graph, feats, score)
     }

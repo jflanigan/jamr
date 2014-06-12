@@ -66,6 +66,7 @@ abstract class TrainObj[FeatureVector <: AbstractFeatureVector](options: Map[Sym
             val (grad, score, _) = decode(i, weights)
             val o = oracle(i, weights)
             grad -= o._1
+            //logger(0, "Gradient:\n"+grad.toString)
             (grad, score - o._2)
         } else if (loss == "SVM") {
             val (grad, score) = costAugmented(i, weights, scale)

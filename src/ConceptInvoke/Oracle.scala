@@ -39,7 +39,9 @@ class Oracle(featureNames: List[String],
         val feats = new FeatureVector()
 
         logger(1, "\n--- Oracle Decoder ---\n")
-        logger(1, "Spans: "+graph.spans.toList)
+        for ((span, i) <- graph.spans.sortBy(x => x.words.toLowerCase).zipWithIndex) {
+            logger(0, "Oracle Span "+(i+1).toString+":  "+span.words+" => "+span.amr)
+        }
 
         for (span <- graph.spans) {
             val words = span.words.split(" ").toList

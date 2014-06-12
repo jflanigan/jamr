@@ -39,7 +39,8 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
 
     def oracle(i: Int, weights: FeatureVector) : (FeatureVector, Double) = {
         oracle.features.weights = weights
-        val result = oracle.decode(input(i))
+        val amrData = AMRTrainingData(training(i))
+        val result = oracle.decode(Input.Input(amrData, input(i), oracle = true, clearUnalignedNodes = true))
         return (result.features, result.score)
     }
 
