@@ -1,6 +1,0 @@
-#!/bin/bash
-
-#WORDNET_JAR=/disk2/work/amr/wordnet/edu.mit.jwi_2.3.0_jdk.jar
-
-fsc -classpath $WORDNET_JAR -optimize *.scala GraphDecoder/*.scala ConceptInvoke/*.scala FastFeatureVector/*.scala Train/*.scala BasicFeatureVector/*.scala
-

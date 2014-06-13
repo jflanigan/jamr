@@ -1,0 +1,21 @@
+# ::id isi_0001.1 ::date 2012-05-14T21:45:29
+# ::snt The boy wants the girl to believe him.
+(w / want-01
+      :ARG0 (b / boy)
+      :ARG1 (b2 / believe-01
+            :ARG0 (g / girl)
+            :ARG1 b))
+
+# ::id isi_0001.25 ::date 2012-05-14T21:59:17
+# ::snt The boy is a hard worker.
+(p / person
+      :domain (b / boy)
+      :ARG0-of (w / work-01
+            :manner (h / hard)))
+
+# ::id isi_0002.209 ::date 2013-05-16T17:19:07
+# ::snt The poet William Shakespeare was born in Stratford-upon-Avon.
+(b / bear-02
+      :ARG1 (p / poet :name (n / name :op1 "William" :op2 "Shakespeare"))
+      :location (c / city :name (n2 / name :op1 "Stratford-upon-Avon")))
+

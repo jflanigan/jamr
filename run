@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+set -eu
+set -o pipefail
+
+export JAVA_OPTS="-ea -Dfile.encoding=UTF-8 -XX:ParallelGCThreads=2 -Xmx4g -XX:+CMSClassUnloadingEnabled"
+
+## so we don't have to type out "edu.cmu.lti.nlp.amr." every time
+klass="edu.cmu.lti.nlp.amr.$1"
+shift
+
+# (cd $(dirname $0); ./sbt --error "runMain $klass $*")
+
+# Alternatively (assumes you've already run `./sbt assembly`):
+java ${JAVA_OPTS} -cp $(dirname $0)/target/scala-2.10/jamr-assembly-0.1-SNAPSHOT.jar "$klass" "$@"

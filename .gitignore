@@ -1,3 +1,9 @@
+# generated files
+/target
+/out
+/project/target
+/project/boot
+/project/project
 # IntelliJ cruft
 .idea
 *.iml
