@@ -1,0 +1,1 @@
+diff <(sed 's/ //g' "${DATA_DIR}/amr-release-proxy.dev.snt") <(cat "${DATA_DIR}/amr-release-proxy.dev.snt.deps" | cut -f 2 | nltot | sed 's/\t//g' | sed 's/ //g') | less

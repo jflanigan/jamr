@@ -1,0 +1,14 @@
+#!/bin/bash
+
+${JAMR_HOME}/run Aligner -v 1 < "${DATA_DIR}/amr-release-proxy.train.tok" &> "${DATA_DIR}/amr-release-proxy.train.aligned.log"
+${JAMR_HOME}/run Aligner -v 1 < "${DATA_DIR}/amr-release-proxy.dev.tok" &> "${DATA_DIR}/amr-release-proxy.dev.aligned.log"
+${JAMR_HOME}/run Aligner -v 1 < "${DATA_DIR}/amr-release-proxy.test.tok" &> "${DATA_DIR}/amr-release-proxy.test.aligned.log"
+
+tail "${DATA_DIR}/amr-release-proxy.train.aligned.log"
+tail "${DATA_DIR}/amr-release-proxy.dev.aligned.log"
+tail "${DATA_DIR}/amr-release-proxy.test.aligned.log"
+
+# Remove the warnings and spans
+cat "${DATA_DIR}/amr-release-proxy.train.aligned.log" | egrep '^#|^ |^\(|^$' > "${DATA_DIR}/amr-release-proxy.train.aligned"
+cat "${DATA_DIR}/amr-release-proxy.dev.aligned.log" | egrep '^#|^ |^\(|^$' > "${DATA_DIR}/amr-release-proxy.dev.aligned"
+cat "${DATA_DIR}/amr-release-proxy.test.aligned.log" | egrep '^#|^ |^\(|^$' > "${DATA_DIR}/amr-release-proxy.test.aligned"

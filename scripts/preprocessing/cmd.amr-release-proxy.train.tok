@@ -1,0 +1,5 @@
+#!/bin/bash
+
+${JAMR_HOME}/run CorpusTool < amr-release-proxy.train --tokenized "${DATA_DIR}/amr-release-proxy.train.snt.tok" > "${DATA_DIR}/amr-release-proxy.train.tok"
+${JAMR_HOME}/run CorpusTool < amr-release-proxy.dev --tokenized "${DATA_DIR}/amr-release-proxy.dev.snt.tok" > "${DATA_DIR}/amr-release-proxy.dev.tok"
+${JAMR_HOME}/run CorpusTool < amr-release-proxy.test --tokenized "${DATA_DIR}/amr-release-proxy.test.snt.tok" > "${DATA_DIR}/amr-release-proxy.test.tok"

@@ -1,0 +1,3 @@
+#!/bin/bash
+
+cat "${DATA_DIR}/amr-release-proxy.test.snt.deps" | cut -f 2 | nltot | sed 's/\t//g' > "${DATA_DIR}/amr-release-proxy.test.snt.deps.strings"

@@ -1,0 +1,6 @@
+#!/bin/bash
+# assumes `config.sh` has already been sourced
+INPUT="${DATA_DIR}/amr-release-proxy.train"
+OUTPUT="${MODEL_DIR}/conceptTable.train"
+
+${JAMR_HOME}/src/mkConceptTable < $INPUT.aligned.concepts_no_opN $INPUT.snt.tok > $OUTPUT

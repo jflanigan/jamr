@@ -1,3 +1,0 @@
-#!/bin/bash
-
-../run CorpusTool < ../aligner/amr.corpus --tokenized ../aligner/snt > corpus.tok
