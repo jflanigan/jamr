@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# builds an uberjar (includes all dependencies)
+# and puts it at target/scala-{scala_version}/jamr-assembly-{jamr_version}.jar
+$(dirname $0)/sbt assembly
