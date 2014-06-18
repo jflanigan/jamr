@@ -13,6 +13,6 @@
 
 # Tag with IllinoisNer
 cd "${ILLINOIS_NER}" #(remember this is a modified version that outputs CONLL format)
-./tagAMR.train.sh
-./tagAMR.dev.sh
-./tagAMR.test.sh
+for split in train dev test; do
+    ./tagAMR.${split}.sh
+done

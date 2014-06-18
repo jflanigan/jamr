@@ -1,3 +1,0 @@
-#!/bin/bash
-
-cut -f 1 "${DATA_DIR}/amr-release-proxy.test.snt.IllinoisNER" | nltot | sed 's/\t//g' > "${DATA_DIR}/amr-release-proxy.test.snt.IllinoisNER.strings"

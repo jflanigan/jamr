@@ -1,8 +1,5 @@
 #!/bin/bash
 
-cd ~/tools/stanford-parser-2011-09-14
-DIR=/disk2/work/amr/data/LDC-2013-Sep
-
-java -mx500m -cp ".:${STANFORD_PARSER}" edu.stanford.nlp.parser.lexparser.LexicalizedParser -sentences newline -outputFormat "penn" grammar/englishPCFG.ser.gz "${DATA_DIR}/amr-release-proxy.dev.snt" > "${DATA_DIR}/amr-release-proxy.dev.snt.tree" &
-java -mx500m -cp ".:${STANFORD_PARSER}" edu.stanford.nlp.parser.lexparser.LexicalizedParser -sentences newline -outputFormat "penn" grammar/englishPCFG.ser.gz "${DATA_DIR}/amr-release-proxy.test.snt" > "${DATA_DIR}/amr-release-proxy.test.snt.tree" &
-java -mx500m -cp ".:${STANFORD_PARSER}" edu.stanford.nlp.parser.lexparser.LexicalizedParser -sentences newline -outputFormat "penn" grammar/englishPCFG.ser.gz "${DATA_DIR}/amr-release-proxy.train.snt" > "${DATA_DIR}/amr-release-proxy.train.snt.tree"
+for split in train dev test; do
+    java -mx500m -cp ".:${STANFORD_PARSER}" edu.stanford.nlp.parser.lexparser.LexicalizedParser -sentences newline -outputFormat "penn" grammar/englishPCFG.ser.gz "${DATA_DIR}/amr-release-proxy.dev.snt" > "${DATA_DIR}/amr-release-proxy.${split}.snt.tree" &
+done
