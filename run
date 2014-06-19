@@ -3,7 +3,7 @@
 set -eu
 set -o pipefail
 
-MY_DIR="$( dirname "${BASH_SOURCE[0]}" )/.."
+MY_DIR="$( dirname "${BASH_SOURCE[0]}" )"
 . "${MY_DIR}/scripts/config.sh"
 
 export JAVA_OPTS="-ea -Dfile.encoding=UTF-8 -XX:ParallelGCThreads=2 -Xmx4g -XX:+CMSClassUnloadingEnabled"
