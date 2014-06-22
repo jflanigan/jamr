@@ -3,7 +3,7 @@ JAMR - AMR Parser
 
 JAMR is a semantic parser for the [Abstract Meaning Representation](http://amr.isi.edu/).
 
-- April 15, 2014 - We will be providing trained models in a ready-to-go package soon.
+- We will be providing trained models in a ready-to-go package soon.
 
 
 Building
@@ -43,11 +43,11 @@ Extract concept table:
 
     ./cmd.conceptTable.train
 
-Stage1 training:
+Concept identification (stage1) training:
 
     ./cmd.stage1-weights
 
-Stage2 training:
+Relation identification (stage2) training:
 
     ./cmd.stage2-weights
 
