@@ -1,0 +1,5 @@
+#!/bin/bash
+
+for split in train dev test; do
+    cat "${DATA_DIR}/amr-release-proxy.${split}.snt.deps" | cut -f 2 | nltot | sed 's/\t//g' > "${DATA_DIR}/amr-release-proxy.${split}.snt.deps.strings"
+done

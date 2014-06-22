@@ -1,0 +1,10 @@
+#!/bin/bash
+
+for split in train dev test; do
+    ${JAMR_HOME}/run Aligner -v 1 < "${DATA_DIR}/amr-release-proxy.${split}.tok" &> "${DATA_DIR}/amr-release-proxy.${split}.aligned.log"
+
+    tail "${DATA_DIR}/amr-release-proxy.${split}.aligned.log"
+
+    # Remove the warnings and spans
+    cat "${DATA_DIR}/amr-release-proxy.${split}.aligned.log" | egrep '^#|^ |^\(|^$' > "${DATA_DIR}/amr-release-proxy.${split}.aligned"
+done

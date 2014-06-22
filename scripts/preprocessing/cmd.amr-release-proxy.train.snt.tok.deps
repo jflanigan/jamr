@@ -1,0 +1,11 @@
+#!/bin/bash
+
+for split in train dev test; do
+    java -mx500m -cp ".:${STANFORD_PARSER}" edu.stanford.nlp.trees.EnglishGrammaticalStructure -basic -treeFile "${DATA_DIR}/amr-release-proxy.${split}.snt.tree" -conllx > "${DATA_DIR}/amr-release-proxy.${split}.snt.deps"
+
+    cp "${DATA_DIR}/amr-release-proxy.${split}.snt.deps{,_ORIG}"
+
+    sed 's/-LRB-/(/g; s/-RRB-/)/g; s#\\/#/#g' "${DATA_DIR}/amr-release-proxy.${split}.snt.deps_ORIG" > "${DATA_DIR}/amr-release-proxy.${split}.snt.deps"
+
+    ./cmd.amr-release-proxy.${split}.snt.deps.strings
+done
