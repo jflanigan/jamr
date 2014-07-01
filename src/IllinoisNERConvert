@@ -1,0 +1,33 @@
+#!/bin/bash
+exec scala "$0" "$@"
+!#
+
+import java.lang.Math.log
+import scala.io.Source.stdin
+import scala.io.Source.fromFile
+import scala.collection.mutable.Map
+
+for (line <- stdin.getLines()) {
+    var tag : String = "O"
+    var begin = false
+    for (word <- line.split(" ")) {
+        if(word.matches("""\[[A-Z]*""")) {
+            assert(tag == "O", "Error: Nested tags. Line = "+line)
+            tag = word.tail
+            begin = true
+        } else if(!word.endsWith("]")) {
+            if(tag != "O") {
+                println(word + "\t" + (if (begin) { "B-" } else { "I-" }) + tag)
+            } else {
+                println(word + "\t" + tag)
+            }
+            begin = false
+        } else {
+            assert(tag != "O", "Error: Closing bracket outside of tag. Line = "+line)
+            println(word.slice(0,word.size-1) + "\t" + (if (begin) { "B-" } else { "I-" }) + tag)
+            tag = "O"
+        }
+    }
+    println("")
+}
+
