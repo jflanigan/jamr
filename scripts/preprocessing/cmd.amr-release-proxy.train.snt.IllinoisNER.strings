@@ -1,5 +1,0 @@
-#!/bin/bash
-
-for split in train dev test; do
-    cut -f 1 "${DATA_DIR}/amr-release-proxy.${split}.snt.IllinoisNER" | nltot | sed 's/\t//g' > "${DATA_DIR}/amr-release-proxy.${split}.snt.IllinoisNER.strings"
-done

@@ -28,6 +28,6 @@ for (line <- stdin.getLines()) {
             tag = "O"
         }
     }
-    println("")
+    print("\n")
 }
 
