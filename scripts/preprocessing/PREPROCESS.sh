@@ -12,7 +12,5 @@
 ./cmd.amr-release-proxy.train.aligned.no_opN
 
 # Tag with IllinoisNer
-cd "${ILLINOIS_NER}" #(remember this is a modified version that outputs CONLL format)
-for split in train dev test; do
-    ./tagAMR.${split}.sh
-done
+./cmd.amr-release-proxy.train.snt.IllinoisNER
+
