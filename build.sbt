@@ -10,11 +10,15 @@ organization := "edu.cmu.lti.nlp"
 
 scalaVersion := "2.10.3"
 
-//libraryDependencies ++= Seq(
+libraryDependencies ++= Seq(
+  "edu.stanford.nlp" % "stanford-corenlp" % "3.3.1",
+  "edu.stanford.nlp" % "stanford-corenlp" % "3.3.1" classifier "models"
 //  "org.scala-lang" % "scala-swing" % "2.10.3"
-//)
+)
 
-scalaSource in compile := (baseDirectory in compile).value  / "src"
+//scalaSource in compile := (baseDirectory in compile).value  / "src"
+
+scalaSource in Compile := baseDirectory.value / "src"
 
 // Running JAMR via sbt:
 

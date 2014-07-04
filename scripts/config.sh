@@ -12,5 +12,3 @@ export MODEL_DIR="${JAMR_HOME}/experiments/current"
 export CDEC="${HOME}/code/cdec" # CHANGEME
 
 export ILLINOIS_NER="${HOME}/code/IllinoisNerExtended-v2.3" # CHANGEME
-
-export STANFORD_PARSER="${HOME}/code/stanford-parser-2011-09-14/stanford-parser.jar" # CHANGEME
