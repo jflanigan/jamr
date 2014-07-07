@@ -18,9 +18,11 @@ JAMR depends on
 
 Install these dependencies, and then change the relevant environment variables in
 `scripts/config.sh` to point at their executables.
-Source `scripts/config.sh`, so that other bash scripts have access to these envvars (or 
-add them to ~/.bashrc to set them permanently).
- 
+Source the config script so that other bash scripts have access to these envvars (or 
+add them to ~/.bashrc to set them permanently):
+
+    . scripts/config.sh
+
 Run `./compile` to build an uberjar, which will be output to
     `target/scala-{scala_version}/jamr-assembly-{jamr_version}.jar`
 (If you get out of memory errors during this step, you may need to edit the Java memory options
