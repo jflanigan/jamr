@@ -18,7 +18,7 @@ JAMR depends on
 
 Install these dependencies, and then change the relevant environment variables in
 `scripts/config.sh` to point at their executables.
-Source the script with `. scripts/config.sh`, so that other bash scripts have access to these envvars (or 
+Source `scripts/config.sh`, so that other bash scripts have access to these envvars (or 
 add them to ~/.bashrc to set them permanently).
  
 Run `./compile` to build an uberjar, which will be output to
