@@ -49,14 +49,13 @@ object Aligner {
         }
 
         val sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
-        val Block = """((?:\n|.)*)\n(\((?:\n|.)*)""".r  // (?: ) is non-capturing group
-                                                        // and . does not match \n
         for (block <- Corpus.splitOnNewline(Source.stdin.getLines)) {
             if (block.split("\n").exists(_.startsWith("("))) {  // Does it contain some AMR?
                 logger(2,"**** Processsing Block *****")
                 logger(2,block)
                 logger(2,"****************************")
-                val Block(extrastr, amrstr) = block
+                val extrastr : String = block.split("\n[(]")(0)
+                val amrstr : String = "(" + block.split("\n[(]").tail.mkString("\n(")
                 println(extrastr)
                 val amr = Graph.parse(amrstr)
                 val extras = AMRTrainingData.getUlfString(extrastr)
