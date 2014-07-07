@@ -16,7 +16,7 @@ JAMR depends on
  * [WordNet](http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz) (for the aligner).
 
 
-Install these dependencies, and then change the relevent environment variables in
+Install these dependencies, and then change the relevant environment variables in
 `scripts/config.sh` to point at their executables.
 Source `scripts/config.sh`, so that other bash scripts have access to these envvars (or 
 add them to ~/.bashrc to set them permanently).
