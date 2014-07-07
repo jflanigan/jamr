@@ -1,5 +1,5 @@
 #!/bin/bash
 
 for split in train dev test; do
-    ${JAMR_HOME}/run CorpusTool < amr-release-proxy.${split} --tokenized "${DATA_DIR}/amr-release-proxy.${split}.snt.tok" > "${DATA_DIR}/amr-release-proxy.${split}.tok"
+    ${JAMR_HOME}/run CorpusTool < "${DATA_DIR}/amr-release-proxy.${split}" --tokenized "${DATA_DIR}/amr-release-proxy.${split}.snt.tok" > "${DATA_DIR}/amr-release-proxy.${split}.tok"
 done

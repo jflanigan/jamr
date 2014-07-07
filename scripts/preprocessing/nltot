@@ -1,0 +1,3 @@
+#!/bin/bash
+
+awk 'BEGIN {RS = ""} {gsub("\n", "\t", $0); print $0}'

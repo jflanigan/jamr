@@ -39,14 +39,14 @@ object CorpusTool {
 
         val tokenized = Source.fromFile(options('tokenized).asInstanceOf[String]).getLines.toArray
 
-        val Block = """((?:\n|.)*)\n(\((?:\n|.)*)""".r  // (?: ) is non-capturing group
         var i = 0
         for (block <- splitOnNewline(Source.stdin.getLines)) {
-            if (block matches "(.|\n)*\n\\((.|\n)*") { // . does not match \n
-                val Block(extras, amr) = block
+            if (block.split("\n").exists(_.startsWith("("))) {  // needs to contain come AMR
+                val extras : String = block.split("\n[(]")(0)
+                val amr : String = block.split("\n[(]").tail.mkString("\n(")
                 println(extras)
                 println("# ::tok " + tokenized(i))
-                println(amr+"\n")
+                println("("+amr+"\n")
                 i += 1
             } else {
                 println(block+"\n")

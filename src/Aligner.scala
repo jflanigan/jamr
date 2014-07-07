@@ -52,7 +52,7 @@ object Aligner {
         val Block = """((?:\n|.)*)\n(\((?:\n|.)*)""".r  // (?: ) is non-capturing group
                                                         // and . does not match \n
         for (block <- Corpus.splitOnNewline(Source.stdin.getLines)) {
-            if (block matches "(.|\n)*\n\\((.|\n)*") {  // Does it contain some AMR?
+            if (block.split("\n").exists(_.startsWith("("))) {  // Does it contain some AMR?
                 logger(2,"**** Processsing Block *****")
                 logger(2,block)
                 logger(2,"****************************")
