@@ -3,8 +3,6 @@ JAMR - AMR Parser
 
 JAMR is a semantic parser for the [Abstract Meaning Representation](http://amr.isi.edu/).
 
-- We will be providing trained models in a ready-to-go package soon.
-
 
 Building
 ========
@@ -23,7 +21,7 @@ add them to ~/.bashrc to set them permanently).
 Run `./compile` to build an uberjar, which will be output to
     `target/scala-{scala_version}/jamr-assembly-{jamr_version}.jar`
 (If you get out of memory errors during this step, you may need to edit the Java memory options
-in the script `sbt` or `build.sbt`.)
+in the script `sbt` and `build.sbt`.)
 
 Preprocessing
 =============
