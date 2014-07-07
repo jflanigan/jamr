@@ -10,8 +10,10 @@ Building
 JAMR depends on
 
  * the [Illinois NER system](http://cogcomp.cs.illinois.edu/page/download_view/NETagger) v2.3,
- * the tokenization scripts in [cdec](https://github.com/redpony/cdec), and 
- * the [Stanford Parser](http://nlp.stanford.edu/software/lex-parser.shtml).
+ * the tokenization scripts in [cdec](https://github.com/redpony/cdec),
+ * the [Stanford Parser](http://nlp.stanford.edu/software/lex-parser.shtml), and
+ * [WordNet](http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz) (for the aligner).
+
 
 Install these dependencies, and then change the environment variables in
 `scripts/config.sh` to point at their executables.

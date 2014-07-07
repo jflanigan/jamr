@@ -10,6 +10,8 @@ export ILLINOIS_NER="${HOME}/tools/IllinoisNerExtended" # CHANGEME
 
 export ILLINOIS_NER_JAR="${ILLINOIS_NER}/dist/LbjNerTagger-2.3.jar" # CHANGEME
 
+export WNHOME="${HOME}/tools/WordNet-3.0" # WORDNET
+
 export DATA_DIR="${JAMR_HOME}/data/LDC-2013-Sep"
 
 # the variables below shouldn't need to be changed
