@@ -10,6 +10,8 @@
 ./cmd.amr-release-proxy.train.aligned
 # Remove opN
 ./cmd.amr-release-proxy.train.aligned.no_opN
+# Extract concept table
+cmd.amr-release-proxy.train.aligned.concepts_no_opN
 
 # Tag with IllinoisNer
 ./cmd.amr-release-proxy.train.snt.IllinoisNER
