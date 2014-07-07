@@ -9,13 +9,14 @@ Building
 
 JAMR depends on
 
+ * [Scala](http://www.scala-lang.org),
  * the [Illinois NER system](http://cogcomp.cs.illinois.edu/page/download_view/NETagger) v2.3,
  * the tokenization scripts in [cdec](https://github.com/redpony/cdec),
  * the [Stanford Parser](http://nlp.stanford.edu/software/lex-parser.shtml), and
  * [WordNet](http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz) (for the aligner).
 
 
-Install these dependencies, and then change the environment variables in
+Install these dependencies, and then change the relevent environment variables in
 `scripts/config.sh` to point at their executables.
 Source `scripts/config.sh`, so that other bash scripts have access to these envvars (or 
 add them to ~/.bashrc to set them permanently).
@@ -33,7 +34,7 @@ Extract the file `deft-amr-release-r3-proxy.txt` into `data/LDC-2013-Sep/`.
 
     cd scripts/preprocessing
 
-Run `./PREPROCESS.sh` (not tested).
+Run `./PREPROCESS.sh`.
 
 
 Training
