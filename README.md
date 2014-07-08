@@ -18,7 +18,7 @@ JAMR depends on
 
 Install these dependencies, and then change the relevant environment variables in
 `scripts/config.sh` to point at their executables.
-Source the config script so that other bash scripts have access to these envvars (or 
+Source the config script so that other bash scripts have access to these environment variables (or 
 add them to ~/.bashrc to set them permanently):
 
     . scripts/config.sh

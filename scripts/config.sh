@@ -12,11 +12,9 @@ export ILLINOIS_NER_JAR="${ILLINOIS_NER}/dist/LbjNerTagger-2.3.jar" # CHANGEME
 
 export WNHOME="${HOME}/tools/WordNet-3.0" # WORDNET
 
-export DATA_DIR="${JAMR_HOME}/data/LDC-2013-Sep"
-
-# the variables below shouldn't need to be changed
-
 export JAMR_HOME="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." > /dev/null && pwd )"
+
+export DATA_DIR="${JAMR_HOME}/data/LDC-2013-Sep"
 
 export CLASSPATH=".:${JAMR_HOME}/target/scala-2.10/jamr-assembly-0.1-SNAPSHOT.jar"
 
