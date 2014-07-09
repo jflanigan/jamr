@@ -81,6 +81,6 @@ object RunStanfordParser extends App {
   val processor = new StanfordProcessor
 
   for (sentence <- Source.stdin.getLines()) {
-    println(processor.parseToConll(sentence) + "\n")
+    println(processor.parseToConll(sentence).replaceAllLiterally("\n\n","\n") + "\n")
   }
 }
