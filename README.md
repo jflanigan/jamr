@@ -42,6 +42,9 @@ Run `./PREPROCESS.sh`.
 Training
 ========
 
+(To skip this step, download and extract model weights [current.tgz](http://cs.cmu.edu/~jmflanig/current.tgz) 
+into the directory experiments/current.)
+
     cd scripts/training
 
 Extract concept table:
