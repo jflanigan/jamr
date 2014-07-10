@@ -12,7 +12,7 @@
 # Remove opN
 ./cmd.amr-release-proxy.train.aligned.no_opN
 # Extract concept table
-cmd.amr-release-proxy.train.aligned.concepts_no_opN
+./cmd.amr-release-proxy.train.aligned.concepts_no_opN
 
 # Stanford Dependency Parser
 ./cmd.amr-release-proxy.train.snt.tok.deps
