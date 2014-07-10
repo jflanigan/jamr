@@ -1,6 +1,7 @@
 #!/bin/bash -xe
 
 # Preprocess the data
+./cmd.amr-release-proxy.txt.FIXED
 ./cmd.amr-release-proxy.train
 ./cmd.amr-release-proxy.train.snt
 ./cmd.amr-release-proxy.train.snt.tok
