@@ -32,7 +32,8 @@ Preprocessing
 =============
 
 Download `LDC2013E117.tgz` from the LDC Catalog (requires an LDC subscription).
-Extract the file `deft-amr-release-r3-proxy.txt` into `data/LDC-2013-Sep/`.
+Extract the file `deft-amr-release-r3-proxy.txt` into `data/LDC-2013-Sep/` and rename it
+`amr-release-proxy.txt`.
 
     cd scripts/preprocessing
 
