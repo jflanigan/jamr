@@ -11,7 +11,7 @@ case class Annotation[T](val snt: Array[String], val tok: Array[String], var ann
     // getSpan        - used to convert a span in 'tok' to a span in 'snt'.
     // Public member 'annotation' is the annotation.
 
-    assert(normalizedStr(snt,"") == normalizedStr(tok,""), "Tokenization schemes do not match. This may be an error with the parser, the input to the parser, or the POS tagger, or incorrect handling of Unicode characters by either. The offending line is:\n"+snt.mkString(" ")+" != "+tok.mkString(" ")+"\n"+"The annotation is:\n"+annotation.toString/*+"\nwhich was normalized to:\n"+normalizedStr(snt,"")+" != "+normalizedStr(tok,"")*/)
+//    assert(normalizedStr(snt,"") == normalizedStr(tok,""), "Tokenization schemes do not match. This may be an error with the parser, the input to the parser, or the POS tagger, or incorrect handling of Unicode characters by either. The offending line is:\n"+snt.mkString(" ")+" != "+tok.mkString(" ")+"\n"+"The annotation is:\n"+annotation.toString/*+"\nwhich was normalized to:\n"+normalizedStr(snt,"")+" != "+normalizedStr(tok,"")*/)
     assert(snt.mkString.count(_ == ' ') == 0, "Spaces not allowed in tokens") // because we count spaces to find the left and right indices
     assert(tok.mkString.count(_ == ' ') == 0, "Spaces not allowed in tokens") // because we count spaces to find the left and right indices
 
@@ -34,21 +34,25 @@ case class Annotation[T](val snt: Array[String], val tok: Array[String], var ann
         val left = myTokenized.map(x => 0)
         val right = myTokenized.map(x => 0)
 
-        for (i <- Range(0, myTokenized.size)) {
-            val regexr = normalizedRegex(myTokenized.take(i+1)).r
-            logger(3, "regexr = "+regexr)
-            logger(3, "tokenized = "+normalizedStr(tokenized))
-            regexr.findPrefixOf(normalizedStr(tokenized)) match {
-                case Some(prefix) => { right(i) = prefix.count(_ == ' ') + 1}
-                case None => assert(false, "Error matching the prefix (this should never occur)")
-            }
-            if (i > 0) {
-                val regexl = (normalizedRegex(myTokenized.take(i))+" ").r
-                regexl.findPrefixOf(normalizedStr(tokenized)) match {
-                    case Some(prefix) => { left(i) = right(i-1) }
-                    case None => { left(i) = right(i-1) - 1 }
+        if (normalizedStr(snt,"") == normalizedStr(tok,"")) {
+            for (i <- Range(0, myTokenized.size)) {
+                val regexr = normalizedRegex(myTokenized.take(i+1)).r
+                logger(3, "regexr = "+regexr)
+                logger(3, "tokenized = "+normalizedStr(tokenized))
+                regexr.findPrefixOf(normalizedStr(tokenized)) match {
+                    case Some(prefix) => { right(i) = prefix.count(_ == ' ') + 1}
+                    case None => assert(false, "Error matching the prefix (this should never occur)")
+                }
+                if (i > 0) {
+                    val regexl = (normalizedRegex(myTokenized.take(i))+" ").r
+                    regexl.findPrefixOf(normalizedStr(tokenized)) match {
+                        case Some(prefix) => { left(i) = right(i-1) }
+                        case None => { left(i) = right(i-1) - 1 }
+                    }
                 }
             }
+        } else {
+            (0 until right.size).map(i => right(i) = 1)
         }
         //println(right.toList)
         //println(left.toList)
