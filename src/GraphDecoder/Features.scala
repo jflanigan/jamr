@@ -431,8 +431,12 @@ class Features(var featureNames: List[String], labelSet: Array[String]) {
             path
         } else {
             val dep = dependencies.annotations.find(_.dependent == word)
-            assert(dep != None, "The dependency tree seems broken.  I can't find the head of "+input.dependencies.tok(word)+" in position "+word)
-            rootDependencyPath(dep.get.head, word :: path)
+            if (dep == None) {
+                logger(0, " *** WARNING: The dependency tree seems broken.  I can't find the head of "+input.dependencies.tok(word)+" in position "+word)
+                List()
+            } else {
+                rootDependencyPath(dep.get.head, word :: path)
+            }
         }
     }
 
