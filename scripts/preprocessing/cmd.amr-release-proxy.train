@@ -2,7 +2,6 @@
 
 # split data into train/dev/test folds
 
-patch "${DATA_DIR}/amr-release-proxy.txt" amr-release-proxy.txt.patch  # fix malformed AMRs
 cat "${DATA_DIR}/amr-release-proxy.txt.FIXED" | ./nltot | grep '::preferred' | grep -v '_200[78]' | ./ttonl > "${DATA_DIR}/amr-release-proxy.train"
 cat "${DATA_DIR}/amr-release-proxy.txt.FIXED" | ./nltot | grep '::preferred' | grep '_2007' | ./ttonl > "${DATA_DIR}/amr-release-proxy.dev"
 cat "${DATA_DIR}/amr-release-proxy.txt.FIXED" | ./nltot | grep '::preferred' | grep '_2008' | ./ttonl > "${DATA_DIR}/amr-release-proxy.test"
