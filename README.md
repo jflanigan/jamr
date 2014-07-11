@@ -12,7 +12,6 @@ JAMR depends on
  * [Scala](http://www.scala-lang.org),
  * the [Illinois NER system](http://cogcomp.cs.illinois.edu/page/download_view/NETagger) v2.3,
  * the tokenization scripts in [cdec](https://github.com/redpony/cdec),
- * [Stanford Core NLP](http://nlp.stanford.edu/software/corenlp.shtml), and
  * [WordNet](http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz) (for the aligner).
 
 
