@@ -20,6 +20,6 @@ ${JAMR_HOME}/run AMRParser \
 --training-data "${INPUT}.aligned.no_opN" \
 --output-format AMR \
 -v 0 \
-< ""${INPUT}.snt" \
+< "${INPUT}.snt" \
 > "${OUTPUT}" \
 2> "${OUTPUT}.err"
