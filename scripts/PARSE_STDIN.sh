@@ -11,29 +11,29 @@ STAGE2_WEIGHTS="${MODEL_DIR}/stage2-weights.iter5"
 
 #### Tokenize ####
 
-echo '   ### Tokenizing input ###'
+echo ' ### Tokenizing input ###' >&2
 
 cat "$INPUT" | "${CDEC}/corpus/tokenize-anything.sh" > "$INPUT.tok"
 
 #### NER ####
 
-echo '   ### Running NER system ###'
+echo ' ### Running NER system ###' >&2
 
 inputfile="$INPUT"
 outputfile="$INPUT.IllinoisNER.tmp"
 configfile="$JAMR_HOME/scripts/preprocessing/IllinoisNER.config"
 cpath="$ILLINOIS_NER_JAR:$ILLINOIS_NER/lib/*"
 cat $inputfile | sed 's/$/\n####\n/' > $inputfile.tmp
-pushd "$ILLINOIS_NER"
-java -classpath  ${cpath} -Xmx8g edu.illinois.cs.cogcomp.LbjNer.LbjTagger.NerTagger -annotate $inputfile.tmp ${outputfile} ${configfile}
-popd
+pushd "$ILLINOIS_NER" >&2
+java -classpath  ${cpath} -Xmx8g edu.illinois.cs.cogcomp.LbjNer.LbjTagger.NerTagger -annotate $inputfile.tmp ${outputfile} ${configfile} 1>&2
+popd >&2
 cat "$outputfile" | sed 's/ #### /\n/g' | "$JAMR_HOME/src/IllinoisNERConvert" | head -n -2 > "$INPUT.IllinoisNER"
 rm "$outputfile"
 rm "$inputfile".tmp
 
 #### Dependencies ####
 
-echo '   ### Running dependency parser ###'
+echo ' ### Running dependency parser ###' >&2
 
 "${JAMR_HOME}/run" RunStanfordParser < "$INPUT" > "$INPUT.deps"
 
