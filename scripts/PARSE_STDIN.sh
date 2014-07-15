@@ -1,8 +1,10 @@
 #!/bin/bash -e
 
-cat > /tmp/jamr-$!.snt
+# usage: ./PARSE_STDIN < input_file > output_file 2> output_file.err
 
-INPUT=/tmp/jamr-$!.snt
+cat > /tmp/jamr-$$.snt
+
+INPUT=/tmp/jamr-$$.snt
 
 STAGE1_WEIGHTS="${MODEL_DIR}/stage1-weights"
 STAGE2_WEIGHTS="${MODEL_DIR}/stage2-weights.iter5"
@@ -45,4 +47,6 @@ ${JAMR_HOME}/run AMRParser \
 --output-format AMR \
 -v 0 \
 < "${INPUT}"
+
+rm jamr-$$.snt jamr-$$.tok jamr-$$.deps jamr-$$.IllinoisNER
 
