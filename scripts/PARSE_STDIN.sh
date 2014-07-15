@@ -11,9 +11,13 @@ STAGE2_WEIGHTS="${MODEL_DIR}/stage2-weights.iter5"
 
 #### Tokenize ####
 
+echo '   ### Tokenizing input ###'
+
 cat "$INPUT" | "${CDEC}/corpus/tokenize-anything.sh" > "$INPUT.tok"
 
 #### NER ####
+
+echo '   ### Running NER system ###'
 
 inputfile="$INPUT"
 outputfile="$INPUT.IllinoisNER.tmp"
@@ -28,6 +32,8 @@ rm "$outputfile"
 rm "$inputfile".tmp
 
 #### Dependencies ####
+
+echo '   ### Running dependency parser ###'
 
 "${JAMR_HOME}/run" RunStanfordParser < "$INPUT" > "$INPUT.deps"
 
@@ -48,5 +54,5 @@ ${JAMR_HOME}/run AMRParser \
 -v 0 \
 < "${INPUT}"
 
-rm jamr-$$.snt jamr-$$.tok jamr-$$.deps jamr-$$.IllinoisNER
+rm /tmp/jamr-$$.snt /tmp/jamr-$$.snt.tok /tmp/jamr-$$.snt.deps /tmp/jamr-$$.snt.IllinoisNER
 
