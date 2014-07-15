@@ -91,7 +91,7 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
     def costAugmented(i: Int, weights: FeatureVector, scale: Double) : (FeatureVector, Double) = {
         val decoder = Decoder(options)
         decoder.features.weights = weights
-        val costAug = new CostAugmented(Decoder(options), scale, options.getOrElse('precRecallTradeoff,"0.5").toDouble)
+        val costAug = new CostAugmented(Decoder(options), scale, options.getOrElse('trainingPrecRecallTradeoff,"0.5").toDouble)
         costAug.features.weights = weights
 
         val amrdata1 = AMRTrainingData(training(i))

@@ -38,6 +38,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             case "--stage2-not-connected" :: l =>        parseOptions(map + ('stage2NotConnected -> "true"), l)
             case "--training-loss" :: value :: l =>      parseOptions(map + ('trainingLoss -> value), l)
             case "--training-cost-scale" :: value ::l => parseOptions(map + ('trainingCostScale -> value), l)
+            case "--training-prec-recall" :: value ::l => parseOptions(map + ('trainingPrecRecallTradeoff -> value), l)
             case "--training-l2-strength" :: value::l => parseOptions(map + ('trainingL2RegularizerStrength -> value), l)
             case "--training-optimizer" :: value :: l => parseOptions(map + ('trainingOptimizer -> value), l)
             case "--training-output" :: value :: l =>    parseOptions(map + ('trainingOutputFile -> value), l)
