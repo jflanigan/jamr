@@ -158,7 +158,11 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             val input = stdin.getLines.toArray
             val tokenized = fromFile(options('tokenized).asInstanceOf[String]).getLines.toArray
             val nerFile = Corpus.splitOnNewline(fromFile(options('ner).asInstanceOf[String]).getLines).toArray
-
+            val oracleData : Array[String] = if (options.contains('trainingData)) {
+                    Corpus.getAmrBlocks(fromFile(options('trainingData)).getLines()).toArray
+                } else {
+                    new Array(0)
+                }
             val dependencies: Array[String] = if (options.contains('dependencies)) {
                 (for {
                     block <- Corpus.splitOnNewline(Source.fromFile(options('dependencies).asInstanceOf[String]).getLines())
@@ -175,13 +179,13 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             }
             val spanF1 = F1(0,0,0)
 
-            for ((block, i) <- Corpus.getAmrBlocks(fromFile(options('trainingData)).getLines()).zipWithIndex) {
+            for ((block, i) <- input.zipWithIndex) {
             time {
                 val line = input(i)
                 logger(0, "Sentence: "+line+"\n")
                 val tok = tokenized(i)
                 val ner = nerFile(i)
-                val inputGraph = if (options.contains('stage1Oracle)) { Some(AMRTrainingData(block).toInputGraph) } else { None }
+                val inputGraph = if (options.contains('stage1Oracle)) { Some(AMRTrainingData(oracleData(i)).toInputGraph) } else { None }
                 val stage1Result = stage1.decode(new Input(inputGraph,
                                                            tok.split(" "),
                                                            line.split(" "),
@@ -200,14 +204,6 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                 stage1Result.graph.normalizeInverseRelations
                 stage1Result.graph.addVariableToSpans
 
-
-                //val amrdata = AMRTrainingData(block)
-                val amrdata2 = AMRTrainingData(block)   // 2nd copy for oracle
-                logger(1, "Node.spans:")
-                for (node <- amrdata2.graph.nodes) {
-                    logger(1, node.concept+" "+node.spans.toList)
-                }
-
                 var decoderResultGraph = stage1Result.graph  // TODO: in future just do decoderResult.graph instead (when BasicFeatureVector is removed from stage1)
 
                     // TODO: clean up this code
@@ -220,6 +216,12 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                 }//endif (!options.contains('stage1Only))
 
                 if (options.contains('trainingData)) {
+                    val amrdata2 = AMRTrainingData(oracleData(i))   // 2nd copy for oracle
+                    logger(1, "Node.spans:")
+                    for (node <- amrdata2.graph.nodes) {
+                        logger(1, node.concept+" "+node.spans.toList)
+                    }
+
                     val oracle = stage2Oracle.get
                     val oracleResult = oracle.decode(new Input(amrdata2, dependencies(i), oracle = true))
                     for ((span, i) <- amrdata2.graph.spans.sortBy(x => x.words.toLowerCase).zipWithIndex) {
@@ -272,7 +274,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                 }
             }
             }
-            
+
             if (options.contains('stage1Eval)) {
                 logger(0, "--- Stage1 evaluation ---\n"+spanF1.toString)
             }
