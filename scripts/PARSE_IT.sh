@@ -1,7 +1,7 @@
 #!/bin/bash -e
 
-INPUT="$1"
-OUTPUT="$1.parsed"
+INPUT="$(cd "$(dirname "$1")"; pwd)"/"$(basename $1)"
+OUTPUT="$INPUT.parsed"
 
 STAGE1_WEIGHTS="${MODEL_DIR}/stage1-weights"
 STAGE2_WEIGHTS="${MODEL_DIR}/stage2-weights.iter5"

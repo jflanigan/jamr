@@ -39,6 +39,8 @@ echo ' ### Running dependency parser ###' >&2
 
 #### Parse ####
 
+echo ' ### Running JAMR ###' >&2
+
 ${JAMR_HOME}/run AMRParser \
 --stage1-concept-table "${MODEL_DIR}/conceptTable.train" \
 --stage1-features "bias,length,fromNERTagger,conceptGivenPhrase" \
