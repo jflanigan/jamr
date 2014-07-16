@@ -6,7 +6,7 @@ import scala.collection.mutable.{Map, Set, ArrayBuffer}
 
 class MultiMapCount[A,B] {
     private val map : Map[A,Map[B,Int]] = Map()
-    def get = map
+    def get(a: A) : Map[B,Int] = map.getOrElse(a, Map())
     def add(x: (A,B), count: Int = 1) {
         val (a, b) = x
         if (map.contains(a)) {

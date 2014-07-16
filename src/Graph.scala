@@ -329,10 +329,12 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
     }
 
     private def unifyVariables(node: Node = root) {
+        // This function is used when loading AMR annotations.
         // Postcondition: Unify variables, remove variables from node.topologicalOrdering,
         // and populate node.relations and node.variableRelations attributes for each node
-        // Precondition: topologicalOrdering was filled in by the graph parser
-        // and that makeVariables has already been called
+        // Precondition: topologicalOrdering was filled in by the graph parser (the parser
+        // that parses AMR annotations, not the decoder!) and that makeVariables has 
+        // already been called
         val relations = node.topologicalOrdering
         node.relations = List[(String, Node)]()
         node.topologicalOrdering = List[(String, Node)]()

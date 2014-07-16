@@ -58,17 +58,82 @@ class RuleModel(options: Map[Symbol, String]) {
     }
 
     def getRealizations(node: Node) : List[(Phrase, List[(String, Node)])] = {   // phrase, children
-        return phraseTable.get.getOrElse(node.concept, List()).map(x => (x, node.children))   // TODO: should produce a possible realization if not found
+        return phraseTable.get.getOrElse(node.concept, List()).map(x => (x, node.children.map(y => (Label(x._1),x._2))))   // TODO: should produce a possible realization if not found
     }
 
-    def syntheticRules(node: Node, args: List[String]) : List[Rule] = {
+    val argsLeft : Map[(String, String), Array[(String, String)] = new Map()    // Todo: fill in (pos, arg) -> array of realizations
+    val argsRight : Map[(String, String), Array[(String, String)] = new Map()   // make sure there are no gaps
+    
+    def getArgsLeft(pos_arg: (String, String)) : Array[(String, String)] = {
+        return argsLeft.getOrElse(new Array(("","")))
+    }
+
+    def getArgsRight(pos_arg: (String, String)) : Array[(String, String)] = {
+        return argsRight.getOrElse(new Array(("","")))
+    }
+
+    def argToTag(arg: String, left_right: (String, String)) : Tag = {
+        return Tag(left_right._1.replaceAllLiterally(" ","_")+"_"+label+"_"+left_right._2.replaceAllLiterally(" ","_"), arg)
+    }
+
+    case class Tag(tag: String, arg: String)
+    case class ConceptRealization(realization: String, pos: String, position: Int)
+
+    def syntheticRules(node: Node) : List[Rule] = {
         var rules : List[Rule] = List()
+        var bestRule : Option[Array[Tag]] = None
+        var bestScore : Option[Double] = None
         for ((phrase, children) <- getRealizations(node)) {
+            //val leftChildren = children.map((label, node) => argTableLeft.getOrElse(rule.headPos, new MultiMapCount()).get(label).keys.toArray)
+            val leftTags : List[Array[(String,String)]] = children.map((label, node) => getArgsLeft(rule.headPos, label).map(x => argToTag(label,x)))
+            val rightTags : List[Array[(String,String)]] = children.map((label, node) => getArgsRight((rule.headPos, label)).map(x => argToTag(label,x)))
+            val numArgs = children.size
+            for (permutation <- (0 until numArgs).permutations) {
+                for (i <- 0 until numArgs) {
+                    
+                }
+            }
             for (child <- children) {
-                
+                getProduct(
             }
         }
         return rules
+    }
+
+    def decode(tagList: List[Array[Tag]], conceptPosition: Int) : (Array[Int], FeatureVector, Double) = {
+        val tags : Array[Array[Tag]] = (Array(Tag("<START>","<START>")) :: list ::: List((Array(Tag("<STOP>","<STOP>"))))).toArray
+        def localScore(state: Viterbi.State) : Double = {
+            val i = state.i
+            weights.dot(features.localScore(tags(i-1)(state.prev), tags(i)(state.cur), i))
+        }
+        val Viterbi.DecoderResult(tagseq, score) = Viterbi.decode(tags.size, localScore_, i => tags(i).size)
+        return oracle(list, conceptPosition, tagseq.slice(1,tagseq.size-2))
+    }
+
+    def oracle(tagList: List[Array[Tag]], conceptPosition: Int, prediction: Array[Int]) : (Array[Int], FeatureVector, Double) = {
+        val tags : Array[Array[Tag]] = (Array(Tag("<START>","<START>")) :: list ::: List((Array(Tag("<STOP>","<STOP>"))))).toArray
+        var feats = new FeatureVector()
+        for (i <- 1 until tags.size-1) {
+            feats += localFeatures(tags(i-1), tags(i), conceptPosition, i)
+        }
+    }
+
+    def localFeatures(prev: Tag, cur: Tag, conceptPosition: Int, position: Int, conceptPOS: String, concept: String) : FeatureVector = {
+        // cur.tag = realization tag (from argToTag) (e.g. "_ARG1_'s")
+        // cur.arg = argument (e.g. "ARG1", etc)
+        val left = i < concept
+        FeatureVector(Map(
+            "r-1="+prev.tag => 1.0,
+            "r="+cur.tag => 1.0,
+            "r-1="+prev.tag+"+"+"r="+cur.tag => 1.0,
+            "A-1="+prev.arg+"+"+"A="+cur.arg => 1.0,
+            "r="+cur.tag+"+dist" => abs(conceptPosition-position),
+            "r="+cur.tag+"+s="+(if(left) {"L"} else {"R"}) => 1.0,
+            "r="+cur.tag+"+s="+(if(left) {"L"} else {"R"})+"+dist" => abs(conceptPosition-position),
+            "A="+cur.arg+"+dist" => abs(conceptPosition-position),
+            "A="+cur.arg+"+s="+(if(left) {"L"} else {"R"}) => 1.0,
+            "A="+cur.arg+"+s="+(if(left) {"L"} else {"R"})+"+dist" => abs(conceptPosition-position)
+            ))
     }
 
     def createArgTables {
@@ -101,6 +166,10 @@ class RuleModel(options: Map[Symbol, String]) {
         for (span <- graph.spans) {
             phraseTable.add(span.amr.concept -> Phrase(span, pos)
         }
+    }
+
+    def Label(label: String) : String = { 
+        return label.drop(1).toUpperCase.replaceAll("-","")
     }
 
     def extractRules(graph: Graph,

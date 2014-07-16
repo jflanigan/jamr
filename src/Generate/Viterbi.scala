@@ -8,10 +8,13 @@ import scala.collection.mutable.{Map, Set, ArrayBuffer}
 
 object Viterbi {
 
-    def decode(length: Int, localScore: (Int, Int, Int) => Double, tags: Int => Int) : (Array[Int], Double) = {
+    case class State(prev: Int, cur: Int, i: Int)
+    case class DecoderResult(tagseq: Array[Int], score: Double)
+
+    def decode(length: Int, localScore: State => Double, tags: Int => Int) : DecoderResult = {
         // Viterbi algorithm modified from Fig 5.17 in Speech & Language Processing (p. 147)
         //   length: the length of the input (INCLUDING start and stop padding)
-        //   localScore: (prevState, curState, position) => transition weight (log prob)
+        //   localScore: State(prevState, curState, position) => transition weight (log prob)
         //   tags: position => number of tags
         // returns (tag_sequence, score) where tag_sequence.size = length
         assert(length > 2, "Length must be greater than 2")
@@ -24,7 +27,7 @@ object Viterbi {
 
         def max_prev(t: Int, sCur: Int) : (Double, Int) = {
             // Find the most likely previous state (highest model score)
-            val scores = Range(0,tags(t-1)).map(sPrev => localScore(sPrev,sCur,t) + viterbi(t-1)(sPrev))
+            val scores = Range(0,tags(t-1)).map(sPrev => localScore(State(sPrev,sCur,t)) + viterbi(t-1)(sPrev))
             val (max, sPrev) = scores.zipWithIndex.maxBy(_._1)
             return (max, sPrev+1)
         }
@@ -33,7 +36,7 @@ object Viterbi {
         viterbi(1) = new Array[Double](tags(1))
         backpointers(1) = new Array[Int](tags(1))
         for (s <- Range(0, tags(1))) {
-            viterbi(1)(s) = localScore(0, s, 1)
+            viterbi(1)(s) = localScore(State(0, s, 1))
             backpointers(1)(s) = 0
         }
         // Recursive
@@ -67,7 +70,7 @@ object Viterbi {
         }
         decode(0) = 0
 
-        return (decode, max)
+        return DecoderResult(decode, max)
     }
 
 }
