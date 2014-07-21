@@ -8,7 +8,8 @@ case class Rule(lhs: String,
                 args: Vector[String],
                 prefix: String,
                 left: List[(String, Int, String)],      // left realization
-                lex: String,                            // lexical content
+                //lex: String,                          // lexical content
+                concept: Phrase,                        // PhraseConceptPair
                 right: List[(String, Int, String)],     // right realization
                 end: String,
                 pos: String) {
@@ -29,10 +30,9 @@ case class Rule(lhs: String,
 }
 
 object Rule {
-    def mkLhs(x: Node, includeArgs: Boolean = false) : String = {
-        val (label, node) = x
+    def mkLhs(x: Node, includeArgs: Boolean = false, sameSpan: Boolean = true) : String = {
         val concept = node.conceptStr
-        val children = if (includeArgs) {
+        val children = if (includeArgs || !sameSpan) {
             node.children.map(x => (labelStr(x._1), x._2)).sortBy(_._1)
         } else {
             node.children.filter(x => x._2.span == node.span).map(x => (labelStr(x._1), x._2)).sortBy(_._1)
@@ -46,14 +46,19 @@ object Rule {
         } else {
             // Example: (X (X hit-01) (ARG0 ___) (ARG1 ___))
             val list = for (x <- children) yield {
-                "("+x._1+" "+(if (x._2.span == node.span) { mkLhs(x) } else { "["+x._1+"]" } +")")
+                "("+x._1+" "+(if (x._2.span == node.span || !sameSpan) { mkLhs(x._2) } else { "["+x._1+"]" } +")")
             }
             "(X (X "+concept+") "+list.mkString(" ")+")"
         }
     }
 
-    def mkLhsList(node: Node) : List[(String, String)] = {
-        ("#", "(X " + node.conceptStr + ")") :: node.children.filter(x => x._2.span == node.span).map(x => label=labelStr(x._1); (label, "("+label+" "+mkLhs(x._2)+")"))
+    def mkLhsList(node: Node, sameSpan: Boolean = true) : List[(String, String)] = {
+        val children = if (sameSpan) {
+            node.children.filter(x => x._2.span == node.span)
+        } else {
+            node.children
+        }
+        return ("#", "(X " + node.conceptStr + ")") :: children.map(x => label=labelStr(x._1); (label, "("+label+" "+mkLhs(x._2, includeArgs=false, sameSpan=sameSpan)+")"))
     }
 }
 
