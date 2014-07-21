@@ -7,12 +7,11 @@ import scala.collection.mutable.{Map, Set, ArrayBuffer}
 case class Rule(lhs: String,
                 args: Vector[String],
                 prefix: String,
-                left: List[(String, Int, String)],      // left realization
+                left: List[(String, Int, String)],      // left realization (Int is index into vector)
                 //lex: String,                          // lexical content
-                concept: Phrase,                        // PhraseConceptPair
-                right: List[(String, Int, String)],     // right realization
-                end: String,
-                pos: String) {
+                concept: PhraseConceptPair,             // PhraseConceptPair
+                right: List[(String, Int, String)],     // right realization (Int is index into vector)
+                end: String) {
     def mkRule(verbose: Boolean = true) : String = {
         //"(X "+(lhs ::: args.toList.map(x => (x,"["+x+"]"))).sortBy(_._1).map(_._2).mkString(" ")+") ||| "+rhs(verbose)
         lhs+" ||| "+rhs(verbose)

@@ -44,7 +44,7 @@ case class Node(var id: String, var name: Option[String], concept: String, var r
         }
     }
 
-    override def toString() : String = {
+    override def toString() : String = { // DO NOT CHANGE THE BEHAVIOR OF THIS FUNCTION, IT WILL AFFECT CODE THAT RELIES ON THIS OUTPUT FORMAT
         prettyString(0, false, Set.empty[String])
     }
 

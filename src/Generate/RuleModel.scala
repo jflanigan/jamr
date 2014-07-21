@@ -6,7 +6,7 @@ import scala.collection.mutable.{Map, Set, ArrayBuffer}
 
 class RuleModel(options: Map[Symbol, String]) {
 
-    val phraseTable : MultiMapCount[String, Phrase] = new MultiMapCount()       // Map from concept to phrases with counts
+    val phraseTable : MultiMapCount[String, PhraseConceptPair] = new MultiMapCount()       // Map from concept to PhraseConcepPairs with counts
     val lexRules : MultiMapCount[String, Rule] = new MultiMapCount()            // Map from concept to lexicalized rules with counts
     val abstractRules : MultiMapCount[String, Rule] = new MultiMapCount()       // Map from pos to abstract rules with counts
     val argTableLeft : Map[String, MultiMapCount[String, (String, String)]] = new MultiMapCount()  // Map from pos to map of args to realizations with counts
@@ -57,7 +57,7 @@ class RuleModel(options: Map[Symbol, String]) {
         }
     }
 
-    def getRealizations(node: Node) : List[(Phrase, List[(String, Node)])] = {   // phrase, children not consumed
+    def getRealizations(node: Node) : List[(PhraseConceptPair, List[(String, Node)])] = {   // phrase, children not consumed
         return phraseTable.get.getOrElse(node.concept, List()).map(x => (x, node.children.map(y => (Label(x._1),x._2))))   // TODO: should produce a possible realization if not found
     }
 
@@ -107,7 +107,7 @@ class RuleModel(options: Map[Symbol, String]) {
         return rules
     }
 
-    def decode(tagList: List[Array[Tag]], concept: ConceptRealization /*TODO: instead, pass Phrase or PhraseConceptPair*/, node: Node, graph: Graph) : (Array[Int], FeatureVector, Double) = {
+    def decode(tagList: List[Array[Tag]], concept: ConceptRealization /*TODO: instead, pass PhraseConceptPair*/, node: Node, graph: Graph) : (Array[Int], FeatureVector, Double) = {
         val tags : Array[Array[Tag]] = (Array(Tag("<START>","<START>")) :: tagList ::: List((Array(Tag("<STOP>","<STOP>"))))).toArray
         def localScore(state: Viterbi.State) : Double = {
             val i = state.i
@@ -118,7 +118,13 @@ class RuleModel(options: Map[Symbol, String]) {
         return (tagseq.slice(1,tagseq.size-2), feats, weights.dot(feats))
     }
 
-    def oracle(tagList: List[Array[Tag]], prediction: Array[Int], concept: ConceptRealization, node: Node, graph: Graph) : FeatureVector = {
+    def oracle(rule: Rule, concept: PhraseConceptPair, node: Node, graph: Graph) : FeatureVector = {
+        val tagList = rule.left.map(x => (new Array(argToTag(rule.args(x._2), (x._1, x._3))))) ::: List(new Array(conceptTag)) ::: rule.right.map(x => (new Array(argToTag(rule.args(x._2), (x._1, x._3)))))
+        val prediction = tagList.map(x => 0)
+        return oracle(tagList, prediction, concept, node, graph)
+    }
+
+    def oracle(tagList: List[Array[Tag]], prediction: Array[Int], concept: PhraseConceptPair, node: Node, graph: Graph) : FeatureVector = {
         // TODO: the code below has some slow copying, maybe change so it's faster (still will be O(n) though)
         val tags : Array[Array[Tag]] = (Array(Tag("<START>","<START>")) :: tagList ::: List((Array(Tag("<STOP>","<STOP>"))))).toArray
         val pred : Array[Int] = (0 :: prediction.toList ::: List(0)).toArray
@@ -129,21 +135,21 @@ class RuleModel(options: Map[Symbol, String]) {
         return feats
     }
 
-    def localFeatures(prev: Tag, cur: Tag, position: Int, concept: ConceptRealization /*TODO: instead, pass Phrase or PhraseConceptPair and concepPosition*/, node: Node, graph: Graph) : FeatureVector = {
+    def localFeatures(prev: Tag, cur: Tag, position: Int, concept: PhraseConceptPair, conceptPosition: Int, node: Node, graph: Graph) : FeatureVector = {
         // cur.tag = realization tag (from argToTag) (e.g. "_ARG1_'s")
         // cur.arg = argument (e.g. "ARG1", etc)
-        val left : Boolean = i < concept.position
+        val left : Boolean = i < conceptPosition
         FeatureVector(Map(
             "r-1="+prev.tag => 1.0,
             "r="+cur.tag => 1.0,
             "r-1="+prev.tag+"+"+"r="+cur.tag => 1.0,
             "A-1="+prev.arg+"+"+"A="+cur.arg => 1.0,
-            "r="+cur.tag+"+dist" => abs(concept.position-position),
+            "r="+cur.tag+"+dist" => abs(conceptPosition-position),
             "r="+cur.tag+"+s="+(if(left) {"L"} else {"R"}) => 1.0,
-            "r="+cur.tag+"+s="+(if(left) {"L"} else {"R"})+"+dist" => abs(concept.position-position),
-            "A="+cur.arg+"+dist" => abs(concept.position-position),
+            "r="+cur.tag+"+s="+(if(left) {"L"} else {"R"})+"+dist" => abs(conceptPosition-position),
+            "A="+cur.arg+"+dist" => abs(conceptPosition-position),
             "A="+cur.arg+"+s="+(if(left) {"L"} else {"R"}) => 1.0,
-            "A="+cur.arg+"+s="+(if(left) {"L"} else {"R"})+"+dist" => abs(concept.position-position)
+            "A="+cur.arg+"+s="+(if(left) {"L"} else {"R"})+"+dist" => abs(conceptPosition-position)
             ))
     }
 
@@ -172,10 +178,10 @@ class RuleModel(options: Map[Symbol, String]) {
         return count > 1    // TODO
     }
 
-    def extractPhrases(graph: Graph, sentence: Array[String], pos: Array[String]) {
+    def extractPhrasesConceptPairs(graph: Graph, sentence: Array[String], pos: Array[String]) {
         // Populates phraseTable
         for (span <- graph.spans) {
-            phraseTable.add(span.amr.concept -> Phrase(span, pos)
+            phraseTable.add(span.amr.concept -> PhraseConceptPair(span, pos)
         }
     }
 
@@ -187,17 +193,7 @@ class RuleModel(options: Map[Symbol, String]) {
                      sentence: Array[String],
                      pos : Array[String],
                      spans: Map[String, (Option[Int], Option[Int])],    // map from nodeId to (start, end) in sent
-                     spanArray: Array[Boolean], 
-                     rules : Map[String, Rule]) {
-        walkGraph(graph, sentence, pos, spans, spanArray
-    }
-
-    def walkGraph(graph: Graph,
-                     sentence: Array[String],
-                     pos: Array[String],
-                     spans: Map[String, (Option[Int], Option[Int])],    // map from nodeId to (start, end) in sent
-                     spanArray: Array[Boolean],
-                     func: Rule) {
+                     spanArray: Array[Boolean]) {
 
         // Populates lexRules and abstractRules
 
@@ -224,6 +220,7 @@ class RuleModel(options: Map[Symbol, String]) {
                 val end : String = sentence.slice(myEnd.get, outsideUpper)
                 val lex : String = sentence.slice(span.start, span.end).mkString(" ")
                 val pos : String = pos.slice(span.start, span.end).mkString(" ")
+                val headPos : String = pos.slice(span.end-1, span.end)
 
                 val argsList = args.map(x => x.label).toVector
                 var left = (0 until lowerChildren.size-1).map(
@@ -234,61 +231,10 @@ class RuleModel(options: Map[Symbol, String]) {
                 right = (sentence.slice(span.end, upperChilren.head._1.end), upperChilren.last._2, "") :: right
                 val lhs = Rule.mkLhs(node, includeArgs=true)
 
-                val rule = Rule(lhs, argsList, prefix, left, lex, right, end, pos)
+                val rule = Rule(lhs, argsList, prefix, left, PhraseConceptPair(lex, span.amr.prettyString(0, false, Set.empty[String]), pos, headPos), right, end)
                 lexRules.add(node.concept -> rule)
 
-                val abstractRule = Rule(lhs, argsList, prefix, left, "", right, end, pos)
-                abstractRules.add(pos -> abstractRule)
-            }
-        }
-    }
-
-    def extractRules(graph: Graph,
-                     sentence: Array[String],
-                     pos : Array[String],
-                     spans: Map[String, (Option[Int], Option[Int])],    // map from nodeId to (start, end) in sent
-                     spanArray: Array[Boolean],
-                     rules : Map[String, Rule]) {
-
-        // Populates lexRules and abstractRules
-
-        case class Child(label: String, node: Node, start: Int, end: Int)
-
-        for (span <- graph.spans) {
-            val node = graph.getNodeById(span.nodeIds.sorted.apply(0))
-            val (ruleStart, ruleEnd) = spans(node.id)
-            val children : List[Child] = node.children.filter(x => spans(x._2.id)._1 != None).filter(x => x._2.spans.spans(0) != node.spans(0)).map(x => {val (start, end) = spans(x._2.id); Child(x._1.drop(1).toUpperCase.replaceAll("-",""), x._2, start.get, end.get)}).sortBy(x => x.end)    // notice label => label.drop(1).toUpperCase.replaceAll("-","")
-            //logger(1, "children = "+children.toString)
-            if (children.size > 0 && !(0 until children.size-1).exists(i => children(i).start > children(i+1).end)) { // check for no overlapping child spans (if so, no rule can be extracted)
-                var outsideLower = ruleStart.get
-                //do { outsideLower -= 1 } while (outsideLower >= 0 && !spanArray(outsideLower))
-                //outsideLower += 1
-                var outsideUpper = ruleEnd.get
-                //while (outsideUpper < sent.size && !spanArray(outsideUpper)) {
-                //    outsideUpper += 1
-                //}
-
-                val args : List[Children] = children.sortBy(x => x.label)
-                val lowerChildren : Vector[(Children, Int)] = args.zipWithIndex.filter(x => x._1.start < span.start).sortBy(_._1.start).toVector
-                val upperChildren : Vector[(Children, Int)] = args.zipWithIndex.filter(x => x._1.start > span.end).start).sortBy(_._1.start).toVector
-                val prefix : String = sentence.slice(outsideLower, ruleStart.get)
-                val end : String = sentence.slice(myEnd.get, outsideUpper)
-                val lex : String = sentence.slice(span.start, span.end).mkString(" ")
-                val pos : String = pos.slice(span.start, span.end).mkString(" ")
-
-                val argsList = args.map(x => x.label).toVector
-                var left = (0 until lowerChildren.size-1).map(
-                    i => ("", x._2, sentence.slice(lowerChildren(i)._2.end, lowerChildren(i+1)._2.start))).toList
-                left = left ::: List("", lowerChilren.last._2, sentence.slice(lowerChilren.last._1.end, span.start))
-                var right = (1 until upperChildren.size).map(
-                    i => (sentence.slice(upperChildren(i-1)._2.end, upperChildren(i)._2.start)), x._2, "").toList
-                right = (sentence.slice(span.end, upperChilren.head._1.end), upperChilren.last._2, "") :: right
-                val lhs = Rule.mkLhs(node, includeArgs=true)
-
-                val rule = Rule(lhs, argsList, prefix, left, lex, right, end, pos)
-                lexRules.add(node.concept -> rule)
-
-                val abstractRule = Rule(lhs, argsList, prefix, left, "", right, end, pos)
+                val abstractRule = Rule(lhs, argsList, prefix, left, PhraseConceptPair("###", span.amr.prettyString(0, false, Set.empty[String]), pos, headPos), right, end)
                 abstractRules.add(pos -> abstractRule)
             }
         }
