@@ -26,13 +26,15 @@ object Wordnet {
     def stemmer(word: String) : List[String] = {
         var stems = List[String]()
         for (pos <- POS.values) {
-            stems ++= wordnetStemmer.findStems(word, pos)
+            try { stems ++= wordnetStemmer.findStems(word, pos) }
+            catch { case e : Throwable => Unit }
         }
         return stems.distinct.sorted
     }
 
     def stemmer(word: String, pos: POS) : List[String] = {
-        return wordnetStemmer.findStems(word, pos).asScala.toList
+        try { wordnetStemmer.findStems(word, pos).asScala.toList }
+        catch { case e : Throwable => List() }
     }
 
 }
