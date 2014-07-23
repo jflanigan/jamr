@@ -285,6 +285,9 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             } catch { // try
                 case e : Throwable => {
                     println("# ::snt "+input(i))
+                    println("# ::tok "+tokenized(i))
+                    val sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
+                    println("# ::alignments  ::annotator JAMR ::date "+sdf.format(new Date))
                     println(Graph.empty.prettyString(detail=1, pretty=true) + '\n')
                 }
             }
