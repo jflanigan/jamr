@@ -4,6 +4,8 @@ import scala.io.Source.fromFile
 import scala.collection.mutable.Map
 import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
+import java.util.Date
+import java.text.SimpleDateFormat
 
 import edu.cmu.lti.nlp.amr.GraphDecoder._
 import edu.cmu.lti.nlp.amr.ConceptInvoke.PhraseConceptPair
@@ -180,6 +182,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             val spanF1 = F1(0,0,0)
 
             for ((block, i) <- input.zipWithIndex) {
+            try {
             time {
                 val line = input(i)
                 logger(0, "Sentence: "+line+"\n")
@@ -266,14 +269,26 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                     })+"\n")
                 }
 
+                println("# ::snt "+line)
+                println("# ::tok "+tok)
+                val sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
+                decoderResultGraph.makeIds()
+                println("# ::alignments "+decoderResultGraph.spans.map(_.format).mkString(" ")+" ::annotator JAMR ::date "+sdf.format(new Date))
                 if (outputFormat.contains("AMR")) {
+                    // TODO: print tok and alignments
                     println(decoderResultGraph.prettyString(detail=1, pretty=true) + '\n')
                 }
                 if (outputFormat.contains("triples")) {
                     println(decoderResultGraph.printTriples(detail = 1)+"\n")
                 }
+            } // time
+            } catch { // try
+                case e : Throwable => {
+                    println("# ::snt "+input(i))
+                    println(Graph.empty.prettyString(detail=1, pretty=true) + '\n')
+                }
             }
-            }
+            } // main loop
 
             if (options.contains('stage1Eval)) {
                 logger(0, "--- Stage1 evaluation ---\n"+spanF1.toString)
