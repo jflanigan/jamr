@@ -272,6 +272,8 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                 println("# ::snt "+line)
                 println("# ::tok "+tok)
                 val sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
+                decoderResultGraph.assignOpN()
+                decoderResultGraph.sortRelations()
                 decoderResultGraph.makeIds()
                 println("# ::alignments "+decoderResultGraph.spans.map(_.format).mkString(" ")+" ::annotator JAMR ::date "+sdf.format(new Date))
                 if (outputFormat.contains("AMR")) {

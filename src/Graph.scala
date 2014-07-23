@@ -262,6 +262,12 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
     }
 */
 
+    def sortRelations() {
+        // Sorts the nodes in topological ordering by the label name
+        // WARNING: This should be called only after assignOpN
+        doRecursive(x => {x.topologicalOrdering = x.topologicalOrdering.sortBy(_._1)}, root)
+    }
+
     def makeIds() {
         // Sets the node.id field for every node in the graph according to the topologicalOrdering
         // For example "0" is the root and "0.1" is the 2nd child of the root
@@ -282,7 +288,7 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         var oldIdToNewId : immutable.Map[String, String] = immutable.Map(node.id -> newId)
         node.id = newId
         getNodeById += (node.id -> node)
-        for (((_,child), i) <- node.topologicalOrdering.zipWithIndex) {
+        for (((label,child), i) <- node.topologicalOrdering.zipWithIndex) {
             oldIdToNewId ++= makeIds(child, id ::: List(i))
         }
         return oldIdToNewId
@@ -451,11 +457,10 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
             vars += root.name.get
         }
         doRecursive(node => vars ++= node.variableRelations.map(_._2.name))
-        assignOpN
         return root.prettyString(detail, pretty, vars)
     }
 
-    def assignOpN {
+    def assignOpN() {
         def numberOps(relations: List[(String, Node)]) : List[(String, Node)] = {
             val ops = relations.filter(x => x._1 == ":op")
             val opNs = ops.sortBy(x => spans(x._2.spans(0)).start).zipWithIndex.map(x => (x._1._1 + (x._2+1).toString, x._1._2))
