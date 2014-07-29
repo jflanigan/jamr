@@ -1,0 +1,6 @@
+#!/bin/bash
+
+#for split in train dev test; do
+for split in train; do
+    ${JAMR_HOME}/run PrintSpans < "${DATA_DIR}/amr-release-proxy.${split}.aligned" &> "${DATA_DIR}/amr-release-proxy.${split}.aligned.log"
+done
