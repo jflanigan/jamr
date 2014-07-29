@@ -35,6 +35,10 @@ case class AMRTrainingData(sentence: Array[String], graph: Graph, spans: ArrayBu
         logger(2, "OracleGraph triples: "+graph.printTriples(detail = 1))
         return graph
     }
+    def loadSpans() {
+        val annotationIndex = annotators.size - 1
+        graph.loadSpans(spans(annotationIndex), sentence)
+    }
 }
 
 object AMRTrainingData {
@@ -70,8 +74,8 @@ object AMRTrainingData {
             val ulfstr : Map[String, String] = getUlfString(spanline)
 //            logger(2,spanline)
             spans += ulfstr("::alignments")
-            annotators += ulfstr("::annotator")
-            annotation_dates += ulfstr("::date")
+            annotators += ulfstr.getOrElse("::annotator", "")
+            annotation_dates += ulfstr.getOrElse("::date", "")
         }
         return AMRTrainingData(sentence, graph, spans, annotators, annotation_dates, lines.filterNot(_.matches("^#.*")).mkString("\n"), extras)
     }
