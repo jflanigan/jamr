@@ -84,9 +84,9 @@ class Decoder1(featureNames: List[String],
         if (graph.getNodeById.size == 0) {  // no invoked concepts
             graph = Graph.empty
         }
-        logger(0, "Decoder1 Spans:")
+        logger(1, "Decoder1 Spans:")
         for ((span, i) <- graph.spans.sortBy(x => x.words.toLowerCase).zipWithIndex) {
-            logger(0, "Span "+(i+1).toString+":  "+span.words+" => "+span.amr)
+            logger(1, "Span "+(i+1).toString+":  "+span.words+" => "+span.amr)
         }
         logger(1, "Decoder1 feats:\n"+feats.toString)
         return DecoderResult(graph, feats, score)
