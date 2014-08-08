@@ -48,3 +48,4 @@ ${JAMR_HOME}/run AMRParser \
 > "${OUTPUT}" \
 2> "${OUTPUT}.err"
 
+rm "${INPUT}.deps" "${INPUT}.IllinoisNER" "${INPUT}.tok"
