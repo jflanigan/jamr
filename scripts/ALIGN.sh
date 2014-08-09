@@ -1,6 +1,7 @@
 #!/bin/bash -e
 
-# usage: ./ALIGN.sh < input_file > output_file 2> output_file.err
+# This script will run JAMR's rule-based aligner on an AMR annotation (English alignments only).
+# usage: ./ALIGN.sh < amr_input_file > output_file
 
 cat > /tmp/jamr-$$
 
