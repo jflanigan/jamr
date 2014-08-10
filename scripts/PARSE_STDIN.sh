@@ -13,7 +13,7 @@ STAGE2_WEIGHTS="${MODEL_DIR}/stage2-weights.iter5"
 
 echo ' ### Tokenizing input ###' >&2
 
-cat "$INPUT" | "${CDEC}/corpus/tokenize-anything.sh" > "$INPUT.tok"
+cat "$INPUT" | sed 's/   */ /g' | "${CDEC}/corpus/tokenize-anything.sh" > "$INPUT.tok"
 
 #### NER ####
 
