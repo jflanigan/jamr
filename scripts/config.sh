@@ -8,7 +8,7 @@ export CDEC="${HOME}/tools/cdec" # CHANGEME
 
 export ILLINOIS_NER="${HOME}/tools/IllinoisNerExtended" # CHANGEME
 
-export ILLINOIS_NER_JAR="${ILLINOIS_NER}/dist/LbjNerTagger-2.3.jar" # CHANGEME
+export ILLINOIS_NER_JAR="${ILLINOIS_NER}/target/IllinoisNerExtended-2.7.jar" # CHANGEME
 
 export WNHOME="${HOME}/tools/WordNet-3.0" # WORDNET
 
