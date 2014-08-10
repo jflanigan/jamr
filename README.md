@@ -4,31 +4,46 @@ JAMR - AMR Parser
 JAMR is a semantic parser for the [Abstract Meaning Representation](http://amr.isi.edu/).
 
 
-Building
-========
+#Building
 
 JAMR depends on
 
  * [Scala](http://www.scala-lang.org),
- * the [Illinois NER system](http://cogcomp.cs.illinois.edu/page/download_view/NETagger),
+ * the [Illinois NER system](http://cogcomp.cs.illinois.edu/page/download_view/NETagger) v2.7,
  * the tokenization scripts in [cdec](https://github.com/redpony/cdec),
  * [WordNet](http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz) (for the aligner).
 
 
 Install these dependencies, and then change the relevant environment variables in
 `scripts/config.sh`.
-Source the config script so that other bash scripts have access to these environment variables (or 
-add them to ~/.bashrc to set them permanently):
+Source the config script (you will need to do this before running any of the scripts below):
 
     . scripts/config.sh
 
 Run `./compile` to build an uberjar, which will be output to
     `target/scala-{scala_version}/jamr-assembly-{jamr_version}.jar`
-(If you get out of memory errors during this step, you may need to edit the Java memory options
-in the script `sbt` and `build.sbt`.)
+If you get out of memory errors during this step, you may need to edit the Java memory options
+in the script `sbt` and `build.sbt`.
 
-Preprocessing
-=============
+#Running the Parser
+
+Download and extract the model weights [current.tgz](http://cs.cmu.edu/~jmflanig/current.tgz) into the directory $JAMR_HOME/experiments/current.  To parse a file:
+
+    . scripts/config.sh
+    scripts/PARSE.sh < input_file > output_file 2> output_file.err
+
+#Running the Aligner
+
+To run the rule-based aligner:
+
+    . scripts/config.sh
+    scripts/ALIGN.sh < amr_input_file > output_file
+
+The output format of the aligner is described in `scripts/Alignment_Format.txt.`  Currently the aligner works best for release r3 data (AMR Specification v1.0), but it will run on newer data as well.
+
+#Experimental Pipeline
+
+##1. Preprocessing the data
 
 Download `LDC2013E117.tgz` from the LDC Catalog (requires an LDC subscription).
 Extract the file `deft-amr-release-r3-proxy.txt` into `data/LDC-2013-Sep/` and rename it
@@ -39,11 +54,10 @@ Extract the file `deft-amr-release-r3-proxy.txt` into `data/LDC-2013-Sep/` and r
 Run `./PREPROCESS.sh`.
 
 
-Training
-========
+##2. Training
 
 (To skip this step, download and extract model weights [current.tgz](http://cs.cmu.edu/~jmflanig/current.tgz) 
-into the directory experiments/current.)
+into the directory $JAMR_HOME/experiments/current.)
 
     cd scripts/training
 
@@ -62,8 +76,7 @@ Relation identification (stage2) training:
 (Search for 'Performance on Dev' in `stage2-weights.err` for early stopping)
 
 
-Evaluating
-==========
+##3. Evaluating
 
 Decode test set:
 
