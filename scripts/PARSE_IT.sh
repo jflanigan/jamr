@@ -1,5 +1,8 @@
 #!/bin/bash -e
 
+# Usage: ./PARSE_IT.sh input_file
+# Output will be in input_file.parsed
+
 INPUT="$(cd "$(dirname "$1")"; pwd)"/"$(basename $1)"
 OUTPUT="$INPUT.parsed"
 

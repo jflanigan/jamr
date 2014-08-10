@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-# usage: ./PARSE_STDIN < input_file > output_file 2> output_file.err
+# usage: ./PARSE.sh < input_file > output_file 2> output_file.err
 
 cat > /tmp/jamr-$$.snt
 
