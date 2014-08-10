@@ -22,7 +22,7 @@ echo ' ### Running NER system ###' >&2
 inputfile="$INPUT"
 outputfile="$INPUT.IllinoisNER.tmp"
 configfile="$JAMR_HOME/scripts/preprocessing/IllinoisNER.config"
-cpath="$ILLINOIS_NER_JAR:$ILLINOIS_NER/lib/*"
+cpath="$ILLINOIS_NER_JAR:$ILLINOIS_NER/target/classes:$ILLINOIS_NER/target/dependency/*"
 cat $inputfile | sed 's/$/\n####\n/' > $inputfile.tmp
 pushd "$ILLINOIS_NER" >&2
 java -classpath  ${cpath} -Xmx8g edu.illinois.cs.cogcomp.LbjNer.LbjTagger.NerTagger -annotate $inputfile.tmp ${outputfile} ${configfile} 1>&2

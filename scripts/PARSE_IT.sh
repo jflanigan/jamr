@@ -15,7 +15,7 @@ cat "$INPUT" | sed 's/   */ /g' | "${CDEC}/corpus/tokenize-anything.sh" > "$INPU
 inputfile="$INPUT"
 outputfile="$PWD/$INPUT.IllinoisNER.tmp"
 configfile="$JAMR_HOME/scripts/preprocessing/IllinoisNER.config"
-cpath="$ILLINOIS_NER_JAR:$ILLINOIS_NER/lib/*"
+cpath="$ILLINOIS_NER_JAR:$ILLINOIS_NER/target/classes:$ILLINOIS_NER/target/dependency/*"
 cat $inputfile | sed 's/$/\n####\n/' > $inputfile.tmp
 temp="$PWD/$inputfile.tmp"
 pushd "$ILLINOIS_NER"
