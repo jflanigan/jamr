@@ -27,7 +27,7 @@ in the script `sbt` and `build.sbt`.
 
 #Running the Parser
 
-Download and extract the model weights [current.tgz](http://cs.cmu.edu/~jmflanig/current.tgz) into the directory $JAMR_HOME/experiments/current.  To parse a file (the file should be cased, untokenized, with one sentence per line):
+Download and extract the model weights [current.tgz](http://cs.cmu.edu/~jmflanig/current.tgz) into the directory $JAMR_HOME/experiments/current.  To parse a file (cased, untokenized, with one sentence per line):
 
     . scripts/config.sh
     scripts/PARSE.sh < input_file > output_file 2> output_file.err
