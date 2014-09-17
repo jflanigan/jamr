@@ -310,6 +310,7 @@ class Features(var featureNames: List[String], labelSet: Array[String]) {
         //logger(1, "node.spans = "+node.spans)
         //logger(1, "node.spans(0) = "+node.spans(0).toString)
         //logger(1,"span = "+(graph.spans(node.spans(0)).start, graph.spans(node.spans(0)).end))
+        // If an array index out of bounds error occurs in the line below, it could be because the input sentence has a training newline (I know, fragile!)
         val span = dependencies.annotationSpan((graph.spans(node.spans(0)).start, graph.spans(node.spans(0)).end))
         return Range(span._1, span._2)
     }
