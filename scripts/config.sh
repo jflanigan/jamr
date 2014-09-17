@@ -20,3 +20,4 @@ export CLASSPATH=".:${JAMR_HOME}/target/scala-2.10/jamr-assembly-0.1-SNAPSHOT.ja
 
 export MODEL_DIR="${JAMR_HOME}/experiments/current"
 
+export SMATCH="${JAMR_HOME}/scripts/smatch_v1_0/smatch_modified.py"
