@@ -82,6 +82,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
         verbosity = options.getOrElse('verbosity, "0").toInt
 
         val outputFormat = options.getOrElse('outputFormat,"triples").split(",").toList
+        // Output format is comma separated list of: nodes,edges,AMR,triples
 
         val stage1 : ConceptInvoke.Decoder = {
             if (!options.contains('stage1Oracle) && !options.contains('stage2Train)) {
@@ -158,7 +159,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             logger(0, "done")
 
             val input = stdin.getLines.toArray
-            val tokenized = fromFile(options('tokenized).asInstanceOf[String]).getLines.toArray
+            val tokenized = fromFile(options('tokenized).asInstanceOf[String]).getLines/*.map(x => x)*/.toArray
             val nerFile = Corpus.splitOnNewline(fromFile(options('ner).asInstanceOf[String]).getLines).toArray
             val oracleData : Array[String] = if (options.contains('trainingData)) {
                     Corpus.getAmrBlocks(fromFile(options('trainingData)).getLines()).toArray
@@ -282,6 +283,12 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                 }
                 if (outputFormat.contains("triples")) {
                     println(decoderResultGraph.printTriples(detail = 1)+"\n")
+                }
+                if (outputFormat.contains("nodes")) {
+                    println(decoderResultGraph.printNodes+"\n")
+                }
+                 if (outputFormat.contains("edges")) {
+                    println(decoderResultGraph.printEdges+"\n")
                 }
             } // time
             } catch { // try

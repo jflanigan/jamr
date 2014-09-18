@@ -107,6 +107,25 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         return this
     }
 
+    def printNodes : String = {
+        nodes.map(node =>
+            node.id + "\t" + node.nameStr + "\t" + node.concept + "\t" + spans(node.spans(0)).start + "-" + spans(node.spans(0)).end
+        ).toList.sorted.mkString("\n")
+    }
+
+    def printEdges : String = {
+        var edges : List[String] = List()
+        val Relation = """:?(.*)""".r
+
+        for { node1 <- nodes
+              (label, node2) <- node1.relations
+              Relation(relation) = label    // label includes the ":"
+            } {
+                edges = node1.id + "\t" + node1.concept + "\t" + relation + "\t" + node2.id + "\t" + node2.concept :: edges
+        }
+        return edges.sorted.mkString("\n")
+    }
+
     def printTriples(detail: Int = 1,
                      extra: (Node, Node, String) => String = (n1, n2, r) => "",   // Optional string to print after each relation
                      sorted: Boolean = true

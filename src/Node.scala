@@ -37,6 +37,13 @@ case class Node(var id: String, var name: Option[String], concept: String, var r
         }
     }
 
+    def nameStr : String = {
+        name match {
+            case None => ""
+            case Some(n) => n 
+        }
+    }
+
     override def toString() : String = {
         prettyString(0, false, Set.empty[String])
     }
