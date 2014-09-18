@@ -279,17 +279,20 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                 println("# ::alignments "+decoderResultGraph.spans.map(_.format).mkString(" ")+" ::annotator JAMR ::date "+sdf.format(new Date))
                 if (outputFormat.contains("AMR")) {
                     // TODO: print tok and alignments
-                    println(decoderResultGraph.prettyString(detail=1, pretty=true) + '\n')
+                    println(decoderResultGraph.prettyString(detail=1, pretty=true))
                 }
                 if (outputFormat.contains("triples")) {
-                    println(decoderResultGraph.printTriples(detail = 1)+"\n")
+                    println(decoderResultGraph.printTriples(detail = 1))
                 }
                 if (outputFormat.contains("nodes")) {
-                    println(decoderResultGraph.printNodes+"\n")
+                    println("Nodes:")
+                    println(decoderResultGraph.printNodes)
                 }
-                 if (outputFormat.contains("edges")) {
-                    println(decoderResultGraph.printEdges+"\n")
+                if (outputFormat.contains("edges")) {
+                    println("Edges:")
+                    println(decoderResultGraph.printEdges)
                 }
+                println()
             } // time
             } catch { // try
                 case e : Throwable => {
