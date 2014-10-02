@@ -33,6 +33,7 @@ class Decoder1(featureNames: List[String],
 
     def decode(input: Input) : DecoderResult = {
         logger(1, "\n--- Decoder1 ---\n")
+        logger(1, "Sentence: "+input.sentence.mkString(" "))
         //logger(1, "Weights:\n"+features.weights.toString)
         val sentence = input.sentence
         val bestState : Array[Option[(Double, PhraseConceptPair, Int)]] = sentence.map(x => None)    // (score, concept, backpointer)
