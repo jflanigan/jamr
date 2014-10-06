@@ -1,0 +1,25 @@
+#!/bin/bash
+set -e
+
+# Source config script
+. scripts/config.sh
+
+# Extract and preprocess data
+mkdir -p data/LDC-2013-Sep
+tar -xzOf data/LDC2013E117.tgz ./LDC2013E117_DEFT_Phase_1_AMR_Annotation_R3/data/deft-amr-release-r3-proxy.txt > data/LDC-2013-Sep/amr-release-proxy.txt
+pushd scripts/preprocessing
+./PREPROCESS.sh
+popd
+
+# Train
+pushd scripts/training
+./cmd.conceptTable.train
+./cmd.stage1-weights
+./cmd.stage2-weights
+
+# Evaluate on test set
+./cmd.test.decode.allstages
+./cmd.test.decode.stage2only
+${JAMR_HOME}/scripts/smatch_v1_0/smatch_modified.py --pr -f ${JAMR_HOME}/experiments/current/test.decode.allstages ${JAMR_HOME}/data/LDC-2013-Sep/amr-release-proxy.test
+${JAMR_HOME}/scripts/smatch_v1_0/smatch_modified.py --pr -f ${JAMR_HOME}/experiments/current/test.decode.stage2only ${JAMR_HOME}/data/LDC-2013-Sep/amr-release-proxy.test
+
