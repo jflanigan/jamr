@@ -7,7 +7,10 @@ import scala.io.Source.stdin
 import scala.io.Source.fromFile
 import scala.collection.mutable.Map
 
+var first = true
 for (line <- stdin.getLines()) {
+    if (! first) print("\n")
+    else first = false
     var tag : String = "O"
     var begin = false
     for (word <- line.split(" ")) {
@@ -28,6 +31,5 @@ for (line <- stdin.getLines()) {
             tag = "O"
         }
     }
-    print("\n")
 }
 

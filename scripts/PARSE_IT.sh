@@ -19,12 +19,12 @@ inputfile="$INPUT"
 outputfile="$PWD/$INPUT.IllinoisNER.tmp"
 configfile="$JAMR_HOME/scripts/preprocessing/IllinoisNER.config"
 cpath="$ILLINOIS_NER_JAR:$ILLINOIS_NER/target/classes:$ILLINOIS_NER/target/dependency/*"
-cat $inputfile | sed 's/$/\n####\n/' > $inputfile.tmp
+cat $inputfile | sed $'s/$/\\\n####\\\n/' > $inputfile.tmp
 temp="$PWD/$inputfile.tmp"
 pushd "$ILLINOIS_NER"
 java -classpath  ${cpath} -Xmx8g edu.illinois.cs.cogcomp.LbjNer.LbjTagger.NerTagger -annotate ${temp} ${outputfile} ${configfile}
 popd
-cat "$outputfile" | sed 's/ #### /\n/g' | "$JAMR_HOME/src/IllinoisNERConvert" | head -n -2 > "$INPUT.IllinoisNER"
+cat "$outputfile" | sed $'s/ #### /\\\n/g' | "$JAMR_HOME/src/IllinoisNERConvert" > "$INPUT.IllinoisNER"
 rm "$outputfile"
 rm "$inputfile".tmp
 
