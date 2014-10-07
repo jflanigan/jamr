@@ -13,6 +13,8 @@ import edu.cmu.lti.nlp.amr.ConceptInvoke.PhraseConceptPair
 /****************************** Driver Program *****************************/
 object AMRParser {
 
+    val VERSION = "JAMR dev v0.2"
+
     val usage = """Usage:
     // TODO: remove --tok so that the parser calls the tokenizer
 scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage1-decode --stage1-weights weights --concept-table concepts --ner namedEntities --tok tokenized.txt < inputFile
@@ -276,21 +278,18 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                 decoderResultGraph.assignOpN()
                 decoderResultGraph.sortRelations()
                 decoderResultGraph.makeIds()
-                println("# ::alignments "+decoderResultGraph.spans.map(_.format).mkString(" ")+" ::annotator JAMR ::date "+sdf.format(new Date))
+                println("# ::alignments "+decoderResultGraph.spans.map(_.format).mkString(" ")+" ::annotator "+VERSION+" ::date "+sdf.format(new Date))
+                if (outputFormat.contains("nodes")) {
+                    println(decoderResultGraph.printNodes.map(x => "# ::node\t" + x).mkString("\n"))
+                }
+                if (outputFormat.contains("edges")) {
+                    println(decoderResultGraph.printEdges.map(x => "# ::edge\t" + x).mkString("\n"))
+                }
                 if (outputFormat.contains("AMR")) {
-                    // TODO: print tok and alignments
                     println(decoderResultGraph.prettyString(detail=1, pretty=true))
                 }
                 if (outputFormat.contains("triples")) {
                     println(decoderResultGraph.printTriples(detail = 1))
-                }
-                if (outputFormat.contains("nodes")) {
-                    println("Nodes:")
-                    println(decoderResultGraph.printNodes)
-                }
-                if (outputFormat.contains("edges")) {
-                    println("Edges:")
-                    println(decoderResultGraph.printEdges)
                 }
                 println()
             } // time

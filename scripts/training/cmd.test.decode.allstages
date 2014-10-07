@@ -18,7 +18,7 @@ ${JAMR_HOME}/run AMRParser \
 --ner "${INPUT}.snt.IllinoisNER" \
 --tok "${INPUT}.snt.tok" \
 --training-data "${INPUT}.aligned.no_opN" \
---output-format AMR \
+--output-format AMR,nodes,edges \
 -v 0 \
 < "${INPUT}.snt" \
 > "${OUTPUT}" \

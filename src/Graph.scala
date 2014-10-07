@@ -107,13 +107,13 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         return this
     }
 
-    def printNodes : String = {
+    def printNodes : List[String] = {
         nodes.map(node =>
             node.id + "\t" + node.nameStr + "\t" + node.concept + "\t" + spans(node.spans(0)).start + "-" + spans(node.spans(0)).end
-        ).toList.sorted.mkString("\n")
+        ).toList.sorted
     }
 
-    def printEdges : String = {
+    def printEdges : List[String] = {
         var edges : List[String] = List()
         val Relation = """:?(.*)""".r
 
@@ -123,7 +123,7 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
             } {
                 edges = node1.id + "\t" + node1.concept + "\t" + relation + "\t" + node2.id + "\t" + node2.concept :: edges
         }
-        return edges.sorted.mkString("\n")
+        return edges.sorted
     }
 
     def printTriples(detail: Int = 1,
