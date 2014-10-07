@@ -19,12 +19,12 @@ inputfile="$INPUT"
 outputfile="$PWD/$INPUT.IllinoisNER.tmp"
 configfile="$JAMR_HOME/scripts/preprocessing/IllinoisNER.config"
 cpath="$ILLINOIS_NER_JAR:$ILLINOIS_NER/target/classes:$ILLINOIS_NER/target/dependency/*"
-cat $inputfile | sed 's/$/\n####\n/' > $inputfile.tmp
+cat $inputfile | sed $'s/$/\\\n####\\\n/' > $inputfile.tmp # see http://superuser.com/questions/307165/newlines-in-sed-on-mac-os-x
 temp="$PWD/$inputfile.tmp"
 pushd "$ILLINOIS_NER"
 java -classpath  ${cpath} -Xmx8g edu.illinois.cs.cogcomp.LbjNer.LbjTagger.NerTagger -annotate ${temp} ${outputfile} ${configfile}
 popd
-cat "$outputfile" | sed 's/ #### /\n/g' | "$JAMR_HOME/src/IllinoisNERConvert" | head -n -2 > "$INPUT.IllinoisNER"
+cat "$outputfile" | sed $'s/ #### /\\\n/g' | "$JAMR_HOME/src/IllinoisNERConvert" | awk 'NR > 2' > "$INPUT.IllinoisNER"
 rm "$outputfile"
 rm "$inputfile".tmp
 
@@ -35,20 +35,20 @@ rm "$inputfile".tmp
 #### Parse ####
 
 ${JAMR_HOME}/run AMRParser \
---stage1-concept-table "${MODEL_DIR}/conceptTable.train" \
---stage1-features "bias,length,fromNERTagger,conceptGivenPhrase" \
---stage1-weights "${STAGE1_WEIGHTS}" \
---stage2-decoder LR \
---stage2-features "rootConcept,rootDependencyPathv1,bias,typeBias,self,fragHead,edgeCount,distance,logDistance,posPathv3,dependencyPathv4,conceptBigram" \
---stage2-labelset "${JAMR_HOME}/resources/labelset" \
---stage2-weights "${STAGE2_WEIGHTS}" \
---dependencies "${INPUT}.deps" \
---ner "${INPUT}.IllinoisNER" \
---tok "${INPUT}.tok" \
---output-format AMR,nodes,edges \
--v 0 \
-< "${INPUT}" \
-> "${OUTPUT}" \
-2> "${OUTPUT}.err"
+  --stage1-concept-table "${MODEL_DIR}/conceptTable.train" \
+  --stage1-features "bias,length,fromNERTagger,conceptGivenPhrase" \
+  --stage1-weights "${STAGE1_WEIGHTS}" \
+  --stage2-decoder LR \
+  --stage2-features "rootConcept,rootDependencyPathv1,bias,typeBias,self,fragHead,edgeCount,distance,logDistance,posPathv3,dependencyPathv4,conceptBigram" \
+  --stage2-labelset "${JAMR_HOME}/resources/labelset" \
+  --stage2-weights "${STAGE2_WEIGHTS}" \
+  --dependencies "${INPUT}.deps" \
+  --ner "${INPUT}.IllinoisNER" \
+  --tok "${INPUT}.tok" \
+  --output-format AMR,nodes,edges \
+  -v 0 \
+  < "${INPUT}" \
+  > "${OUTPUT}" \
+  2> "${OUTPUT}.err"
 
 rm "${INPUT}.deps" "${INPUT}.IllinoisNER" "${INPUT}.tok"
