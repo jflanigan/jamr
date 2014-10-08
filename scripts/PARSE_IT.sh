@@ -45,6 +45,7 @@ ${JAMR_HOME}/run AMRParser \
   --dependencies "${INPUT}.deps" \
   --ner "${INPUT}.IllinoisNER" \
   --tok "${INPUT}.tok" \
+  --ignore-parser-errors \
   --output-format AMR,nodes,edges \
   -v 0 \
   < "${INPUT}" \

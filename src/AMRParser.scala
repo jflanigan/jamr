@@ -42,7 +42,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             case "--stage2-not-connected" :: l =>        parseOptions(map + ('stage2NotConnected -> "true"), l)
             case "--training-loss" :: value :: l =>      parseOptions(map + ('trainingLoss -> value), l)
             case "--training-cost-scale" :: value ::l => parseOptions(map + ('trainingCostScale -> value), l)
-            case "--training-prec-recall" :: value ::l => parseOptions(map + ('trainingPrecRecallTradeoff -> value), l)
+            case "--training-prec-recall" :: value::l => parseOptions(map + ('trainingPrecRecallTradeoff -> value), l)
             case "--training-l2-strength" :: value::l => parseOptions(map + ('trainingL2RegularizerStrength -> value), l)
             case "--training-optimizer" :: value :: l => parseOptions(map + ('trainingOptimizer -> value), l)
             case "--training-output" :: value :: l =>    parseOptions(map + ('trainingOutputFile -> value), l)
@@ -52,17 +52,18 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             case "--training-save-interval"::value::l => parseOptions(map + ('trainingSaveInterval -> value), l)
             case "--training-data" :: value :: tail =>   parseOptions(map + ('trainingData -> value), tail) // used to be "--amr-oracle-data"
             case "--training-dev" :: value :: tail =>    parseOptions(map + ('trainingDev -> value), tail)
+            //case "--amr-oracle-data" :: value :: tail => parseOptions(map + ('amrOracleData -> value), tail)
             case "--smatch-eval" :: value :: tail =>     parseOptions(map + ('smatchEval -> value), tail)
             case "--output-format" :: value :: l =>      parseOptions(map + ('outputFormat -> value), l)
-            //case "--amr-oracle-data" :: value :: tail => parseOptions(map + ('amrOracleData -> value), tail)
+            case "--ignore-parser-errors" :: l =>        parseOptions(map + ('ignoreParserErrors -> "true"), l)
             case "--dependencies" :: value :: tail =>    parseOptions(map + ('dependencies -> value), tail)
             case "--ner" :: value :: tail =>             parseOptions(map + ('ner -> value), tail)
             case "--snt" :: value :: tail =>             parseOptions(map ++ Map('notTokenized -> value), tail)
             case "--tok" :: value :: tail =>             parseOptions(map ++ Map('tokenized -> value), tail)
             case "-v" :: value :: tail =>                parseOptions(map ++ Map('verbosity -> value), tail)
 
-            case string :: opt2 :: tail if isSwitch(opt2) => parseOptions(map ++ Map('infile -> string), list.tail)
-            case string :: Nil =>  parseOptions(map ++ Map('infile -> string), list.tail)
+            //case string :: opt2 :: tail if isSwitch(opt2) => parseOptions(map ++ Map('infile -> string), list.tail)
+            //case string :: Nil =>  parseOptions(map ++ Map('infile -> string), list.tail)
             case option :: tail => println("Error: Unknown option "+option) 
                                    sys.exit(1)
       }
@@ -294,12 +295,16 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                 println()
             } // time
             } catch { // try
-                case e : Throwable => {
+                case e : Throwable => if (options.contains('ignoreParserErrors)) {
                     println("# ::snt "+input(i))
                     println("# ::tok "+tokenized(i))
                     val sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
                     println("# ::alignments  ::annotator "+VERSION+" ::date "+sdf.format(new Date))
+                    println("# THERE WAS AN EXCEPTION IN THE PARSER.  Returning an empty graph.  (To find out the error, please run again without --ignore-parser-errors)")
                     println(Graph.empty.prettyString(detail=1, pretty=true) + '\n')
+                } else {
+                    println("Error, not handling")
+                    throw e
                 }
             }
             } // main loop
