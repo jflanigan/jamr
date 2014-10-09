@@ -303,7 +303,6 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                     println("# THERE WAS AN EXCEPTION IN THE PARSER.  Returning an empty graph.  (To find out the error, please run again without --ignore-parser-errors)")
                     println(Graph.empty.prettyString(detail=1, pretty=true) + '\n')
                 } else {
-                    println("Error, not handling")
                     throw e
                 }
             }
