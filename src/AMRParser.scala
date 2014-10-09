@@ -283,7 +283,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                 if (outputFormat.contains("nodes")) {
                     println(decoderResultGraph.printNodes.map(x => "# ::node\t" + x).mkString("\n"))
                 }
-                if (outputFormat.contains("edges")) {
+                if (outputFormat.contains("edges") && decoderResultGraph.root.relations.size > 0) {
                     println(decoderResultGraph.printEdges.map(x => "# ::edge\t" + x).mkString("\n"))
                 }
                 if (outputFormat.contains("AMR")) {
@@ -299,7 +299,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                     println("# ::snt "+input(i))
                     println("# ::tok "+tokenized(i))
                     val sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
-                    println("# ::alignments  ::annotator "+VERSION+" ::date "+sdf.format(new Date))
+                    println("# ::alignments 0-1|0 ::annotator "+VERSION+" ::date "+sdf.format(new Date))
                     println("# THERE WAS AN EXCEPTION IN THE PARSER.  Returning an empty graph.  (To find out the error, please run again without --ignore-parser-errors)")
                     println(Graph.empty.prettyString(detail=1, pretty=true) + '\n')
                 } else {

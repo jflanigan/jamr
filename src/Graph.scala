@@ -109,7 +109,11 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
 
     def printNodes : List[String] = {
         nodes.map(node =>
-            node.id + "\t" + node.nameStr + "\t" + node.concept + "\t" + spans(node.spans(0)).start + "-" + spans(node.spans(0)).end
+            if (node.spans.size > 0) {
+                node.id + "\t" + node.nameStr + "\t" + node.concept + "\t" + spans(node.spans(0)).start + "-" + spans(node.spans(0)).end
+            } else {
+                node.id + "\t" + node.nameStr + "\t" + node.concept + "\t"
+            }
         ).toList.sorted
     }
 
@@ -547,6 +551,6 @@ object Graph {
 
     //def empty() : Graph = { val g = parse("(n / none)"); g.getNodeById.clear; g.getNodeByName.clear; return g }
     //def amrEmpty() : Graph = { parse("(a / amr-empty)") }
-    def empty() : Graph = { val g = parse("(a / amr-empty)"); g.loadSpans("0-0|0", Array()); return g }
+    def empty() : Graph = { val g = parse("(a / amr-empty)"); g.loadSpans("0-1|0", Array()); return g }
 }
 
