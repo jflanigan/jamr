@@ -8,7 +8,8 @@ import scala.util.parsing.combinator._
 
 object EvalSpans {
 
-    val usage = """Usage: scala -classpath . edu.cmu.lti.nlp.amr.EvalSpans < amr_file"""
+    val usage = """Usage: ${JAMR_HOME}/run EvalSpans < amr_file"""
+    //val usage = """Usage: scala -classpath . edu.cmu.lti.nlp.amr.EvalSpans < amr_file"""
     type OptionMap = Map[Symbol, Any]
 
     def parseOptions(map : OptionMap, list: List[String]) : OptionMap = {
@@ -61,7 +62,7 @@ object EvalSpans {
             val annotatorStrs = lines.filter(x => x.matches(".*AlignerTool.*")).filterNot(x => x.matches(".*Aligner .*"))
 
             if (alignerStrs.size != 0 && annotatorStrs.size != 0) {
-                assert(lines.filter(x => x.matches("^# ::tok .*")).size == 1, "Invalid # of tokenized")
+                assert(lines.filter(x => x.matches("^# ::tok .*")).distinct.size == 1, "Multiple ::tok fields that are not the same, not sure which one to use.")
                 val tokenized = lines.filter(x => x.matches("^# ::tok .*"))(0).drop(8).split(" ")
 
                 logger(2,"Index: "+i.toString)
