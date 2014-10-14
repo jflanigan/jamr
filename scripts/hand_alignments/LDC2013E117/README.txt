@@ -2,7 +2,7 @@ This directory contains the hand alignments we produced for the LDC2013E117 data
 
 To create the alignments file, move LDC2013E117.tgz to $JAMR_HOME/data and then do:
 
-cd scripts/hand_alignments/LDC2013E117/
+cd scripts/hand_alignments/LDC2013E117
 . ../../config.sh
 ./cmd.hand_align.txt
 
@@ -15,7 +15,7 @@ when calculating F1 since JAMR doesn't use them.
 
 To test the performance of the automatic aligner do:
 
-cd scripts/
+cd scripts
 . config.sh
 ./ALIGN.sh < hand_alignments/LDC2013E117/hand_align.txt > align.txt
 ../run EvalSpans < align.txt
@@ -26,6 +26,4 @@ Number of AMR: 200
 Precision = 0.9158829676071055
 Recall = 0.8880445795339412
 F1 = 0.9017489711934157
-
-Email questions to jflanigan@cs.cmu.edu.
 
