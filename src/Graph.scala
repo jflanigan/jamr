@@ -114,9 +114,11 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
     def printNodes : List[String] = {
         nodes.map(node =>
             if (node.spans.size > 0) {
-                node.id + "\t" + node.nameStr + "\t" + node.concept + "\t" + spans(node.spans(0)).start + "-" + spans(node.spans(0)).end
+                //node.id + "\t" + node.nameStr + "\t" + node.concept + "\t" + spans(node.spans(0)).start + "-" + spans(node.spans(0)).end
+                node.id + "\t" + node.concept + "\t" + spans(node.spans(0)).start + "-" + spans(node.spans(0)).end
             } else {
-                node.id + "\t" + node.nameStr + "\t" + node.concept + "\t"
+                //node.id + "\t" + node.nameStr + "\t" + node.concept + "\t"
+                node.id + "\t" + node.concept + "\t"
             }
         ).toList.sorted
     }
@@ -129,7 +131,8 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
               (label, node2) <- node1.relations
               Relation(relation) = label    // label includes the ":"
             } {
-                edges = node1.id + "\t" + node1.concept + "\t" + relation + "\t" + node2.id + "\t" + node2.concept :: edges
+                //edges = node1.id + "\t" + node1.concept + "\t" + relation + "\t" + node2.id + "\t" + node2.concept :: edges
+                edges = node1.concept + "\t" + relation + "\t" + node2.concept + "\t" + node1.id + "\t" +  node2.id + "\t" :: edges
         }
         return edges.sorted
     }
