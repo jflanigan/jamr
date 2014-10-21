@@ -74,6 +74,9 @@ object Aligner {
                     logger(3, "* "+span.format)
                 }
                 println("# ::alignments "+spans.map(_.format).mkString(" ")+" ::annotator Aligner v.02 ::date "+sdf.format(new Date))
+                println(amr.printNodes.map(x => "# ::node\t" + x).mkString("\n"))
+                println(amr.printRoot)
+                println(amr.printEdges.map(x => "# ::edge\t" + x).mkString("\n"))
                 println(amrstr+"\n")
             } else {
                 println(block+"\n")
