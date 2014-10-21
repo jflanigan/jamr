@@ -107,6 +107,10 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         return this
     }
 
+    def printRoot : String = {
+        return "# ::root\t" + root.id + "\t" + root.concept
+    }
+
     def printNodes : List[String] = {
         nodes.map(node =>
             if (node.spans.size > 0) {
