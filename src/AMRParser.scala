@@ -2,6 +2,8 @@ package edu.cmu.lti.nlp.amr
 
 import java.io.StringWriter
 import java.io.PrintWriter
+import java.io.PrintStream
+
 import scala.io.Source.fromFile
 import scala.collection.mutable.Map
 import scala.collection.mutable.Set
@@ -64,6 +66,8 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             case "--ner" :: value :: tail =>             parseOptions(map + ('ner -> value), tail)
             case "--snt" :: value :: tail =>             parseOptions(map ++ Map('notTokenized -> value), tail)
             case "--tok" :: value :: tail =>             parseOptions(map ++ Map('tokenized -> value), tail)
+            case "--input" :: value :: tail =>             parseOptions(map ++ Map('input -> value), tail)
+            case "--output" :: value :: tail =>             parseOptions(map ++ Map('output -> value), tail)
             case "-v" :: value :: tail =>                parseOptions(map ++ Map('verbosity -> value), tail)
 
             //case string :: opt2 :: tail if isSwitch(opt2) => parseOptions(map ++ Map('infile -> string), list.tail)
@@ -158,14 +162,15 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
 
             logger(0, "Reading weights")
             if (stage2 != None) {
-                stage2.get.features.weights.read(Source.fromFile(stage2weightfile).getLines())
+                val stage2weightlines = Source.fromFile(stage2weightfile).getLines()
+                stage2.get.features.weights.read(stage2weightlines)
                 if (stage2Oracle != None) {
                     stage2Oracle.get.features.weights.read(Source.fromFile(stage2weightfile).getLines())
                 }
             }
             logger(0, "done")
 
-            val input = stdin.getLines.toArray
+            val input = if (options.contains('input)) fromFile(options('input)).getLines().toArray else stdin.getLines.toArray
             val tokenized = fromFile(options('tokenized).asInstanceOf[String]).getLines/*.map(x => x)*/.toArray
             val nerFile = Corpus.splitOnNewline(fromFile(options('ner).asInstanceOf[String]).getLines).toArray
             val oracleData : Array[String] = if (options.contains('trainingData)) {
@@ -188,6 +193,8 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                 override def toString : String = { "Precision: "+precision.toString+"\nRecall: "+recall.toString+"\nF1: "+f1.toString }
             }
             val spanF1 = F1(0,0,0)
+
+          val outStream = if (options.contains('output)) new PrintStream(options('output)) else System.out
 
             for ((block, i) <- input.zipWithIndex) {
             try {
@@ -277,46 +284,46 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                     })+"\n")
                 }
 
-                println("# ::snt "+line)
-                println("# ::tok "+tok)
+                outStream.println("# ::snt "+line)
+              outStream.println("# ::tok "+tok)
                 val sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
                 decoderResultGraph.assignOpN()
                 decoderResultGraph.sortRelations()
                 decoderResultGraph.makeIds()
-                println("# ::alignments "+decoderResultGraph.spans.map(_.format).mkString(" ")+" ::annotator "+VERSION+" ::date "+sdf.format(new Date))
+              outStream.println("# ::alignments "+decoderResultGraph.spans.map(_.format).mkString(" ")+" ::annotator "+VERSION+" ::date "+sdf.format(new Date))
                 if (outputFormat.contains("nodes")) {
-                    println(decoderResultGraph.printNodes.map(x => "# ::node\t" + x).mkString("\n"))
+                  outStream.println(decoderResultGraph.printNodes.map(x => "# ::node\t" + x).mkString("\n"))
                 }
                 if (outputFormat.contains("root")) {
                     println(decoderResultGraph.printRoot)
                 }
                 if (outputFormat.contains("edges") && decoderResultGraph.root.relations.size > 0) {
-                    println(decoderResultGraph.printEdges.map(x => "# ::edge\t" + x).mkString("\n"))
+                  outStream.println(decoderResultGraph.printEdges.map(x => "# ::edge\t" + x).mkString("\n"))
                 }
                 if (outputFormat.contains("AMR")) {
-                    println(decoderResultGraph.prettyString(detail=1, pretty=true))
+                  outStream.println(decoderResultGraph.prettyString(detail=1, pretty=true))
                 }
                 if (outputFormat.contains("triples")) {
-                    println(decoderResultGraph.printTriples(detail = 1))
+                  outStream.println(decoderResultGraph.printTriples(detail = 1))
                 }
-                println()
+              outStream.println()
             } // time
             } catch { // try
                 case e : Throwable => if (options.contains('ignoreParserErrors)) {
-                    println("# ::snt "+input(i))
-                    println("# ::tok "+tokenized(i))
+                  outStream.println("# ::snt "+input(i))
+                  outStream.println("# ::tok "+tokenized(i))
                     val sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
-                    println("# ::alignments 0-1|0 ::annotator "+VERSION+" ::date "+sdf.format(new Date))
-                    println("# THERE WAS AN EXCEPTION IN THE PARSER.  Returning an empty graph.")
+                  outStream.println("# ::alignments 0-1|0 ::annotator "+VERSION+" ::date "+sdf.format(new Date))
+                  outStream.println("# THERE WAS AN EXCEPTION IN THE PARSER.  Returning an empty graph.")
                     if (options.contains('printStackTraceOnErrors)) {
                         val sw = new StringWriter()
                         e.printStackTrace(new PrintWriter(sw))
-                        println(sw.toString.split("\n").map(x => "# "+x).mkString("\n"))
+                        outStream.println(sw.toString.split("\n").map(x => "# "+x).mkString("\n"))
                     }
                     logger(-1, " ********** THERE WAS AN EXCEPTION IN THE PARSER. *********")
                     if (verbosity >= -1) { e.printStackTrace }
                     logger(-1, "Continuing. To exit on errors, please run without --ignore-parser-errors")
-                    println(Graph.empty.prettyString(detail=1, pretty=true) + '\n')
+                    outStream.println(Graph.empty.prettyString(detail=1, pretty=true) + '\n')
                 } else {
                     throw e
                 }

@@ -198,7 +198,12 @@ case class FeatureVector(labelset : Array[String],
         // (feature, _, label, value)
         // matches featurename+L=label 1.0
         fmap.clear()
+        var counter = 0;
         for (line <- iterator) {
+            if (counter % 50000 == 0) {
+              logger(0, f"FeatureVector read counter=$counter")
+            }
+            counter += 1
             val regex(feature, _, label, value) = line
             if (!fmap.contains(feature)) {
                 fmap(feature) = ValuesMap(0.0, Map())

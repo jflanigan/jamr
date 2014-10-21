@@ -1,4 +1,7 @@
 package edu.cmu.lti.nlp.amr.Train
+
+import java.io.PrintStream
+
 import edu.cmu.lti.nlp.amr._
 
 import java.lang.Math.abs
@@ -45,7 +48,10 @@ abstract class TrainObj[FeatureVector <: AbstractFeatureVector](options: Map[Sym
     }
 
     val input = Input.loadInputfiles(options)
-    val training: Array[String] = Corpus.getAmrBlocks(io.Source.stdin.getLines()).toArray
+    val stdInput = if (options.contains('input)) fromFile(options('input)).getLines().toArray else stdin.getLines.toArray
+    val training: Array[String] = Corpus.getAmrBlocks(stdInput.iterator).toArray
+
+      val outStream = if (options.contains('output)) new PrintStream(options('output)) else System.out
 
 /*  Runtime.getRuntime().addShutdownHook(new Thread() {
         override def run() {
@@ -179,7 +185,7 @@ abstract class TrainObj[FeatureVector <: AbstractFeatureVector](options: Map[Sym
             try { file.print(weights.toString) }
             finally { file.close }
         } else {
-            print(weights.unsorted)
+          outStream.println(weights.unsorted)
         }
         System.err.println("done")
     }

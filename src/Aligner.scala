@@ -1,5 +1,8 @@
 package edu.cmu.lti.nlp.amr
 
+import java.io.PrintStream
+
+import scala.io.Source._
 import scala.util.matching.Regex
 import scala.collection.mutable.{Map, Set, ArrayBuffer}
 import java.util.Date
@@ -27,6 +30,8 @@ object Aligner {
                       parseOptions(map ++ Map('aligner1 -> true), tail)
             case "-v" :: value :: tail =>
                       parseOptions(map ++ Map('verbosity -> value.toInt), tail)
+            case "--input" :: value :: tail =>             parseOptions(map ++ Map('input -> value), tail)
+            case "--output" :: value :: tail =>             parseOptions(map ++ Map('output -> value), tail)
              //case string :: opt2 :: tail if isSwitch(opt2) => 
             //          parseOptions(map ++ Map('infile -> string), list.tail)
             //case string :: Nil =>  parseOptions(map ++ Map('infile -> string), list.tail)
@@ -48,15 +53,19 @@ object Aligner {
             aligner2 = false
         }
 
-        val sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
-        for (block <- Corpus.splitOnNewline(Source.stdin.getLines)) {
+      val outStream = if (options.contains('output)) new PrintStream(options('output).asInstanceOf[String]) else System.out
+      val input = if (options.contains('input)) Source.fromFile(options('input).asInstanceOf[String]).getLines() else stdin.getLines
+
+
+      val sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
+        for (block <- Corpus.splitOnNewline(input)) {
             if (block.split("\n").exists(_.startsWith("("))) {  // Does it contain some AMR?
                 logger(2,"**** Processsing Block *****")
                 logger(2,block)
                 logger(2,"****************************")
                 val extrastr : String = block.split("\n").filter(_.matches("^# ::.*")).mkString("\n")
                 val amrstr : String = block.split("\n").filterNot(_.matches("^#.*")).mkString("\n")
-                println(extrastr)
+              outStream.println(extrastr)
                 val amr = Graph.parse(amrstr)
                 val extras = AMRTrainingData.getUlfString(extrastr)
                 val tokenized = extras("::tok").split(" ")
@@ -73,15 +82,15 @@ object Aligner {
                     logger(1, "Span "+(i+1).toString+":  "+span.words+" => "+span.amr)
                     logger(3, "* "+span.format)
                 }
-                println("# ::alignments "+spans.map(_.format).mkString(" ")+" ::annotator Aligner v.02 ::date "+sdf.format(new Date))
-                println(amr.printNodes.map(x => "# ::node\t" + x).mkString("\n"))
-                println(amr.printRoot)
+              outStream.println("# ::alignments "+spans.map(_.format).mkString(" ")+" ::annotator Aligner v.02 ::date "+sdf.format(new Date))
+              outStream.println(amr.printNodes.map(x => "# ::node\t" + x).mkString("\n"))
+              outStream.println(amr.printRoot)
                 if (amr.root.relations.size > 0) {
-                    println(amr.printEdges.map(x => "# ::edge\t" + x).mkString("\n"))
+                  outStream.println(amr.printEdges.map(x => "# ::edge\t" + x).mkString("\n"))
                 }
-                println(amrstr+"\n")
+              outStream.println(amrstr+"\n")
             } else {
-                println(block+"\n")
+                outStream.println(block+"\n")
             }
         }
     }
