@@ -44,7 +44,7 @@ The output format of the aligner is described in `scripts/Alignment_Format.txt.`
 
 #Experimental Pipeline
 
-The steps below describe how to train and evaluate the parser on the release r3
+The following steps describe how to train and evaluate the parser on the release r3
 data, using the same train/dev/test splits as in the paper.  The script
 `./train` will do all these steps for you, or you can do them step-by-step below.
 
