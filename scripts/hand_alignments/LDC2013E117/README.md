@@ -1,8 +1,6 @@
 Hand alignments for LDC2012E117
 =================
 
-This readme describes how to obtain the hand alignments we produced for the LDC2013E117 data.
-
 To create the alignments file, move `LDC2013E117.tgz` to `$JAMR_HOME/data` and then do:
 
     . scripts/config.sh
