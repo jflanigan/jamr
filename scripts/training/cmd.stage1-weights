@@ -17,7 +17,7 @@ OUTPUT="${MODEL_DIR}/stage1-weights"
 --tok "${INPUT}.snt.tok" \
 --snt "${INPUT}.snt" \
 --output-format AMR \
--v 0 \
+-v -1 \
 < "${INPUT}.aligned.no_opN" \
 > "${OUTPUT}" \
 2> "${OUTPUT}.err"

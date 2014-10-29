@@ -55,7 +55,7 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
 
     def evalDev(options: Map[Symbol, String], pass: Int, weights: FeatureVector) {
         if (options.contains('trainingDev)) {
-        logger(0, "Decoding dev...")
+        logger(-1, "Decoding dev...")
         val verbosity_save = verbosity  // TODO: could also just change the logging stream (add a var for the logging stream in amr.logger, and change it)
         verbosity = java.lang.Integer.MIN_VALUE     // Like Double.NEGATIVE_INFINITY, but for integers
         //try {
@@ -111,7 +111,7 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
             file.println("")
         }
         verbosity = verbosity_save
-        logger(0, "--- Performance on Dev ---\n" + spanF1.toString + "\n")
+        logger(-1, "--- Performance on Dev ---\n" + spanF1.toString + "\n")
         file.println("--- Performance on Dev ---\n" + spanF1.toString)
         file.close
 

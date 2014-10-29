@@ -32,8 +32,8 @@ class Adagrad extends Optimizer[FeatureVector] {
         var avg_weights = FeatureVector(weights.labelset)
         var sumSq = FeatureVector(weights.labelset)         // G_{i,i}
         var pass = 0
-        while (pass < passes && trainingObserver(pass,avg_weights)) {
-            logger(0,"Pass "+(pass+1).toString)
+        while (pass < passes && (pass == 0 || trainingObserver(pass,avg_weights))) {
+            logger(-1,"Pass "+(pass+1).toString)
             var objective = 0.0 // objective is 1/N \sum_i=1^N Loss(i) + 1/2 * \lambda * ||weights||^2 (var objective is N times this)
             for (t <- Random.shuffle(Range(0, trainingSize).toList)) {
                 // normally we would do weights -= stepsize * gradient(t)._1
@@ -65,7 +65,7 @@ class Adagrad extends Optimizer[FeatureVector] {
                     noregSaveValues.map(x => { weights.fmap(x._1) = x._2 })
                 }
             }
-            logger(0,"                                   Avg objective value last pass: "+(objective/trainingSize.toDouble).toString)
+            logger(-1,"                                   Avg objective value last pass: "+(objective/trainingSize.toDouble).toString)
             //logger(0,"                                                       objective: "+((0 until trainingSize).map(x => gradient(None, x, weights)._2).sum/trainingSize).toString)
             avg_weights += weights
             pass += 1
