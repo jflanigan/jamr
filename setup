@@ -1,7 +1,6 @@
 #!/bin/bash
 set -e
 
-./compile
 mkdir -p tools
 cd tools
 wget http://cs.cmu.edu/~jmflanig/IllinoisNerExtended-2.7.tar.gz
