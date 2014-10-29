@@ -52,7 +52,7 @@ class Adagrad extends Optimizer[FeatureVector] {
                 if (l2strength != 0.0) {
                     val noregSaveValues = noreg.map(feat => (feat, weights.fmap(feat)))
                     noreg.map(feat => weights.fmap.remove(feat))
-                    objective += weights.l2norm / 2.0   // don't count the unregularized features in the regularizer
+                    objective += weights.dot(weights) / 2.0   // don't count the unregularized features in the regularizer
                     sumSq.update(weights, (feat, label, x , y) => x + l2strength * l2strength * y * y)
                     weights.update(weights, (feat, label, x, y) => {
                         val sq = sumSq(feat, label)
