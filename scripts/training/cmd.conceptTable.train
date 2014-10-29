@@ -4,4 +4,4 @@ INPUT="$DATA_DIR/amr-release-proxy.train"
 OUTPUT="$MODEL_DIR/conceptTable.train"
 
 mkdir -p $MODEL_DIR
-$JAMR_HOME/tools/scala-2.11.2/bin/scala $JAMR_HOME/src/mkConceptTable < $INPUT.aligned.concepts_no_opN $INPUT.snt.tok > $OUTPUT
+$SCALA $JAMR_HOME/src/mkConceptTable < $INPUT.aligned.concepts_no_opN $INPUT.snt.tok > $OUTPUT
