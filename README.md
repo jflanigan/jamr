@@ -15,7 +15,7 @@ JAMR depends on
 
 
 Install these dependencies, and then change the relevant environment variables in
-`scripts/config.sh`.
+`scripts/config.sh`.  (Actually you can just run the script `./setup` to download the dependencies for you into `tools/`, and you won't need to change the `config.sh` script.)
 Source the config script (you will need to do this before running any of the scripts below):
 
     . scripts/config.sh
@@ -43,9 +43,22 @@ The output format of the aligner is described in `scripts/Alignment_Format.txt.`
 
 #Experimental Pipeline
 
+The steps below describe how to train and evaluate the parser on the release r3
+data, using the same train/dev/test splits as in the paper.  The script
+`./train` will do all these steps for you, or you can do them step-by-step below.
+
+To have the `./train` script do all these steps for you, first download
+`LDC2013E117.tgz` from the LDC Catalog (requires an LDC subscription) and put
+it into the directory `data/`.  Then run
+
+    ./train
+
+It should take about 3-6 hours to train.  At the end, it will report the
+performance of the parser.
+
 ##1. Preprocessing the data
 
-Download `LDC2013E117.tgz` from the LDC Catalog (requires an LDC subscription).
+Download `LDC2013E117.tgz` from the LDC Catalog.
 Extract the file `deft-amr-release-r3-proxy.txt` into `data/LDC-2013-Sep/` and rename it
 `amr-release-proxy.txt`.
 
@@ -56,8 +69,9 @@ Run `./PREPROCESS.sh`.
 
 ##2. Training
 
-(To skip this step, download and extract model weights [current.tgz](http://cs.cmu.edu/~jmflanig/current.tgz) 
-into the directory $JAMR_HOME/experiments/current.)
+(To skip this step, which takes about 3-6 hours, download and extract model
+weights [current.tgz](http://cs.cmu.edu/~jmflanig/current.tgz) into the
+directory $JAMR_HOME/experiments/current.)
 
     cd scripts/training
 
@@ -73,7 +87,7 @@ Relation identification (stage2) training:
 
     ./cmd.stage2-weights
 
-(Search for 'Performance on Dev' in `stage2-weights.err` for early stopping)
+Search for 'Performance on Dev' in `stage2-weights.err` for early stopping.
 
 
 ##3. Evaluating
