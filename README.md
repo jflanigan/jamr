@@ -12,7 +12,7 @@ JAMR depends on [Scala](http://www.scala-lang.org), [Illinois NER
 system](http://cogcomp.cs.illinois.edu/page/download_view/NETagger) v2.7,
 tokenization scripts in [cdec](https://github.com/redpony/cdec),
 and [WordNet](http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz) (for the
-aligner). To download these dependencies into the local directory `tools\`, run
+aligner). To download these dependencies into the local directory `tools`, run
 
     ./setup
 
@@ -30,7 +30,7 @@ in the script `sbt` and `build.sbt`.
 
 #Running the Parser
 
-Download and extract the model weights [current.tgz](http://cs.cmu.edu/~jmflanig/current.tgz) into the directory $JAMR_HOME/experiments/current.  To parse a file (cased, untokenized, with one sentence per line):
+Download and extract the model weights [current.tgz](http://cs.cmu.edu/~jmflanig/current.tgz) into the directory `$JAMR_HOME/experiments/current`.  To parse a file (cased, untokenized, with one sentence per line):
 
     . scripts/config.sh
     scripts/PARSE.sh < input_file > output_file 2> output_file.err
@@ -42,11 +42,11 @@ To run the rule-based aligner:
     . scripts/config.sh
     scripts/ALIGN.sh < amr_input_file > output_file
 
-The output format of the aligner is described in `scripts/Alignment_Format.txt.`  Currently the aligner works best for release r3 data (AMR Specification v1.0), but it will run on newer data as well.
+The output format of the aligner is described in [docs/Alignment_Format.md](docs/Alignment_Format.md).  Currently the aligner works best for release r3 data (AMR Specification v1.0), but it will run on newer data as well.
 
 #Hand Alignments
 
-To create the hand alignments file, see this [readme](scripts/hand_alignments/LDC2013E117/README.md)
+To create the hand alignments file, see this [docs/Hand_Alignments.md](docs/Hand_Alignments.md).
 
 #Experimental Pipeline
 

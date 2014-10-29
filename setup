@@ -12,3 +12,4 @@ tar -xzf WordNet-3.0.tar.gz
 tar -xzf cdec-2014-06-15.tar.gz
 tar -xzf scala-2.11.2.tgz
 ln -s cdec-2014-06-15 cdec
+./compile
