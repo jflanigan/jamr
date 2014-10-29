@@ -2,9 +2,9 @@ JAMR - AMR Parser
 =================
 
 JAMR is a semantic parser and aligner for the [Abstract Meaning
-Representation](http://amr.isi.edu/).  With the parser, we also release 200
-sentences of hand-aligned data.
+Representation](http://amr.isi.edu/). 
 
+We have also released hand-alignments for 200 sentences of the AMR corpus.
 
 #Building
 
@@ -43,6 +43,10 @@ To run the rule-based aligner:
     scripts/ALIGN.sh < amr_input_file > output_file
 
 The output format of the aligner is described in `scripts/Alignment_Format.txt.`  Currently the aligner works best for release r3 data (AMR Specification v1.0), but it will run on newer data as well.
+
+#Hand Alignments
+
+To create the hand alignments file, see this [readme](scripts/hand_alignments/LDC2013E117/README.md)
 
 #Experimental Pipeline
 
