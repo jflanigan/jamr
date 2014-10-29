@@ -5,3 +5,8 @@ OUTPUT="$MODEL_DIR/conceptTable.train"
 
 mkdir -p $MODEL_DIR
 $SCALA $JAMR_HOME/src/mkConceptTable < $INPUT.aligned.concepts_no_opN $INPUT.snt.tok > $OUTPUT
+
+# The code below can be uncommented to run the version of scala sbt downloads.  (But you need to run it twice, otherwise sbt logs to stdin)
+
+#$JAMR_HOME/run-scala-script $JAMR_HOME/src/mkConceptTable < $INPUT.aligned.concepts_no_opN $INPUT.snt.tok > $OUTPUT
+#$JAMR_HOME/run-scala-script $JAMR_HOME/src/mkConceptTable < $INPUT.aligned.concepts_no_opN $INPUT.snt.tok > $OUTPUT
