@@ -1,4 +1,4 @@
-Table of Contents
+Docs - Table of Contents
 ====
 
 [Alignment Format](./Alignment_Format.md)
