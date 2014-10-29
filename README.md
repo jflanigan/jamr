@@ -49,8 +49,8 @@ data, using the same train/dev/test splits as in the paper.  The script
 `./train` will do all these steps for you, or you can do them step-by-step below.
 
 To have the `./train` script do all these steps for you, first download
-`LDC2013E117.tgz` from the LDC Catalog (requires an LDC subscription) and put
-it into the directory `data/`.  Then run
+`LDC2013E117.tgz` from the LDC Catalog (requires an LDC subscription) into the directory `data/`.
+Then run
 
     ./train
 
