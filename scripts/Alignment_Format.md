@@ -6,9 +6,11 @@ The alignments are in the ::alignments field.  The alignments align spans of tok
 
 Each node is specified by descriptor: `0` for the root node, `0.0` for the first child of the root node, `0.1` for the second child of the root node, etc.  (This numbering system skips variable re-entrancies.)
 
-So for the sentence: `2002-01-05`
+So for the sentence:
 
-And the AMR:
+    2002-01-05
+
+and the AMR:
 
 ```
 (d / date-entity
@@ -60,7 +62,7 @@ The graph fragment
           :op2 "Arabia"))
 ```
 
-is aligned to the tokens 0-2 `Saudi Arabia`
+is aligned to the tokens 0-2 `Saudi Arabia`.
 
 The numbering system skips variable re-entrancies:
 
