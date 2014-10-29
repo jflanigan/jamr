@@ -172,7 +172,7 @@ case class FeatureVector(labelset : Array[String],
         }
         return total
     }
-    def l2norm : Double = sqrt(this.dot(this))
+    //def l2norm : Double = sqrt(this.dot(this))
     def += (m: fastmul) = updateList(m.v, (feat, label, x, y) => x + m.scale * y)
     def -= (m: fastmul) = updateList(m.v, (feat, label, x, y) => x - m.scale * y)
     def += (m: fastmul2) = update(m.v, (feat, label, x, y) => x + m.scale * y)
