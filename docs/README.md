@@ -1,5 +1,5 @@
-docs
----
+Table of Contents
+====
 
 [Alignment Format](docs/Alignment_Format.md)
 

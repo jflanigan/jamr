@@ -1,3 +1,12 @@
+Table of Contents
+====
+
+[Alignment Format](docs/Alignment_Format.md)
+
+[Hand Alignments](docs/Hand_Alignments.md)
+
+---
+
 This document describes the format of the alignment field produced by the automatic aligner and by JAMR.
 
 The alignments are in the `::alignments` field.  The alignments align spans of tokens in the `::tok` field with graph fragments.  The format is a space separated list of spans with their graph fragments.  It looks like this:

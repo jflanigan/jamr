@@ -1,3 +1,10 @@
+Table of Contents
+====
+
+[Alignment Format](docs/Alignment_Format.md)
+
+[Hand Alignments](docs/Hand_Alignments.md)
+
 Hand alignments for LDC2012E117
 =================
 
