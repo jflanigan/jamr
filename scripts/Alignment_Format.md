@@ -6,9 +6,7 @@ The alignments are in the ::alignments field.  The alignments align spans of tok
 
 Each node is specified by descriptor: `0` for the root node, `0.0` for the first child of the root node, `0.1` for the second child of the root node, etc.  (This numbering system skips variable re-entrancies.)
 
-So for the sentence:
-
-    2002-01-05
+So for the sentence: `2002-01-05`
 
 And the AMR:
 
@@ -19,11 +17,7 @@ And the AMR:
   :day 5)
 ```
 
-The alignments:
-
-    0-1|0+0.0+0.1+0.2
-
-Align the first token (tokens 0 to 1, not including 1) to the graph fragment
+The alignments `0-1|0+0.0+0.1+0.2` align the first token (tokens 0 to 1, not including 1) to the graph fragment:
 
 ```
 (d / date-entity
