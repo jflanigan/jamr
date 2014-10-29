@@ -14,10 +14,10 @@ aligner). To download these dependencies into the local directory `tools\`, run
 
     ./setup
 
-If you download them yourself, you will need to change the relevant environment
-variables in `scripts/config.sh`.
+(If you download them yourself, you should change the relevant environment
+variables in `scripts/config.sh`.)
 
-Source the config script (you will need to do this before running any of the scripts below):
+Source the config script - you will need to do this before running any of the scripts below:
 
     . scripts/config.sh
 
