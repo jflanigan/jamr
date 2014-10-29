@@ -1,7 +1,7 @@
 Docs - Table of Contents
 ====
 
-[Alignment Format](./Alignment_Format.md)
+Alignment Format
 
 [Hand Alignments](./Hand_Alignments.md)
 
