@@ -1,18 +1,21 @@
 JAMR - AMR Parser
 =================
 
-JAMR is a semantic parser for the [Abstract Meaning Representation](http://amr.isi.edu/).
+JAMR is a semantic parser and aligner for the [Abstract Meaning Representation](http://amr.isi.edu/).
 
 
 #Building
 
-JAMR depends on [Scala](http://www.scala-lang.org), the [Illinois NER system](http://cogcomp.cs.illinois.edu/page/download_view/NETagger) v2.7, the tokenization scripts in [cdec](https://github.com/redpony/cdec), [WordNet](http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz) (for the aligner). Run
+JAMR depends on [Scala](http://www.scala-lang.org), [Illinois NER
+system](http://cogcomp.cs.illinois.edu/page/download_view/NETagger) v2.7,
+tokenization scripts in [cdec](https://github.com/redpony/cdec),
+and [WordNet](http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz) (for the
+aligner). To download these dependencies into the local directory `tools\`, run
 
     ./setup
 
-to download these dependencies into the local directory `tools\`.  If you
-decide to download them yourself, you will need to change the relevant
-environment variables in `scripts/config.sh`.
+If you download them yourself, you will need to change the relevant environment
+variables in `scripts/config.sh`.
 
 Source the config script (you will need to do this before running any of the scripts below):
 
