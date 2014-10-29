@@ -98,8 +98,8 @@ abstract class TrainObj[FeatureVector <: AbstractFeatureVector](options: Map[Sym
             val file = new java.io.PrintWriter(new java.io.File(options('trainingOutputFile) + ".iter" + pass.toString), "UTF-8")
             try { file.print(weights.toString) }
             finally { file.close }
-            evalDev(options, pass, weights)
         }
+        evalDev(options, pass, weights)
         return true
     }
 

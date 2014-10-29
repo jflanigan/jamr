@@ -38,12 +38,14 @@ class Adagrad extends Optimizer[FeatureVector] {
             for (t <- Random.shuffle(Range(0, trainingSize).toList)) {
                 // normally we would do weights -= stepsize * gradient(t)
                 // but instead we do this: (see equation 8 in SocherBauerManningNg_ACL2013.pdf)
-                for ((feat, value) <- gradient(Some(pass), t, weights)._1.fmap
-                     if value != 0.0 ) {
+                val (grad, score) = gradient(Some(pass), t, weights)
+                for ((feat, value) <- grad.fmap if value != 0.0 ) {
                     sumSq.fmap(feat) = sumSq.fmap.getOrElse(feat, 0.0) + value * value
                     weights.fmap(feat) = weights.fmap.getOrElse(feat, 0.0) - stepsize * value / sqrt(sumSq.fmap(feat))
                 }
+                objective += score
                 if (l2reg != 0.0) {
+                    objective += weights.dot(weights) / 2.0   // TODO: don't count the unregularized features in the regularizer
                     for { (feat, v) <- weights.fmap
                           if v != 0.0
                           value = v * l2reg } {

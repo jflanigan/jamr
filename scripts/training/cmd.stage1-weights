@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 INPUT="${DATA_DIR}/amr-release-proxy.train"
+DEV="${DATA_DIR}/amr-release-proxy.dev"
 OUTPUT="${MODEL_DIR}/stage1-weights"
 
 "${JAMR_HOME}/run" AMRParser \
@@ -8,8 +9,10 @@ OUTPUT="${MODEL_DIR}/stage1-weights"
 --stage1-concept-table "${MODEL_DIR}/conceptTable.train" \
 --stage1-features "bias,length,fromNERTagger,conceptGivenPhrase" \
 --training-stepsize 1 \
---dependencies "${INPUT}.snt.deps" \
 --training-optimizer Adagrad --training-passes 10 \
+--training-output "${OUTPUT}" \
+--training-dev "${DEV}" \
+--dependencies "${INPUT}.snt.deps" \
 --ner "${INPUT}.snt.IllinoisNER" \
 --tok "${INPUT}.snt.tok" \
 --snt "${INPUT}.snt" \
