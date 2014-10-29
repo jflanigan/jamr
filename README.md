@@ -13,9 +13,14 @@ JAMR depends on
  * the tokenization scripts in [cdec](https://github.com/redpony/cdec),
  * [WordNet](http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz) (for the aligner).
 
+Run
 
-Install these dependencies, and then change the relevant environment variables in
-`scripts/config.sh`.  (Actually you can just run the script `./setup` to download the dependencies for you into `tools/`, and you won't need to change the `config.sh` script.)
+    ./setup
+
+to download these dependencies into the local directory `tools\`.  If you
+decide to download them yourself, you will need to change the relevant
+environment variables in `scripts/config.sh`.
+
 Source the config script (you will need to do this before running any of the scripts below):
 
     . scripts/config.sh
