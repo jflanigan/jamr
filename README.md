@@ -1,7 +1,9 @@
 JAMR - AMR Parser
 =================
 
-JAMR is a semantic parser and aligner for the [Abstract Meaning Representation](http://amr.isi.edu/).
+JAMR is a semantic parser and aligner for the [Abstract Meaning
+Representation](http://amr.isi.edu/).  With the parser, we also release 200
+sentences of hand-aligned data.
 
 
 #Building
@@ -54,7 +56,7 @@ Then run
 
     ./train
 
-It should take about 3-6 hours to train.  At the end, it will report the
+It should take about 3-6 hours to train.  At the end it will report the
 performance of the parser.
 
 ##1. Preprocessing the data
