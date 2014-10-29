@@ -1,6 +1,6 @@
 This document describes the format of the alignment field produced by the automatic aligner and by JAMR.
 
-The alignments are in the ::alignments field.  The alignments align spans of tokens with graph fragments.  The format is a space separated list of spans with their graph fragments.  It looks like this:
+The alignments are in the `::alignments` field.  The alignments align spans of tokens in the `::tok` field with graph fragments.  The format is a space separated list of spans with their graph fragments.  It looks like this:
 
     span1_start-span1_end|span1_node1+span1_node2+... span2_start-span2_end|span2_node1+span2_node2+..
 
