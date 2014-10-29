@@ -5,6 +5,8 @@ Table of Contents
 
 [Hand Alignments](./Hand_Alignments.md)
 
+---
+
 Hand alignments for LDC2012E117
 =================
 

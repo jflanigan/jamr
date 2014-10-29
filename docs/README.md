@@ -5,4 +5,5 @@ Table of Contents
 
 [Hand Alignments](./Hand_Alignments.md)
 
+---
 
