@@ -38,6 +38,9 @@ class Concepts(phraseConceptPairs: Array[PhraseConceptPair],
         // position i in input.sentence (i.e. position i in the tokenized input)
         // Note: none of the concepts returned have spans that go past the end of the sentence
         val sentence = input.sentence
+        if (sentence.size <= i) {
+            return List()
+        }
 
         var conceptList = conceptTable.getOrElse(sentence(i), List()).filter(x => x.words == sentence.slice(i, i+x.words.size).toList) // TODO: this this case insensitive??
         if (useNER) {
