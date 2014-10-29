@@ -15,8 +15,10 @@ set -ueo pipefail
 # To undo:
 # cat hand_align.temp | awk 'BEGIN {RS = ""} {gsub("\t\n", " ", $0); print $0; print ""}' > hand_align.out
 
-tar -xzOf "$JAMR_HOME/data/LDC2013E117.tgz" ./LDC2013E117_DEFT_Phase_1_AMR_Annotation_R3/data/deft-amr-release-r3-proxy.txt | "$JAMR_HOME/scripts/preprocessing/nltot" | grep -n '.*' | fgrep -f snt.ids | "$JAMR_HOME/scripts/preprocessing/ttonl" | sed 's/::snt \(.*\)/::snt \1\n# ::alignments\n# ::tok \1/' | sed 's/\([^ ]\) /\1\t\n/g' > hand_align.temp
-patch hand_align.temp < patch.hand_align
-cat hand_align.temp | awk 'BEGIN {RS = ""} {gsub("\t\n", " ", $0); print $0; print ""}' > hand_align.txt
-rm hand_align.temp
+DIR="$JAMR_HOME/scripts/hand_alignments/LDC2013E117"
+
+tar -xzOf "$JAMR_HOME/data/LDC2013E117.tgz" ./LDC2013E117_DEFT_Phase_1_AMR_Annotation_R3/data/deft-amr-release-r3-proxy.txt | "$JAMR_HOME/scripts/preprocessing/nltot" | grep -n '.*' | fgrep -f snt.ids | "$JAMR_HOME/scripts/preprocessing/ttonl" | sed 's/::snt \(.*\)/::snt \1\n# ::alignments\n# ::tok \1/' | sed 's/\([^ ]\) /\1\t\n/g' > "$DIR/hand_align.temp"
+patch "$DIR/hand_align.temp" < "$DIR/patch.hand_align"
+cat "$DIR/hand_align.temp" | awk 'BEGIN {RS = ""} {gsub("\t\n", " ", $0); print $0; print ""}' > "$DIR/hand_align.txt"
+rm "$DIR/hand_align.temp"
 
