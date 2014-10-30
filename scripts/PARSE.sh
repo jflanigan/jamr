@@ -53,7 +53,7 @@ ${JAMR_HOME}/run AMRParser \
   --ner "${INPUT}.IllinoisNER" \
   --tok "${INPUT}.tok" \
   --ignore-parser-errors \
-  --output-format AMR,nodes,edge,roots \
+  --output-format AMR,nodes,edges,root \
   -v 0 \
   < "${INPUT}"
 
