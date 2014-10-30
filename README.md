@@ -35,7 +35,7 @@ Download and extract the model weights [current.tgz](http://cs.cmu.edu/~jmflanig
     . scripts/config.sh
     scripts/PARSE.sh < input_file > output_file 2> output_file.err
 
-The output format is AMR format, with some extra fields described in [docs/Nodes and Edges Format](docs/Nodes_and_Edges_Format.md) and [docs/Alignment Format](docs/Alignment_Format.md).
+The output is AMR format, with some extra fields described in [docs/Nodes_and_Edges_Format](docs/Nodes_and_Edges_Format.md) and [docs/Alignment_Format](docs/Alignment_Format.md).
 
 #Running the Aligner
 
@@ -44,11 +44,11 @@ To run the rule-based aligner:
     . scripts/config.sh
     scripts/ALIGN.sh < amr_input_file > output_file
 
-The output format of the aligner is described in [docs/Alignment Format](docs/Alignment_Format.md).  Currently the aligner works best for release r3 data (AMR Specification v1.0), but it will run on newer data as well.
+The output format of the aligner is described in [docs/Alignment_Format](docs/Alignment_Format.md).  Currently the aligner works best for release r3 data (AMR Specification v1.0), but it will run on newer data as well.
 
 #Hand Alignments
 
-To create the hand alignments file, see [docs/Hand Alignments](docs/Hand_Alignments.md).
+To create the hand alignments file, see [docs/Hand_Alignments](docs/Hand_Alignments.md).
 
 #Experimental Pipeline
 
