@@ -12,11 +12,11 @@ Docs - Table of Contents
 Alignment Format
 ===
 
-This document describes the format of the alignment field produced by the automatic aligner and by JAMR.
+This page describes the format of the alignments produced by the automatic aligner and by JAMR.
 
 The alignments are in the `::alignments` field.  The alignments align spans of tokens in the `::tok` field with graph fragments.  The format is a space separated list of spans with their graph fragments.  It looks like this:
 
-    span1_start-span1_end|span1_node1+span1_node2+... span2_start-span2_end|span2_node1+span2_node2+..
+    span1_start-span1_end|span1_node1+span1_node2+... span2_start-span2_end|span2_node1+span2_node2+...
 
 Each node is specified by descriptor: `0` for the root node, `0.0` for the first child of the root node, `0.1` for the second child of the root node, etc.  (This numbering system skips variable re-entrancies.)
 
