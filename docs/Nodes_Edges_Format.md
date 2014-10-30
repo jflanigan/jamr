@@ -1,9 +1,11 @@
 Docs - Table of Contents
 ====
 
-Alignment Format
-
-[Hand Alignments](./Hand_Alignments.md)
+ * Output formats
+  * [Alignment Format](./Alignment_Format.md)
+  * [**Nodes and Edges Format**](./Nodes_and_Edges_Format.md)
+ * Data
+  * [Hand Alignments](./Hand_Alignments.md)
 
 ---
 
@@ -59,5 +61,5 @@ Lines beginning with "# ::edge" list the edges.  The format is:
 The edge points from `source_uniq_id` to `dest_uniq_id` with label
 `relation`.  `source_concept` and `dest_concept` are there just for reference.
 
-The nodes are always printed first, then the root, and then the edges
+Nodes are printed first, then the root, and then the edges.
 

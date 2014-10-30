@@ -1,9 +1,11 @@
 Docs - Table of Contents
 ====
 
-Alignment Format
-
-[Hand Alignments](./Hand_Alignments.md)
+ * Output formats
+  * [**Alignment Format**](./Alignment_Format.md)
+  * [Nodes and Edges Format](./Nodes_and_Edges_Format.md)
+ * Data
+  * [Hand Alignments](./Hand_Alignments.md)
 
 ---
 
