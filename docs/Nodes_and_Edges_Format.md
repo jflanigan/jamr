@@ -12,7 +12,7 @@ Docs - Table of Contents
 Nodes and Edges Format
 ===
 
-The parser and aligner both output an optional "nodes and edges" format.
+The parser and aligner both output an additional "nodes and edges" format.
 This format lists the nodes and edges of the AMR graphs in a
 tab-separated format.
 
