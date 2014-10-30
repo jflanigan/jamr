@@ -54,7 +54,7 @@ Lines beginning with `# ::root` list the root.  The format is:
 The `uniq_id` is the same as listed in the nodes.  The `concept` field is
 the concept of the root node.
 
-Lines beginning with "# ::edge" list the edges.  The format is:
+Lines beginning with `# ::edge` list the edges.  The format is:
 
     # ::edges TAB source_concept TAB relation TAB dest_concept TAB source_uniq_id TAB dest_uniq_id
 
