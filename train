@@ -24,8 +24,10 @@ echo "Training stage 2"
 ./cmd.stage2-weights
 
 # Evaluate on test set
-./cmd.test.decode.allstages
+echo "  *** Test Evaluation (gold concept ID) ***"
 ./cmd.test.decode.stage2only
-${JAMR_HOME}/scripts/smatch_v1_0/smatch_modified.py --pr -f ${JAMR_HOME}/experiments/current/test.decode.allstages ${JAMR_HOME}/data/LDC-2013-Sep/amr-release-proxy.test
 ${JAMR_HOME}/scripts/smatch_v1_0/smatch_modified.py --pr -f ${JAMR_HOME}/experiments/current/test.decode.stage2only ${JAMR_HOME}/data/LDC-2013-Sep/amr-release-proxy.test
+echo "  *** Test Evaluation (all stages) ***"
+./cmd.test.decode.allstages
+${JAMR_HOME}/scripts/smatch_v1_0/smatch_modified.py --pr -f ${JAMR_HOME}/experiments/current/test.decode.allstages ${JAMR_HOME}/data/LDC-2013-Sep/amr-release-proxy.test
 
