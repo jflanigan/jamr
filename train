@@ -18,7 +18,9 @@ popd
 # Train
 pushd "$JAMR_HOME/scripts/training"
 ./cmd.conceptTable.train
+echo "Training stage 1"
 ./cmd.stage1-weights
+echo "Training stage 2"
 ./cmd.stage2-weights
 
 # Evaluate on test set
