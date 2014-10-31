@@ -2,6 +2,17 @@
 
 # usage: ./PARSE.sh < input_file > output_file 2> output_file.err
 
+if [ -z "$JAMR_HOME" ]; then
+    echo 'Error: please source config script'
+    exit 1
+fi
+
+if [ ! -f "${MODEL_DIR}/stage1-weights" ]; then
+    echo "Error: cannot find weights file ${MODEL_DIR}/stage1-weights."
+    echo "Please train JAMR or download and extract weights file to ${MODEL_DIR}"
+    exit 1
+fi
+
 cat > /tmp/jamr-$$.snt
 
 INPUT=/tmp/jamr-$$.snt

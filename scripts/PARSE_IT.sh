@@ -3,6 +3,22 @@
 # Usage: ./PARSE_IT.sh input_file
 # Output will be in input_file.parsed
 
+if [ -z "$JAMR_HOME" ]; then
+    echo 'Error: please source config script'
+    exit 1
+fi
+
+if [ ! -f "${MODEL_DIR}/stage1-weights" ]; then
+    echo "Error: cannot find weights file ${MODEL_DIR}/stage1-weights."
+    echo "Please train JAMR or download and extract weights file to ${MODEL_DIR}"
+    exit 1
+fi
+
+if [ -z "$1" ]; then
+    echo 'Usage: PARSE_IT.sh input_file'
+    exit 1
+fi
+
 INPUT="$(cd "$(dirname "$1")"; pwd)"/"$(basename $1)"
 OUTPUT="$INPUT.parsed"
 

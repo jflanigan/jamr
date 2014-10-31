@@ -3,6 +3,11 @@
 # This script will run JAMR's rule-based aligner on an AMR annotation (English alignments only).
 # usage: ./ALIGN.sh < amr_input_file > output_file
 
+if [ -z "$JAMR_HOME" ]; then
+    echo 'Error: please source config script'
+    exit 1
+fi
+
 cat > /tmp/jamr-$$
 
 INPUT=/tmp/jamr-$$
