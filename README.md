@@ -24,15 +24,14 @@ cd to the `jamr` repository and run
 You should agree to the terms and conditions of the software dependencies
 before running this script.  If you download them yourself, you will need to change
 the relevant environment variables in `scripts/config.sh`.
+If you get out of memory errors, you may need to edit the Java memory options
+in the script `sbt` and `build.sbt`.
 
 Source the config script - you will need to do this before running any of the scripts below:
 
     . scripts/config.sh
 
-Run `./compile` to build an uberjar, which will be output to
-    `target/scala-{scala_version}/jamr-assembly-{jamr_version}.jar`
-If you get out of memory errors during this step, you may need to edit the Java memory options
-in the script `sbt` and `build.sbt`.
+Run `./compile` to build an uberjar, which will be output to `target/scala-{scala_version}/jamr-assembly-{jamr_version}.jar`
 
 #Running the Parser
 
