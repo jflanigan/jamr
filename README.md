@@ -8,11 +8,16 @@ We have also released [hand-alignments](docs/Hand_Alignments.md) for 200 sentenc
 
 #Building
 
+First checkout the github repository:
+
+    git clone https://github.com/jflanigan/jamr.git
+
 JAMR depends on [Scala](http://www.scala-lang.org), [Illinois NER
 system](http://cogcomp.cs.illinois.edu/page/download_view/NETagger) v2.7,
 tokenization scripts in [cdec](https://github.com/redpony/cdec),
 and [WordNet](http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz) (for the
-aligner). To download these dependencies into the local directory `tools`, run
+aligner). To download these dependencies into the subdirectory `tools`,
+cd to the `jamr` repository and run
 
     ./setup
 
