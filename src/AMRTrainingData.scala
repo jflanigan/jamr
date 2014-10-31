@@ -58,9 +58,9 @@ object AMRTrainingData {
         val lines = input.split("\n")
         val amrstr = lines.filterNot(_.matches("^#.*")).mkString(" ")
         val tokenized = lines.filter(_.matches("^# ::tok .*"))
-        assert(tokenized.size == 1, "Incorrect number of tokenized ::tok ")
+        assert(tokenized.size == 1, "Incorrect number of tokenized ::tok\n"+input)
         val spanlines = lines.filter(_.matches("^# ::alignments .*"))
-        assert(spanlines.size > 0, "Missing alignments")
+        assert(spanlines.size > 0, "Missing alignments\n"+input)
 
         val graph = Graph.parse(amrstr)
         val sentence = getUlfString(tokenized(0))("::tok").split(" ")
