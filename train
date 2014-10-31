@@ -5,6 +5,10 @@ set -e
 . scripts/config.sh
 
 # Extract and preprocess data
+if [ ! -f "$JAMR_HOME/data/LDC2013E117.tgz" ]; then
+    echo 'Error: Please copy LDC2013E117.tgz to the directory $JAMR_HOME/data before running this script.'
+    exit 1
+fi
 tar -xzOf "$JAMR_HOME/data/LDC2013E117.tgz" ./LDC2013E117_DEFT_Phase_1_AMR_Annotation_R3/data/deft-amr-release-r3-proxy.txt > "$JAMR_HOME/data/LDC-2013-Sep/amr-release-proxy.txt"
 pushd "$JAMR_HOME/scripts/preprocessing"
 ./PREPROCESS.sh
