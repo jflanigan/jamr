@@ -24,8 +24,8 @@ cd to the `jamr` repository and run
 You should agree to the terms and conditions of the software dependencies
 before running this script.  If you download them yourself, you will need to change
 the relevant environment variables in `scripts/config.sh`.
-If you get out of memory errors, you may need to edit the Java memory options
-in the script `sbt` and `build.sbt`.
+You may need to edit the Java memory options in the script `sbt` and `build.sbt` if
+you get out of memory errors.
 
 Source the config script - you will need to do this before running any of the scripts below:
 
@@ -69,6 +69,8 @@ Then run
 
 It should take about 3-6 hours to train.  At the end it will report the
 performance of the parser.
+
+Below are the detailed steps if you didn't run the `train` script.
 
 ##1. Preprocessing the data
 
