@@ -27,7 +27,7 @@ cat $inputfile | sed $'s/$/\\\n####\\\n/' > $inputfile.tmp  # see http://superus
 pushd "$ILLINOIS_NER" >&2
 java -classpath  ${cpath} -Xmx8g edu.illinois.cs.cogcomp.LbjNer.LbjTagger.NerTagger -annotate $inputfile.tmp ${outputfile} ${configfile} 1>&2
 popd >&2
-cat "$outputfile" | sed $'s/ #### /\\\n/g' | "$JAMR_HOME/src/IllinoisNERConvert" | awk 'NR > 2' > "$INPUT.IllinoisNER"
+cat "$outputfile" | sed $'s/ #### /\\\n/g' | "$SCALA" "$JAMR_HOME/src/IllinoisNERConvert" | awk 'NR > 2' > "$INPUT.IllinoisNER"
 rm "$outputfile"
 rm "$inputfile".tmp
 

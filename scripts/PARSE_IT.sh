@@ -24,7 +24,7 @@ temp="$PWD/$inputfile.tmp"
 pushd "$ILLINOIS_NER"
 java -classpath  ${cpath} -Xmx8g edu.illinois.cs.cogcomp.LbjNer.LbjTagger.NerTagger -annotate ${temp} ${outputfile} ${configfile}
 popd
-cat "$outputfile" | sed $'s/ #### /\\\n/g' | "$JAMR_HOME/src/IllinoisNERConvert" | awk 'NR > 2' > "$INPUT.IllinoisNER"
+cat "$outputfile" | sed $'s/ #### /\\\n/g' | "$SCALA" "$JAMR_HOME/src/IllinoisNERConvert" | awk 'NR > 2' > "$INPUT.IllinoisNER"
 rm "$outputfile"
 rm "$inputfile".tmp
 
