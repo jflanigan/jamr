@@ -31,7 +31,8 @@ Source the config script - you will need to do this before running any of the sc
 
     . scripts/config.sh
 
-Run `./compile` to build an uberjar, which will be output to `target/scala-{scala_version}/jamr-assembly-{jamr_version}.jar`
+Run `./compile` to build an uberjar, which will be output to `target/scala-{scala_version}/jamr-assembly-{jamr_version}.jar` (`setup` does this
+for you).
 
 #Running the Parser
 
