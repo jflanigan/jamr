@@ -13,7 +13,7 @@ import edu.cmu.lti.nlp.amr.ConceptInvoke.PhraseConceptPair
 /****************************** Driver Program *****************************/
 object AMRParser {
 
-    val VERSION = "JAMR dev v0.2"
+    val VERSION = "JAMR v0.2"
 
     val usage = """Usage:
     // TODO: remove --tok so that the parser calls the tokenizer
