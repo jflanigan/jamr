@@ -16,21 +16,12 @@ object EvalSpans {
         def isSwitch(s : String) = (s(0) == '-')
         list match {
             case Nil => map
-            //case "--train" :: tail =>
-            //          parseOptions(map ++ Map('train -> true), tail)
-            //case "-a" :: value :: tail =>
-            //          parseOptions(map ++ Map('amrfile -> value), tail)
-            //case "--only" :: tail =>
-            //          parseOptions(map ++ Map('only -> true), tail)
             case "-h" :: value :: tail =>
                       parseOptions(map ++ Map('help -> value.toInt), tail)
             case "-v" :: value :: tail =>
                       parseOptions(map ++ Map('verbosity -> value.toInt), tail)
-             //case string :: opt2 :: tail if isSwitch(opt2) => 
-            //          parseOptions(map ++ Map('infile -> string), list.tail)
-            //case string :: Nil =>  parseOptions(map ++ Map('infile -> string), list.tail)
-            case option :: tail => println("Error: Unknown option "+option) 
-                               sys.exit(1) 
+            case string :: Nil =>  println(usage); sys.exit(1)
+            case option :: tail => println(usage); sys.exit(1)
       }
     }
 
@@ -58,8 +49,8 @@ object EvalSpans {
 
         for ((block, i) <- Corpus.splitOnNewline(Source.stdin.getLines).zipWithIndex) {
             val lines = block.split("\n")
-            val alignerStrs = lines.filter(x => x.matches(".*Aligner .*"))
-            val annotatorStrs = lines.filter(x => x.matches(".*AlignerTool.*")).filterNot(x => x.matches(".*Aligner .*"))
+            val alignerStrs = lines.filter(x => x.matches(".*::alignments.*") && !x.matches(".*::gold.*"))
+            val annotatorStrs = lines.filter(x => x.matches(".*::alignments.*") && x.matches(".*::gold.*"))
 
             if (alignerStrs.size != 0 && annotatorStrs.size != 0) {
                 assert(lines.filter(x => x.matches("^# ::tok .*")).distinct.size == 1, "Multiple ::tok fields that are not the same, not sure which one to use.")
@@ -67,7 +58,7 @@ object EvalSpans {
 
                 logger(2,"Index: "+i.toString)
                 n += 1
-                val Alignments(alignerStr) = alignerStrs(alignerStrs.size-1)
+                val Alignments(alignerStr) = alignerStrs(alignerStrs.size-1)        // use the last alignment
                 val Alignments(annotatorStr) = annotatorStrs(annotatorStrs.size-1)
                 val aligner = alignerStr.split(" ").filterNot(_.matches("")).filterNot(_.matches("[*].*")).map(x => normalizeSpanStr(x)).distinct
                 val annotator = annotatorStr.split(" ").filterNot(_.matches("")).filterNot(_.matches("[*].*")).map(x => normalizeSpanStr(x)).distinct

@@ -6,6 +6,7 @@ Docs - Table of Contents
   * [Nodes and Edges Format](./Nodes_and_Edges_Format.md)
  * Data
   * [Hand Alignments](./Hand_Alignments.md)
+  * [Alignment Evaluation](./Alignment_Evaluation.md)
 
 ---
 

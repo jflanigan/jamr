@@ -6,6 +6,7 @@ Docs - Table of Contents
   * [Nodes and Edges Format](./Nodes_and_Edges_Format.md)
  * Data
   * [**Hand Alignments**](./Hand_Alignments.md)
+  * [Alignment Evaluation](./Alignment_Evaluation.md)
 
 ---
 
@@ -21,19 +22,6 @@ The output will be in `$JAMR_HOME/data/hand_alignments/LDC2013E117/hand_align.tx
 
 The format is the same as described in [docs/Alignment Format](Alignment_Format.md), except there
 are also coreference alignments that are marked with a *.  For example `*15-16|0.0` is a coreference
-alignment.  These coreference alignments are ignored when calculating F1 since JAMR doesn't use
-them.
-
-To test the performance of the automatic aligner do:
-
-    . scripts/config.sh
-    scripts/ALIGN.sh < data/hand_alignments/LDC2013E117/hand_align.txt > align.txt
-    ./run EvalSpans < align.txt
-
-The output should be:
-
-    Number of AMR: 200
-    Precision = 0.9158829676071055
-    Recall = 0.8880445795339412
-    F1 = 0.9017489711934157
+alignment.  (These coreference alignments are ignored when calculating F1 since JAMR doesn't use
+them.)
 
