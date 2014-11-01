@@ -6,6 +6,7 @@ Docs - Table of Contents
   * [Nodes and Edges Format](./Nodes_and_Edges_Format.md)
  * Data
   * [**Hand Alignments**](./Hand_Alignments.md)
+ * Evaluation
   * [Alignment Evaluation](./Alignment_Evaluation.md)
 
 ---
@@ -23,5 +24,5 @@ The output will be in `$JAMR_HOME/data/hand_alignments/LDC2013E117/hand_align.tx
 The format is the same as described in [docs/Alignment Format](Alignment_Format.md), except there
 are also coreference alignments that are marked with a *.  For example `*15-16|0.0` is a coreference
 alignment.  (These coreference alignments are ignored when calculating F1 since JAMR doesn't use
-them.)
+them.)  To evaluate, see [docs/Alignment Evaluation](./Alignment_Evaluation.md).
 
