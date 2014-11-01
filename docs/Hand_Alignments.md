@@ -17,7 +17,7 @@ To create the alignments file, move `LDC2013E117.tgz` to `$JAMR_HOME/data` and t
     . scripts/config.sh
     scripts/hand_alignments/LDC2013E117/cmd.hand_align.txt
 
-The output will be in `$JAMR_HOME/scripts/hand_alignments/LDC2013E117/hand_align.txt`
+The output will be in `$JAMR_HOME/data/hand_alignments/LDC2013E117/hand_align.txt`
 
 The format is the same as described in [docs/Alignment Format](Alignment_Format.md), except there
 are also coreference alignments that are marked with a *.  For example `*15-16|0.0` is a coreference
@@ -26,10 +26,9 @@ them.
 
 To test the performance of the automatic aligner do:
 
-    cd scripts
-    . config.sh
-    ./ALIGN.sh < hand_alignments/LDC2013E117/hand_align.txt > align.txt
-    ../run EvalSpans < align.txt
+    . scripts/config.sh
+    scripts/ALIGN.sh < data/hand_alignments/LDC2013E117/hand_align.txt > align.txt
+    ./run EvalSpans < align.txt
 
 The output should be:
 
