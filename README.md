@@ -1,8 +1,7 @@
 JAMR - AMR Parser
 =================
 
-JAMR is a semantic parser and aligner for the [Abstract Meaning
-Representation](http://amr.isi.edu/). 
+JAMR is a semantic parser and aligner for the [Abstract Meaning Representation](http://amr.isi.edu/). 
 
 We have also released [hand-alignments](docs/Hand_Alignments.md) for 200 sentences of the AMR corpus.
 
@@ -13,44 +12,41 @@ First checkout the github repository:
     git clone https://github.com/jflanigan/jamr.git
 
 JAMR depends on [Scala](http://www.scala-lang.org), [Illinois NER
-system](http://cogcomp.cs.illinois.edu/page/download_view/NETagger) v2.7,
-tokenization scripts in [cdec](https://github.com/redpony/cdec),
-and [WordNet](http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz) (for the
-aligner). To download these dependencies into the subdirectory `tools`,
-cd to the `jamr` repository and run
+system](http://cogcomp.cs.illinois.edu/page/download_view/NETagger) v2.7, tokenization scripts in
+[cdec](https://github.com/redpony/cdec), and [WordNet](http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz) (for the
+aligner). To download these dependencies into the subdirectory `tools`, cd to the `jamr` repository and run
 
     ./setup
 
-You should agree to the terms and conditions of the software dependencies
-before running this script.  If you download them yourself, you will need to change
-the relevant environment variables in `scripts/config.sh`.
-You may need to edit the Java memory options in the script `sbt` and `build.sbt` if
-you get out of memory errors.
+You should agree to the terms and conditions of the software dependencies before running this script.  If you download
+them yourself, you will need to change the relevant environment variables in `scripts/config.sh`.  You may need to edit
+the Java memory options in the script `sbt` and `build.sbt` if you get out of memory errors.
 
 Source the config script - you will need to do this before running any of the scripts below:
 
     . scripts/config.sh
 
-Run `./compile` to build an uberjar, which will be output to `target/scala-{scala_version}/jamr-assembly-{jamr_version}.jar`
-(the `setup` script does this for you).
+Run `./compile` to build an uberjar, which will be output to
+`target/scala-{scala_version}/jamr-assembly-{jamr_version}.jar` (the `setup` script does this for you).
 
 #Running the Parser
 
-Download and extract the model weights [current.tgz](http://cs.cmu.edu/~jmflanig/current.tgz) into the directory `$JAMR_HOME/experiments/current`.  To parse a file (cased, untokenized, with one sentence per line):
+Download and extract the model weights [current.tgz](http://cs.cmu.edu/~jmflanig/current.tgz) into the directory
+`$JAMR_HOME/experiments/current`.  To parse a file (cased, untokenized, with one sentence per line):
 
-    . scripts/config.sh
-    scripts/PARSE.sh < input_file > output_file 2> output_file.err
+    . scripts/config.sh scripts/PARSE.sh < input_file > output_file 2> output_file.err
 
-The output is AMR format, with some extra fields described in [docs/Nodes and Edges Format](docs/Nodes_and_Edges_Format.md) and [docs/Alignment Format](docs/Alignment_Format.md).
+The output is AMR format, with some extra fields described in [docs/Nodes and Edges
+Format](docs/Nodes_and_Edges_Format.md) and [docs/Alignment Format](docs/Alignment_Format.md).
 
 #Running the Aligner
 
 To run the rule-based aligner:
 
-    . scripts/config.sh
-    scripts/ALIGN.sh < amr_input_file > output_file
+    . scripts/config.sh scripts/ALIGN.sh < amr_input_file > output_file
 
-The output of the aligner is described in [docs/Alignment Format](docs/Alignment_Format.md).  Currently the aligner works best for release r3 data (AMR Specification v1.0), but it will run on newer data as well.
+The output of the aligner is described in [docs/Alignment Format](docs/Alignment_Format.md).  Currently the aligner
+works best for release r3 data (AMR Specification v1.0), but it will run on newer data as well.
 
 #Hand Alignments
 
@@ -58,26 +54,22 @@ To create the hand alignments file, see [docs/Hand Alignments](docs/Hand_Alignme
 
 #Experimental Pipeline
 
-The following steps describe how to train and evaluate the parser on the release r3
-data, using the same train/dev/test splits as in the paper.  The script
-`./train` will do all these steps for you, or you can do them step-by-step below.
+The following steps describe how to train and evaluate the parser on the release r3 data, using the same train/dev/test
+splits as in the paper.  The script `./train` will do all these steps for you, or you can do them step-by-step below.
 
-To have the `./train` script do all these steps for you, first download
-`LDC2013E117.tgz` from the LDC Catalog (requires an LDC subscription) into the directory `data/`.
-Then run
+To have the `./train` script do all these steps for you, first download `LDC2013E117.tgz` from the LDC Catalog (requires
+an LDC subscription) into the directory `data/`.  Then run
 
     ./train
 
-It should take about 3-6 hours to train.  At the end it will report the
-performance of the parser.
+It should take about 3-6 hours to train.  At the end it will report the performance of the parser.
 
 Below are the detailed steps if you didn't run the `train` script.
 
 ##1. Preprocessing the data
 
-Download `LDC2013E117.tgz` from the LDC Catalog.
-Extract the file `deft-amr-release-r3-proxy.txt` into `data/LDC-2013-Sep/` and rename it
-`amr-release-proxy.txt`.
+Download `LDC2013E117.tgz` from the LDC Catalog.  Extract the file `deft-amr-release-r3-proxy.txt` into
+`data/LDC-2013-Sep/` and rename it `amr-release-proxy.txt`.
 
     cd scripts/preprocessing
 
@@ -86,9 +78,8 @@ Run `./PREPROCESS.sh`.
 
 ##2. Training
 
-(To skip this step, which takes about 3-6 hours, download and extract model
-weights [current.tgz](http://cs.cmu.edu/~jmflanig/current.tgz) into the
-directory $JAMR_HOME/experiments/current.)
+(To skip this step, which takes about 3-6 hours, download and extract model weights
+[current.tgz](http://cs.cmu.edu/~jmflanig/current.tgz) into the directory $JAMR_HOME/experiments/current.)
 
     cd scripts/training
 

@@ -12,9 +12,8 @@ Docs - Table of Contents
 Nodes and Edges Format
 ===
 
-The parser and aligner both output an additional "nodes and edges" format.
-This format lists the nodes and edges of the AMR graphs in a
-tab-separated format.
+The parser and aligner both output an additional "nodes and edges" format.  This format lists the nodes and edges of the
+AMR graphs in a tab-separated format.
 
 Each sentence is separated by a newline.  The output looks like this:
 
@@ -43,23 +42,21 @@ Lines beginning with `# ::node` list the nodes.  The format is:
  * `uniq_id` field is a unique id for each node.
  * `concept` field is the node's concept.
  * `start_alignment-end_alignment` field is the span of words in the `# ::tok`
-field.  `start_alignment` is inclusive, but `end_alignment` is not.  So
-0-1 means the first token in the sentence. If the node is unaligned,
-then the `start_alignment-end_alignment` field is blank.
+field.  `start_alignment` is inclusive, but `end_alignment` is not.  So 0-1 means the first token in the sentence. If
+the node is unaligned, then the `start_alignment-end_alignment` field is blank.
 
 Lines beginning with `# ::root` list the root.  The format is:
 
     # ::root TAB uniq_id TAB concept
 
-The `uniq_id` is the same as listed in the nodes.  The `concept` field is
-the concept of the root node.
+The `uniq_id` is the same as listed in the nodes.  The `concept` field is the concept of the root node.
 
 Lines beginning with `# ::edge` list the edges.  The format is:
 
     # ::edges TAB source_concept TAB relation TAB dest_concept TAB source_uniq_id TAB dest_uniq_id
 
-The edge points from `source_uniq_id` to `dest_uniq_id` with label
-`relation`.  `source_concept` and `dest_concept` are there just for reference.
+The edge points from `source_uniq_id` to `dest_uniq_id` with label `relation`.  `source_concept` and `dest_concept` are
+there just for reference.
 
 Nodes are printed first, then the root, and then the edges.
 
