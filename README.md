@@ -32,9 +32,8 @@ Run `./compile` to build an uberjar, which will be output to
 
 #Running the Parser
 
-Download and extract
-[model-weights-v0.2.tgz](https://github.com/jflanigan/jamr/releases/download/JAMR_v0.2/model-weights-v0.2.tgz) into
-the directory `$JAMR_HOME/experiments/current`.  To parse a file (cased, untokenized, with one sentence per line):
+Download and extract model weights [current.tgz](http://cs.cmu.edu/~jmflanig/current.tgz) into the directory
+`$JAMR_HOME/experiments/current`.  To parse a file (cased, untokenized, with one sentence per line):
 
     . scripts/config.sh scripts/PARSE.sh < input_file > output_file 2> output_file.err
 
@@ -81,8 +80,7 @@ Run `./PREPROCESS.sh`.
 ##2. Training
 
 (To skip this step, which takes about 3-6 hours, download and extract model weights
-[model-weights-v0.2.tgz](https://github.com/jflanigan/jamr/releases/download/JAMR_v0.2/model-weights-v0.2.tgz) into
-the directory $JAMR_HOME/experiments/current.)
+[current.tgz](http://cs.cmu.edu/~jmflanig/current.tgz) into the directory $JAMR_HOME/experiments/current.)
 
     cd scripts/training
 
