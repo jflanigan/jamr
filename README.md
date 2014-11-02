@@ -35,7 +35,8 @@ Run `./compile` to build an uberjar, which will be output to
 Download and extract model weights [current.tgz](http://cs.cmu.edu/~jmflanig/current.tgz) into the directory
 `$JAMR_HOME/experiments/current`.  To parse a file (cased, untokenized, with one sentence per line):
 
-    . scripts/config.sh scripts/PARSE.sh < input_file > output_file 2> output_file.err
+    . scripts/config.sh
+    scripts/PARSE.sh < input_file > output_file 2> output_file.err
 
 The output is AMR format, with some extra fields described in [docs/Nodes and Edges
 Format](docs/Nodes_and_Edges_Format.md) and [docs/Alignment Format](docs/Alignment_Format.md).
@@ -44,7 +45,8 @@ Format](docs/Nodes_and_Edges_Format.md) and [docs/Alignment Format](docs/Alignme
 
 To run the rule-based aligner:
 
-    . scripts/config.sh scripts/ALIGN.sh < amr_input_file > output_file
+    . scripts/config.sh
+    scripts/ALIGN.sh < amr_input_file > output_file
 
 The output of the aligner is described in [docs/Alignment Format](docs/Alignment_Format.md).  Currently the aligner
 works best for release r3 data (AMR Specification v1.0), but it will run on newer data as well.
