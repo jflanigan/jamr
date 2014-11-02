@@ -7,7 +7,7 @@ We have also released [hand-alignments](docs/Hand_Alignments.md) for 200 sentenc
 
 #Building
 
-First checkout the github repository:
+Download the source of the latest release or checkout the github repository:
 
     git clone https://github.com/jflanigan/jamr.git
 
@@ -28,7 +28,7 @@ Source the config script - you will need to do this before running any of the sc
     . scripts/config.sh
 
 Run `./compile` to build an uberjar, which will be output to
-`target/scala-{scala_version}/jamr-assembly-{jamr_version}.jar` (the `setup` script does this for you).
+`target/scala-{scala_version}/jamr-assembly-{jamr_version}.jar` (the setup script does this for you).
 
 #Running the Parser
 
