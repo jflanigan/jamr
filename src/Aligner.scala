@@ -62,7 +62,7 @@ object Aligner {
                 val tokenized = extras("::tok").split(" ")
                 val wordAlignments = AlignWords.alignWords(tokenized, amr)
                 val spanAlignments = if (aligner2) {
-                        AlignSpans2.align(tokenized, amr)
+                        AlignSpans3.align(tokenized, amr)
                     } else {
                         AlignSpans.alignSpans(tokenized, amr, wordAlignments)
                     }
