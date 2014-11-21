@@ -161,6 +161,7 @@ object AlignSpans3 {
                            ":op2" -> "States")
             words = x => { "\tus\t|\tu[.]\t?s[.]\t".r }
         }
+        val haveOrgRoleArg1 = new UnalignedConcept(sentence, graph, wordToSpan) { concept="have-org-role-91"; label=":ARG1" } // have-org-role-91 aligned with to ARG1 child
         val haveRoleArg2 = new UnalignedConcept(sentence, graph, wordToSpan) { concept="have-org-role-91|have-rel-role-91"; label=":ARG2" } // have-org-role-91 or have-rel-role-91 aligned with to ARG2 child
 
         addAllSpans(namedEntity, graph, wordToSpan, addCoRefs=false)
@@ -182,6 +183,8 @@ object AlignSpans3 {
         try { updateSpans(governmentOrg, graph) } catch { case e : Throwable => Unit }
         try { updateSpans(polarityChild, graph) } catch { case e : Throwable => Unit }
         try { updateSpans(est, graph) } catch { case e : Throwable => Unit }
+        logger(2, "Attempting to match haveOrgRole")
+        try { updateSpans(haveOrgRoleArg1, graph) } catch { case e : Throwable => Unit }
         try { updateSpans(haveRoleArg2, graph) } catch { case e : Throwable => Unit }
         //try { updateSpans(er, graph) } catch { case e : Throwable => Unit }
         //dateEntities(sentence, graph)
@@ -252,32 +255,30 @@ object AlignSpans3 {
         }
 
         def update(node: Node) {
+            logger(2, "SpanUpdater concept regex: " + concept)
             logger(2, "SpanUpdater processing node: " + node.concept)
-            node match {
-                case Node(_,_,c,_,_,_,_,_) if ((concept.r.unapplySeq(getConcept(c)) != None) && (!node.isAligned(graph) || !unalignedOnly)) => {
-                    logger(2, "SpanUpdater matched concept regex: " + concept)
-                    val allNodes = nodes(node)
-                    logger(2, "allNodes = "+allNodes.toString)
-                    val updateIndices = if (!allNodes.isEmpty) { spanIndex(allNodes) } else { List() }
-                    logger(2, "updateIndices = "+updateIndices.toString)
-                    val wordSpans = if (!allNodes.isEmpty) { spans(node, updateIndices) } else { List() }
-                    //for ((spanIndex, (nodes, span)) <- updateIndices.zip(allNodes.zip(wordSpans))) {
-                    //    assert(spans == (graph.spans(spanIndex).start, graph.spans(spanIndex).end), "SpanUpdater does not support changing the word span")  // If you want to do this, you must call graph.updateSpan, AND fix up the wordToSpan map
-                    assert(allNodes.size == updateIndices.size && allNodes.size == wordSpans.size, "SpanUpdater: Number of spans do not match")
-                    for (((spanIndex, nodes), span) <- updateIndices.zip(allNodes).zip(wordSpans)) {
-                        if (nodes.size > 0) {
-                            logger(2, "Calling updateSpan( span="+spanIndex.toString+", start="+span._1+", end="+span._2+", nodes="+nodes.map(_._2.id).toString+" )")
-                            updateWordMap(spanIndex, (graph.spans(spanIndex).start, graph.spans(spanIndex).end), span, wordToSpan)
-                            graph.updateSpan(spanIndex, span._1, span._2, nodes.map(_._2.id), graph.spans(spanIndex).coRef, sentence)
-                            //logger(2, "Calling updateSpan( "+spanIndex.toString+", "+nodes.map(_._2.id).toString+" )")
-                            //graph.updateSpan(spanIndex, nodes.map(_._2.id), sentence)
-                        } else {
-                            logger(2, "Deleting span")
-                            graph.updateSpan(spanIndex, 0, 0, List(), false, sentence) // this effectively deletes the span
-                        }
+            if (node.concept.matches(concept) && (!node.isAligned(graph) || !unalignedOnly)) {
+                logger(2, "SpanUpdater matched concept regex: " + concept)
+                val allNodes = nodes(node)
+                logger(2, "allNodes = "+allNodes.toString)
+                val updateIndices = if (!allNodes.isEmpty) { spanIndex(allNodes) } else { List() }
+                logger(2, "updateIndices = "+updateIndices.toString)
+                val wordSpans = if (!allNodes.isEmpty) { spans(node, updateIndices) } else { List() }
+                //for ((spanIndex, (nodes, span)) <- updateIndices.zip(allNodes.zip(wordSpans))) {
+                //    assert(spans == (graph.spans(spanIndex).start, graph.spans(spanIndex).end), "SpanUpdater does not support changing the word span")  // If you want to do this, you must call graph.updateSpan, AND fix up the wordToSpan map
+                assert(allNodes.size == updateIndices.size && allNodes.size == wordSpans.size, "SpanUpdater: Number of spans do not match")
+                for (((spanIndex, nodes), span) <- updateIndices.zip(allNodes).zip(wordSpans)) {
+                    if (nodes.size > 0) {
+                        logger(2, "Calling updateSpan( span="+spanIndex.toString+", start="+span._1+", end="+span._2+", nodes="+nodes.map(_._2.id).toString+" )")
+                        updateWordMap(spanIndex, (graph.spans(spanIndex).start, graph.spans(spanIndex).end), span, wordToSpan)
+                        graph.updateSpan(spanIndex, span._1, span._2, nodes.map(_._2.id), graph.spans(spanIndex).coRef, sentence)
+                        //logger(2, "Calling updateSpan( "+spanIndex.toString+", "+nodes.map(_._2.id).toString+" )")
+                        //graph.updateSpan(spanIndex, nodes.map(_._2.id), sentence)
+                    } else {
+                        logger(2, "Deleting span")
+                        graph.updateSpan(spanIndex, 0, 0, List(), false, sentence) // this effectively deletes the span
                     }
                 }
-            case _ => Unit
             }
         }
     }
