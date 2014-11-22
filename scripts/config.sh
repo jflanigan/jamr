@@ -22,10 +22,10 @@ export DEV_FILE="${JAMR_HOME}/data/LDC-2013-Sep/amr-release-proxy.dev"
 export TEST_FILE="${JAMR_HOME}/data/LDC-2013-Sep/amr-release-proxy.test"
 
 export PARSER_OPTIONS="
-    --stage1-features "bias,length,fromNERTagger,conceptGivenPhrase" \
+    --stage1-features bias,length,fromNERTagger,conceptGivenPhrase \
     --stage2-decoder LR \
-    --stage2-features "rootConcept,rootDependencyPathv1,bias,typeBias,self,fragHead,edgeCount,distance,logDistance,posPathv3,dependencyPathv4,conceptBigram" \
-    --stage2-labelset "${JAMR_HOME}/resources/labelset"
+    --stage2-features rootConcept,rootDependencyPathv1,bias,typeBias,self,fragHead,edgeCount,distance,logDistance,posPathv3,dependencyPathv4,conceptBigram \
+    --stage2-labelset ${JAMR_HOME}/resources/labelset
 "
 
 export CONCEPT_ID_TRAINING_OPTIONS="
