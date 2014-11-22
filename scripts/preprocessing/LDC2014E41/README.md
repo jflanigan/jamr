@@ -1,4 +1,4 @@
-`patch.sh` in this directory patches the LDC2014E41 data to fix broken AMRs (duplicate variable names).  The following
+`patch.sh` patches the LDC2014E41 data to fix broken AMRs (duplicate variable names).  The following
 changes are made:
 
 ```
