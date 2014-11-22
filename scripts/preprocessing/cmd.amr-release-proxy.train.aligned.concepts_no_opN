@@ -1,3 +1,0 @@
-#!/bin/bash
-
-grep '^Span ' ${DATA_DIR}/amr-release-proxy.train.aligned.log | sed 's/:op[0-9]*/:op/g' | sed 's/^Span [0-9]*:  //' | sed 's/ => / ||| /' | sort | uniq -c | sed 's/^ *\([0-9]*\) \(.*\)/\2 ||| Count=\1/' | grep -v '^ ' > ${DATA_DIR}/amr-release-proxy.train.aligned.concepts_no_opN

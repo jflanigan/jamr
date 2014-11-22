@@ -1,0 +1,6 @@
+#!/bin/bash
+
+for AMR in "${TRAIN_FILE}" "${DEV_FILE}" "{$TEST_FILE}"
+do
+    cat "${AMR}.aligned" | sed 's/:op[^ ]*/:op/g' > "${AMR}.aligned.no_opN"
+done

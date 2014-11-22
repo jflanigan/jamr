@@ -1,23 +1,21 @@
 #!/usr/bin/env bash
 
-INPUT="${DATA_DIR}/amr-release-proxy.train"
-DEV="${DATA_DIR}/amr-release-proxy.dev"
+INPUT="${TRAIN_FILE}"
 OUTPUT="${MODEL_DIR}/stage1-weights"
 
 "${JAMR_HOME}/run" AMRParser \
---stage1-train \
---stage1-concept-table "${MODEL_DIR}/conceptTable.train" \
---stage1-features "bias,length,fromNERTagger,conceptGivenPhrase" \
---training-stepsize 1 \
---training-optimizer Adagrad --training-passes 10 \
---training-output "${OUTPUT}" \
---training-dev "${DEV}" \
---dependencies "${INPUT}.snt.deps" \
---ner "${INPUT}.snt.IllinoisNER" \
---tok "${INPUT}.snt.tok" \
---snt "${INPUT}.snt" \
---output-format AMR \
--v -1 \
-< "${INPUT}.aligned.no_opN" \
-> "${OUTPUT}" \
-2> "${OUTPUT}.err"
+    ${PARSER_OPTIONS} \
+    ${CONCEPT_ID_TRAINING_OPTIONS} \
+    --stage1-train \
+    --stage1-concept-table "${MODEL_DIR}/conceptTable.train" \
+    --training-output "${OUTPUT}" \
+    --training-dev "${DEV_FILE}" \
+    --dependencies "${INPUT}.snt.deps" \
+    --ner "${INPUT}.snt.IllinoisNER" \
+    --tok "${INPUT}.snt.tok" \
+    --snt "${INPUT}.snt" \
+    --output-format AMR \
+    -v -1 \
+    < "${INPUT}.aligned.no_opN" \
+    > "${OUTPUT}" \
+    2> "${OUTPUT}.err"

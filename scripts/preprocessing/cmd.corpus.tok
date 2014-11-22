@@ -1,3 +1,0 @@
-#!/bin/bash
-
-${JAMR_HOME}/run CorpusTool < ../aligner/amr.corpus --tokenized ../aligner/snt > corpus.tok

@@ -1,6 +1,6 @@
 #!/bin/bash
 # assumes `config.sh` has already been sourced
-INPUT="$DATA_DIR/amr-release-proxy.train"
+INPUT="$TRAIN_FILE"
 OUTPUT="$MODEL_DIR/conceptTable.train"
 
 mkdir -p $MODEL_DIR

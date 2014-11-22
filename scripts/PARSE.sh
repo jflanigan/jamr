@@ -53,12 +53,9 @@ echo ' ### Running dependency parser ###' >&2
 echo ' ### Running JAMR ###' >&2
 
 ${JAMR_HOME}/run AMRParser \
+  ${PARSER_OPTIONS} \
   --stage1-concept-table "${MODEL_DIR}/conceptTable.train" \
-  --stage1-features "bias,length,fromNERTagger,conceptGivenPhrase" \
   --stage1-weights "${STAGE1_WEIGHTS}" \
-  --stage2-decoder LR \
-  --stage2-features "rootConcept,rootDependencyPathv1,bias,typeBias,self,fragHead,edgeCount,distance,logDistance,posPathv3,dependencyPathv4,conceptBigram" \
-  --stage2-labelset "${JAMR_HOME}/resources/labelset" \
   --stage2-weights "${STAGE2_WEIGHTS}" \
   --dependencies "${INPUT}.deps" \
   --ner "${INPUT}.IllinoisNER" \

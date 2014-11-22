@@ -1,5 +1,0 @@
-#!/bin/bash
-
-for split in train dev test; do
-    "${JAMR_HOME}/run" RunStanfordParser < "${DATA_DIR}/amr-release-proxy.${split}.snt" > "${DATA_DIR}/amr-release-proxy.${split}.snt.deps"
-done

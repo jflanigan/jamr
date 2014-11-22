@@ -1,0 +1,6 @@
+#!/bin/bash
+
+for AMR in "${TRAIN_FILE}" "${DEV_FILE}" "{$TEST_FILE}"
+do
+    ${JAMR_HOME}/run CorpusTool < "${AMR}" --tokenized "${AMR}.snt.tok" > "${AMR}.tok"
+done
