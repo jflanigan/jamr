@@ -15,7 +15,6 @@ tar -xzf LDC2014E41_DEFT_Phase_1_AMR_Annotation_R4.tgz
 popd
 
 pushd "$JAMR_HOME/scripts/preprocessing"
-LDC2014E41/patch.sh
 LDC2014E41/make_splits.sh
 ./PREPROCESS.sh
 popd

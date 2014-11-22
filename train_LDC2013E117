@@ -15,7 +15,6 @@ tar -xzf LDC2013E117.tgz
 popd
 
 pushd "$JAMR_HOME/scripts/preprocessing"
-LDC2013E117/patch.sh
 LDC2013E117/make_splits.sh
 ./PREPROCESS.sh
 popd
