@@ -72,11 +72,10 @@ Below are the detailed steps if you didn't run the train script.
 
 ##1. Preprocessing the data
 
-Download and extract `LDC2013E117.tgz` into the directory `data/LDC2013E117_DEFT_Phase_1_AMR_Annotation_R3`.  Patch the
-data (fixes some broken AMRs) and make the train/dev/test split:
+Download and extract `LDC2013E117.tgz` into the directory `data/LDC2013E117_DEFT_Phase_1_AMR_Annotation_R3`.  To make
+the train/dev/test split:
 
     cd scripts/preprocessing
-    LDC2013E117/patch.sh
     LDC2013E117/make_splits.sh
 
 Then run `./PREPROCESS.sh` to tokenize, align, and dependency parse the data.
