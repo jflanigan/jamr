@@ -332,14 +332,16 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
             getNodeByName.clear
         }
         if (node.name != None) {
-            val Some(name) = node.name
+            var Some(name) = node.name
             if (getNodeByName.contains(name)) {
-                throw new RuntimeException("duplicate variable name: " + name)
-            } else {
-                getNodeByName += (name -> node)
-                for ((_,child) <- node.topologicalOrdering) {
-                    makeVariables(child)
-                }
+                logger(-2, "WARNING: Duplicate variable name in annotation: " + name)
+                name = getNextVariableName(name(0))
+                logger(-2, "Changing name to: " + name)
+                node.name = Some(name)
+            }
+            getNodeByName += (name -> node)
+            for ((_,child) <- node.topologicalOrdering) {
+                makeVariables(child)
             }
         }
     }
