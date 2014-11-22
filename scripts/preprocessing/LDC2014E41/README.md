@@ -14,3 +14,5 @@ changes are made:
 - :time (b / before
 + :time (b3 / before
 ```
+
+`make_splits.sh` puts all the training, dev, and test corpora into `training.txt`, `dev.txt` and `test.txt`.
