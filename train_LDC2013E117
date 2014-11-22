@@ -2,7 +2,7 @@
 set -ueo pipefail
 
 # Source config script
-. scripts/config_ACL2013_LDC2013E117.sh
+. scripts/config_ACL2014_LDC2013E117.sh
 
 # Extract and preprocess data
 if [ ! -f "$JAMR_HOME/data/LDC2013E117.tgz" ]; then
