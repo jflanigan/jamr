@@ -11,13 +11,13 @@ if [ ! -f "$JAMR_HOME/data/LDC2013E117.tgz" ]; then
 fi
 mkdir -p "$JAMR_HOME/data"
 pushd "$JAMR_HOME/data"
-#tar -xzf LDC2013E117.tgz
+tar -xzf LDC2013E117.tgz
 popd
 
 pushd "$JAMR_HOME/scripts/preprocessing"
-#patch "${JAMR_HOME}/data/LDC2013E117_DEFT_Phase_1_AMR_Annotation_R3/data/deft-amr-release-r3-proxy.txt" LDC2013E117/deft-amr-release-r3-proxy.txt.patch
-#LDC2013E117/make_splits.sh
-#./PREPROCESS.sh
+patch "${JAMR_HOME}/data/LDC2013E117_DEFT_Phase_1_AMR_Annotation_R3/data/deft-amr-release-r3-proxy.txt" LDC2013E117/deft-amr-release-r3-proxy.txt.patch
+LDC2013E117/make_splits.sh
+./PREPROCESS.sh
 popd
 
 # Train
