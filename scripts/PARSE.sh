@@ -1,4 +1,5 @@
-#!/bin/bash -e
+#!/bin/bash
+set -eo pipefail
 
 # usage: ./PARSE.sh < input_file > output_file 2> output_file.err
 

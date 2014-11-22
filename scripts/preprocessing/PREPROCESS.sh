@@ -1,8 +1,9 @@
 #!/bin/bash -xe
+set -ueo pipefail
 
 # Preprocess the data
-./cmd.txt.FIXED
-./cmd.train
+#./cmd.txt.FIXED
+#./cmd.train
 ./cmd.snt
 ./cmd.snt.tok
 ./cmd.tok

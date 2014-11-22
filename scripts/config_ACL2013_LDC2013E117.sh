@@ -1,4 +1,5 @@
 #!/bin/bash
+set -ueo pipefail
 
 # assumes this script (config.sh) lives in "${JAMR_HOME}/scripts/"
 
@@ -14,7 +15,7 @@ export WNHOME="${JAMR_HOME}/tools/WordNet-3.0"
 export SCALA="${JAMR_HOME}/tools/scala-2.11.2/bin/scala"
 export SMATCH="${JAMR_HOME}/scripts/smatch_v1_0/smatch_modified.py"
 
-export DATA_DIR="${JAMR_HOME}/data/LDC-2013-Sep"  # used in scripts/preprocessing/LDC2013E117 or scripts/preprocessing/LDC2014E41
+export DATA_DIR="${JAMR_HOME}/data/LDC2013E117_DEFT_Phase_1_AMR_Annotation_R3/data"  # used in scripts/preprocessing/LDC2013E117 or scripts/preprocessing/LDC2014E41
 export MODEL_DIR="${JAMR_HOME}/experiments/current"
 
 export TRAIN_FILE="${JAMR_HOME}/data/LDC-2013-Sep/amr-release-proxy.train"

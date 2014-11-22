@@ -1,4 +1,0 @@
-#!/bin/bash
-
-cp "${DATA_DIR}/amr-release-proxy.txt" "${DATA_DIR}/amr-release-proxy.txt.FIXED"
-patch "${DATA_DIR}/amr-release-proxy.txt.FIXED" amr-release-proxy.txt.patch  # fix malformed AMRs

@@ -1,4 +1,5 @@
-#!/bin/bash -e
+#!/bin/bash
+set -eo pipefail
 
 # Usage: ./PARSE_IT.sh input_file
 # Output will be in input_file.parsed
