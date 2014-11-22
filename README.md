@@ -58,7 +58,7 @@ To create the hand alignments file, see [docs/Hand Alignments](docs/Hand_Alignme
 #Experimental Pipeline
 
 The following steps describe how to train and evaluate the parser on the release r3 data, using the same train/dev/test
-splits as in the paper.  The script `./train_LDC2013E117` will do all these steps for you, or you can do them
+split as in the paper.  The script `./train_LDC2013E117` will do all these steps for you, or you can do them
 step-by-step below.
 
 To have the train script do all these steps for you, first download `LDC2013E117.tgz` from the LDC Catalog (requires
@@ -73,10 +73,10 @@ Below are the detailed steps if you didn't run the train script.
 ##1. Preprocessing the data
 
 Download and extract `LDC2013E117.tgz` into the directory `data/LDC2013E117_DEFT_Phase_1_AMR_Annotation_R3`.  Patch the
-data (fixes some broken AMRs) and make the splits:
+data (fixes some broken AMRs) and make the train/dev/test split:
 
     cd scripts/preprocessing
-    patch "${JAMR_HOME}/data/LDC2013E117_DEFT_Phase_1_AMR_Annotation_R3/data/deft-amr-release-r3-proxy.txt" LDC2013E117/deft-amr-release-r3-proxy.txt.patch
+    LDC2013E117/patch.sh
     LDC2013E117/make_splits.sh
 
 Then run `./PREPROCESS.sh` to tokenize, align, and dependency parse the data.
