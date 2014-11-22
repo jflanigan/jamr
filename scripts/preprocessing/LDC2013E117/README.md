@@ -1,3 +1,5 @@
+`make_splits.sh` makes the splits used in the ACL 2014 paper.
+
 Test is anything in year 2008
 
 Dev is anything in year 2007
