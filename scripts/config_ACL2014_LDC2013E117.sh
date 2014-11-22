@@ -18,7 +18,7 @@ export TRAIN_FILE="${JAMR_HOME}/data/LDC2013E117_DEFT_Phase_1_AMR_Annotation_R3/
 export DEV_FILE="${JAMR_HOME}/data/LDC2013E117_DEFT_Phase_1_AMR_Annotation_R3/data/deft-amr-release-r3-proxy.dev"
 export TEST_FILE="${JAMR_HOME}/data/LDC2013E117_DEFT_Phase_1_AMR_Annotation_R3/data/deft-amr-release-r3-proxy.test"
 
-export MODEL_DIR="${JAMR_HOME}/experiments/current"
+export MODEL_DIR="${JAMR_HOME}/experiments/ACL2014_LDC2013E117"  # ideally keep this the same as the config_SOMETHING.sh
 
 export PARSER_OPTIONS="
     --stage1-features bias,length,fromNERTagger,conceptGivenPhrase
