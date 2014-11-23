@@ -7,9 +7,12 @@ JAMR_HOME="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." > /dev/null && pwd )"
 
 mkdir -p "$JAMR_HOME/data/AMR-Bank-v1.4"
 pushd "$JAMR_HOME/data/AMR-Bank-v1.4"
-wget http://amr.isi.edu/download/amr-bank-struct-v1.4-training.txt
-wget http://amr.isi.edu/download/amr-bank-struct-v1.4-dev.txt
-wget http://amr.isi.edu/download/amr-bank-struct-v1.4-test.txt
+for split in training dev test; do
+    file=amr-bank-struct-v1.4-$split.txt
+    if [ ! -f $file ]; then
+        wget http://amr.isi.edu/download/$file
+    fi
+done
 popd
 "${JAMR_HOME}/scripts/TRAIN.sh"
 
