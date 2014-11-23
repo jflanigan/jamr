@@ -7,24 +7,18 @@ DATA_DIR="${JAMR_HOME}/data/LDC2014E41_DEFT_Phase_1_AMR_Annotation_R4/data/split
 
 split=training
 cat "${DATA_DIR}/$split/deft-p1-amr-r4-$split-proxy.txt" > "${DATA_DIR}/$split/$split.txt"
-echo "" >> "${DATA_DIR}/$split/$split.txt" # fix missing newline at EOF
 for corpus in bolt cctv dfa mt09sdl wb xinhua; do
     cat "${DATA_DIR}/$split/deft-p1-amr-r4-$split-$corpus.txt" >> "${DATA_DIR}/$split/$split.txt"
-    echo "" >> "${DATA_DIR}/$split/$split.txt" # fix missing newline at EOF
 done
 
 split=dev
 cat "${DATA_DIR}/$split/deft-p1-amr-r4-$split-proxy.txt" > "${DATA_DIR}/$split/$split.txt"
-echo "" >> "${DATA_DIR}/$split/$split.txt" # fix missing newline at EOF
 for corpus in bolt consensus dfa xinhua; do
     cat "${DATA_DIR}/$split/deft-p1-amr-r4-$split-$corpus.txt" >> "${DATA_DIR}/$split/$split.txt"
-    echo "" >> "${DATA_DIR}/$split/$split.txt" # fix missing newline at EOF
 done
 
 split=test
 cat "${DATA_DIR}/$split/deft-p1-amr-r4-$split-proxy.txt" > "${DATA_DIR}/$split/$split.txt"
-echo "" >> "${DATA_DIR}/$split/$split.txt" # fix missing newline at EOF
 for corpus in bolt consensus dfa xinhua; do
     cat "${DATA_DIR}/$split/deft-p1-amr-r4-$split-$corpus.txt" >> "${DATA_DIR}/$split/$split.txt"
-    echo "" >> "${DATA_DIR}/$split/$split.txt" # fix missing newline at EOF
 done
