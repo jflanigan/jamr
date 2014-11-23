@@ -12,7 +12,7 @@ for (line <- stdin.getLines()) {
     var begin = false
     for (word <- line.split(" ")) {
         if(word.matches("""\[[A-Z]+""")) {
-            assert(tag == "O", "Error: Nested tags. Line = "+line)
+            assert(tag == "O", "Error: Nested tags. Line = "+line+"\nSuggestion: you may want to remove any [ or ] from the input.")
             tag = word.tail
             begin = true
         } else if(!word.endsWith("]") || word.size == 1) {
@@ -23,7 +23,7 @@ for (line <- stdin.getLines()) {
             }
             begin = false
         } else {
-            assert(tag != "O", "Error: Closing bracket outside of tag. Line = "+line)
+            assert(tag != "O", "Error: Closing bracket outside of tag. Line = "+line+"\nSuggestion: you may want to remove any [ or ] from the input.")
             println(word.slice(0,word.size-1) + "\t" + (if (begin) { "B-" } else { "I-" }) + tag)
             tag = "O"
         }
