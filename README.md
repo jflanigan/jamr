@@ -32,8 +32,9 @@ Run `./compile` to build an uberjar, which will be output to
 
 #Running the Parser
 
-Download and extract model weights [current.tgz](http://cs.cmu.edu/~jmflanig/current.tgz) into the directory
-`$JAMR_HOME/experiments/current`.  To parse a file (cased, untokenized, with one sentence per line):
+Download and extract model weights [ACL2014_LDC2013E117.tgz](http://cs.cmu.edu/~jmflanig/ACL2014_LDC2013E117.tgz) into
+the directory `$JAMR_HOME/experiments/ACL2014_LDC2013E117.tgz`.  To parse a file (cased, untokenized, with one sentence
+per line):
 
     . scripts/config.sh
     scripts/PARSE.sh < input_file > output_file 2> output_file.err
@@ -64,7 +65,7 @@ step-by-step below.
 To have the train script do all these steps for you, first download `LDC2013E117.tgz` from the LDC Catalog (requires
 access to DEFT project LDC data) into the directory `data/`.  Then run
 
-    ./train_LDC2013E117
+    scripts/train_LDC2013E117.sh
 
 It should take about 3-6 hours to train.  At the end it will report the performance of the parser.
 
