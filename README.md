@@ -32,9 +32,8 @@ Run `./compile` to build an uberjar, which will be output to
 
 #Running the Parser
 
-Download and extract model weights [ACL2014_LDC2013E117.tgz](http://cs.cmu.edu/~jmflanig/ACL2014_LDC2013E117.tgz) into
-the directory `$JAMR_HOME/experiments/ACL2014_LDC2013E117.tgz`.  To parse a file (cased, untokenized, with one sentence
-per line):
+Download and extract model weights [experiments.tgz](http://cs.cmu.edu/~jmflanig/experiments.tgz) into the directory
+`$JAMR_HOME/experiments`.  To parse a file (cased, untokenized, with one sentence per line):
 
     . scripts/config.sh
     scripts/PARSE.sh < input_file > output_file 2> output_file.err
@@ -59,7 +58,7 @@ To create the hand alignments file, see [docs/Hand Alignments](docs/Hand_Alignme
 #Experimental Pipeline
 
 The following steps describe how to train and evaluate the parser on the release r3 data, using the same train/dev/test
-split as in the paper.  The script `./train_LDC2013E117` will do all these steps for you, or you can do them
+split as in the paper.  The script `./train_LDC2013E117.sh` will do all these steps for you, or you can do them
 step-by-step below.
 
 To have the train script do all these steps for you, first download `LDC2013E117.tgz` from the LDC Catalog (requires
