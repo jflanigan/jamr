@@ -32,8 +32,8 @@ Run `./compile` to build an uberjar, which will be output to
 
 #Running the Parser
 
-Download and extract model weights [experiments.tgz](http://cs.cmu.edu/~jmflanig/experiments.tgz) into the directory
-`$JAMR_HOME/experiments`.  To parse a file (cased, untokenized, with one sentence per line):
+Download and extract model weights [models.tgz](http://cs.cmu.edu/~jmflanig/models.tgz) into the directory
+`$JAMR_HOME/models`.  To parse a file (cased, untokenized, with one sentence per line):
 
     . scripts/config.sh
     scripts/PARSE.sh < input_file > output_file 2> output_file.err
@@ -84,7 +84,7 @@ Then run `./PREPROCESS.sh` to tokenize, align, and dependency parse the data.
 ##2. Training
 
 (To skip this step, which takes about 3-6 hours, download and extract model weights
-[current.tgz](http://cs.cmu.edu/~jmflanig/current.tgz) into the directory $JAMR_HOME/experiments/current.)
+[models.tgz](http://cs.cmu.edu/~jmflanig/models.tgz) into the directory $JAMR_HOME/models.)
 
     cd scripts/training
 
@@ -115,6 +115,6 @@ Decode test set:
 
 Evaluate the predictions using smatch:
 
-    ${JAMR_HOME}/scripts/smatch_v1_0/smatch_modified.py --pr -f ${JAMR_HOME}/experiments/current/test.decode.allstages ${JAMR_HOME}/data/LDC-2013-Sep/amr-release-proxy.test
-    ${JAMR_HOME}/scripts/smatch_v1_0/smatch_modified.py --pr -f ${JAMR_HOME}/experiments/current/test.decode.stage2only ${JAMR_HOME}/data/LDC-2013-Sep/amr-release-proxy.test
+    ${JAMR_HOME}/scripts/smatch_v1_0/smatch_modified.py --pr -f ${MODEL_DIR}/test.decode.stage2only ${TEST_FILE}
+    ${JAMR_HOME}/scripts/smatch_v1_0/smatch_modified.py --pr -f ${MODEL_DIR}/test.decode.allstages ${TEST_FILE}
 

@@ -18,7 +18,7 @@ export TRAIN_FILE="${JAMR_HOME}/data/AMR-Bank-v1.4/amr-bank-struct-v1.4-training
 export DEV_FILE="${JAMR_HOME}/data/AMR-Bank-v1.4/amr-bank-struct-v1.4-dev.txt"
 export TEST_FILE="${JAMR_HOME}/data/AMR-Bank-v1.4/amr-bank-struct-v1.4-test.txt"
 
-export MODEL_DIR="${JAMR_HOME}/experiments/Little_Prince"  # ideally keep this the same as the config_SOMETHING.sh
+export MODEL_DIR="${JAMR_HOME}/models/Little_Prince"  # ideally keep this the same as the config_SOMETHING.sh
 
 export PARSER_OPTIONS="
     --stage1-features bias,length,fromNERTagger,conceptGivenPhrase
