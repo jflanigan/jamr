@@ -52,16 +52,14 @@ rm "$inputfile".tmp
 #### Parse ####
 
 ${JAMR_HOME}/run AMRParser \
-  ${PARSER_OPTIONS} \
   --stage1-concept-table "${MODEL_DIR}/conceptTable.train" \
   --stage1-weights "${STAGE1_WEIGHTS}" \
   --stage2-weights "${STAGE2_WEIGHTS}" \
   --dependencies "${INPUT}.deps" \
   --ner "${INPUT}.IllinoisNER" \
   --tok "${INPUT}.tok" \
-  --ignore-parser-errors \
-  --output-format AMR,nodes,edges,root \
   -v 0 \
+  ${PARSER_OPTIONS} \
   < "${INPUT}" \
   > "${OUTPUT}" \
   2> "${OUTPUT}.err"

@@ -7,7 +7,6 @@ STAGE1_WEIGHTS="${MODEL_DIR}/stage1-weights"
 STAGE2_WEIGHTS="${MODEL_DIR}/stage2-weights.iter5"
 
 ${JAMR_HOME}/run AMRParser \
-    ${PARSER_OPTIONS} \
     --stage1-concept-table "${MODEL_DIR}/conceptTable.train" \
     --stage1-weights "${STAGE1_WEIGHTS}" \
     --stage2-weights "${STAGE2_WEIGHTS}" \
@@ -15,9 +14,8 @@ ${JAMR_HOME}/run AMRParser \
     --ner "${INPUT}.snt.IllinoisNER" \
     --tok "${INPUT}.snt.tok" \
     --training-data "${INPUT}.aligned.no_opN" \
-    --output-format AMR,nodes,edges \
-    --ignore-parser-errors \
     -v 0 \
+    ${PARSER_OPTIONS} \
     < "${INPUT}.snt" \
     > "${OUTPUT}" \
     2> "${OUTPUT}.err"

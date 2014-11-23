@@ -4,8 +4,6 @@ INPUT="${TRAIN_FILE}"
 OUTPUT="${MODEL_DIR}/stage1-weights"
 
 "${JAMR_HOME}/run" AMRParser \
-    ${PARSER_OPTIONS} \
-    ${CONCEPT_ID_TRAINING_OPTIONS} \
     --stage1-train \
     --stage1-concept-table "${MODEL_DIR}/conceptTable.train" \
     --training-output "${OUTPUT}" \
@@ -14,8 +12,10 @@ OUTPUT="${MODEL_DIR}/stage1-weights"
     --ner "${INPUT}.snt.IllinoisNER" \
     --tok "${INPUT}.snt.tok" \
     --snt "${INPUT}.snt" \
-    --output-format AMR \
+    ${PARSER_OPTIONS} \
     -v -1 \
+    ${CONCEPT_ID_TRAINING_OPTIONS} \
+    --output-format AMR \
     < "${INPUT}.aligned.no_opN" \
     > "${OUTPUT}" \
     2> "${OUTPUT}.err"

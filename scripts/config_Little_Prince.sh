@@ -20,11 +20,16 @@ export TEST_FILE="${JAMR_HOME}/data/AMR-Bank-v1.4/amr-bank-struct-v1.4-test.txt"
 
 export MODEL_DIR="${JAMR_HOME}/models/Little_Prince"  # ideally keep this the same as the config_SOMETHING.sh
 
+# The options specified below will override any options specified in the scripts
+# CONCEPT_ID_TRAINING_OPTIONS and RELATION_ID_TRAINING_OPTIONS will override PARSER_OPTIONS
+
 export PARSER_OPTIONS="
     --stage1-features bias,length,fromNERTagger,conceptGivenPhrase
     --stage2-decoder LR
     --stage2-features rootConcept,rootDependencyPathv1,bias,typeBias,self,fragHead,edgeCount,distance,logDistance,posPathv3,dependencyPathv4,conceptBigram
     --stage2-labelset ${JAMR_HOME}/resources/labelset-r3
+    --output-format AMR,nodes,edges,root
+    --ignore-parser-errors
 "
 
 export CONCEPT_ID_TRAINING_OPTIONS="

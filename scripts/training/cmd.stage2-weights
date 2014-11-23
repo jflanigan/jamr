@@ -4,8 +4,6 @@ INPUT="${TRAIN_FILE}"
 OUTPUT="${MODEL_DIR}/stage2-weights"
 
 ${JAMR_HOME}/run AMRParser \
-    ${PARSER_OPTIONS} \
-    ${RELATION_ID_TRAINING_OPTIONS} \
     --stage2-train \
     --stage1-concept-table "${MODEL_DIR}/conceptTable.train" \
     --dependencies "${INPUT}.snt.deps" \
@@ -15,9 +13,10 @@ ${JAMR_HOME}/run AMRParser \
     --training-dev "${DEV_FILE}" \
     --training-output "${OUTPUT}" \
     --smatch-eval "${SMATCH}" \
-    --output-format "triples" \
-    --ignore-parser-errors \
     -v 0 \
+    --output-format "triples" \
+    ${PARSER_OPTIONS} \
+    ${RELATION_ID_TRAINING_OPTIONS} \
     < "${INPUT}.aligned.no_opN" \
     > "${OUTPUT}" \
     2> "${OUTPUT}.err"

@@ -54,16 +54,14 @@ echo ' ### Running dependency parser ###' >&2
 echo ' ### Running JAMR ###' >&2
 
 ${JAMR_HOME}/run AMRParser \
-  ${PARSER_OPTIONS} \
   --stage1-concept-table "${MODEL_DIR}/conceptTable.train" \
   --stage1-weights "${STAGE1_WEIGHTS}" \
   --stage2-weights "${STAGE2_WEIGHTS}" \
   --dependencies "${INPUT}.deps" \
   --ner "${INPUT}.IllinoisNER" \
   --tok "${INPUT}.tok" \
-  --ignore-parser-errors \
-  --output-format AMR,nodes,edges,root \
   -v 0 \
+  ${PARSER_OPTIONS} \
   < "${INPUT}"
 
 rm /tmp/jamr-$$.snt /tmp/jamr-$$.snt.tok /tmp/jamr-$$.snt.deps /tmp/jamr-$$.snt.IllinoisNER
