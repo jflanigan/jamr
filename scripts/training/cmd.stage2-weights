@@ -16,6 +16,7 @@ ${JAMR_HOME}/run AMRParser \
     --training-output "${OUTPUT}" \
     --smatch-eval "${SMATCH}" \
     --output-format "triples" \
+    --ignore-parser-errors \
     -v 0 \
     < "${INPUT}.aligned.no_opN" \
     > "${OUTPUT}" \

@@ -16,6 +16,7 @@ ${JAMR_HOME}/run AMRParser \
     --tok "${INPUT}.snt.tok" \
     --training-data "${INPUT}.aligned.no_opN" \
     --output-format AMR,nodes,edges \
+    --ignore-parser-errors \
     -v 0 \
     < "${INPUT}.snt" \
     > "${OUTPUT}" \

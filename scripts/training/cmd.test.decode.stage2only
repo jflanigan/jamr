@@ -1,6 +1,6 @@
 #!/bin/bash
 
-INPUT="${DATA_DIR}/amr-release-proxy.test"
+INPUT="${TEST_FILE}"
 OUTPUT="${MODEL_DIR}/test.decode.stage2only"
 
 STAGE1_WEIGHTS="${MODEL_DIR}/stage1-weights"
@@ -17,6 +17,7 @@ ${JAMR_HOME}/run AMRParser \
     --tok "${INPUT}.snt.tok" \
     --training-data "${INPUT}.aligned.no_opN" \
     --output-format AMR,nodes,edges \
+    --ignore-parser-errors \
     -v 0 \
     < "${INPUT}.snt" \
     > "${OUTPUT}" \

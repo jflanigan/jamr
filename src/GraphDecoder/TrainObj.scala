@@ -131,19 +131,29 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
         val dependencies = Corpus.splitOnNewline(fromFile(dev+".snt.deps").getLines).map(block => block.replaceAllLiterally("-LRB-","(").replaceAllLiterally("-RRB-",")").replaceAllLiterally("""\/""","/")).toArray
 
         val file = new java.io.PrintWriter(new java.io.File(devDecode), "UTF-8")
-        for((block, i) <- Corpus.splitOnNewline(fromFile(dev+".aligned.no_opN").getLines).zipWithIndex) {
-            val inputGraph = AMRTrainingData(block).toInputGraph
-            val stage2Alg_Save = options('stage2Decoder)
-            val stage2 = if (stage2Alg_Save == "Alg1") {
-                    options('stage2Decoder) = "Alg1a"
-                    GraphDecoder.Decoder(options)
+        for { (block, i) <- Corpus.splitOnNewline(fromFile(dev+".aligned.no_opN").getLines).zipWithIndex
+                if block.split("\n").exists(_.startsWith("(")) } { // needs to contain some AMR
+            try {
+                val inputGraph = AMRTrainingData(block).toInputGraph
+                val stage2Alg_Save = options('stage2Decoder)
+                val stage2 = if (stage2Alg_Save == "Alg1") {
+                        options('stage2Decoder) = "Alg1a"
+                        GraphDecoder.Decoder(options)
+                    } else {
+                        GraphDecoder.Decoder(options)
+                    }
+                options('stage2Decoder) = stage2Alg_Save
+                stage2.features.weights = weights
+                val decoderResult = stage2.decode(new Input(inputGraph, tokenized(i).split(" "), dependencies(i)))
+                file.println(decoderResult.graph.prettyString(detail=1, pretty=true) + '\n')
+            } catch {
+                case e : Throwable => if (options.contains('ignoreParserErrors)) {
+                    file.println("# THERE WAS AN EXCEPTION IN THE PARSER.  Returning an empty graph.  (To find out the error, please run again without --ignore-parser-errors)")
+                    file.println(Graph.empty.prettyString(detail=1, pretty=true) + '\n')
                 } else {
-                    GraphDecoder.Decoder(options)
+                    throw e
                 }
-            options('stage2Decoder) = stage2Alg_Save
-            stage2.features.weights = weights
-            val decoderResult = stage2.decode(new Input(inputGraph, tokenized(i).split(" "), dependencies(i)))
-            file.println(decoderResult.graph.prettyString(detail=1, pretty=true) + '\n')
+            }
         }
         file.close
 
