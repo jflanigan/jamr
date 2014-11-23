@@ -11,11 +11,11 @@ for (line <- stdin.getLines()) {
     var tag : String = "O"
     var begin = false
     for (word <- line.split(" ")) {
-        if(word.matches("""\[[A-Z]*""")) {
+        if(word.matches("""\[[A-Z]+""")) {
             assert(tag == "O", "Error: Nested tags. Line = "+line)
             tag = word.tail
             begin = true
-        } else if(!word.endsWith("]")) {
+        } else if(!word.endsWith("]") || word.size == 1) {
             if(tag != "O") {
                 println(word + "\t" + (if (begin) { "B-" } else { "I-" }) + tag)
             } else {
