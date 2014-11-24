@@ -24,6 +24,7 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
     val decoder = Decoder(options, oracle = false)
     val oracle : Decoder = Decoder(options, oracle = true)
     //costAugDecoder.features.weights = weights
+    def zeroVector : FeatureVector = { FeatureVector() }
 
     var optimizer = options.getOrElse('trainingOptimizer, "Adagrad") match {     // TODO: this should go back into Train/TrainObj
         case "SSGD" => new SSGD()

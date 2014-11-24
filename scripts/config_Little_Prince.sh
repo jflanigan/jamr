@@ -30,6 +30,7 @@ export PARSER_OPTIONS="
     --stage2-labelset ${JAMR_HOME}/resources/labelset-r3
     --output-format AMR,nodes,edges,root
     --ignore-parser-errors
+    --print-stack-trace-on-errors
 "
 
 export CONCEPT_ID_TRAINING_OPTIONS="

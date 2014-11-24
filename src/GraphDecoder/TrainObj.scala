@@ -3,6 +3,8 @@ import edu.cmu.lti.nlp.amr._
 import edu.cmu.lti.nlp.amr.Train._
 import edu.cmu.lti.nlp.amr.FastFeatureVector._
 
+import java.io.StringWriter
+import java.io.PrintWriter
 import java.lang.Math.abs
 import java.lang.Math.log
 import java.lang.Math.exp
@@ -29,6 +31,8 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
     //val weights = decoder.features.weights
     //oracle.features.weights = weights
     //costAug.features.weights = weights
+
+    def zeroVector : FeatureVector = { new FeatureVector(getLabelset(options).map(_._1)) }
 
     var optimizer = options.getOrElse('trainingOptimizer, "Adagrad") match {     // TODO: this should go back into Train/TrainObj
         case "SSGD" => new SSGD()
@@ -148,7 +152,12 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
                 file.println(decoderResult.graph.prettyString(detail=1, pretty=true) + '\n')
             } catch {
                 case e : Throwable => if (options.contains('ignoreParserErrors)) {
-                    file.println("# THERE WAS AN EXCEPTION IN THE PARSER.  Returning an empty graph.  (To find out the error, please run again without --ignore-parser-errors)")
+                    file.println("# THERE WAS AN EXCEPTION IN THE PARSER.  Returning an empty graph.")
+                    if (options.contains('printStackTraceOnErrors)) {
+                        val sw = new StringWriter()
+                        e.printStackTrace(new PrintWriter(sw))
+                        file.println(sw.toString.split("\n").map(x => "# "+x).mkString("\n"))
+                    }
                     file.println(Graph.empty.prettyString(detail=1, pretty=true) + '\n')
                 } else {
                     throw e

@@ -1,5 +1,7 @@
 package edu.cmu.lti.nlp.amr
 
+import java.io.StringWriter
+import java.io.PrintWriter
 import scala.io.Source.fromFile
 import scala.collection.mutable.Map
 import scala.collection.mutable.Set
@@ -56,6 +58,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             case "--smatch-eval" :: value :: tail =>     parseOptions(map + ('smatchEval -> value), tail)
             case "--output-format" :: value :: l =>      parseOptions(map + ('outputFormat -> value), l)
             case "--ignore-parser-errors" :: l =>        parseOptions(map + ('ignoreParserErrors -> "true"), l)
+            case "--print-stack-trace-on-errors" :: l => parseOptions(map + ('printStackTraceOnErrors -> "true"), l)
             case "--dependencies" :: value :: tail =>    parseOptions(map + ('dependencies -> value), tail)
             case "--ner" :: value :: tail =>             parseOptions(map + ('ner -> value), tail)
             case "--snt" :: value :: tail =>             parseOptions(map ++ Map('notTokenized -> value), tail)
@@ -303,7 +306,15 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                     println("# ::tok "+tokenized(i))
                     val sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
                     println("# ::alignments 0-1|0 ::annotator "+VERSION+" ::date "+sdf.format(new Date))
-                    println("# THERE WAS AN EXCEPTION IN THE PARSER.  Returning an empty graph.  (To find out the error, please run again without --ignore-parser-errors)")
+                    println("# THERE WAS AN EXCEPTION IN THE PARSER.  Returning an empty graph.")
+                    if (options.contains('printStackTraceOnErrors)) {
+                        val sw = new StringWriter()
+                        e.printStackTrace(new PrintWriter(sw))
+                        println(sw.toString.split("\n").map(x => "# "+x).mkString("\n"))
+                    }
+                    logger(-1, " ********** THERE WAS AN EXCEPTION IN THE PARSER. *********")
+                    if (verbosity >= -1) { e.printStackTrace }
+                    logger(-1, "Continuing. To exit on errors, please run without --ignore-parser-errors")
                     println(Graph.empty.prettyString(detail=1, pretty=true) + '\n')
                 } else {
                     throw e

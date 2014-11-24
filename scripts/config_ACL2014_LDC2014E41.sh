@@ -30,12 +30,14 @@ export PARSER_OPTIONS="
     --stage2-labelset ${JAMR_HOME}/resources/labelset-r4
     --output-format AMR,nodes,edges,root
     --ignore-parser-errors
+    --print-stack-trace-on-errors
 "
 
 export CONCEPT_ID_TRAINING_OPTIONS="
     --training-optimizer Adagrad
     --training-passes 10
     --training-stepsize 1
+    -v 1
 "
 
 export RELATION_ID_TRAINING_OPTIONS="
