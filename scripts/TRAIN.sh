@@ -1,5 +1,5 @@
 #!/bin/bash
-set -ueo pipefail
+set -eo pipefail
 
 # usage: create a config.sh script, source it, and then run ./TRAIN.sh to train the model
 
@@ -21,10 +21,10 @@ echo "Training stage 2"
 ./cmd.stage2-weights
 
 # Evaluate on test set
-echo "  *** Test Evaluation (gold concept ID) ***"
+echo "  *** Test Evaluation (gold concept ID) ***" | tee "${MODEL_DIR}/RESULTS.txt"
 ./cmd.test.decode.stage2only
-"${JAMR_HOME}/scripts/smatch_v1_0/smatch_modified.py" --pr -f "${MODEL_DIR}/test.decode.stage2only" "${TEST_FILE}"
-echo "  *** Test Evaluation (all stages) ***"
+"${JAMR_HOME}/scripts/smatch_v1_0/smatch_modified.py" --pr -f "${MODEL_DIR}/test.decode.stage2only" "${TEST_FILE}" 2>&1 | tee -a "${MODEL_DIR}/RESULTS.txt"
+echo "  *** Test Evaluation (all stages) ***" | tee -a "${MODEL_DIR}/RESULTS.txt"
 ./cmd.test.decode.allstages
-"${JAMR_HOME}/scripts/smatch_v1_0/smatch_modified.py" --pr -f "${MODEL_DIR}/test.decode.allstages" "${TEST_FILE}"
+"${JAMR_HOME}/scripts/smatch_v1_0/smatch_modified.py" --pr -f "${MODEL_DIR}/test.decode.allstages" "${TEST_FILE}" 2>&1 | tee -a "${MODEL_DIR}/RESULTS.txt"
 
