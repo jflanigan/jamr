@@ -10,7 +10,7 @@ import scala.collection.mutable.Map
 for (line <- stdin.getLines()) {
     var tag : String = "O"
     var begin = false
-    for (word <- line.split(" ")) {
+    for (word <- line.split(" ") if word != "") { // more than one space, or an empty line, is skipped
         if (word.matches("""\[[A-Z]+""")) {
             if (tag != "O") {
                 System.err.println(" *** WARNING *** : Nested tags in Illinois NER output.\nLine = "+line+"\nSuggestion: you may want to remove any [ or ] from the input.")

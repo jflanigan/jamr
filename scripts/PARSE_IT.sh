@@ -41,7 +41,8 @@ temp="$PWD/$inputfile.tmp"
 pushd "$ILLINOIS_NER"
 java -classpath  ${cpath} -Xmx8g edu.illinois.cs.cogcomp.LbjNer.LbjTagger.NerTagger -annotate ${temp} ${outputfile} ${configfile}
 popd
-cat "$outputfile" | sed $'s/ #### /\\\n/g' | "$SCALA" "$JAMR_HOME/src/IllinoisNERConvert" | awk 'NR > 2' > "$INPUT.IllinoisNER"
+# The awk command drops the last line, see http://askubuntu.com/questions/475694/awk-command-to-print-all-the-lines-except-the-last-three-lines
+cat "$outputfile" | sed $'s/ #### /\\\n/g' | "$SCALA" "$JAMR_HOME/src/IllinoisNERConvert" | awk '{l[NR] = $0} END {for (i=1; i<=NR-1; i++) print l[i]}' > "$INPUT.IllinoisNER"
 rm "$outputfile"
 rm "$inputfile".tmp
 
