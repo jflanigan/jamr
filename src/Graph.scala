@@ -168,8 +168,14 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
     }
 
     def loadSpans(spanStr: String, sentence: Array[String]) = {
-        assert(spans.size == 0, "This code does not support re-loading the spans")
-        //spans.clear
+        //assert(spans.size == 0, "This code does not support re-loading the spans")
+        if (spans.size != 0) {
+            logger(-1, "WARNING: Reloading the spans")   // used to be assert
+            spans.clear
+            for (node <- nodes) {
+                node.spans.clear
+            }
+        }
         val SpanRegex = """([*]?)([0-9]+)-([0-9]+)\|(.*)""".r   // TODO: move to Span
         for (spanStr <- spanStr.split(" ")) {
             try {
