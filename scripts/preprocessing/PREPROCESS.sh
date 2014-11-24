@@ -22,7 +22,7 @@ set -x
 ./cmd.aligned.concepts_no_opN
 
 # Stanford Dependency Parser
-#./cmd.snt.tok.deps
+./cmd.snt.tok.deps
 # Tag with IllinoisNer
 ./cmd.snt.IllinoisNER
 
