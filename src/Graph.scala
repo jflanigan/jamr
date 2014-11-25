@@ -213,7 +213,7 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
             node2.id = node.id
             nodeIds = node.id :: nodeIds
             getNodeById(node.id) = node
-            if (node.concept(0) != '"') {   // concepts always have size > 0 (enforced by GraphParser)
+            if (node.concept(0) != '"' && node.concept(0) != '-') {   // concepts always have size > 0 (enforced by GraphParser)
                 val varName = getNextVariableName(node.concept.toLowerCase()(0))
                 getNodeByName(varName) = node
                 node.name = Some(varName)
