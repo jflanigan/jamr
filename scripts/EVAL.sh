@@ -30,7 +30,8 @@ STAGE2_WEIGHTS="${MODEL_DIR}/stage2-weights.iter5"
 #### Tokenize ####
 
 cat "$TEST_FILE" | grep '^# ::snt' | sed 's/^# ::snt //' > "$INPUT"
-cat "$INPUT" | sed 's/   */ /g' | "${CDEC}/corpus/tokenize-anything.sh" > "$OUTPUT.tok"
+cat "$INPUT" | sed 's/   */ /g' | "${CDEC}/corpus/tokenize-anything.sh" > "$OUTPUT.snt.tok"
+${JAMR_HOME}/run CorpusTool < "$TEST_FILE" --tokenized "$OUTPUT.snt.tok" > "$OUTPUT.tok"
 
 #### NER ####
 
@@ -52,6 +53,9 @@ rm "$tmp"
 
 "${JAMR_HOME}/run" RunStanfordParser < "$INPUT" > "$OUTPUT.deps"
 
+#### Align gold data ###
+${JAMR_HOME}/run Aligner -v 1 < "$OUTPUT.tok" 2>&1 | sed 's/:op[^ ]*/:op/g' > "$OUTPUT.aligned.no_opN"
+
 #### Parse ####
 
 ${JAMR_HOME}/run AMRParser \
@@ -60,8 +64,9 @@ ${JAMR_HOME}/run AMRParser \
   --stage2-weights "${STAGE2_WEIGHTS}" \
   --dependencies "${OUTPUT}.deps" \
   --ner "${OUTPUT}.IllinoisNER" \
-  --tok "${OUTPUT}.tok" \
+  --tok "${OUTPUT}.snt.tok" \
   -v 0 \
+  --stage1-eval \
   ${PARSER_OPTIONS} \
   < "${INPUT}" \
   > "${OUTPUT}.parsed" \
@@ -73,15 +78,16 @@ ${JAMR_HOME}/run AMRParser \
   --stage1-weights "${STAGE1_WEIGHTS}" \
   --stage2-weights "${STAGE2_WEIGHTS}" \
   --dependencies "${OUTPUT}.deps" \
+  --training-data "${OUTPUT}.aligned.no_opN" \
   --ner "${OUTPUT}.IllinoisNER" \
-  --tok "${OUTPUT}.tok" \
+  --tok "${OUTPUT}.snt.tok" \
   -v 0 \
   ${PARSER_OPTIONS} \
   < "${INPUT}" \
   > "${OUTPUT}.parsed-gold-concepts" \
   2> "${OUTPUT}.parsed-gold-concepts.err"
 
-rm "$OUTPUT.deps" "$OUTPUT.IllinoisNER" "$OUTPUT.tok" "$INPUT"
+rm "$OUTPUT.deps" "$OUTPUT.IllinoisNER" "$OUTPUT.tok" "$OUTPUT.snt.tok" "$OUTPUT.snt" "$OUTPUT.aligned.no_opN"
 
 echo ""
 echo "  ----- Evaluation: Smatch (all stages) -----" | tee "$OUTPUT.results"
