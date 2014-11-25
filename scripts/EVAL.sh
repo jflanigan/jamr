@@ -54,7 +54,7 @@ rm "$tmp"
 "${JAMR_HOME}/run" RunStanfordParser < "$INPUT" > "$OUTPUT.deps"
 
 #### Align gold data ###
-${JAMR_HOME}/run Aligner -v 1 < "$OUTPUT.tok" 2>&1 | sed 's/:op[^ ]*/:op/g' > "$OUTPUT.aligned.no_opN"
+${JAMR_HOME}/run Aligner -v 1 < "$OUTPUT.tok" 2>&1 | egrep '^#|^ |^\(|^$' | sed 's/:op[^ ]*/:op/g' > "$OUTPUT.aligned.no_opN"
 
 #### Parse ####
 
