@@ -24,7 +24,7 @@ class SSGD extends Optimizer[FeatureVector] {
         var avg_weights = FeatureVector(weights.labelset)
         var i = 0
         var scaling_trick = 1.0
-        while (i < passes && trainingObserver(i,avg_weights)) {
+        while (i < passes && trainingObserver(i,weights)) {
             logger(0,"Pass "+(i+1).toString)
             var objective = 0.0 // objective is 1/N \sum_i=1^N Loss(i) + 1/2 * \lambda * ||weights||^2 (var objective is N times this)
             for (t <- Random.shuffle(Range(0, trainingSize).toList)) {
@@ -55,6 +55,7 @@ class SSGD extends Optimizer[FeatureVector] {
             avg_weights += weights
             i += 1
         }
+        trainingObserver(i,weights)
         avg_weights *= (1.0 / passes.toDouble)
         if(avg) { avg_weights } else { weights }
     }

@@ -42,6 +42,6 @@ export CONCEPT_ID_TRAINING_OPTIONS="
 
 export RELATION_ID_TRAINING_OPTIONS="
     --training-optimizer Adagrad
-    --training-passes 10
+    --training-passes 7
     --training-save-interval 1
 "

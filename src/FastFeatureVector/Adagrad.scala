@@ -70,6 +70,7 @@ class Adagrad extends Optimizer[FeatureVector] {
             avg_weights += weights
             pass += 1
         }
+        trainingObserver(pass,avg_weights)
         if(avg) { avg_weights } else { weights }
     }
 }
