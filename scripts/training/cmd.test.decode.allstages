@@ -14,6 +14,7 @@ ${JAMR_HOME}/run AMRParser \
     --ner "${INPUT}.snt.IllinoisNER" \
     --tok "${INPUT}.snt.tok" \
     --training-data "${INPUT}.aligned.no_opN" \
+    --stage1-eval \
     -v 0 \
     ${PARSER_OPTIONS} \
     < "${INPUT}.snt" \
