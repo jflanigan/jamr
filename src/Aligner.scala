@@ -32,6 +32,7 @@ object Aligner {
                       parseOptions(map ++ Map('verbosity -> value.toInt), tail)
             case "--input" :: value :: tail =>             parseOptions(map ++ Map('input -> value), tail)
             case "--output" :: value :: tail =>             parseOptions(map ++ Map('output -> value), tail)
+            case "--wnhome" :: value :: tail =>             parseOptions(map ++ Map('wnhome -> value), tail)
              //case string :: opt2 :: tail if isSwitch(opt2) => 
             //          parseOptions(map ++ Map('infile -> string), list.tail)
             //case string :: Nil =>  parseOptions(map ++ Map('infile -> string), list.tail)
@@ -47,6 +48,14 @@ object Aligner {
         if (options.contains('verbosity)) {
             verbosity = options('verbosity).asInstanceOf[Int]
         }
+
+        val wnhome: String = if (options.contains('wnhome))
+          options('wnhome).asInstanceOf[String]
+        else
+          System.getenv("WNHOME")
+
+
+        Wordnet.init(wnhome)
 
         var aligner2 = true
         if (options.contains('aligner1)) {
