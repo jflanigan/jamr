@@ -18,7 +18,7 @@ Docs - Table of Contents
 Config File
 ==============
 
-The config file sets the environment variables for JAMR.  The variables relevant for training are:
+The config file sets the environment variables for JAMR.  The variables are:
 
 | Environment Variable | Purpose |
 | --- | --- |
@@ -30,5 +30,5 @@ The config file sets the environment variables for JAMR.  The variables relevant
 | `CONCEPT_ID_TRAINING_OPTIONS` | Options for concept ID training |
 | `RELATION_ID_TRAINING_OPTIONS` | Options for relation ID training |
 
-For the list possible `PARSER_OPTIONS`, see `src/AMRParser.scala`.
+There are also variable for the paths to the external depdendencies.  For the list of possible `PARSER_OPTIONS`, see `src/AMRParser.scala`.
 
