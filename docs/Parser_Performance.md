@@ -11,7 +11,7 @@ Docs - Table of Contents
   * [Step by Step Training](./Step_by_Step_Training.md)
  * Evaluation
   * [Alignment Evaluation](./Alignment_Evaluation.md)
-  * [Parser Performance](./Parser_Performance.md)
+  * [**Parser Performance**](./Parser_Performance.md)
 
 ---
 
@@ -20,7 +20,7 @@ Parser Performance
 
 ## LDC2013E117
 
-This is the dataset and train/dev/test split used in the ACL 2014 paper.  The split is listed
+Train/dev/test split used in the ACL 2014 paper.  The split is described
 [here](../scripts/preprocessing/LDC2013E117/README.md).  With the same configuration as the ACL paper, and some bugfixes
 we get the following results:
 
