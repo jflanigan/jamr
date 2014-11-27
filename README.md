@@ -63,7 +63,7 @@ To create the hand alignments file, see [docs/Hand Alignments](docs/Hand_Alignme
 
 The following describes how to train and evaluate the parser.  There are scripts to train the parser on various
 datasets, as well as a general train script to train the parser on any AMR dataset.  More detailed instructions for
-training the parser are in [docs/Step by Step Training.md](docs/Step_by_Step_Training.md).
+training the parser are in [docs/Step by Step Training](docs/Step_by_Step_Training.md).
 
 To train the parser on LDC data or public [AMR Bank](http://amr.isi.edu/download.html) data, download the data .tgz file
 into to `$JAMR_HOME/data/` and run one of the train scripts.  The data file and the train script to run for each of the datasets
@@ -76,9 +76,9 @@ is listed in the following table:
 | LDC2013E117 (Proxy only) | October 14, 2013 | 8,219 | `scripts/train_LDC2013E117.sh` | `LDC2013E117.tgz` |
 | [AMR Bank v1.4](http://amr.isi.edu/download.html) | November 14, 2014 | 1,562 | `scripts/train_Little_Prince.sh` | (automatically downloaded)   |
 
-For LDC2013E117 or LDC2014E41, you will need a licence for LDC DEFT project data. The trained model will go into a subdirectory of `models/`, and the evaulation results will be printed and saved to
+For LDC2013E117 or LDC2014E41, you will need a license for LDC DEFT project data. The trained model will go into a subdirectory of `models/`, and the evaulation results will be printed and saved to
 `models/directory/RESULTS.txt`.  The performance of the parser on the various datasets is in [docs/Parser
-Performance](docs/Parser_Performance).
+Performance](docs/Parser_Performance.md).
 
 To train the parser on another dataset, create a [config file](docs/Config_File.md) in `scripts/`, and
 then do:
