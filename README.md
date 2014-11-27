@@ -69,14 +69,14 @@ To train the parser on LDC data or public [AMR Bank](http://amr.isi.edu/download
 into to `$JAMR_HOME/data/` and run one of the train scripts.  The data file and the train script to run for each of the datasets
 is listed in the following table:
 
-| Dataset | Date released | Size (# sents) | Script to run   | File to move to `data/` | Notes |
-| --- | ---- | ---- | ---- | --- | ------- |
-| [LDC2014T12](https://catalog.ldc.upenn.edu/LDC2014T12) | June 16, 2014 | 13,051 | `scripts/train_LDC2014T12.sh`    | `amr_anno_1.0_LDC2014T12.tgz` | |
-| LDC2014E41 | May 30, 2014 | 18,779 | `scripts/train_LDC2014E41.sh`    | `LDC2014E41_DEFT_Phase_1_AMR_Annotation_R4.tgz`  | requires DEFT project LDC license |
-| LDC2013E117 (Proxy only) | October 14, 2013 | 8,219 | `scripts/train_LDC2013E117.sh` | `LDC2013E117.tgz` | Dataset used in ACL 2014 Paper. Requires DEFT project LDC license |
-| [AMR Bank v1.4](http://amr.isi.edu/download.html) | November 14, 2014 | 1,562 | `scripts/train_Little_Prince.sh` | (automatically downloaded)   |                    |
+| Dataset | Date released | Size (# sents) | Script to run   | File to move to `data/` |
+| --- | ---- | ---- | ---- | --- |
+| [LDC2014T12](https://catalog.ldc.upenn.edu/LDC2014T12) | June 16, 2014 | 13,051 | `scripts/train_LDC2014T12.sh`    | `amr_anno_1.0_LDC2014T12.tgz` |
+| LDC2014E41 | May 30, 2014 | 18,779 | `scripts/train_LDC2014E41.sh`    | `LDC2014E41_DEFT_Phase_1_AMR_Annotation_R4.tgz`  |
+| LDC2013E117 (Proxy only) | October 14, 2013 | 8,219 | `scripts/train_LDC2013E117.sh` | `LDC2013E117.tgz` |
+| [AMR Bank v1.4](http://amr.isi.edu/download.html) | November 14, 2014 | 1,562 | `scripts/train_Little_Prince.sh` | (automatically downloaded)   |
 
-The trained model will go into a subdirectory of `models/`, and the evaulation results will be printed and saved to
+For LDC2013E117 or LDC2014E41, you will need a licence for LDC DEFT project data. The trained model will go into a subdirectory of `models/`, and the evaulation results will be printed and saved to
 `models/directory/RESULTS.txt`.  The performance of the parser on the various datasets is in [docs/Parser
 Performance](docs/Parser_Performance).
 
