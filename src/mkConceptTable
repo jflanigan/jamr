@@ -22,7 +22,7 @@ for (Line(phrase, concept, countStr) <- stdin.getLines()) {
 
 System.err.println("Counting phrases in corpus: "+args(0))
 
-for (line <- fromFile(args(0)).getLines) {
+for (line <- fromFile(args(0), "utf-8").getLines) {
     val sentence = line.split(" ")
     for ((word, i) <- sentence.zipWithIndex) {
         val matching = conceptTable.getOrElse(word, List()).filter(x => x._1 == sentence.slice(i, i+x._1.split(" ").size).mkString(" "))
