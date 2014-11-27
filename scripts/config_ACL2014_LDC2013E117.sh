@@ -2,6 +2,8 @@
 
 # assumes this script (config.sh) lives in "${JAMR_HOME}/scripts/"
 
+# TODO: check that we live in the scripts directory.
+
 export JAMR_HOME="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." > /dev/null && pwd )"
 export CLASSPATH=".:${JAMR_HOME}/target/scala-2.10/jamr-assembly-0.1-SNAPSHOT.jar"
 
