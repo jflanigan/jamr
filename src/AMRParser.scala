@@ -33,6 +33,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
         def isSwitch(s : String) = (s(0) == '-')
         list match {
             case Nil => map
+            case "--model-name"  :: value :: tail =>     parseOptions(map + ('modelName -> value), tail)
             case "--stage1-only" :: l =>                 parseOptions(map + ('stage1Only -> "true"), l)
             case "--stage1-oracle" :: l =>               parseOptions(map + ('stage1Oracle -> "true"), l)
             case "--stage1-train" :: l =>                parseOptions(map + ('stage1Train -> "true"), l)
@@ -87,11 +88,11 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
        result
     }
 
-    // cache the previous Stage2 GraphDecoder object so that it can be re-used. This saves us from having to reload
-    // the weights if JAMR is re-invoked in the same process
-    var previousStage2: Option[GraphDecoder.Decoder] = None
+  // cache the previous Stage2 GraphDecoder object so that it can be re-used. This saves us from having to reload
+  // the weights if JAMR is re-invoked in the same process. Save multiple version using modelName is a key
+    var previousStage2: Map[String, GraphDecoder.Decoder] = Map()
 
-    // an optional callback that lets us get direct access to decoderResultGraph when parsing
+  // an optional callback that lets us get direct access to decoderResultGraph when parsing
     var resultHandler: Option[Graph => Unit] = None
 
     def main(args: Array[String]) {
@@ -100,6 +101,8 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
         val options = parseOptions(Map(),args.toList)
 
         verbosity = options.getOrElse('verbosity, "0").toInt
+
+        val modelName = options.getOrElse('modelName, "Default").toString
 
         val outputFormat = options.getOrElse('outputFormat,"triples").split(",").toList
         // Output format is comma separated list of: nodes,edges,AMR,triples
@@ -113,17 +116,16 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             }
         }
 
-        // re-use the previous Stage2 GraphDecoder if it's there
-        val stage2 : Option[GraphDecoder.Decoder] = if (previousStage2.isDefined) previousStage2 else {
-            if((options.contains('stage1Only) || options.contains('stage1Train)) && !options.contains('stage2Train)) {
+
+        val stage2 : Option[GraphDecoder.Decoder] = if (previousStage2.contains(modelName)) previousStage2.get(modelName) else {
+        if((options.contains('stage1Only) || options.contains('stage1Train)) && !options.contains('stage2Train)) {
                 None
             } else {
                 Some(GraphDecoder.Decoder(options))
             }
         }
 
-        // save previous Stage2 GraphDecoder for later
-        previousStage2 = stage2
+        if (stage2.isDefined) previousStage2 += (modelName -> stage2.get)
 
         val stage2Oracle : Option[GraphDecoder.Decoder] = {
             if(options.contains('trainingData) || options.contains('stage2Train)) {
@@ -173,10 +175,11 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             }
             val stage2weightfile : String = options('stage2Weights)
 
-            logger(0, "Reading weights")
+
             if (stage2 != None) {
                 // don't read the weights again if they are already there, this check is probably redundant
                 if (stage2.get.features.weights.fmap.size == 0) {
+                  logger(0, f"Reading weights for $modelName")
                   val stage2weightlines = Source.fromFile( stage2weightfile ).getLines( )
                   stage2.get.features.weights.read( stage2weightlines )
                   if( stage2Oracle != None ) {

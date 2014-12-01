@@ -63,6 +63,7 @@ class Concepts(phraseConceptPairs: Array[PhraseConceptPair],
             case "LOC" => "country"         // also city, world-region, continent, county
             case "DAT" => "date"
             case "TIM" => "time"
+            case "NUM" => "number"
             case "MIS" => "thing"         // also treaty, publication, newspaper, product, war
         }
         val (start, end) = ner.getSpan((entity.start, entity.end))    // start and end in ner.snt, which should be the unTokenized text
