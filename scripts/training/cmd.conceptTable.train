@@ -2,6 +2,7 @@
 # assumes `config.sh` has already been sourced
 INPUT="$TRAIN_FILE"
 OUTPUT="$MODEL_DIR/conceptTable.train"
+export JAVA_OPTS="-ea -Dfile.encoding=UTF-8 -XX:ParallelGCThreads=2 -Xmx4g -XX:+CMSClassUnloadingEnabled"
 
 mkdir -p $MODEL_DIR
 $SCALA $JAMR_HOME/src/mkConceptTable < $INPUT.aligned.concepts_no_opN $INPUT.snt.tok > $OUTPUT

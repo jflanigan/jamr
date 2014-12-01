@@ -63,16 +63,16 @@ case class Input(var graph: Option[Graph],  // var so we can update for the inpu
 object Input {
     def loadInputfiles(options: Map[Symbol, String]) : Array[Input] = {
         logger(1,"Loading external input...")
-        val tokenized = fromFile(options('tokenized)).getLines.toArray
-        val notTokenized = fromFile(options('notTokenized)).getLines.toArray
+        val tokenized = fromFile(options('tokenized), "utf-8").getLines.toArray
+        val notTokenized = fromFile(options('notTokenized), "utf-8").getLines.toArray
         val dependencies = if (options.contains('dependencies)) {
             (for {
-                block <- Corpus.splitOnNewline(fromFile(options('dependencies)).getLines())
+                block <- Corpus.splitOnNewline(fromFile(options('dependencies), "utf-8").getLines())
             } yield block.replaceAllLiterally("-LRB-","(").replaceAllLiterally("-RRB-",")").replaceAllLiterally("""\/""","/")).toArray
         } else {
             tokenized.map(x => "")
         }
-        val ner = Corpus.splitOnNewline(fromFile(options('ner)).getLines).toArray
+        val ner = Corpus.splitOnNewline(fromFile(options('ner), "utf-8").getLines).toArray
         logger(1, "tokenized.size = "+tokenized.size.toInt)
         logger(1, "snt.size = "+notTokenized.size.toInt)
         logger(1, "dependencies.size = "+dependencies.size.toInt)
