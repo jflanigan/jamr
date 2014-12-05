@@ -33,18 +33,18 @@ cat "$INPUT" | sed 's/   */ /g' | "${CDEC}/corpus/tokenize-anything.sh" > "$INPU
 #### NER ####
 
 inputfile="$INPUT"
-outputfile="$PWD/$INPUT.IllinoisNER.tmp"
+outputfile="$INPUT.IllinoisNER.tmp"
 configfile="$JAMR_HOME/scripts/preprocessing/IllinoisNER.config"
 cpath="$ILLINOIS_NER_JAR:$ILLINOIS_NER/target/classes:$ILLINOIS_NER/target/dependency/*"
-cat $inputfile | sed $'s/$/\\\n####\\\n/' > $inputfile.tmp # see http://superuser.com/questions/307165/newlines-in-sed-on-mac-os-x
-temp="$PWD/$inputfile.tmp"
+temp="$inputfile.tmp"
+cat "$inputfile" | sed $'s/$/\\\n####\\\n/' > "$temp" # see http://superuser.com/questions/307165/newlines-in-sed-on-mac-os-x
 pushd "$ILLINOIS_NER"
 java -classpath  ${cpath} -Xmx8g edu.illinois.cs.cogcomp.LbjNer.LbjTagger.NerTagger -annotate ${temp} ${outputfile} ${configfile}
 popd
 # The awk command drops the last line, see http://askubuntu.com/questions/475694/awk-command-to-print-all-the-lines-except-the-last-three-lines
 cat "$outputfile" | sed $'s/ #### /\\\n/g' | "$SCALA" "$JAMR_HOME/src/IllinoisNERConvert" | awk '{l[NR] = $0} END {for (i=1; i<=NR-1; i++) print l[i]}' > "$INPUT.IllinoisNER"
 rm "$outputfile"
-rm "$inputfile".tmp
+rm "$temp"
 
 #### Dependencies ####
 
