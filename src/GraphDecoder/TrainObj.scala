@@ -129,13 +129,13 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
         val devDecode = options('trainingOutputFile)+".iter"+pass.toString+".decode_dev"
         val dev = options('trainingDev) // assumes .aligned, .aligned.no_opN, .snt, .tok, .snt.deps, .snt.IllinoisNER
 
-        val snt = fromFile(dev+".aligned.no_opN", "utf-8").getLines.toArray // aka 'input' in AMRParser decode
-        val tokenized = fromFile(dev+".snt.tok", "utf-8").getLines.toArray
-        val nerFile = Corpus.splitOnNewline(fromFile(dev+".snt.IllinoisNER", "utf-8").getLines).toArray
-        val dependencies = Corpus.splitOnNewline(fromFile(dev+".snt.deps", "utf-8").getLines).map(block => block.replaceAllLiterally("-LRB-","(").replaceAllLiterally("-RRB-",")").replaceAllLiterally("""\/""","/")).toArray
+        val snt = fromFile(dev+".aligned.no_opN").getLines.toArray // aka 'input' in AMRParser decode
+        val tokenized = fromFile(dev+".snt.tok").getLines.toArray
+        val nerFile = Corpus.splitOnNewline(fromFile(dev+".snt.IllinoisNER").getLines).toArray
+        val dependencies = Corpus.splitOnNewline(fromFile(dev+".snt.deps").getLines).map(block => block.replaceAllLiterally("-LRB-","(").replaceAllLiterally("-RRB-",")").replaceAllLiterally("""\/""","/")).toArray
 
         val file = new java.io.PrintWriter(new java.io.File(devDecode), "UTF-8")
-        for { (block, i) <- Corpus.splitOnNewline(fromFile(dev+".aligned.no_opN", "utf-8").getLines).zipWithIndex
+        for { (block, i) <- Corpus.splitOnNewline(fromFile(dev+".aligned.no_opN").getLines).zipWithIndex
                 if block.split("\n").exists(_.startsWith("(")) } { // needs to contain some AMR
             try {
                 val inputGraph = AMRTrainingData(block).toInputGraph

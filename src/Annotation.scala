@@ -44,7 +44,21 @@ case class Annotation[T](var snt: Array[String], var tok: Array[String], var ann
                 logger(3, "tokenized = "+normalizedStr(tokenized))
                 regexr.findPrefixOf(normalizedStr(tokenized)) match {
                     case Some(prefix) => { right(i) = prefix.count(_ == ' ') + 1}
-                    case None => assert(false, "Error matching the prefix (this will occur if there are two or more consecutive spaces in the input.)\nTokenized 1 = "+tokenized.mkString(" ")+"\nTokenized 2 = "+myTokenized.mkString(" "))  // TODO: fixme
+                    case None => {
+                        System.err.println("Error matching the prefix (this will occur if there are two or more consecutive spaces in the input.")
+                        System.err.println("tokenized = "+tokenized.mkString(" "))
+                        System.err.println("myTokenized = "+myTokenized.mkString(" "))
+                        if (tokenized.mkString("") != myTokenized.mkString("")) {
+                            System.err.println("Tokenizations don't match")
+                        }
+                        System.err.println("i = "+i.toString)
+                        System.err.println("prefix = "+myTokenized.take(i+1))
+                        System.err.println("regexr = "+regexr)
+                        if (regexr.findPrefixOf(myTokenized.mkString(" ")) == None) {
+                            System.err.println("Regex doesn't match myTokenized either")
+                        }
+                        assert(false)
+                    }
                 }
                 if (i > 0) {
                     val regexl = (normalizedRegex(myTokenized.take(i))+" ").r
