@@ -146,7 +146,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             if (!options.contains('stage1Weights)) {
                 System.err.println("Error: No stage1 weights file specified"); sys.exit(1)
             }
-            stage1.features.weights.read(Source.fromFile(options('stage1Weights).asInstanceOf[String], "utf-8").getLines())
+            stage1.features.weights.read(Source.fromFile(options('stage1Weights).asInstanceOf[String]).getLines())
 
             //logger(0, "Stage1 weights:\n"+stage1.features.weights.toString)
 
@@ -158,7 +158,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
 
             logger(0, "Reading weights")
             if (stage2 != None) {
-                stage2.get.features.weights.read(Source.fromFile(stage2weightfile, "utf-8").getLines())
+                stage2.get.features.weights.read(Source.fromFile(stage2weightfile).getLines())
                 if (stage2Oracle != None) {
                     stage2Oracle.get.features.weights.read(Source.fromFile(stage2weightfile).getLines())
                 }
@@ -166,16 +166,16 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             logger(0, "done")
 
             val input = stdin.getLines.toArray
-            val tokenized = fromFile(options('tokenized).asInstanceOf[String], "utf-8").getLines/*.map(x => x)*/.toArray
-            val nerFile = Corpus.splitOnNewline(fromFile(options('ner).asInstanceOf[String], "utf-8").getLines).toArray
+            val tokenized = fromFile(options('tokenized).asInstanceOf[String]).getLines/*.map(x => x)*/.toArray
+            val nerFile = Corpus.splitOnNewline(fromFile(options('ner).asInstanceOf[String]).getLines).toArray
             val oracleData : Array[String] = if (options.contains('trainingData)) {
-                    Corpus.getAmrBlocks(fromFile(options('trainingData), "utf-8").getLines()).toArray
+                    Corpus.getAmrBlocks(fromFile(options('trainingData)).getLines()).toArray
                 } else {
                     new Array(0)
                 }
             val dependencies: Array[String] = if (options.contains('dependencies)) {
                 (for {
-                    block <- Corpus.splitOnNewline(Source.fromFile(options('dependencies).asInstanceOf[String], "utf-8").getLines())
+                    block <- Corpus.splitOnNewline(Source.fromFile(options('dependencies).asInstanceOf[String]).getLines())
                 } yield block.replaceAllLiterally("-LRB-","(").replaceAllLiterally("-RRB-",")").replaceAllLiterally("""\/""","/")).toArray
             } else {
                 new Array(0)

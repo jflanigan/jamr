@@ -18,6 +18,12 @@ case class Annotation[T](var snt: Array[String], var tok: Array[String], var ann
     snt = snt.map(x => x.replaceAllLiterally(" ",""))
     tok = tok.map(x => x.replaceAllLiterally(" ",""))
 
+    val weird_system = if ("abc".split("").toList == List("a","b","c")) {
+        true    // on some systems "abc".split("") gives Array("a","b","c") and I have no idea why
+    } else {
+        false   // usually "abc".split("") is Array("","a","b","c")
+    }
+
     def annotations: T = annotation   // alias for annotation
     def annotations_= (a: T) { annotation = a }
 
@@ -25,8 +31,12 @@ case class Annotation[T](var snt: Array[String], var tok: Array[String], var ann
         // For some reason, Pattern.quote doesn't seem to work when we have "(" or ")" in our input, so we change them to "-LRB-" and "-RRB-" (and do the same in normalizedStr)
         // The Stanford parser replaces unicode with ??? so, we delete any ?
         // We also remove any unicode
-        normalizedStr(tokens, "").split("").map(x => Pattern.quote(x)).drop(1).mkString(" ?")
         //normalizedStr(tokens, "").split("").map(x => Pattern.quote(x)).drop(1).mkString(" *")   // * because we may have removed a token completely using the replacement rules, so we must match "  "
+        if (!weird_system) {
+            normalizedStr(tokens, "").split("").map(x => Pattern.quote(x)).drop(1).mkString(" ?")
+        } else { 
+            normalizedStr(tokens, "").split("").map(x => Pattern.quote(x)).mkString(" ?")
+        }
     }
     def normalizedStr(tokens: Array[String], spacer: String = " ") : String = {
         tokens.mkString(spacer).replaceAllLiterally("(","-LRB-").replaceAllLiterally(")","-RRB-")
@@ -44,7 +54,21 @@ case class Annotation[T](var snt: Array[String], var tok: Array[String], var ann
                 logger(3, "tokenized = "+normalizedStr(tokenized))
                 regexr.findPrefixOf(normalizedStr(tokenized)) match {
                     case Some(prefix) => { right(i) = prefix.count(_ == ' ') + 1}
-                    case None => assert(false, "Error matching the prefix (this will occur if there are two or more consecutive spaces in the input.)")  // TODO: fixme
+                    case None => {
+                        System.err.println("Error matching the prefix (this will occur if there are two or more consecutive spaces in the input.")
+                        System.err.println("tokenized = "+tokenized.mkString(" "))
+                        System.err.println("myTokenized = "+myTokenized.mkString(" "))
+                        if (tokenized.mkString("") != myTokenized.mkString("")) {
+                            System.err.println("Tokenizations don't match")
+                        }
+                        System.err.println("i = "+i.toString)
+                        System.err.println("prefix = "+myTokenized.take(i+1).toList)
+                        System.err.println("regexr = "+regexr)
+                        if (regexr.findPrefixOf(myTokenized.mkString(" ")) == None) {
+                            System.err.println("Regex doesn't match myTokenized either")
+                        }
+                        assert(false)
+                    }
                 }
                 if (i > 0) {
                     val regexl = (normalizedRegex(myTokenized.take(i))+" ").r

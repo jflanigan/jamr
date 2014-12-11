@@ -128,9 +128,9 @@ abstract class TrainObj[FeatureVector <: AbstractFeatureVector](options: Map[Sym
         val devfile = "data/splits/sec20."+formalism+".sdp"
         val (iASSave, iGSave, oGSave) = (inputAnnotatedSentences, inputGraphs, oracleGraphs)
         inputAnnotatedSentences = Corpus.getInputAnnotatedSentences(devfile+".dependencies")
-        inputGraphs = Corpus.splitOnNewline(fromFile(devfile, "utf-8").getLines).map(
+        inputGraphs = Corpus.splitOnNewline(fromFile(devfile).getLines).map(
             x => SDPGraph.fromGold(x.split("\n"), true)).toArray
-        oracleGraphs = Corpus.splitOnNewline(fromFile(devfile, "utf-8").getLines).map(
+        oracleGraphs = Corpus.splitOnNewline(fromFile(devfile).getLines).map(
             x => SDPGraph.fromGold(x.split("\n"), false)).toArray
         assert(inputAnnotatedSentences.size == inputGraphs.size && inputGraphs.size == oracleGraphs.size, "sdp and dep file lengths do not match")
 
