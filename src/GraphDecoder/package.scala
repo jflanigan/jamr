@@ -56,7 +56,7 @@ package object GraphDecoder {
         }
 
         if (options('stage2Decoder) == "Alg1" && outputFormat.contains("AMR")) {
-            println("Cannot have --outputFormat \"AMR\" for stage2 Alg1 (graph may not be connected!)")
+            System.err.println("Cannot have --outputFormat \"AMR\" for stage2 Alg1 (graph may not be connected!)")
             sys.exit(1)
         }
 

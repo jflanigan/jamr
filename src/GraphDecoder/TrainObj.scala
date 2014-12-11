@@ -64,7 +64,7 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
                     "" //"\t"+decoder.features.ffDependencyPathv2(node1, node2, relation).toString.split("\n").filter(_.matches("^C1.*")).toList.toString+"\t"+decoder.features.localScore(node1, node2, relation).toString
                 })+"\n")
         }
-        logger(1, "Decoder features:\n"+result.features+"\n")
+        //logger(1, "Decoder features:\n"+result.features+"\n")
         return (result.features, result.score, if (outputFormat.contains("AMR")) { result.graph.prettyString(detail = 1, pretty = true) } else { "" })
     }
 
@@ -95,7 +95,7 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
     def costAugmented(i: Int, weights: FeatureVector, scale: Double) : (FeatureVector, Double) = {
         val decoder = Decoder(options)
         decoder.features.weights = weights
-        val costAug = new CostAugmented(Decoder(options), scale, options.getOrElse('trainingPrecRecallTradeoff,"0.5").toDouble)
+        val costAug = new CostAugmented(decoder, scale, options.getOrElse('trainingPrecRecallTradeoff,"0.5").toDouble)
         costAug.features.weights = weights
 
         val amrdata1 = AMRTrainingData(training(i))
@@ -122,7 +122,11 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
     }
 
     def train {
-        train(FeatureVector(getLabelset(options).map(x => x._1)))
+        val initialWeights = FeatureVector(getLabelset(options).map(x => x._1))
+        if (options.contains('trainingInitialWeights)) {
+            initialWeights.read(Source.fromFile(options('trainingInitialWeights)).getLines)
+        }
+        train(initialWeights)
     }
 
     def evalDev(options: Map[Symbol, String], pass: Int, weights: FeatureVector) {
