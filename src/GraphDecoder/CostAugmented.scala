@@ -19,23 +19,29 @@ import scala.collection.mutable.ArrayBuffer
 class CostAugmented(val decoder: Decoder, costScale: Double, precRecTradeoff: Double) extends Decoder {
     // precRecTradeoff: 1 = only prec errors, 0 = only recall errors
     val features = decoder.features
-    decoder.features.addFeatureFunction("CostAugEdgeId")
+    decoder.features.addFeatureFunction("CostAugEdge")
     decoder.features.addFeatureFunction("rootCostAug")
 
     def decode(input: Input) : DecoderResult = {                        // WARNING: input should be same as input to oracle decoder
         val oracleDecoder = new Oracle(decoder.features.featureNames,   // "CostAugEdgeId" and "rootCostAug" already in featureNames
                                        decoder.features.weights.labelset)
         val oracle = oracleDecoder.decode(input)
-        val addCost = oracle.features.filter(x => x.startsWith("CA:"))
-        for ((feat, values) <- addCost.fmap) {
-            values.unconjoined = 1.0
-            values.conjoined = Map()
+        val addCost = new FeatureVector(oracle.features.labelset)
+        var edgeFeatures : List[(String, ValuesList)] = List()
+        for { node1 <- input.graph.get.nodes
+              node2 <- input.graph.get.nodes
+            } {
+                edgeFeatures = ("CA:U_C1="+node1.concept+"+C2="+node2.concept, ValuesList(1.0, List())) :: edgeFeatures
         }
+        addCost += edgeFeatures     // Add features not conjoined with label (aka unconjoined)
 
-        // add costScale to edge weights that don't match oracle (penalize precision type errors) (Actually add to all weights, will subtract)
-        features.weights += (2.0 * precRecTradeoff * costScale) * addCost
+        // add costScale to edge weights that don't match oracle (penalize precision type errors) (Actually add to all weights, then subtract)
+        // (penalize predicting edge that isn't in oracle)
+        features.weights += (1.0 * precRecTradeoff * costScale) * addCost
+        features.weights -= (1.0 * precRecTradeoff * costScale) * oracle.features.filter(x => x.startsWith("CA:C1"))
         // subtract costScale from ones that match (penalize recall type errors) (Actually subtract twice the amount to cancel adding to all)
-        features.weights -= (2.0 * (1.0 - 2.0 * precRecTradeoff) * costScale) * oracle.features.filter(x => x.startsWith("CA:"))
+        // (penalize not predicting edge that is in oracle)
+        features.weights -= (1.0 * (1.0 - precRecTradeoff) * costScale) * oracle.features.filter(x => x.startsWith("CA:C1"))
 
         // We want to do this:
         //val result = decoder.decode(Input(input.inputAnnotatedSentence, input.graph.duplicate.clearEdges))
@@ -50,8 +56,9 @@ class CostAugmented(val decoder: Decoder, costScale: Double, precRecTradeoff: Do
         val score = features.weights.dot(result.features)
 
         // undo the changes
-        features.weights -= (2.0 * precRecTradeoff * costScale) * addCost
-        features.weights += (2.0 * (1.0-2.0 * precRecTradeoff) * costScale) * oracle.features.filter(x => x.startsWith("CA:"))
+        features.weights -= (1.0 * precRecTradeoff * costScale) * addCost
+        features.weights += (1.0 * precRecTradeoff * costScale) * oracle.features.filter(x => x.startsWith("CA:"))
+        features.weights += (1.0 * (1.0 - precRecTradeoff) * costScale) * oracle.features.filter(x => x.startsWith("CA:"))
 
         val feats = result.features.filter(x => !x.startsWith("CA:"))
         return DecoderResult(result.graph, feats, score)
