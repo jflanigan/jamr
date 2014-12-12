@@ -38,10 +38,6 @@ class Features(featureNames: List[String]) {
     val ffTable = Map[String, FeatureFunction](
         "bias" -> ffBias,
         "length" -> ffLength,
-        "count" -> ffCount,
-        "conceptGivenPhrase" -> ffConceptGivenPhrase,
-        "fromNERTagger" -> ffFromNERTagger,
-        "fromDateExpr" -> ffFromDateExpr,
         "phraseConceptPair" -> ffPhraseConceptPair,
         "pairWith2WordContext" -> ffPairWith2WordContext
     )
@@ -54,23 +50,15 @@ class Features(featureNames: List[String]) {
         return FeatureVector(Map("len" -> concept.words.size))
     }
 
-    def ffCount(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
-        return FeatureVector(Map("N" -> concept.features.count))
-    }
-
-    def ffConceptGivenPhrase(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
-        return FeatureVector(Map("c|p" -> concept.features.conceptGivenPhrase))
-    }
-
-    def ffFromNERTagger(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
+/*    def ffFromNERTagger(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
         if (concept.features.fromNER) { FeatureVector(Map("ner" -> 1.0))
-        } else { FeatureVector(Map("ner" -> 0.0)) }
+        } else { new FeatureVector() }
     }
 
     def ffFromDateExpr(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
         if (concept.features.fromDateExpr) { FeatureVector(Map("datex" -> 1.0))
-        } else { FeatureVector(Map("datex" -> 0.0)) }
-    }
+        } else { new FeatureVector() }
+    } */
 
     def ffPhraseConceptPair(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
         return FeatureVector(Map("CP="+concept.words.mkString("_")+"=>"+concept.graphFrag.replaceAllLiterally(" ","_") -> 1.0))
@@ -96,6 +84,7 @@ class Features(featureNames: List[String]) {
         for (ff <- featureFunctions) {
             feats += ff(input, concept, start, end)
         }
+        feats += concept.features   // add the features in the rule
         return feats
     }
 
@@ -104,6 +93,7 @@ class Features(featureNames: List[String]) {
         for (ff <- featureFunctions) {
             score += weights.dot(ff(input, concept, start, end))
         }
+        score += weights.dot(concept.features)  // add the features in the rule
         return score
     }
 
