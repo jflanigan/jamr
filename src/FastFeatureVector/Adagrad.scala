@@ -35,8 +35,8 @@ class Adagrad extends Optimizer[FeatureVector] {
         while (pass < passes && (pass == 0 || trainingObserver(pass,avg_weights))) {
             logger(-1,"Pass "+(pass+1).toString)
             var objective = 0.0 // objective is 1/N \sum_i=1^N Loss(i) + 1/2 * \lambda * ||weights||^2 (var objective is N times this)
-            for (t <- Range(0, trainingSize).toList) {
-            //for (t <- Random.shuffle(Range(0, trainingSize).toList)) {
+            //for (t <- Range(0, trainingSize).toList) {
+            for (t <- Random.shuffle(Range(0, trainingSize).toList)) {
                 // normally we would do weights -= stepsize * gradient(t)._1
                 // but instead we do this: (see equation 8 in SocherBauerManningNg_ACL2013.pdf)
                 val (grad, score) = gradient(Some(pass), t, weights)
