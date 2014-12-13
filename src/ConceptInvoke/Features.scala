@@ -50,16 +50,6 @@ class Features(featureNames: List[String]) {
         return FeatureVector(Map("len" -> concept.words.size))
     }
 
-/*    def ffFromNERTagger(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
-        if (concept.features.fromNER) { FeatureVector(Map("ner" -> 1.0))
-        } else { new FeatureVector() }
-    }
-
-    def ffFromDateExpr(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
-        if (concept.features.fromDateExpr) { FeatureVector(Map("datex" -> 1.0))
-        } else { new FeatureVector() }
-    } */
-
     def ffPhraseConceptPair(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
         return FeatureVector(Map("CP="+concept.words.mkString("_")+"=>"+concept.graphFrag.replaceAllLiterally(" ","_") -> 1.0))
     }

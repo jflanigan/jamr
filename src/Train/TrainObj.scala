@@ -44,7 +44,7 @@ abstract class TrainObj[FeatureVector <: AbstractFeatureVector](options: Map[Sym
         optimizer = new MiniBatch(optimizer, options('trainingMiniBatchSize).toInt, numThreads)
     }
 
-    val input = Input.loadInputfiles(options)
+    val input: Array[Input] = Input.loadInputfiles(options)
     val training: Array[String] = Corpus.getAmrBlocks(io.Source.stdin.getLines()).toArray
 
 /*  Runtime.getRuntime().addShutdownHook(new Thread() {

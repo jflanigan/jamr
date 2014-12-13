@@ -17,12 +17,12 @@ package object ConceptInvoke {
             System.err.println("Error: No concept table specified"); sys.exit(1)
         }
         val conceptFile = options('stage1ConceptTable)
-        val conceptTable = Source.fromFile(conceptFile).getLines.map(x => new PhraseConceptPair(x)).toArray
+        val conceptTable = Source.fromFile(conceptFile).getLines.map(x => PhraseConceptPair(x)).toArray
         val useNER = options.contains('ner)
         if (oracle) {
-            new Oracle(stage1Features, conceptTable, useNER)
+            new Oracle(options, stage1Features, conceptTable, useNER)
         } else {
-            new Decoder1(stage1Features, conceptTable, useNER)
+            new Decoder1(options, stage1Features, conceptTable, useNER)
         }
     }
 }
