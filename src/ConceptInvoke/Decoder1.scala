@@ -22,14 +22,15 @@ import Double.{NegativeInfinity => minusInfty}
 type PhraseConceptPair = (List[String], String, PhraseConceptFeatures)
 ********************************/
 
-class Decoder1(featureNames: List[String],
+class Decoder1(options: Map[Symbol, String],
+               featureNames: List[String],
                phraseConceptPairs: Array[PhraseConceptPair],
                useNER: Boolean = true)
     extends Decoder(featureNames) {
     // Base class has defined:
     // val features: Features
 
-    val conceptInvoker = new Concepts(phraseConceptPairs)
+    val conceptInvoker = new Concepts(options, phraseConceptPairs)
 
     def decode(input: Input) : DecoderResult = {
         logger(1, "\n--- Decoder1 ---\n")

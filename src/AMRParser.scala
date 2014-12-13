@@ -201,7 +201,8 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                                                            tok.split(" "),
                                                            line.split(" "),
                                                            dependencies(i),
-                                                           ner))
+                                                           ner,
+                                                           None))
                 logger(1, "Concepts:")
                 for ((id, node) <- stage1Result.graph.getNodeById) {
                     logger(1, "id = "+id+" concept = "+node.concept)

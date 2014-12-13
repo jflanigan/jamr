@@ -2,6 +2,7 @@ package edu.cmu.lti.nlp.amr.ConceptInvoke
 import edu.cmu.lti.nlp.amr._
 import edu.cmu.lti.nlp.amr.Train._
 import edu.cmu.lti.nlp.amr.BasicFeatureVector._
+import edu.cmu.lti.nlp.amr.ConceptInvoke.PhraseConceptPair._
 
 import java.lang.Math.abs
 import java.lang.Math.log
@@ -16,7 +17,8 @@ import scala.collection.mutable.Map
 import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 
-class Concepts(phraseConceptPairs: Array[PhraseConceptPair],
+class Concepts(options: Map[Symbol, String],
+               phraseConceptPairs: Array[PhraseConceptPair],
                useNER: Boolean = true,
                useDateExpr: Boolean = true) {
 
@@ -42,7 +44,7 @@ class Concepts(phraseConceptPairs: Array[PhraseConceptPair],
             return List()
         }
 
-        var conceptList = conceptTable.getOrElse(sentence(i), List()).filter(x => x.words == sentence.slice(i, i+x.words.size).toList) // TODO: this this case insensitive??
+        var conceptList = conceptTable.getOrElse(sentence(i), List()).filter(x => x.words == sentence.slice(i, i+x.words.size).toList) // TODO: is this case insensitive??
         if (useNER) {
             conceptList = input.ner.annotation.filter(_.start == i).map(x => namedEntity(input, x)).toList ::: conceptList
             //conceptList = input.ner.annotation.filter(_.start == i).map(x => PhraseConceptPair.entity(input, x)).toList ::: conceptList
@@ -55,7 +57,7 @@ class Concepts(phraseConceptPairs: Array[PhraseConceptPair],
     }
 
     def namedEntity(input: Input, entity: Entity) : PhraseConceptPair = {
-        val Input(_, sentence, notTokenized, _, _, ner) = input
+        val Input(_, sentence, notTokenized, _, _, ner, _) = input
         val entityType : String = entity.label match {
             case "PER" => "person"          // also president
             case "ORG" => "organization"    // also company, government-organization, criminal-organization
@@ -71,7 +73,9 @@ class Concepts(phraseConceptPairs: Array[PhraseConceptPair],
         //logger(1, "notTokenized.snt = "+notTokenized.snt.toList)
         //logger(1, "notTokenized.tok = "+notTokenized.tok.toList)
         val (tokStart, tokEnd) = notTokenized.getSpan((start, end))
-        return PhraseConceptPair(sentence.slice(tokStart, tokEnd).toList, graphFrag, PhraseConceptFeatures(0,0,true,false))
+        return PhraseConceptPair(sentence.slice(tokStart, tokEnd).toList,
+                                 graphFrag,
+                                 FeatureVector(Map("ner" -> 1.0)))
     }
 
     def dateEntities(input: Input, start: Int) : List[PhraseConceptPair] = {
@@ -156,25 +160,25 @@ class Concepts(phraseConceptPairs: Array[PhraseConceptPair],
         logger(0, "mkDayMonthYear("+matching+","+day+","+month+","+year+")")
         PhraseConceptPair(tokens.take(matching.count(_ == '\t')+1).toList,
                           "(date-entity :day "+day.toInt.toString+" :month "+monthStr(month)+" :year "+year+")",
-                          PhraseConceptFeatures(0, 0, false, true))
+                          FeatureVector(Map("datex" -> 1.0)))
     }
 
     def mkMonthYear(matching: String, month: String, year: String) : PhraseConceptPair = {
         PhraseConceptPair(tokens.take(matching.count(_ == '\t')+1).toList,
                           "(date-entity :month "+monthStr(month)+" :year "+year+")",
-                          PhraseConceptFeatures(0, 0, false, true))
+                          FeatureVector(Map("datex" -> 1.0)))
     }
 
     def mkMonth(matching: String, month: String) : PhraseConceptPair = {
         PhraseConceptPair(tokens.take(matching.count(_ == '\t')+1).toList,
                           "(date-entity :month "+monthStr(month)+")",
-                          PhraseConceptFeatures(0, 0, false, true))
+                          FeatureVector(Map("datex" -> 1.0)))
     }
 
     def mkYear(matching: String, year: String) : PhraseConceptPair = {
         PhraseConceptPair(tokens.take(matching.count(_ == '\t')+1).toList,
                           "(date-entity :year "+year+")",
-                          PhraseConceptFeatures(0, 0, false, true))
+                          FeatureVector(Map("datex" -> 1.0)))
     }
 
     def monthStr(month: String) : String = {

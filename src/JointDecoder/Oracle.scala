@@ -6,7 +6,8 @@ import scala.collection.mutable.Map
 import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 
-class Oracle(stage1FeatureNames: List[String],
+class Oracle(options: Map[Symbol, String],
+             stage1FeatureNames: List[String],
              phraseConceptPairs: Array[ConceptInvoke.PhraseConceptPair],  // this is the concept table
              stage2FeatureNames: List[String],
              labelSet: Array[(String, Int)]) extends Decoder {
@@ -15,7 +16,7 @@ class Oracle(stage1FeatureNames: List[String],
     val stage1Features = new ConceptInvoke.Features(stage1FeatureNames)
     val stage2Features = new GraphDecoder.Features(stage2FeatureNames, weights.labelset)
 
-    val conceptInvoker = new ConceptInvoke.Concepts(phraseConceptPairs)
+    val conceptInvoker = new ConceptInvoke.Concepts(options, phraseConceptPairs)
 
     def decode(input: Input) : FastFeatureVector.DecoderResult = {
         stage2Features.input = input
