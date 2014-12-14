@@ -24,6 +24,7 @@ export MODEL_DIR="${JAMR_HOME}/models/Little_Prince"  # ideally keep this the sa
 # CONCEPT_ID_TRAINING_OPTIONS and RELATION_ID_TRAINING_OPTIONS will override PARSER_OPTIONS
 
 export STAGE1_FEATURES="bias,length,fromNERTagger,conceptGivenPhrase"
+#export STAGE1_FEATURES="bias,length,fromNERTagger,conceptGivenPhrase,count,phraseGivenConcept"
 
 export PARSER_OPTIONS="
     --stage1-features $STAGE1_FEATURES
