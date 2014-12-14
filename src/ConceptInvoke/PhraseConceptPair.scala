@@ -31,9 +31,9 @@ object PhraseConceptPair {
     def apply(string: String) : PhraseConceptPair = {
         val words = string.split(""" \|\|\| """)(0).split(" ").toList
         val graphFrag = string.split(""" \|\|\| """)(1)
-        val Feat = """(.*)=([^=]*)""".r
+        val Feat = """(.+)=([^=]+)""".r
         val features = Map() ++ string.split(""" \|\|\| """)(2).split(" ").map(x => { val Feat(name, v) = x; (name, v.toDouble) }).toMap
-        val trainingIndices = string.split(""" \|\|\| """)(2).split(" ").toList.map(_.toInt)
+        val trainingIndices = string.split(""" \|\|\| """)(3).split(" ").toList.map(_.toInt)
         return new PhraseConceptPair(words, graphFrag, FeatureVector(features), trainingIndices)
     }
 

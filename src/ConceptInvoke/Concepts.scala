@@ -17,6 +17,10 @@ import scala.collection.mutable.Map
 import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 
+object Concepts {
+    val implementedFeatures = Set("fromNERTagger", "dateExpression")
+}
+
 class Concepts(options: Map[Symbol, String],
                phraseConceptPairs: Array[PhraseConceptPair],
                useNER: Boolean = true,

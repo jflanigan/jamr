@@ -23,14 +23,12 @@ object ExtractConceptTable {
             case "--stage1-features" :: value :: l =>              parseOptions(map + ('stage1Features -> value), l)
             case "--max-training-instances" :: value :: l =>       parseOptions(map + ('maxTrainingInstances -> value), l)
             case "-v" :: value :: l =>                             parseOptions(map + ('verbosity -> value), l)
-            case option :: tail => println("Error: Unknown option "+option)
+            case option :: tail => System.err.println("Error: Unknown option "+option)
                                sys.exit(1)
         }
     }
 
     def main(args: Array[String]) {
-
-        if (args.length != 0) { println(usage); sys.exit(1) }
 
         val options = parseOptions(Map(),args.toList)
         if (options.contains('verbosity)) {
@@ -97,7 +95,7 @@ object ExtractConceptTable {
         // Count the phrases in the corpus
         for (sentence <- tokenized) {
             for ((word, i) <- sentence.zipWithIndex) {
-                val matching = conceptTable.getOrElse(word, List()).filter(x => x.words == sentence.slice(i, i+x.words.size))
+                val matching = conceptTable.getOrElse(word, List()).filter(x => x.words == sentence.slice(i, i+x.words.size).toList)
                 for (concept <- matching) {
                     phraseCounts(concept.words) = phraseCounts(concept.words) + 1
                 }

@@ -67,7 +67,7 @@ class Features(featureNames: List[String]) {
     }
 
     var featureFunctions : List[FeatureFunction] = featureNames.filter(x => ffTable.contains(x)).map(x => ffTable(x)) // TODO: error checking on lookup
-    val unknownFeatures = featureNames.filterNot(x => ffTable.contains(x)).filterNot(x => ExtractConceptTable.implementedFeatures.contains(x))
+    val unknownFeatures = featureNames.filterNot(x => ffTable.contains(x) || ExtractConceptTable.implementedFeatures.contains(x) || Concepts.implementedFeatures.contains(x))
     assert(unknownFeatures.size == 0, "Unknown stage1 features: "+unknownFeatures.mkString(","))
 
     def localFeatures(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
