@@ -7,6 +7,8 @@ import scala.collection.mutable.ArrayBuffer
 
 import Corpus._
 
+// TODO: this class can be removed
+
 object PrintSpans {
     val usage = """Usage: scala -classpath . edu.cmu.lti.nlp.amr.PrintSpans < amr_corpus > span_file"""
     type OptionMap = Map[Symbol, Any]

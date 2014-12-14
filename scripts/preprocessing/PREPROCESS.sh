@@ -18,8 +18,6 @@ set -x
 ./cmd.aligned
 # Remove opN
 ./cmd.aligned.no_opN
-# Extract concept table
-./cmd.aligned.concepts_no_opN
 
 # Stanford Dependency Parser
 ./cmd.snt.tok.deps

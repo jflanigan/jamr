@@ -2,12 +2,7 @@
 # assumes `config.sh` has already been sourced
 INPUT="$TRAIN_FILE"
 OUTPUT="$MODEL_DIR/conceptTable.train"
-export JAVA_OPTS="-ea -Dfile.encoding=UTF-8 -XX:ParallelGCThreads=2 -Xmx4g -XX:+CMSClassUnloadingEnabled"
 
 mkdir -p $MODEL_DIR
-$SCALA $JAMR_HOME/src/mkConceptTable < $INPUT.aligned.concepts_no_opN $INPUT.snt.tok > $OUTPUT
+"${JAMR_HOME}/run" ExtractConceptTable ${CONCEPT_EXTRACT_OPTIONS} < "$INPUT".aligned > "$OUTPUT" 2> "${OUTPUT}.err"
 
-# The code below can be uncommented to run the version of scala sbt downloads.  (But you need to run it twice, otherwise sbt logs to stdin)
-
-#$JAMR_HOME/run-scala-script $JAMR_HOME/src/mkConceptTable < $INPUT.aligned.concepts_no_opN $INPUT.snt.tok > $OUTPUT
-#$JAMR_HOME/run-scala-script $JAMR_HOME/src/mkConceptTable < $INPUT.aligned.concepts_no_opN $INPUT.snt.tok > $OUTPUT
