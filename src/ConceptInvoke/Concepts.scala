@@ -38,6 +38,15 @@ class Concepts(options: Map[Symbol, String],
     }
 
     private var tokens : Array[String] = Array()  // stores sentence.drop(i) (used in the dateEntity code to make it more concise)
+    var ontoNotes : Set[String] = Set()           // could be multi-map instead
+
+    if (options.contains('stage1Predicates)) {
+        val Pred = """(.+)-([0-9]+)""".r
+        for (predicate <- Source.fromFile(options('stage1Predicates)).getLines) {
+            val Pred(verb, sense) = predicate
+            ontoNotes += verb
+        }
+    }
 
     def invoke(input: Input, i: Int) : List[PhraseConceptPair] = {
         // returns a list of all concepts that can be invoke starting at 
@@ -59,6 +68,86 @@ class Concepts(options: Map[Symbol, String],
 
         return conceptList
     }
+
+    def ontoNotesLookup(input: Input, i: Int) : List[PhraseConceptPair] = {
+        val stems = WordNet.stemmer(input.sentence(i))
+        val concepts = stems.filter(stem => ontoNotes.contains(stem)).map(stem => PhraseConceptPair(
+            List(input.sentence(i)),
+            stem+"-01",         // first sense is most common
+            FeatureVector(Map("OntoNotes" -> 1.0)),
+            List()))
+        return concepts
+    }
+
+    def NEPassThrough(input: Input, i: Int) : List[PhraseConceptPair] = {
+        var concepts = List[PhraseConceptPair]()
+        for (j <- Range(1,7) if i + j < input.sentence.size) {
+            concepts = PhraseConceptPair(
+                input.sentence.slice(i+j).toList,
+                "(thing :name (name "+input.sentence.slice(i,i+j).map(x => ":op "+x).mkString(" ")+"))",
+                FeatureVector(Map("NEPassThrough" -> 1.0, "NEPassThrough_len" -> j)),
+                List())) :: concepts
+        }
+        return concepts
+    }
+
+    def passThrough(input: Input, i: Int) : List[PhraseConceptPair] = {
+        return List(PhraseConceptPair(
+            List(input.sentence(i)),
+            input.sentence(i),
+            FeatureVector(Map("PassThrough" -> 1.0)),
+            List()))
+    }
+
+    def stemPassThrough(input: Input, i: Int) : List[PhraseConceptPair] = {
+        val stems = WordNet.stemmer(word)
+        if (stems.size > ) {
+            List(PhraseConceptPair(
+                List(input.sentence(i)),
+                stems.minBy(_.size),
+                FeatureVector(Map("stemPassThrough" -> 1.0)),
+                List()))
+        } else { List() }
+    }
+
+    def verbs(input: Input, i: Int) : List[PhraseConceptPair] = {
+        var concepts = List[PhraseConceptPair]()
+        val (start, stop) = input.pos.annotationSpan(start,stop)
+        val pos : Array[String] = input.annotation.slice(start,stop)
+        if (pos.size > 0 && pos.size(0).startsWith("V")) {  // it's a verb
+            val word = input.sentence(i)
+            val stems = WordNet.stemmer(word)
+            val stem = if (stems.size > 0) { stems.minBy(_.size) } else { word }
+            concepts = List(PhraseConceptPair(
+                List(word),
+                stem+"-00",     // 00 sense for missing predicates
+                FeatureVector(Map("AddedVerb" -> 1.0)),
+                List()))
+        }
+        return concepts
+    }
+
+    def nominalizations(input: Input, i: Int) : List[PhraseConceptPair] = {
+        // (no change) budget -> budget-01
+
+        // (drop -e in predicate that ends in -ate) proliferate-01 -> proliferation, state-01 -> statement
+        // (drop -ify in predicate) intensify-01 -> intensity, ratify-01 -> ratification
+
+        // (drop -ance or -ances) assistance -> assist-01
+        // (drop -ment or -ments) development -> develop-02
+        // (drop -ing) discriminating -> discriminate-02 (also drop -e)
+        // (drop -ion) discrimination -> discriminate-02, discussion -> discuss-01
+        // (drop -s) addicts -> addict-01, arrests -> arrest-01
+        // (drop -ant or -ants) combatants -> combat-01
+        // (drop -ure) seizure -> seize-01, departure -> depart-01, failure -> fail-01 (not always tho: manufacture -> manufacture-01)
+        // not as common: (drop -ation) determination -> determine-01 (lots of counter-examples: exaggeration -> exaggerate-01)
+        // not common (-ees) employees -> employ-01, attendees -> attend-01
+
+        // -er: parser -> thing :ARG0-of parse-00 (not very common)
+        return List()
+    }
+
+    // verbalization (modern -> modernize (to make modern), etc, not use in AMR modernize -> modernize-01)
 
     def namedEntity(input: Input, entity: Entity) : PhraseConceptPair = {
         val Input(_, sentence, notTokenized, _, _, ner, _) = input
