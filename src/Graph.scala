@@ -284,6 +284,17 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         return getNodeByName.valuesIterator
     }
 
+    def edges : List[(Node, String, Node)] = {
+        var edges = List[(Node, String, Node)]()
+
+        for { node1 <- nodes
+              (label, node2) <- node1.relations
+            } {
+                edges = (node1, label, node2) :: edges
+        }
+        return edges
+    }
+
     def doRecursive(f: (Node) => Unit, node: Node = root) {
         f(node)
         for ((_,child) <- node.topologicalOrdering) {
