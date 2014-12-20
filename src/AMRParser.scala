@@ -85,6 +85,10 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
        result
     }
 
+    // cache the previous Stage2 GraphDecoder object so that it can be re-used. This saves us from having to reload
+    // the weights if JAMR is re-invoked in the same process
+    var previousStage2: Option[GraphDecoder.Decoder] = None
+
     def main(args: Array[String]) {
 
         if (args.length == 0) { println(usage); sys.exit(1) }
@@ -104,13 +108,17 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             }
         }
 
-        val stage2 : Option[GraphDecoder.Decoder] = {
+        // re-use the previous Stage2 GraphDecoder if it's there
+        val stage2 : Option[GraphDecoder.Decoder] = if (previousStage2.isDefined) previousStage2 else {
             if((options.contains('stage1Only) || options.contains('stage1Train)) && !options.contains('stage2Train)) {
                 None
             } else {
                 Some(GraphDecoder.Decoder(options))
             }
         }
+
+        // save previous Stage2 GraphDecoder for later
+        previousStage2 = stage2
 
         val stage2Oracle : Option[GraphDecoder.Decoder] = {
             if(options.contains('trainingData) || options.contains('stage2Train)) {
@@ -162,10 +170,13 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
 
             logger(0, "Reading weights")
             if (stage2 != None) {
-                val stage2weightlines = Source.fromFile(stage2weightfile).getLines()
-                stage2.get.features.weights.read(stage2weightlines)
-                if (stage2Oracle != None) {
-                    stage2Oracle.get.features.weights.read(Source.fromFile(stage2weightfile).getLines())
+                // don't read the weights again if they are already there, this check is probably redundant
+                if (stage2.get.features.weights.fmap.size == 0) {
+                  val stage2weightlines = Source.fromFile( stage2weightfile ).getLines( )
+                  stage2.get.features.weights.read( stage2weightlines )
+                  if( stage2Oracle != None ) {
+                    stage2Oracle.get.features.weights.read( Source.fromFile( stage2weightfile ).getLines( ) )
+                  }
                 }
             }
             logger(0, "done")

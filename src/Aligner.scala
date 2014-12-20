@@ -69,17 +69,22 @@ object Aligner {
                 val amr = Graph.parse(amrstr)
                 val extras = AMRTrainingData.getUlfString(extrastr)
                 val tokenized = extras("::tok").split(" ")
-                val wordAlignments = AlignWords.alignWords(tokenized, amr)
+                // val wordAlignments = AlignWords.alignWords(tokenized, amr)
+
+                amr.printNodes.foreach(n => logger(1, f"$n"))
+
+                // spanAlignments isn't used, output of .align and .alignSpans is modification of
+                // amr.spans
                 val spanAlignments = if (aligner2) {
                         AlignSpans3.align(tokenized, amr)
                     } else {
-                        AlignSpans.alignSpans(tokenized, amr, wordAlignments)
+                        AlignSpans.alignSpans(tokenized, amr, AlignWords.alignWords(tokenized, amr))
                     }
                 AlignSpans.logUnalignedConcepts(amr.root)
 
                 val spans = amr.spans
                 for ((span, i) <- spans.zipWithIndex) {
-                    logger(1, "Span "+(i+1).toString+":  "+span.words+" => "+span.amr)
+                    outStream.println("Span "+(i+1).toString+":  "+span.words+" => "+span.amr)
                     logger(3, "* "+span.format)
                 }
               outStream.println("# ::alignments "+spans.map(_.format).mkString(" ")+" ::annotator Aligner v.02 ::date "+sdf.format(new Date))

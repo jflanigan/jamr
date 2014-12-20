@@ -11,3 +11,5 @@
 # IntelliJ cruft
 .idea
 *.iml
+.DS_Store
+/tools
