@@ -61,8 +61,9 @@ class Concepts(phraseConceptPairs: Array[PhraseConceptPair],
             case "PER" => "person"          // also president
             case "ORG" => "organization"    // also company, government-organization, criminal-organization
             case "LOC" => "country"         // also city, world-region, continent, county
-            case "DAT" => "date"         // also city, world-region, continent, county
-            case "MISC" => "thing"         // also treaty, publication, newspaper, product, war
+            case "DAT" => "date"
+            case "TIM" => "time"
+            case "MIS" => "thing"         // also treaty, publication, newspaper, product, war
         }
         val (start, end) = ner.getSpan((entity.start, entity.end))    // start and end in ner.snt, which should be the unTokenized text
         val graphFrag = "(" + entityType + " :name (name " + ner.snt.slice(start, end).map(x => ":op \"" + x + "\"").mkString(" ") + "))"

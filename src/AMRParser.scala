@@ -4,6 +4,8 @@ import java.io.StringWriter
 import java.io.PrintWriter
 import java.io.PrintStream
 
+import edu.cmu.lti.nlp.amr.BasicFeatureVector.DecoderResult
+
 import scala.io.Source.fromFile
 import scala.collection.mutable.Map
 import scala.collection.mutable.Set
@@ -88,6 +90,9 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
     // cache the previous Stage2 GraphDecoder object so that it can be re-used. This saves us from having to reload
     // the weights if JAMR is re-invoked in the same process
     var previousStage2: Option[GraphDecoder.Decoder] = None
+
+    // an optional callback that lets us get direct access to decoderResultGraph when parsing
+    var resultHandler: Option[Graph => Unit] = None
 
     def main(args: Array[String]) {
 
@@ -301,6 +306,10 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                 decoderResultGraph.assignOpN()
                 decoderResultGraph.sortRelations()
                 decoderResultGraph.makeIds()
+
+              // fire the callback if defined
+              if (resultHandler.isDefined) resultHandler.get.apply(decoderResultGraph)
+
               outStream.println("# ::alignments "+decoderResultGraph.spans.map(_.format).mkString(" ")+" ::annotator "+VERSION+" ::date "+sdf.format(new Date))
                 if (outputFormat.contains("nodes")) {
                   outStream.println(decoderResultGraph.printNodes.map(x => "# ::node\t" + x).mkString("\n"))
