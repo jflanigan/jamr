@@ -37,7 +37,7 @@ abstract class TrainObj[FeatureVector <: AbstractFeatureVector](options: Map[Sym
     val l2RegularizerStrength = options.getOrElse('trainingL2RegularizerStrength, "0.0").toDouble
     val loss = options.getOrElse('trainingLoss, "Perceptron")
     if (options.contains('trainingSaveInterval) && !options.contains('trainingOutputFile)) {
-        System.err.println("Error: trainingSaveInterval specified but output weights filename given"); sys.exit(1)
+        logger(0,"Error: trainingSaveInterval specified but output weights filename given"); sys.exit(1)
     }
 
     var optimizer: Optimizer[FeatureVector]
@@ -63,7 +63,7 @@ abstract class TrainObj[FeatureVector <: AbstractFeatureVector](options: Map[Sym
             } else {
                 print(weights.unsorted)
             }
-            System.err.println("done")
+            logger(0,"done")
         }
     }) */
 
@@ -104,7 +104,7 @@ abstract class TrainObj[FeatureVector <: AbstractFeatureVector](options: Map[Sym
                 grad -= o._1
                 (grad, score + o._2)
             } else {
-                System.err.println("Error: unknown training loss " + loss); sys.exit(1).asInstanceOf[Nothing]
+                logger(0,"Error: unknown training loss " + loss); sys.exit(1).asInstanceOf[Nothing]
             }
         } catch {
             case e : Throwable => if (options.contains('ignoreParserErrors)) {
@@ -187,7 +187,7 @@ abstract class TrainObj[FeatureVector <: AbstractFeatureVector](options: Map[Sym
         } else {
           outStream.println(weights.unsorted)
         }
-        System.err.println("done")
+        logger(0,"done")
     }
 }
 

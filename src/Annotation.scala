@@ -55,17 +55,17 @@ case class Annotation[T](var snt: Array[String], var tok: Array[String], var ann
                 regexr.findPrefixOf(normalizedStr(tokenized)) match {
                     case Some(prefix) => { right(i) = prefix.count(_ == ' ') + 1}
                     case None => {
-                        System.err.println("Error matching the prefix (this will occur if there are two or more consecutive spaces in the input.")
-                        System.err.println("tokenized = "+tokenized.mkString(" "))
-                        System.err.println("myTokenized = "+myTokenized.mkString(" "))
+                        logger(0,"Error matching the prefix (this will occur if there are two or more consecutive spaces in the input.")
+                        logger(0,"tokenized = "+tokenized.mkString(" "))
+                        logger(0,"myTokenized = "+myTokenized.mkString(" "))
                         if (tokenized.mkString("") != myTokenized.mkString("")) {
-                            System.err.println("Tokenizations don't match")
+                            logger(0,"Tokenizations don't match")
                         }
-                        System.err.println("i = "+i.toString)
-                        System.err.println("prefix = "+myTokenized.take(i+1).toList)
-                        System.err.println("regexr = "+regexr)
+                        logger(0,"i = "+i.toString)
+                        logger(0,"prefix = "+myTokenized.take(i+1).toList)
+                        logger(0,"regexr = "+regexr)
                         if (regexr.findPrefixOf(myTokenized.mkString(" ")) == None) {
-                            System.err.println("Regex doesn't match myTokenized either")
+                            logger(0,"Regex doesn't match myTokenized either")
                         }
                         assert(false)
                     }

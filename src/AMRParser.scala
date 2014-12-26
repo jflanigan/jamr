@@ -84,7 +84,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
        val now = System.nanoTime
        val result = a
        val micros = (System.nanoTime - now) / 1000
-       System.err.println("Decoded in %,d microseconds".format(micros))
+       logger(0,"Decoded in %,d microseconds".format(micros))
        result
     }
 
@@ -140,7 +140,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             ////////////////// Training  ////////////////
 
             if (options.contains('stage1Train) && options.contains('stage2Train)) {
-                System.err.println("Error: please specify either stage1 training or stage2 training (not both)")
+                logger(0,"Error: please specify either stage1 training or stage2 training (not both)")
                 sys.exit(1)
             }
 
@@ -163,14 +163,14 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             /////////////////// Decoding /////////////////
 
             if (!options.contains('stage1Weights)) {
-                System.err.println("Error: No stage1 weights file specified"); sys.exit(1)
+                logger(0,"Error: No stage1 weights file specified"); sys.exit(1)
             }
             stage1.features.weights.read(Source.fromFile(options('stage1Weights).asInstanceOf[String]).getLines())
 
             //logger(0, "Stage1 weights:\n"+stage1.features.weights.toString)
 
             if (!options.contains('stage2Weights)) {
-                System.err.println("Error: No stage2 weights file specified")
+                logger(0,"Error: No stage2 weights file specified")
                 sys.exit(1)
             }
             val stage2weightfile : String = options('stage2Weights)

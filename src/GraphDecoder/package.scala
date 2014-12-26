@@ -26,7 +26,7 @@ package object GraphDecoder {
 
     def Decoder(options: OptionMap) : GraphDecoder.Decoder = {
         if (!options.contains('stage2Labelset)) {
-            System.err.println("Error: No labelset file specified"); sys.exit(1)
+            logger(0,"Error: No labelset file specified"); sys.exit(1)
         }
 
         val labelset: Array[(String, Int)] = getLabelset(options)
@@ -38,7 +38,7 @@ package object GraphDecoder {
         logger(0, "connected = " + connected)
 
         if (!options.contains('stage2Decoder)) {
-            System.err.println("Error: No stage2 decoder specified"); sys.exit(1)
+            logger(0,"Error: No stage2 decoder specified"); sys.exit(1)
         }
 
         val decoder: Decoder = options('stage2Decoder) match {
@@ -47,7 +47,7 @@ package object GraphDecoder {
             case "Alg2" => new Alg2(features, labelset, connected)
             //case "DD" => new DualDecomposition(features, labelset, 1)
             case "LR" => new LagrangianRelaxation(features, labelset, 1, 500)
-            case x => { System.err.println("Error: unknown stage2 decoder " + x); sys.exit(1) }
+            case x => { logger(0,"Error: unknown stage2 decoder " + x); sys.exit(1) }
         }
 
         val outputFormat = options.getOrElse('outputFormat,"triples").split(",").toList
@@ -56,7 +56,7 @@ package object GraphDecoder {
         }
 
         if (options('stage2Decoder) == "Alg1" && outputFormat.contains("AMR")) {
-            System.err.println("Cannot have --outputFormat \"AMR\" for stage2 Alg1 (graph may not be connected!)")
+            logger(0,"Cannot have --outputFormat \"AMR\" for stage2 Alg1 (graph may not be connected!)")
             sys.exit(1)
         }
 

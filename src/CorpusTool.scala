@@ -38,7 +38,7 @@ object CorpusTool {
             verbosity = options('verbosity).asInstanceOf[Int]
         }
         if (!options.contains('tokenized)) {
-            System.err.println("Error: No tokenized file specified")
+            logger(0,"Error: No tokenized file specified")
             sys.exit(1)
         }
 
