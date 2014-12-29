@@ -1,8 +1,13 @@
 package edu.cmu.lti.nlp.amr.FastFeatureVector
+
+import java.util.NoSuchElementException
+
 import edu.cmu.lti.nlp.amr._
 import edu.cmu.lti.nlp.amr.Train.AbstractFeatureVector
 
 import scala.math.sqrt
+import scala.util.Try
+
 //import scala.collection.mutable.Map
 import scala.collection.concurrent.{TrieMap => Map}
 import scala.collection.immutable
@@ -194,7 +199,8 @@ case class FeatureVector(labelset : Array[String],
         return f
     } */
     def read(iterator: Iterator[String]) {
-      val regex = ( """(.*?)(\+L=(""" + labelset.mkString( "|" ) + """))?[ \t]([^ \t]*)""" ).r // .*? is non-greedy
+      val newRegex = ( """(.*?)(\+L=(\:[a-zA-Z0-9-]+))?[ \t]([^ \t]*)""" ).r // .*? is non-greedy
+      // val regex = ( """(.*?)(\+L=(""" + labelset.mkString( "|" ) + """))?[ \t]([^ \t]*)""" ).r // .*? is non-greedy
       // (feature, _, label, value)
       // matches featurename+L=label 1.0
       fmap.clear( )
@@ -202,10 +208,10 @@ case class FeatureVector(labelset : Array[String],
       for( line <- iterator ) {
         // log a counter, sometimes the JVM gets bogged down and it's hard to tell if any progress is being made...
         if( counter % 50000 == 0 ) {
-          logger( 1, f"FeatureVector read counter=$counter" )
+          logger( 1, f"FastFeatureVector.FeatureVector.read counter=$counter" )
         }
         counter += 1
-        val regex( feature, _, label, value ) = line
+        val newRegex( feature, _, label, value ) = line
         if( !fmap.contains( feature ) ) {
           fmap( feature ) = ValuesMap( 0.0, Map( ) )
         }
@@ -213,7 +219,11 @@ case class FeatureVector(labelset : Array[String],
           fmap( feature ).unconjoined = value.toDouble
         }
         else {
-          fmap( feature ).conjoined( labelToIndex( label ) ) = value.toDouble // TODO: catch invalid label errors and print labels
+          try {
+            fmap( feature ).conjoined( labelToIndex( label ) ) = value.toDouble
+          } catch {
+            case e: NoSuchElementException => logger(0, f"Label $label not found in FastFeatureVector.FeatureVector.read")
+          }
         }
       }
     }
