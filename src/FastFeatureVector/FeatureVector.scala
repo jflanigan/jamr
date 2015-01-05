@@ -203,6 +203,7 @@ case class FeatureVector(labelset : Array[String],
       // val regex = ( """(.*?)(\+L=(""" + labelset.mkString( "|" ) + """))?[ \t]([^ \t]*)""" ).r // .*? is non-greedy
       // (feature, _, label, value)
       // matches featurename+L=label 1.0
+      var missingFeatures = Map[String, Int]()
       fmap.clear( )
       var counter = 0
       for( line <- iterator ) {
@@ -222,10 +223,15 @@ case class FeatureVector(labelset : Array[String],
           try {
             fmap( feature ).conjoined( labelToIndex( label ) ) = value.toDouble
           } catch {
-            case e: NoSuchElementException => logger(0, f"Label $label not found in FastFeatureVector.FeatureVector.read")
+            case e: java.util.NoSuchElementException =>
+              if (missingFeatures.contains(label))
+                missingFeatures(label) += 1
+              else
+                missingFeatures(label) = 1
           }
         }
       }
+      missingFeatures.foreach(f => logger(0, f"Label ${f._1} not found ${f._2} times in FastFeatureVector.FeatureVector.read"))
     }
     def fromFile(filename: String) {
         val iterator = Source.fromFile(filename).getLines()

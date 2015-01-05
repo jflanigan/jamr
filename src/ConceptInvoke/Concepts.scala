@@ -65,6 +65,8 @@ class Concepts(phraseConceptPairs: Array[PhraseConceptPair],
             case "TIM" => "time"
             case "NUM" => "number"
             case "MIS" => "thing"         // also treaty, publication, newspaper, product, war
+            case  _ => logger(0,f"Unknown concept ${entity.label} ConceptInvoke.Concepts.namedEntity")
+                "other"
         }
         val (start, end) = ner.getSpan((entity.start, entity.end))    // start and end in ner.snt, which should be the unTokenized text
         val graphFrag = "(" + entityType + " :name (name " + ner.snt.slice(start, end).map(x => ":op \"" + x + "\"").mkString(" ") + "))"
