@@ -2,6 +2,10 @@ package edu.cmu.lti.nlp.amr
 
 import java.io.StringWriter
 import java.io.PrintWriter
+import java.io.PrintStream
+
+import edu.cmu.lti.nlp.amr.BasicFeatureVector.DecoderResult
+
 import scala.io.Source.fromFile
 import scala.collection.mutable.Map
 import scala.collection.mutable.Set
@@ -29,6 +33,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
         def isSwitch(s : String) = (s(0) == '-')
         list match {
             case Nil => map
+            case "--model-name"  :: value :: tail =>     parseOptions(map + ('modelName -> value), tail)
             case "--stage1-only" :: l =>                 parseOptions(map + ('stage1Only -> "true"), l)
             case "--stage1-oracle" :: l =>               parseOptions(map + ('stage1Oracle -> "true"), l)
             case "--stage1-train" :: l =>                parseOptions(map + ('stage1Train -> "true"), l)
@@ -64,6 +69,8 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             case "--ner" :: value :: tail =>             parseOptions(map + ('ner -> value), tail)
             case "--snt" :: value :: tail =>             parseOptions(map ++ Map('notTokenized -> value), tail)
             case "--tok" :: value :: tail =>             parseOptions(map ++ Map('tokenized -> value), tail)
+            case "--input" :: value :: tail =>             parseOptions(map ++ Map('input -> value), tail)
+            case "--output" :: value :: tail =>             parseOptions(map ++ Map('output -> value), tail)
             case "-v" :: value :: tail =>                parseOptions(map ++ Map('verbosity -> value), tail)
 
             //case string :: opt2 :: tail if isSwitch(opt2) => parseOptions(map ++ Map('infile -> string), list.tail)
@@ -77,9 +84,16 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
        val now = System.nanoTime
        val result = a
        val micros = (System.nanoTime - now) / 1000
-       System.err.println("Decoded in %,d microseconds".format(micros))
+       logger(0,"Decoded in %,d microseconds".format(micros))
        result
     }
+
+  // cache the previous Stage2 GraphDecoder object so that it can be re-used. This saves us from having to reload
+  // the weights if JAMR is re-invoked in the same process. Save multiple version using modelName is a key
+    var previousStage2: Map[String, GraphDecoder.Decoder] = Map()
+
+  // an optional callback that lets us get direct access to decoderResultGraph when parsing
+    var resultHandler: Option[Graph => Unit] = None
 
     def main(args: Array[String]) {
 
@@ -87,6 +101,8 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
         val options = parseOptions(Map(),args.toList)
 
         verbosity = options.getOrElse('verbosity, "0").toInt
+
+        val modelName = options.getOrElse('modelName, "Default").toString
 
         val outputFormat = options.getOrElse('outputFormat,"triples").split(",").toList
         // Output format is comma separated list of: nodes,edges,AMR,triples
@@ -100,13 +116,16 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             }
         }
 
-        val stage2 : Option[GraphDecoder.Decoder] = {
-            if((options.contains('stage1Only) || options.contains('stage1Train)) && !options.contains('stage2Train)) {
+
+        val stage2 : Option[GraphDecoder.Decoder] = if (previousStage2.contains(modelName)) previousStage2.get(modelName) else {
+        if((options.contains('stage1Only) || options.contains('stage1Train)) && !options.contains('stage2Train)) {
                 None
             } else {
                 Some(GraphDecoder.Decoder(options))
             }
         }
+
+        if (stage2.isDefined) previousStage2 += (modelName -> stage2.get)
 
         val stage2Oracle : Option[GraphDecoder.Decoder] = {
             if(options.contains('trainingData) || options.contains('stage2Train)) {
@@ -121,7 +140,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             ////////////////// Training  ////////////////
 
             if (options.contains('stage1Train) && options.contains('stage2Train)) {
-                System.err.println("Error: please specify either stage1 training or stage2 training (not both)")
+                logger(0,"Error: please specify either stage1 training or stage2 training (not both)")
                 sys.exit(1)
             }
 
@@ -144,28 +163,33 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             /////////////////// Decoding /////////////////
 
             if (!options.contains('stage1Weights)) {
-                System.err.println("Error: No stage1 weights file specified"); sys.exit(1)
+                logger(0,"Error: No stage1 weights file specified"); sys.exit(1)
             }
             stage1.features.weights.read(Source.fromFile(options('stage1Weights).asInstanceOf[String]).getLines())
 
             //logger(0, "Stage1 weights:\n"+stage1.features.weights.toString)
 
             if (!options.contains('stage2Weights)) {
-                System.err.println("Error: No stage2 weights file specified")
+                logger(0,"Error: No stage2 weights file specified")
                 sys.exit(1)
             }
             val stage2weightfile : String = options('stage2Weights)
 
-            logger(0, "Reading weights")
+
             if (stage2 != None) {
-                stage2.get.features.weights.read(Source.fromFile(stage2weightfile).getLines())
-                if (stage2Oracle != None) {
-                    stage2Oracle.get.features.weights.read(Source.fromFile(stage2weightfile).getLines())
+                // don't read the weights again if they are already there, this check is probably redundant
+                if (stage2.get.features.weights.fmap.size == 0) {
+                  logger(0, f"Reading weights for $modelName")
+                  val stage2weightlines = Source.fromFile( stage2weightfile ).getLines( )
+                  stage2.get.features.weights.read( stage2weightlines )
+                  if( stage2Oracle != None ) {
+                    stage2Oracle.get.features.weights.read( Source.fromFile( stage2weightfile ).getLines( ) )
+                  }
                 }
             }
             logger(0, "done")
 
-            val input = stdin.getLines.toArray
+            val input = if (options.contains('input)) fromFile(options('input)).getLines().toArray else stdin.getLines.toArray
             val tokenized = fromFile(options('tokenized).asInstanceOf[String]).getLines/*.map(x => x)*/.toArray
             val nerFile = Corpus.splitOnNewline(fromFile(options('ner).asInstanceOf[String]).getLines).toArray
             val oracleData : Array[String] = if (options.contains('trainingData)) {
@@ -188,6 +212,8 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                 override def toString : String = { "Precision: "+precision.toString+"\nRecall: "+recall.toString+"\nF1: "+f1.toString }
             }
             val spanF1 = F1(0,0,0)
+
+          val outStream = if (options.contains('output)) new PrintStream(options('output)) else System.out
 
             for ((block, i) <- input.zipWithIndex) {
             try {
@@ -277,46 +303,50 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                     })+"\n")
                 }
 
-                println("# ::snt "+line)
-                println("# ::tok "+tok)
+                outStream.println("# ::snt "+line)
+              outStream.println("# ::tok "+tok)
                 val sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
                 decoderResultGraph.assignOpN()
                 decoderResultGraph.sortRelations()
                 decoderResultGraph.makeIds()
-                println("# ::alignments "+decoderResultGraph.spans.map(_.format).mkString(" ")+" ::annotator "+VERSION+" ::date "+sdf.format(new Date))
+
+              // fire the callback if defined
+              if (resultHandler.isDefined) resultHandler.get.apply(decoderResultGraph)
+
+              outStream.println("# ::alignments "+decoderResultGraph.spans.map(_.format).mkString(" ")+" ::annotator "+VERSION+" ::date "+sdf.format(new Date))
                 if (outputFormat.contains("nodes")) {
-                    println(decoderResultGraph.printNodes.map(x => "# ::node\t" + x).mkString("\n"))
+                  outStream.println(decoderResultGraph.printNodes.map(x => "# ::node\t" + x).mkString("\n"))
                 }
                 if (outputFormat.contains("root")) {
                     println(decoderResultGraph.printRoot)
                 }
                 if (outputFormat.contains("edges") && decoderResultGraph.root.relations.size > 0) {
-                    println(decoderResultGraph.printEdges.map(x => "# ::edge\t" + x).mkString("\n"))
+                  outStream.println(decoderResultGraph.printEdges.map(x => "# ::edge\t" + x).mkString("\n"))
                 }
                 if (outputFormat.contains("AMR")) {
-                    println(decoderResultGraph.prettyString(detail=1, pretty=true))
+                  outStream.println(decoderResultGraph.prettyString(detail=1, pretty=true))
                 }
                 if (outputFormat.contains("triples")) {
-                    println(decoderResultGraph.printTriples(detail = 1))
+                  outStream.println(decoderResultGraph.printTriples(detail = 1))
                 }
-                println()
+              outStream.println()
             } // time
             } catch { // try
                 case e : Throwable => if (options.contains('ignoreParserErrors)) {
-                    println("# ::snt "+input(i))
-                    println("# ::tok "+tokenized(i))
+                  outStream.println("# ::snt "+input(i))
+                  outStream.println("# ::tok "+tokenized(i))
                     val sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
-                    println("# ::alignments 0-1|0 ::annotator "+VERSION+" ::date "+sdf.format(new Date))
-                    println("# THERE WAS AN EXCEPTION IN THE PARSER.  Returning an empty graph.")
+                  outStream.println("# ::alignments 0-1|0 ::annotator "+VERSION+" ::date "+sdf.format(new Date))
+                  outStream.println("# THERE WAS AN EXCEPTION IN THE PARSER.  Returning an empty graph.")
                     if (options.contains('printStackTraceOnErrors)) {
                         val sw = new StringWriter()
                         e.printStackTrace(new PrintWriter(sw))
-                        println(sw.toString.split("\n").map(x => "# "+x).mkString("\n"))
+                        outStream.println(sw.toString.split("\n").map(x => "# "+x).mkString("\n"))
                     }
                     logger(-1, " ********** THERE WAS AN EXCEPTION IN THE PARSER. *********")
                     if (verbosity >= -1) { e.printStackTrace }
                     logger(-1, "Continuing. To exit on errors, please run without --ignore-parser-errors")
-                    println(Graph.empty.prettyString(detail=1, pretty=true) + '\n')
+                    outStream.println(Graph.empty.prettyString(detail=1, pretty=true) + '\n')
                 } else {
                     throw e
                 }

@@ -78,7 +78,7 @@ case class FeatureVector(fmap : Map[String, Double] = Map[String, Double]()) ext
         val regex = """(.*)[ \t]([^ \t]*)""".r
         //val iterator = Source.fromFile(filename).getLines()
         fmap.clear()
-        fmap ++= iterator.map((s : String) => { val regex(f,v) = s; (f,v.toDouble) })
+        fmap ++= iterator.filter((s: String) => s.length > 0).map((s : String) => { val regex(f,v) = s; (f,v.toDouble) })
     }
     override def toString() : String = {
         val string = new StringBuilder

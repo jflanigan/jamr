@@ -14,7 +14,7 @@ package object ConceptInvoke {
         logger(0, "Stage1 features = " + stage1Features)
 
         if (!options.contains('stage1ConceptTable)) {
-            System.err.println("Error: No concept table specified"); sys.exit(1)
+            logger(0,"Error: No concept table specified"); sys.exit(1)
         }
         val conceptFile = options('stage1ConceptTable)
         val conceptTable = Source.fromFile(conceptFile).getLines.map(x => new PhraseConceptPair(x)).toArray

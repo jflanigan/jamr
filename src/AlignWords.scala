@@ -50,7 +50,7 @@ object AlignWords {
             }
         }
         if (!found) {
-            //logger(2,"CONCEPT NOT FOUND: "+node.concept+" by searching "+concept)
+            logger(2,"CONCEPT NOT FOUND: "+node.concept+" by searching "+concept)
         }
         for ((_, child) <- node.topologicalOrdering) {
             alignWords(stemmedSentence, child, alignments)

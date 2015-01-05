@@ -16,24 +16,27 @@ import edu.mit.jwi.morph.WordnetStemmer
 
 object Wordnet {
 
-    private val wnhome : String = System.getenv("WNHOME")
-    private val path : String = wnhome + File.separator + "dict"
-    private val url : URL = new URL("file", null, path)
-    private val dict : IRAMDictionary = new RAMDictionary(url, ILoadPolicy.NO_LOAD)
-    dict.open
-    private val wordnetStemmer : WordnetStemmer = new WordnetStemmer(dict)
+  private var wordnetStemmer : Option[WordnetStemmer] = None
+
+    def init(wnhome: String) {
+      val path : String = wnhome + File.separator + "dict"
+      val url : URL = new URL("file", null, path)
+      val dict : IRAMDictionary = new RAMDictionary(url, ILoadPolicy.NO_LOAD)
+      dict.open
+      wordnetStemmer  = Some(new WordnetStemmer(dict))
+    }
 
     def stemmer(word: String) : List[String] = {
         var stems = List[String]()
         for (pos <- POS.values) {
-            try { stems ++= wordnetStemmer.findStems(word, pos) }
+            try { stems ++= wordnetStemmer.get.findStems(word, pos) }
             catch { case e : Throwable => Unit }
         }
         return stems.distinct.sorted
     }
 
     def stemmer(word: String, pos: POS) : List[String] = {
-        try { wordnetStemmer.findStems(word, pos).asScala.toList }
+        try { wordnetStemmer.get.findStems(word, pos).asScala.toList }
         catch { case e : Throwable => List() }
     }
 

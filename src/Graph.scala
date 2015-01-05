@@ -111,30 +111,37 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         return "# ::root\t" + root.id + "\t" + root.concept
     }
 
-    def printNodes : List[String] = {
-        nodes.map(node =>
-            if (node.spans.size > 0) {
-                //node.id + "\t" + node.nameStr + "\t" + node.concept + "\t" + spans(node.spans(0)).start + "-" + spans(node.spans(0)).end
-                node.id + "\t" + node.concept + "\t" + spans(node.spans(0)).start + "-" + spans(node.spans(0)).end
-            } else {
-                //node.id + "\t" + node.nameStr + "\t" + node.concept + "\t"
-                node.id + "\t" + node.concept + "\t"
-            }
-        ).toList.sorted
+    // factored out of original printNodes method for more flexible access to node information
+    def yieldNodes: List[(String, String)] = {
+      nodes.map(node =>
+        if (node.spans.size > 0) {
+          (node.id, node.nameStr + "\t" + node.concept + "\t" + spans(node.spans(0)).start + "-" + spans(node.spans(0)).end)
+        } else {
+          (node.id, node.nameStr + "\t" + node.concept + "\t")
+        }
+      ).toList.sorted
     }
 
-    def printEdges : List[String] = {
-        var edges : List[String] = List()
-        val Relation = """:?(.*)""".r
+    // get a node string ready for printing
+    def printNodes : List[String] = yieldNodes.map(x => x._1 + "\t" + x._2)
 
-        for { node1 <- nodes
-              (label, node2) <- node1.relations
-              Relation(relation) = label    // label includes the ":"
-            } {
-                //edges = node1.id + "\t" + node1.concept + "\t" + relation + "\t" + node2.id + "\t" + node2.concept :: edges
-                edges = node1.concept + "\t" + relation + "\t" + node2.concept + "\t" + node1.id + "\t" +  node2.id + "\t" :: edges
-        }
-        return edges.sorted
+  // factored out of original printEdges method for more flexible access to edge information
+    def yieldEdges: List[(String, String, String, String, String)] = {
+      var edges : List[(String, String, String, String, String)] = List()
+      val Relation = """:?(.*)""".r
+
+      for { node1 <- nodes
+            (label, node2) <- node1.relations
+            Relation(relation) = label    // label includes the ":"
+      } {
+        edges = (node1.id,node1.concept,relation,node2.id,node2.concept) :: edges
+      }
+      return edges.sorted
+    }
+
+    // get an edge string ready for printing
+    def printEdges : List[String] = {
+        yieldEdges.map(x => x._1 + "\t" + x._2 + "\t" + x._3 + "\t" + x._4 + "\t" + x._5)
     }
 
     def printTriples(detail: Int = 1,

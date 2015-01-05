@@ -29,7 +29,7 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
     var optimizer = options.getOrElse('trainingOptimizer, "Adagrad") match {     // TODO: this should go back into Train/TrainObj
         case "SSGD" => new SSGD()
         case "Adagrad" => new Adagrad()
-        case x => { System.err.println("Error: unknown training optimizer " + x); sys.exit(1) }
+        case x => { logger(0,"Error: unknown training optimizer " + x); sys.exit(1) }
     }
 
     def decode(i: Int, weights: FeatureVector) : (FeatureVector, Double, String) = {

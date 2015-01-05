@@ -37,7 +37,7 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
     var optimizer = options.getOrElse('trainingOptimizer, "Adagrad") match {     // TODO: this should go back into Train/TrainObj
         case "SSGD" => new SSGD()
         case "Adagrad" => new Adagrad()
-        case x => { System.err.println("Error: unknown training optimizer " + x); sys.exit(1) }
+        case x => { logger(0,"Error: unknown training optimizer " + x); sys.exit(1) }
     }
 
     val outputFormat = options.getOrElse('outputFormat,"triples").split(",").toList
@@ -130,52 +130,59 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
     }
 
     def evalDev(options: Map[Symbol, String], pass: Int, weights: FeatureVector) {
-        val devDecode = options('trainingOutputFile)+".iter"+pass.toString+".decode_dev"
-        val dev = options('trainingDev) // assumes .aligned, .aligned.no_opN, .snt, .tok, .snt.deps, .snt.IllinoisNER
+      if (options.contains('trainingDev)) {
+        val devDecode = options( 'trainingOutputFile ) + ".iter" + pass.toString + ".decode_dev"
+        val dev = options( 'trainingDev ) // assumes .aligned, .aligned.no_opN, .snt, .tok, .snt.deps, .snt.IllinoisNER
 
-        val snt = fromFile(dev+".aligned.no_opN").getLines.toArray // aka 'input' in AMRParser decode
-        val tokenized = fromFile(dev+".snt.tok").getLines.toArray
-        val nerFile = Corpus.splitOnNewline(fromFile(dev+".snt.IllinoisNER").getLines).toArray
-        val dependencies = Corpus.splitOnNewline(fromFile(dev+".snt.deps").getLines).map(block => block.replaceAllLiterally("-LRB-","(").replaceAllLiterally("-RRB-",")").replaceAllLiterally("""\/""","/")).toArray
+        val snt = fromFile( dev + ".aligned.no_opN" ).getLines.toArray // aka 'input' in AMRParser decode
+        val tokenized = fromFile( dev + ".snt.tok" ).getLines.toArray
+        val nerFile = Corpus.splitOnNewline( fromFile( dev + ".snt.IllinoisNER" ).getLines ).toArray
+        val dependencies = Corpus.splitOnNewline( fromFile( dev + ".snt.deps" ).getLines ).map( block => block.replaceAllLiterally( "-LRB-", "(" ).replaceAllLiterally( "-RRB-", ")" ).replaceAllLiterally( """\/""", "/" ) ).toArray
 
-        val file = new java.io.PrintWriter(new java.io.File(devDecode), "UTF-8")
-        for { (block, i) <- Corpus.splitOnNewline(fromFile(dev+".aligned.no_opN").getLines).zipWithIndex
-                if block.split("\n").exists(_.startsWith("(")) } { // needs to contain some AMR
-            try {
-                val inputGraph = AMRTrainingData(block).toInputGraph
-                val stage2Alg_Save = options('stage2Decoder)
-                val stage2 = if (stage2Alg_Save == "Alg1") {
-                        options('stage2Decoder) = "Alg1a"
-                        GraphDecoder.Decoder(options)
-                    } else {
-                        GraphDecoder.Decoder(options)
-                    }
-                options('stage2Decoder) = stage2Alg_Save
-                stage2.features.weights = weights
-                val decoderResult = stage2.decode(new Input(inputGraph, tokenized(i).split(" "), dependencies(i)))
-                file.println(decoderResult.graph.prettyString(detail=1, pretty=true) + '\n')
-            } catch {
-                case e : Throwable => if (options.contains('ignoreParserErrors)) {
-                    file.println("# THERE WAS AN EXCEPTION IN THE PARSER.  Returning an empty graph.")
-                    if (options.contains('printStackTraceOnErrors)) {
-                        val sw = new StringWriter()
-                        e.printStackTrace(new PrintWriter(sw))
-                        file.println(sw.toString.split("\n").map(x => "# "+x).mkString("\n"))
-                    }
-                    file.println(Graph.empty.prettyString(detail=1, pretty=true) + '\n')
-                } else {
-                    throw e
-                }
+        val file = new java.io.PrintWriter( new java.io.File( devDecode ), "UTF-8" )
+        for {(block, i) <- Corpus.splitOnNewline( fromFile( dev + ".aligned.no_opN" ).getLines ).zipWithIndex
+             if block.split( "\n" ).exists( _.startsWith( "(" ) )} {
+          // needs to contain some AMR
+          try {
+            val inputGraph = AMRTrainingData( block ).toInputGraph
+            val stage2Alg_Save = options( 'stage2Decoder )
+            val stage2 = if( stage2Alg_Save == "Alg1" ) {
+              options( 'stage2Decoder ) = "Alg1a"
+              GraphDecoder.Decoder( options )
             }
+            else {
+              GraphDecoder.Decoder( options )
+            }
+            options( 'stage2Decoder ) = stage2Alg_Save
+            stage2.features.weights = weights
+            val decoderResult = stage2.decode( new Input( inputGraph, tokenized( i ).split( " " ), dependencies( i ) ) )
+            file.println( decoderResult.graph.prettyString( detail = 1, pretty = true ) + '\n' )
+          }
+          catch {
+            case e: Throwable => if( options.contains( 'ignoreParserErrors ) ) {
+              file.println( "# THERE WAS AN EXCEPTION IN THE PARSER.  Returning an empty graph." )
+              if( options.contains( 'printStackTraceOnErrors ) ) {
+                val sw = new StringWriter( )
+                e.printStackTrace( new PrintWriter( sw ) )
+                file.println( sw.toString.split( "\n" ).map( x => "# " + x ).mkString( "\n" ) )
+              }
+              file.println( Graph.empty.prettyString( detail = 1, pretty = true ) + '\n' )
+            }
+            else {
+              throw e
+            }
+          }
         }
         file.close
 
         try {
-            val externalEval = stringToProcess("python "+options('smatchEval)+" -f "+devDecode+" "+dev+".aligned").lines.toList
-            logger(0, "--- Performance on Dev ---\n" + externalEval.mkString("\n") + "\n")
-        } catch {
-            case _ : Throwable => 
+          val externalEval = stringToProcess( "python " + options( 'smatchEval ) + " -f " + devDecode + " " + dev + ".aligned" ).lines.toList
+          logger( 0, "--- Performance on Dev ---\n" + externalEval.mkString( "\n" ) + "\n" )
         }
+        catch {
+          case _: Throwable =>
+        }
+      }
     }
 
 /*  TODO: port back from SDP

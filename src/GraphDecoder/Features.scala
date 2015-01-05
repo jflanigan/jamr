@@ -477,7 +477,7 @@ class Features(private var myFeatureNames: List[String], labelSet: Array[String]
             if(ffTable.contains(x)) {
                 ffTable(x)
             } else {
-                System.err.println("Error: Unknown feature "+x)
+                logger(0,"Error: Unknown feature "+x)
                 sys.exit(1).asInstanceOf[Nothing]
             })
     }
