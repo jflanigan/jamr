@@ -1,0 +1,8 @@
+#!/bin/bash
+set -ueo pipefail
+
+#for AMR in "${TRAIN_FILE}" "${DEV_FILE}" "${TEST_FILE}"; do
+for AMR in "${TRAIN_FILE}"
+do
+    ${JAMR_HOME}/run PrintSpans < "${AMR}.aligned" &> "${AMR}.aligned.log"
+done

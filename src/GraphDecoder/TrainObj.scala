@@ -3,6 +3,8 @@ import edu.cmu.lti.nlp.amr._
 import edu.cmu.lti.nlp.amr.Train._
 import edu.cmu.lti.nlp.amr.FastFeatureVector._
 
+import java.io.StringWriter
+import java.io.PrintWriter
 import java.lang.Math.abs
 import java.lang.Math.log
 import java.lang.Math.exp
@@ -30,6 +32,8 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
     //oracle.features.weights = weights
     //costAug.features.weights = weights
 
+    def zeroVector : FeatureVector = { new FeatureVector(getLabelset(options).map(_._1)) }
+
     var optimizer = options.getOrElse('trainingOptimizer, "Adagrad") match {     // TODO: this should go back into Train/TrainObj
         case "SSGD" => new SSGD()
         case "Adagrad" => new Adagrad()
@@ -43,7 +47,7 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
         decoder.features.weights = weights
         val amrdata1 = AMRTrainingData(training(i))
         logger(0, "Sentence:\n"+amrdata1.sentence.mkString(" ")+"\n")
-        val result = decoder.decode(Input(amrdata1, input(i), oracle = false))
+        val result = decoder.decode(Input(amrdata1, input(i), i, oracle = false))
         logger(0, "Spans:")
         for ((span, i) <- amrdata1.graph.spans.zipWithIndex) {
             logger(0, "Span "+(i+1).toString+":  "+span.words+" => "+span.amr)
@@ -60,7 +64,7 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
                     "" //"\t"+decoder.features.ffDependencyPathv2(node1, node2, relation).toString.split("\n").filter(_.matches("^C1.*")).toList.toString+"\t"+decoder.features.localScore(node1, node2, relation).toString
                 })+"\n")
         }
-        logger(1, "Decoder features:\n"+result.features+"\n")
+        //logger(1, "Decoder features:\n"+result.features+"\n")
         return (result.features, result.score, if (outputFormat.contains("AMR")) { result.graph.prettyString(detail = 1, pretty = true) } else { "" })
     }
 
@@ -68,11 +72,11 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
         val oracle = Oracle(options)
         oracle.features.weights = weights
         val amrdata = AMRTrainingData(training(i))
-        val result = oracle.decode(Input(amrdata, input(i), oracle = true))
+        val result = oracle.decode(Input(amrdata, input(i), i, oracle = true))
 
         logger(0, "Oracle:")
         if (outputFormat.contains("AMR")) {
-           val result2 = oracle.decode(Input(amrdata, input(i), oracle = true, clearUnalignedNodes = false))
+           val result2 = oracle.decode(Input(amrdata, input(i), i, oracle = true, clearUnalignedNodes = false))
            logger(0, result2.graph.prettyString(detail = 1, pretty = true)+"\n")
         }
         if (outputFormat.contains("triples")) {
@@ -91,12 +95,12 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
     def costAugmented(i: Int, weights: FeatureVector, scale: Double) : (FeatureVector, Double) = {
         val decoder = Decoder(options)
         decoder.features.weights = weights
-        val costAug = new CostAugmented(Decoder(options), scale, options.getOrElse('trainingPrecRecallTradeoff,"0.5").toDouble)
+        val costAug = new CostAugmented(decoder, scale, options.getOrElse('trainingPrecRecallTradeoff,"0.5").toDouble)
         costAug.features.weights = weights
 
         val amrdata1 = AMRTrainingData(training(i))
         logger(0, "Sentence:\n"+amrdata1.sentence.mkString(" ")+"\n")
-        val result = costAug.decode(Input(amrdata1, input(i), oracle = true))
+        val result = costAug.decode(Input(amrdata1, input(i), i, oracle = true))
         logger(0, "Spans:")
         for ((span, i) <- amrdata1.graph.spans.zipWithIndex) {
             logger(0, "Span "+(i+1).toString+":  "+span.words+" => "+span.amr)
@@ -118,7 +122,11 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
     }
 
     def train {
-        train(FeatureVector(getLabelset(options).map(x => x._1)))
+        val initialWeights = FeatureVector(getLabelset(options).map(x => x._1))
+        if (options.contains('trainingInitialWeights)) {
+            initialWeights.read(Source.fromFile(options('trainingInitialWeights)).getLines)
+        }
+        train(initialWeights)
     }
 
     def evalDev(options: Map[Symbol, String], pass: Int, weights: FeatureVector) {
@@ -131,12 +139,34 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
         val dependencies = Corpus.splitOnNewline(fromFile(dev+".snt.deps").getLines).map(block => block.replaceAllLiterally("-LRB-","(").replaceAllLiterally("-RRB-",")").replaceAllLiterally("""\/""","/")).toArray
 
         val file = new java.io.PrintWriter(new java.io.File(devDecode), "UTF-8")
-        for((block, i) <- Corpus.splitOnNewline(fromFile(dev+".aligned.no_opN").getLines).zipWithIndex) {
-            val inputGraph = AMRTrainingData(block).toInputGraph
-            val stage2 = GraphDecoder.Decoder(options)
-            stage2.features.weights = weights
-            val decoderResult = stage2.decode(new Input(inputGraph, tokenized(i).split(" "), dependencies(i)))
-            file.println(decoderResult.graph.prettyString(detail=1, pretty=true) + '\n')
+        for { (block, i) <- Corpus.splitOnNewline(fromFile(dev+".aligned.no_opN").getLines).zipWithIndex
+                if block.split("\n").exists(_.startsWith("(")) } { // needs to contain some AMR
+            try {
+                val inputGraph = AMRTrainingData(block).toInputGraph
+                val stage2Alg_Save = options('stage2Decoder)
+                val stage2 = if (stage2Alg_Save == "Alg1") {
+                        options('stage2Decoder) = "Alg1a"
+                        GraphDecoder.Decoder(options)
+                    } else {
+                        GraphDecoder.Decoder(options)
+                    }
+                options('stage2Decoder) = stage2Alg_Save
+                stage2.features.weights = weights
+                val decoderResult = stage2.decode(new Input(inputGraph, tokenized(i).split(" "), dependencies(i)))
+                file.println(decoderResult.graph.prettyString(detail=1, pretty=true) + '\n')
+            } catch {
+                case e : Throwable => if (options.contains('ignoreParserErrors)) {
+                    file.println("# THERE WAS AN EXCEPTION IN THE PARSER.  Returning an empty graph.")
+                    if (options.contains('printStackTraceOnErrors)) {
+                        val sw = new StringWriter()
+                        e.printStackTrace(new PrintWriter(sw))
+                        file.println(sw.toString.split("\n").map(x => "# "+x).mkString("\n"))
+                    }
+                    file.println(Graph.empty.prettyString(detail=1, pretty=true) + '\n')
+                } else {
+                    throw e
+                }
+            }
         }
         file.close
 

@@ -48,6 +48,7 @@ class SSGD extends Optimizer[FeatureVector] {
             avg_weights += weights
             i += 1
         }
+        trainingObserver(i, weights)
         if(avg) { avg_weights } else { weights }
     }
 }

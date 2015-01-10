@@ -4,6 +4,7 @@ import scala.collection.mutable.Map
 import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.immutable.Queue
+import scala.collection.immutable
 import scala.util.parsing.combinator._
 
 case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[String, Node], getNodeByName: Map[String, Node]) {
@@ -106,6 +107,36 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         return this
     }
 
+    def printRoot : String = {
+        return "# ::root\t" + root.id + "\t" + root.concept
+    }
+
+    def printNodes : List[String] = {
+        nodes.map(node =>
+            if (node.spans.size > 0) {
+                //node.id + "\t" + node.nameStr + "\t" + node.concept + "\t" + spans(node.spans(0)).start + "-" + spans(node.spans(0)).end
+                node.id + "\t" + node.concept + "\t" + spans(node.spans(0)).start + "-" + spans(node.spans(0)).end
+            } else {
+                //node.id + "\t" + node.nameStr + "\t" + node.concept + "\t"
+                node.id + "\t" + node.concept + "\t"
+            }
+        ).toList.sorted
+    }
+
+    def printEdges : List[String] = {
+        var edges : List[String] = List()
+        val Relation = """:?(.*)""".r
+
+        for { node1 <- nodes
+              (label, node2) <- node1.relations
+              Relation(relation) = label    // label includes the ":"
+            } {
+                //edges = node1.id + "\t" + node1.concept + "\t" + relation + "\t" + node2.id + "\t" + node2.concept :: edges
+                edges = node1.concept + "\t" + relation + "\t" + node2.concept + "\t" + node1.id + "\t" +  node2.id + "\t" :: edges
+        }
+        return edges.sorted
+    }
+
     def printTriples(detail: Int = 1,
                      extra: (Node, Node, String) => String = (n1, n2, r) => "",   // Optional string to print after each relation
                      sorted: Boolean = true
@@ -137,8 +168,14 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
     }
 
     def loadSpans(spanStr: String, sentence: Array[String]) = {
-        assert(spans.size == 0, "This code does not support re-loading the spans")
-        //spans.clear
+        //assert(spans.size == 0, "This code does not support re-loading the spans")
+        if (spans.size != 0) {
+            logger(-1, "WARNING: Reloading the spans")   // used to be assert
+            spans.clear
+            for (node <- nodes) {
+                node.spans.clear
+            }
+        }
         val SpanRegex = """([*]?)([0-9]+)-([0-9]+)\|(.*)""".r   // TODO: move to Span
         for (spanStr <- spanStr.split(" ")) {
             try {
@@ -176,7 +213,7 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
             node2.id = node.id
             nodeIds = node.id :: nodeIds
             getNodeById(node.id) = node
-            if (node.concept(0) != '"') {   // concepts always have size > 0 (enforced by GraphParser)
+            if (node.concept(0) != '"' && node.concept(0) != '-') {   // concepts always have size > 0 (enforced by GraphParser)
                 val varName = getNextVariableName(node.concept.toLowerCase()(0))
                 getNodeByName(varName) = node
                 node.name = Some(varName)
@@ -247,6 +284,17 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         return getNodeByName.valuesIterator
     }
 
+    def edges : List[(Node, String, Node)] = {
+        var edges = List[(Node, String, Node)]()
+
+        for { node1 <- nodes
+              (label, node2) <- node1.relations
+            } {
+                edges = (node1, label, node2) :: edges
+        }
+        return edges
+    }
+
     def doRecursive(f: (Node) => Unit, node: Node = root) {
         f(node)
         for ((_,child) <- node.topologicalOrdering) {
@@ -261,20 +309,37 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
     }
 */
 
-    private def makeIds(node: Node = root, id: List[Int] = List(0)) {
+    def sortRelations() {
+        // Sorts the nodes in topological ordering by the label name
+        // WARNING: This should be called only after assignOpN
+        doRecursive(x => {x.topologicalOrdering = x.topologicalOrdering.sortBy(_._1)}, root)
+    }
+
+    def makeIds() {
         // Sets the node.id field for every node in the graph according to the topologicalOrdering
         // For example "0" is the root and "0.1" is the 2nd child of the root
         // Assumes that a topological ordering already exists (node.topologicalOrdering is non-empty)
-        if (node == root) {
-            getNodeById.clear
-        }
-        node.id = id.mkString(".")
-        getNodeById += (node.id -> node)
-        for (((_,child), i) <- node.topologicalOrdering.zipWithIndex) {
-            makeIds(child, id ::: List(i))
+        getNodeById.clear
+        val oldToNew = makeIds(root)
+        for (span <- spans) {
+            span.nodeIds = span.nodeIds.map(x => oldToNew(x))
+            doRecursive(x => x.id = oldToNew.getOrElse(x.id, { logger(0, "WARNING: makeIds can't find span Id: "+x.id); x.id }), span.amr)
         }
     }
 
+    def makeIds(node: Node, id: List[Int] = List(0)) : immutable.Map[String, String] = {
+        // Sets the node.id field for every node in the graph according to the topologicalOrdering
+        // For example "0" is the root and "0.1" is the 2nd child of the root
+        // Assumes that a topological ordering already exists (node.topologicalOrdering is non-empty)
+        val newId = id.mkString(".")
+        var oldIdToNewId : immutable.Map[String, String] = immutable.Map(node.id -> newId)
+        node.id = newId
+        getNodeById += (node.id -> node)
+        for (((label,child), i) <- node.topologicalOrdering.zipWithIndex) {
+            oldIdToNewId ++= makeIds(child, id ::: List(i))
+        }
+        return oldIdToNewId
+    }
 
     private def makeVariables(node: Node = root) {
     // TODO: this can be simplified using getNodeById and 'nodes'
@@ -284,14 +349,16 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
             getNodeByName.clear
         }
         if (node.name != None) {
-            val Some(name) = node.name
+            var Some(name) = node.name
             if (getNodeByName.contains(name)) {
-                throw new RuntimeException("duplicate variable name: " + name)
-            } else {
-                getNodeByName += (name -> node)
-                for ((_,child) <- node.topologicalOrdering) {
-                    makeVariables(child)
-                }
+                logger(-2, "WARNING: Duplicate variable name in annotation: " + name)
+                name = getNextVariableName(name(0))
+                logger(-2, "Changing name to: " + name)
+                node.name = Some(name)
+            }
+            getNodeByName += (name -> node)
+            for ((_,child) <- node.topologicalOrdering) {
+                makeVariables(child)
             }
         }
     }
@@ -441,11 +508,10 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
             vars += root.name.get
         }
         doRecursive(node => vars ++= node.variableRelations.map(_._2.name))
-        assignOpN
         return root.prettyString(detail, pretty, vars)
     }
 
-    def assignOpN {
+    def assignOpN() {
         def numberOps(relations: List[(String, Node)]) : List[(String, Node)] = {
             val ops = relations.filter(x => x._1 == ":op")
             val opNs = ops.sortBy(x => spans(x._2.spans(0)).start).zipWithIndex.map(x => (x._1._1 + (x._2+1).toString, x._1._2))
@@ -513,6 +579,6 @@ object Graph {
 
     //def empty() : Graph = { val g = parse("(n / none)"); g.getNodeById.clear; g.getNodeByName.clear; return g }
     //def amrEmpty() : Graph = { parse("(a / amr-empty)") }
-    def empty() : Graph = { val g = parse("(a / amr-empty)"); g.loadSpans("0-0|0", Array()); return g }
+    def empty() : Graph = { val g = parse("(a / amr-empty)"); g.loadSpans("0-1|0", Array()); return g }
 }
 

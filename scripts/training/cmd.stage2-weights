@@ -1,27 +1,22 @@
 #!/bin/bash
 
-INPUT="${DATA_DIR}/amr-release-proxy.train"
-DEV="${DATA_DIR}/amr-release-proxy.dev"
+INPUT="${TRAIN_FILE}"
 OUTPUT="${MODEL_DIR}/stage2-weights"
 
 ${JAMR_HOME}/run AMRParser \
---stage2-train \
---training-save-interval 1 \
---training-passes 10 \
---stage2-decoder LR \
---stage2-labelset "${JAMR_HOME}/resources/labelset" \
---training-optimizer Adagrad \
---training-output "${OUTPUT}" \
---stage2-features "rootConcept,rootDependencyPathv1,bias,typeBias,self,fragHead,edgeCount,distance,logDistance,posPathv3,dependencyPathv4,conceptBigram" \
---output-format "triples" \
--v 0 \
---stage1-concept-table "${MODEL_DIR}/conceptTable.train" \
---dependencies "${INPUT}.snt.deps" \
---tok "${INPUT}.snt.tok" \
---snt "${INPUT}.snt" \
---ner "${INPUT}.snt.IllinoisNER" \
---training-dev "${DEV}" \
---smatch-eval "${SMATCH}" \
-< "${INPUT}.aligned.no_opN" \
-> "${OUTPUT}" \
-2> "${OUTPUT}.err"
+    --stage2-train \
+    --stage1-concept-table "${MODEL_DIR}/conceptTable.train" \
+    --dependencies "${INPUT}.snt.deps" \
+    --tok "${INPUT}.snt.tok" \
+    --snt "${INPUT}.snt" \
+    --ner "${INPUT}.snt.IllinoisNER" \
+    --training-dev "${DEV_FILE}" \
+    --training-output "${OUTPUT}" \
+    --smatch-eval "${SMATCH}" \
+    -v 0 \
+    --output-format "triples" \
+    ${PARSER_OPTIONS} \
+    ${RELATION_ID_TRAINING_OPTIONS} \
+    < "${INPUT}.aligned.no_opN" \
+    > "${OUTPUT}" \
+    2> "${OUTPUT}.err"

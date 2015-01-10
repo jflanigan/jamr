@@ -1,26 +1,22 @@
 #!/bin/bash
 
-INPUT="${DATA_DIR}/amr-release-proxy.test"
+INPUT="${TEST_FILE}"
 OUTPUT="${MODEL_DIR}/test.decode.stage2only"
 
 STAGE1_WEIGHTS="${MODEL_DIR}/stage1-weights"
 STAGE2_WEIGHTS="${MODEL_DIR}/stage2-weights.iter5" # CHANGEME. pick iteration by performance on dev
 
 ${JAMR_HOME}/run AMRParser \
---stage1-concept-table "${MODEL_DIR}/conceptTable.train" \
---stage1-features "bias,length,fromNERTagger,conceptGivenPhrase" \
---stage1-weights "${STAGE1_WEIGHTS}" \
---stage1-oracle \
---stage2-decoder LR \
---stage2-features "rootConcept,rootDependencyPathv1,bias,typeBias,self,fragHead,edgeCount,distance,logDistance,posPathv3,dependencyPathv4,conceptBigram" \
---stage2-labelset "${JAMR_HOME}/resources/labelset" \
---stage2-weights "${STAGE2_WEIGHTS}" \
---dependencies "${INPUT}.snt.deps" \
---ner "${INPUT}.snt.IllinoisNER" \
---tok "${INPUT}.snt.tok" \
---training-data "${INPUT}.aligned.no_opN" \
---output-format AMR \
--v 0 \
-< "${INPUT}.snt" \
-> "${OUTPUT}" \
-2> "${OUTPUT}.err"
+    --stage1-concept-table "${MODEL_DIR}/conceptTable.train" \
+    --stage1-weights "${STAGE1_WEIGHTS}" \
+    --stage1-oracle \
+    --stage2-weights "${STAGE2_WEIGHTS}" \
+    --dependencies "${INPUT}.snt.deps" \
+    --ner "${INPUT}.snt.IllinoisNER" \
+    --tok "${INPUT}.snt.tok" \
+    --training-data "${INPUT}.aligned.no_opN" \
+    -v 0 \
+    ${PARSER_OPTIONS} \
+    < "${INPUT}.snt" \
+    > "${OUTPUT}" \
+    2> "${OUTPUT}.err"

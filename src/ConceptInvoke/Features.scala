@@ -38,10 +38,6 @@ class Features(featureNames: List[String]) {
     val ffTable = Map[String, FeatureFunction](
         "bias" -> ffBias,
         "length" -> ffLength,
-        "count" -> ffCount,
-        "conceptGivenPhrase" -> ffConceptGivenPhrase,
-        "fromNERTagger" -> ffFromNERTagger,
-        "fromDateExpr" -> ffFromDateExpr,
         "phraseConceptPair" -> ffPhraseConceptPair,
         "pairWith2WordContext" -> ffPairWith2WordContext
     )
@@ -52,24 +48,6 @@ class Features(featureNames: List[String]) {
 
     def ffLength(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
         return FeatureVector(Map("len" -> concept.words.size))
-    }
-
-    def ffCount(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
-        return FeatureVector(Map("N" -> concept.features.count))
-    }
-
-    def ffConceptGivenPhrase(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
-        return FeatureVector(Map("c|p" -> concept.features.conceptGivenPhrase))
-    }
-
-    def ffFromNERTagger(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
-        if (concept.features.fromNER) { FeatureVector(Map("ner" -> 1.0))
-        } else { FeatureVector(Map("ner" -> 0.0)) }
-    }
-
-    def ffFromDateExpr(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
-        if (concept.features.fromDateExpr) { FeatureVector(Map("datex" -> 1.0))
-        } else { FeatureVector(Map("datex" -> 0.0)) }
     }
 
     def ffPhraseConceptPair(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
@@ -88,7 +66,9 @@ class Features(featureNames: List[String]) {
         return feats
     }
 
-    var featureFunctions : List[FeatureFunction] = featureNames.map(x => ffTable(x)) // TODO: error checking on lookup
+    var featureFunctions : List[FeatureFunction] = featureNames.filter(x => ffTable.contains(x)).map(x => ffTable(x)) // TODO: error checking on lookup
+    val unknownFeatures = featureNames.filterNot(x => ffTable.contains(x) || ExtractConceptTable.implementedFeatures.contains(x) || Concepts.implementedFeatures.contains(x))
+    assert(unknownFeatures.size == 0, "Unknown stage1 features: "+unknownFeatures.mkString(","))
 
     def localFeatures(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
         // Calculate the local features
@@ -96,6 +76,7 @@ class Features(featureNames: List[String]) {
         for (ff <- featureFunctions) {
             feats += ff(input, concept, start, end)
         }
+        feats += concept.features   // add the features in the rule
         return feats
     }
 
@@ -104,6 +85,7 @@ class Features(featureNames: List[String]) {
         for (ff <- featureFunctions) {
             score += weights.dot(ff(input, concept, start, end))
         }
+        score += weights.dot(concept.features)  // add the features in the rule
         return score
     }
 

@@ -1,5 +1,0 @@
-#!/bin/bash
-
-for split in train dev test; do
-    cat "${DATA_DIR}/amr-release-proxy.${split}" | grep '::snt ' | sed 's/^# ::snt //' | "${CDEC}/corpus/tokenize-anything.sh" > "${DATA_DIR}/amr-release-proxy.${split}.snt.tok"
-done

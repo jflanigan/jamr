@@ -10,12 +10,14 @@ import scala.collection.mutable.Map
 for (line <- stdin.getLines()) {
     var tag : String = "O"
     var begin = false
-    for (word <- line.split(" ")) {
-        if(word.matches("""\[[A-Z]*""")) {
-            assert(tag == "O", "Error: Nested tags. Line = "+line)
+    for (word <- line.split(" ") if word != "") { // more than one space, or an empty line, is skipped
+        if (word.matches("""\[[A-Z]+""")) {
+            if (tag != "O") {
+                System.err.println(" *** WARNING *** : Nested tags in Illinois NER output.\nLine = "+line+"\nSuggestion: you may want to remove any [ or ] from the input.")
+            }
             tag = word.tail
             begin = true
-        } else if(!word.endsWith("]")) {
+        } else if(!word.endsWith("]") || word.size == 1) {
             if(tag != "O") {
                 println(word + "\t" + (if (begin) { "B-" } else { "I-" }) + tag)
             } else {
@@ -23,8 +25,12 @@ for (line <- stdin.getLines()) {
             }
             begin = false
         } else {
-            assert(tag != "O", "Error: Closing bracket outside of tag. Line = "+line)
-            println(word.slice(0,word.size-1) + "\t" + (if (begin) { "B-" } else { "I-" }) + tag)
+            if (tag == "O") {
+                System.err.println(" *** WARNING *** : Closing bracket outside of tag in Illinois NER output.\nLine = "+line+"\nSuggestion: you may want to remove any [ or ] from the input.")
+                println(word.slice(0,word.size-1) + "\tO")
+            } else {
+                println(word.slice(0,word.size-1) + "\t" + (if (begin) { "B-" } else { "I-" }) + tag)
+            }
             tag = "O"
         }
     }

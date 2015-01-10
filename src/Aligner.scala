@@ -54,15 +54,15 @@ object Aligner {
                 logger(2,"**** Processsing Block *****")
                 logger(2,block)
                 logger(2,"****************************")
-                val extrastr : String = block.split("\n[(]")(0)
-                val amrstr : String = "(" + block.split("\n[(]").tail.mkString("\n(")
+                val extrastr : String = block.split("\n").filter(_.matches("^# ::.*")).mkString("\n")
+                val amrstr : String = block.split("\n").filterNot(_.matches("^#.*")).mkString("\n")
                 println(extrastr)
                 val amr = Graph.parse(amrstr)
                 val extras = AMRTrainingData.getUlfString(extrastr)
                 val tokenized = extras("::tok").split(" ")
                 val wordAlignments = AlignWords.alignWords(tokenized, amr)
                 val spanAlignments = if (aligner2) {
-                        AlignSpans2.align(tokenized, amr)
+                        AlignSpans3.align(tokenized, amr)
                     } else {
                         AlignSpans.alignSpans(tokenized, amr, wordAlignments)
                     }
@@ -74,6 +74,11 @@ object Aligner {
                     logger(3, "* "+span.format)
                 }
                 println("# ::alignments "+spans.map(_.format).mkString(" ")+" ::annotator Aligner v.02 ::date "+sdf.format(new Date))
+                println(amr.printNodes.map(x => "# ::node\t" + x).mkString("\n"))
+                println(amr.printRoot)
+                if (amr.root.relations.size > 0) {
+                    println(amr.printEdges.map(x => "# ::edge\t" + x).mkString("\n"))
+                }
                 println(amrstr+"\n")
             } else {
                 println(block+"\n")

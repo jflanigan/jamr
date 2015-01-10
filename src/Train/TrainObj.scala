@@ -8,6 +8,8 @@ import java.lang.Math.random
 import java.lang.Math.floor
 import java.lang.Math.min
 import java.lang.Math.max
+import java.io.StringWriter
+import java.io.PrintWriter
 import scala.io.Source
 import scala.io.Source.stdin
 import scala.io.Source.fromFile
@@ -23,6 +25,7 @@ abstract class TrainObj[FeatureVector <: AbstractFeatureVector](options: Map[Sym
     def costAugmented(i: Int, weights: FeatureVector, scale: Double) : (FeatureVector, Double)
     def train : Unit
     def evalDev(options: Map[Symbol, String], pass: Int, weights: FeatureVector) : Unit
+    def zeroVector : FeatureVector
 
     ////////////////// Training Setup ////////////////
 
@@ -41,7 +44,7 @@ abstract class TrainObj[FeatureVector <: AbstractFeatureVector](options: Map[Sym
         optimizer = new MiniBatch(optimizer, options('trainingMiniBatchSize).toInt, numThreads)
     }
 
-    val input = Input.loadInputfiles(options)
+    val input: Array[Input] = Input.loadInputfiles(options)
     val training: Array[String] = Corpus.getAmrBlocks(io.Source.stdin.getLines()).toArray
 
 /*  Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -62,34 +65,50 @@ abstract class TrainObj[FeatureVector <: AbstractFeatureVector](options: Map[Sym
 
     def gradient(i: Int, weights: FeatureVector) : (FeatureVector, Double) = {
         val scale = options.getOrElse('trainingCostScale,"1.0").toDouble
-        if (loss == "Perceptron") {
-            val (grad, score, _) = decode(i, weights)
-            val o = oracle(i, weights)
-            grad -= o._1
-            //logger(0, "Gradient:\n"+grad.toString)
-            (grad, score - o._2)
-        } else if (loss == "SVM") {
-            val (grad, score) = costAugmented(i, weights, scale)
-            val o = oracle(i, weights)
-            grad -= o._1
-            (grad, score - o._2)
-        } else if (loss == "Ramp1") {
-            val (grad, score) = costAugmented(i, weights, scale)
-            val o = decode(i, weights)
-            grad -= o._1
-            (grad, score - o._2)
-        } else if (loss == "Ramp2") {
-            val (grad, score, _) = decode(i, weights)
-            val o = costAugmented(i, weights, -1.0 * scale)
-            grad -= o._1
-            (grad, score - o._2)
-        } else if (loss == "Ramp3") {
-            val (grad, score) = costAugmented(i, weights, scale)
-            val o = costAugmented(i, weights, -1.0 * scale)
-            grad -= o._1
-            (grad, score - o._2)
-        } else {
-            System.err.println("Error: unknown training loss " + loss); sys.exit(1).asInstanceOf[Nothing]
+        try {
+            if (loss == "Perceptron") {
+                val (grad, score, _) = decode(i, weights)
+                val o = oracle(i, weights)
+                grad -= o._1
+                //logger(0, "Gradient:\n"+grad.toString)
+                (grad, score + o._2)
+            } else if (loss == "SVM") {
+                val (grad, score) = costAugmented(i, weights, scale)
+                val o = oracle(i, weights)
+                grad -= o._1
+                (grad, score + o._2)
+            } else if (loss == "Ramp1") {
+                val (grad, score) = costAugmented(i, weights, scale)
+                val o = decode(i, weights)
+                grad -= o._1
+                (grad, score + o._2)
+            } else if (loss == "Ramp2") {
+                val (grad, score, _) = decode(i, weights)
+                val o = costAugmented(i, weights, -1.0 * scale)
+                grad -= o._1
+                (grad, score + o._2)
+            } else if (loss == "Ramp3") {
+                val (grad, score) = costAugmented(i, weights, scale)
+                val o = costAugmented(i, weights, -1.0 * scale)
+                grad -= o._1
+                (grad, score + o._2)
+            } else if (loss == "Latent_Hinge") {
+                val (grad, score) = costAugmented(i, weights, scale)
+                val o = costAugmented(i, weights, -10000000.0)
+                grad -= o._1
+                (grad, score + o._2)
+            } else {
+                System.err.println("Error: unknown training loss " + loss); sys.exit(1).asInstanceOf[Nothing]
+            }
+        } catch {
+            case e : Throwable => if (options.contains('ignoreParserErrors)) {
+                logger(-1, " ********** THERE WAS AN EXCEPTION IN THE PARSER. *********")
+                if (verbosity >= -1) { e.printStackTrace }
+                logger(-1, "Continuing. To exit on errors, please run without --ignore-parser-errors")
+                (zeroVector , 0.0)
+            } else {
+                throw e
+            }
         }
     }
 
@@ -98,8 +117,8 @@ abstract class TrainObj[FeatureVector <: AbstractFeatureVector](options: Map[Sym
             val file = new java.io.PrintWriter(new java.io.File(options('trainingOutputFile) + ".iter" + pass.toString), "UTF-8")
             try { file.print(weights.toString) }
             finally { file.close }
-            evalDev(options, pass, weights)
         }
+        evalDev(options, pass, weights)
         return true
     }
 
@@ -109,9 +128,9 @@ abstract class TrainObj[FeatureVector <: AbstractFeatureVector](options: Map[Sym
         val devfile = "data/splits/sec20."+formalism+".sdp"
         val (iASSave, iGSave, oGSave) = (inputAnnotatedSentences, inputGraphs, oracleGraphs)
         inputAnnotatedSentences = Corpus.getInputAnnotatedSentences(devfile+".dependencies")
-        inputGraphs = Corpus.splitOnNewline(fromFile(devfile, "utf-8").getLines).map(
+        inputGraphs = Corpus.splitOnNewline(fromFile(devfile).getLines).map(
             x => SDPGraph.fromGold(x.split("\n"), true)).toArray
-        oracleGraphs = Corpus.splitOnNewline(fromFile(devfile, "utf-8").getLines).map(
+        oracleGraphs = Corpus.splitOnNewline(fromFile(devfile).getLines).map(
             x => SDPGraph.fromGold(x.split("\n"), false)).toArray
         assert(inputAnnotatedSentences.size == inputGraphs.size && inputGraphs.size == oracleGraphs.size, "sdp and dep file lengths do not match")
 

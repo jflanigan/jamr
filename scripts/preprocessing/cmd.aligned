@@ -1,0 +1,12 @@
+#!/bin/bash
+set -ueo pipefail
+
+for AMR in "${TRAIN_FILE}" "${DEV_FILE}" "${TEST_FILE}"
+do
+    ${JAMR_HOME}/run Aligner -v 1 < "${AMR}.tok" &> "${AMR}.aligned.log"
+
+    tail "${AMR}.aligned.log"
+
+    # Remove the warnings and spans
+    cat "${AMR}.aligned.log" | egrep '^#|^ |^\(|^$' > "${AMR}.aligned"
+done

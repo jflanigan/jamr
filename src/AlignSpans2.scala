@@ -9,6 +9,12 @@ import scala.collection.mutable.ArrayBuffer
 /****************************** Align Words *****************************/
 object AlignSpans2 {
 
+    val weird_system = if ("abc".split("").toList == List("a","b","c")) {
+        true    // on some systems "abc".split("") gives Array("a","b","c") and I have no idea why
+    } else {
+        false   // usually "abc".split("") is Array("","a","b","c")
+    }
+
     def align(sentence: Array[String], graph: Graph) {
         val stemmedSentence = sentence.map(stemmer(_))
         val wordToSpan : Array[Option[Int]] = sentence.map(x => None)
@@ -25,7 +31,11 @@ object AlignSpans2 {
                 }
             }
             //words = nodes => { nodes.tail.map(x => Pattern.quote(getConcept(x._2.concept).toLowerCase.replaceAll("[^a-zA-Z0-9\t]",""))).mkString("[^a-zA-Z]*").r }
-            words = nodes => { ("\t"+nodes.tail.map(x => getConcept(x._2.concept).toLowerCase/*.replaceAll("[^a-zA-Z0-9\t]","")*/.split("").tail.map(Pattern.quote(_)).mkString("\t?")).mkString("[^a-zA-Z]*")+"\t").r }
+            if (weird_system) {
+                words = nodes => { ("\t"+nodes.tail.map(x => getConcept(x._2.concept).toLowerCase/*.replaceAll("[^a-zA-Z0-9\t]","")*/.split("").map(Pattern.quote(_)).mkString("\t?")).mkString("[^a-zA-Z]*")+"\t").r }
+            } else {
+                words = nodes => { ("\t"+nodes.tail.map(x => getConcept(x._2.concept).toLowerCase/*.replaceAll("[^a-zA-Z0-9\t]","")*/.split("").tail.map(Pattern.quote(_)).mkString("\t?")).mkString("[^a-zA-Z]*")+"\t").r }
+            }
         }
 
         val fuzzyNamedEntity = new SpanAligner(sentence, graph) {
@@ -42,7 +52,11 @@ object AlignSpans2 {
                 ("\t" + (for ((_, node) <- nodes.tail) yield {
                     var conceptStr = getConcept(node.concept).toLowerCase
                     conceptStr = conceptStr.slice(0, max(fuzzyMatchLength(stemmedSentence, node),4))
-                    conceptStr.split("").tail.map(Pattern.quote(_)).mkString("\t?")
+                    if (weird_system) {
+                        conceptStr.split("").map(Pattern.quote(_)).mkString("\t?")
+                    } else {
+                        conceptStr.split("").tail.map(Pattern.quote(_)).mkString("\t?")
+                    }
                 }).mkString("[^\t]*[^a-zA-Z]*")+"[^\t]*\t").r }
                 //map(x => getConcept(x._2.concept).toLowerCase/*.replaceAll("[^a-zA-Z0-9\t]","")*/.split("").tail.map(Pattern.quote(_)).mkString("\t?")).mkString("[^\t]*[^a-zA-Z]*")+"[^\t]*\t").r }
         }

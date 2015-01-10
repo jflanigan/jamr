@@ -11,12 +11,14 @@ val Line = """(.*) \|\|\| (.*) \|\|\| Count=(.*)""".r
 
 System.err.println("Reading in concept table")
 
+// TODO: this class can be removed
+
 val phraseCounts : Map[String, Int] = Map()
 val conceptTable: Map[String, List[(String, String, Int)]] = Map()  // map from first word in the phrase to list of (phrase, concept, count) triples
 for (Line(phrase, concept, countStr) <- stdin.getLines()) {
     val word = phrase.split(" ")(0)
     //println(word)
-    conceptTable(word) = (phrase, concept, countStr.toInt) :: conceptTable.getOrElse(phrase, List())
+    conceptTable(word) = (phrase, concept, countStr.toInt) :: conceptTable.getOrElse(word, List())
     phraseCounts(phrase) = 0
 }
 

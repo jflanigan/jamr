@@ -1,0 +1,38 @@
+#!/bin/bash
+set -ueo pipefail
+
+# Usage: Run this script to produce the hand aligments file.
+
+#tar -xzOf "$JAMR_HOME/data/LDC2013E117.tgz" ./LDC2013E117_DEFT_Phase_1_AMR_Annotation_R3/data/deft-amr-release-r3-proxy.txt | nltot | awk '(6 <= NR && NR <= 105) || (1901 <= NR && NR <= 2000)' | ttonl > hand_alignments_LDC2013E117.txt
+#patch hand_alignments_LDC2013E117.txt < patch.hand_alignments_LDC2013E117
+
+# Here's how the patch file and snt.ids file were created:
+# (This is complicated because I need to tokenize but I don't want to include LDC data in the patch file)
+# cat hand_align.txt | grep -o '::id.*' > snt.ids
+# cat hand_align.txt | sed 's/\([^ ]\) /\1\t\n/g' > hand_align.temp
+# tar -xzOf ~/data/LDC2013E117.tgz ./LDC2013E117_DEFT_Phase_1_AMR_Annotation_R3/data/deft-amr-release-r3-proxy.txt | nltot | grep -n '.*' | fgrep -f ids3.txt | ttonl | sed 's/::snt \(.*\)/::snt \1\n# ::alignments\n# ::tok \1/' | sed 's/\([^ ]\) /\1\t\n/g' > orig.txt
+# diff orig.txt hand_align.temp > patch.hand_align
+# To undo:
+# cat hand_align.temp | awk 'BEGIN {RS = ""} {gsub("\t\n", " ", $0); print $0; print ""}' > hand_align.out
+
+DIR="$JAMR_HOME/scripts/hand_alignments/LDC2013E117"
+OUTDIR="$JAMR_HOME/data/hand_alignments/LDC2013E117"
+
+mkdir -p "$OUTDIR"
+
+if [ -z "$JAMR_HOME" ]; then
+    echo 'Error: please source config script'
+    exit 1
+fi
+
+if [ ! -f "$JAMR_HOME/data/LDC2013E117.tgz" ]; then
+    echo 'Error: Please copy LDC2013E117.tgz to the directory $JAMR_HOME/data before running this script.'
+    exit 1
+fi
+
+tar -xzOf "$JAMR_HOME/data/LDC2013E117.tgz" ./LDC2013E117_DEFT_Phase_1_AMR_Annotation_R3/data/deft-amr-release-r3-proxy.txt | "$JAMR_HOME/scripts/preprocessing/nltot" | grep -n '.*' | fgrep -f $DIR/snt.ids | "$JAMR_HOME/scripts/preprocessing/ttonl" | sed 's/::snt \(.*\)/::snt \1\n# ::alignments\n# ::tok \1/' | sed 's/\([^ ]\) /\1\t\n/g' > "$OUTDIR/hand_align.txt"
+patch "$OUTDIR/hand_align.txt" < "$DIR/patch.hand_align"
+cat "$OUTDIR/hand_align.txt" | awk 'BEGIN {RS = ""} {gsub("\t\n", " ", $0); print $0; print ""}' | sed 's/\(::alignments.*\)/\1 ::gold/' > "$OUTDIR/hand_align.temp"
+rm "$OUTDIR/hand_align.txt"
+mv "$OUTDIR/hand_align.temp" "$OUTDIR/hand_align.txt"
+

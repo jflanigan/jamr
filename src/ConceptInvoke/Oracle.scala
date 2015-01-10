@@ -22,16 +22,17 @@ import Double.{NegativeInfinity => minusInfty}
 type PhraseConceptPair = (List[String], String, PhraseConceptFeatures)
 ********************************/
 
-class Oracle(featureNames: List[String],
+class Oracle(options: Map[Symbol, String],
+             featureNames: List[String],
              phraseConceptPairs: Array[PhraseConceptPair],
              useNER: Boolean = true)
     extends Decoder(featureNames) {
     // Base class has defined:
     // val features: Features
 
-    val conceptInvoker = new Concepts(phraseConceptPairs)
+    val conceptInvoker = new Concepts(options, phraseConceptPairs)
 
-    def decode(input: Input) : DecoderResult = {
+    def decode(input: Input, cost: (Input, PhraseConceptPair, Int, Int) => Double) : DecoderResult = {
         assert(input.graph != None, "Error: stage1 oracle decoder was not given a graph")
         val graph = input.graph.get
         val sentence = input.sentence
@@ -52,7 +53,7 @@ class Oracle(featureNames: List[String],
             for (concept <- matching) {
                 val f = features.localFeatures(input, concept, span.start, span.end)
                 feats += f
-                score += features.weights.dot(f)
+                score += features.weights.dot(f) + cost(input, concept, span.start, span.end)
                 logger(1, "\nphraseConceptPair: "+concept.toString)
                 logger(1, "feats:\n"+f.toString)
                 logger(1, "score:\n"+score.toString)

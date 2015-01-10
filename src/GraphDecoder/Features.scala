@@ -8,7 +8,7 @@ import scala.collection.immutable
 
 /**************************** Feature Functions *****************************/
 
-class Features(var featureNames: List[String], labelSet: Array[String]) {
+class Features(private var myFeatureNames: List[String], labelSet: Array[String]) {
     var weights = FeatureVector(labelSet: Array[String])    // TODO: maybe weights should be passed in to the constructor
     private var inputSave: Input = _
     private var graph: Graph = _
@@ -31,10 +31,17 @@ class Features(var featureNames: List[String], labelSet: Array[String]) {
         precompute
     }
 
+    def featureNames: List[String] = myFeatureNames
+    def featureNames_= (featNames: List[String]) {
+        myFeatureNames= featNames
+        featureFunctions = myFeatureNames.filter(x => !rootFFTable.contains(x)).map(x => ffTable(x))     // TODO: error checking on lookup
+        rootFeatureFunctions = myFeatureNames.filter(x => rootFFTable.contains(x)).map(x => rootFFTable(x))
+    }
+
     type FeatureFunction = () => Unit           // function with no arguments and no return value
 
     val ffTable = Map[String, FeatureFunction](
-        "CostAugEdgeId" -> ffCostAugEdgeId _,   // trailing _ for partially applied function
+        "CostAugEdge" -> ffCostAugEdge _,   // trailing _ for partially applied function
         "DDEdgeId" -> ffDDEdgeId _,
         "LRLabelWithId" -> ffLRLabelWithId _,
         "bias" -> ffBias _,
@@ -78,16 +85,17 @@ class Features(var featureNames: List[String], labelSet: Array[String]) {
         feats = (feat, Value(unconjoined, conjoined), conjoinedMap) :: feats
     }
 
-    def ffCostAugEdgeId(n1: Node, n2: Node) : List[(String, Value, immutable.Map[Int, Double])] = {
+    def ffCostAugEdge(n1: Node, n2: Node) : List[(String, Value, immutable.Map[Int, Double])] = {
         node1 = n1
         node2 = n2
         feats = List()
-        ffCostAugEdgeId
+        ffCostAugEdge
         return feats
     }
 
-    def ffCostAugEdgeId {     // Used for cost augmented decoding
-        addFeature("CA:Id1="+node1.id+"+Id2="+node2.id, 0.0, 1.0)
+    def ffCostAugEdge {       // Used for cost augmented decoding
+        addFeature("CA:U_C1="+node1.concept+"+C2="+node2.concept, 1.0, 0.0)   // WARNING: don't change this without also changing the features in CostAugmented decoder as well
+        addFeature("CA:C1="+node1.concept+"+C2="+node2.concept, 0.0, 1.0)    // WARNING: don't change this without also changing the features in CostAugmented decoder as well
     }
 
     def ffDDEdgeId {          // Used for Dual Decomposition
@@ -310,6 +318,7 @@ class Features(var featureNames: List[String], labelSet: Array[String]) {
         //logger(1, "node.spans = "+node.spans)
         //logger(1, "node.spans(0) = "+node.spans(0).toString)
         //logger(1,"span = "+(graph.spans(node.spans(0)).start, graph.spans(node.spans(0)).end))
+        // If an array index out of bounds error occurs in the line below, it could be because the input sentence has a training newline (I know, fragile!)
         val span = dependencies.annotationSpan((graph.spans(node.spans(0)).start, graph.spans(node.spans(0)).end))
         return Range(span._1, span._2)
     }
@@ -453,7 +462,7 @@ class Features(var featureNames: List[String], labelSet: Array[String]) {
     }
 
     def ffRootCostAug {         // Used for cost augmented decoding
-        addFeature("CA:Id1="+node1.id+"L=<ROOT>", 1.0, 0.0)
+        addFeature("CA:C1="+node1.concept+"+L=<ROOT>", 1.0, 0.0)
     }
 
     def ffRootDependencyPathv1 = {
@@ -478,23 +487,14 @@ class Features(var featureNames: List[String], labelSet: Array[String]) {
     }
 
     def addFeatureFunction(featureName: String) {
-        if (!featureNames.contains(featureName) || !rootFeatureFunctions.contains(featureName)) {
-            featureNames = featureName :: featureNames
-            if (rootFFTable.contains(featureName)) {
-                rootFeatureFunctions = rootFFTable(featureName) :: rootFeatureFunctions
-            } else {
-                featureFunctions = ffTable(featureName) :: featureFunctions         // TODO: error checking on lookup
-            }
+        if (!featureNames.contains(featureName)) {
+            featureNames = featureName :: myFeatureNames    // featureNames is a parametric field, and it updates featureFunctions
         }
-    }
-
-    def setFeatures(featureNames: List[String]) {
-        featureNames.filter(x => !rootFFTable.contains(x)).map(x => ffTable(x))     // TODO: error checking on lookup
-        featureNames.filter(x => rootFFTable.contains(x)).map(x => rootFFTable(x))
     }
 
     def localFeatures(n1: Node, n2: Node) : List[(String, Value, immutable.Map[Int, Double])] = {
         // Calculate the local features
+        assert(featureNames.size == featureFunctions.size+rootFeatureFunctions.size, "featureNames.size != featureFunctions.size.  You must make sure to use setFeatures() or addFeatureFunction() to set the features if you change them after creating the decoder object.")
         node1 = n1
         node2 = n2
         feats = List()

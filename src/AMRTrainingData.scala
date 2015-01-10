@@ -35,12 +35,16 @@ case class AMRTrainingData(sentence: Array[String], graph: Graph, spans: ArrayBu
         logger(2, "OracleGraph triples: "+graph.printTriples(detail = 1))
         return graph
     }
+    def loadSpans() {
+        val annotationIndex = annotators.size - 1
+        graph.loadSpans(spans(annotationIndex), sentence)
+    }
 }
 
 object AMRTrainingData {
     def getUlfString(string: String) : Map[String,String] = {
         // returns a map representation of Ulf's string representation
-        assert(string.matches("^# ::(.|\n)*"), "This is not a valid properties string")
+        assert(string.startsWith("# ::"), "This is not a valid properties string")
         val split = string.replaceAll("\n","").replaceAll("""#""","").split(" ::")
         val map = Map[String,String]()
         for (x <- split if x != "") {
@@ -54,9 +58,9 @@ object AMRTrainingData {
         val lines = input.split("\n")
         val amrstr = lines.filterNot(_.matches("^#.*")).mkString(" ")
         val tokenized = lines.filter(_.matches("^# ::tok .*"))
-        assert(tokenized.size == 1, "Incorrect number of tokenized ::tok ")
+        assert(tokenized.size == 1, "Incorrect number of tokenized ::tok.\nInput:\n"+input)
         val spanlines = lines.filter(_.matches("^# ::alignments .*"))
-        assert(spanlines.size > 0, "Missing alignments")
+        assert(spanlines.size > 0, "Missing alignments\nInput:\n"+input)
 
         val graph = Graph.parse(amrstr)
         val sentence = getUlfString(tokenized(0))("::tok").split(" ")
@@ -70,8 +74,8 @@ object AMRTrainingData {
             val ulfstr : Map[String, String] = getUlfString(spanline)
 //            logger(2,spanline)
             spans += ulfstr("::alignments")
-            annotators += ulfstr("::annotator")
-            annotation_dates += ulfstr("::date")
+            annotators += ulfstr.getOrElse("::annotator", "")
+            annotation_dates += ulfstr.getOrElse("::date", "")
         }
         return AMRTrainingData(sentence, graph, spans, annotators, annotation_dates, lines.filterNot(_.matches("^#.*")).mkString("\n"), extras)
     }

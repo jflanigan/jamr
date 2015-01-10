@@ -24,6 +24,6 @@ import scala.collection.mutable.ArrayBuffer
 abstract class Decoder(featureNames: List[String]) {
     val features = new Features(featureNames) // maybe this should be renamed ff?
 
-    def decode(input: Input) : DecoderResult
+    def decode(input: Input, cost: (Input, PhraseConceptPair, Int, Int) => Double = (i,c,s,p) => 0) : DecoderResult
 }
 

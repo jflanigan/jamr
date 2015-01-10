@@ -32,18 +32,20 @@ class Adagrad extends Optimizer[FeatureVector] {
         var avg_weights = FeatureVector()
         var sumSq = FeatureVector()         // G_{i,i}
         var pass = 0
-        while (pass < passes && trainingObserver(pass, weights)) {
-            logger(0,"Pass "+(pass+1).toString)
+        while (pass < passes && (pass == 0 || trainingObserver(pass, weights))) {
+            logger(-1,"Pass "+(pass+1).toString)
             var objective = 0.0 // objective is 1/N \sum_i=1^N Loss(i) + 1/2 * \lambda * ||weights||^2 (var objective is N times this)
             for (t <- Random.shuffle(Range(0, trainingSize).toList)) {
                 // normally we would do weights -= stepsize * gradient(t)
                 // but instead we do this: (see equation 8 in SocherBauerManningNg_ACL2013.pdf)
-                for ((feat, value) <- gradient(Some(pass), t, weights)._1.fmap
-                     if value != 0.0 ) {
+                val (grad, score) = gradient(Some(pass), t, weights)
+                for ((feat, value) <- grad.fmap if value != 0.0 ) {
                     sumSq.fmap(feat) = sumSq.fmap.getOrElse(feat, 0.0) + value * value
                     weights.fmap(feat) = weights.fmap.getOrElse(feat, 0.0) - stepsize * value / sqrt(sumSq.fmap(feat))
                 }
+                objective += score
                 if (l2reg != 0.0) {
+                    objective += weights.dot(weights) / 2.0   // TODO: don't count the unregularized features in the regularizer
                     for { (feat, v) <- weights.fmap
                           if v != 0.0
                           value = v * l2reg } {
@@ -52,11 +54,12 @@ class Adagrad extends Optimizer[FeatureVector] {
                     }
                 }
             }
-            logger(0,"                                   Avg objective value last pass: "+(objective/trainingSize.toDouble).toString)
+            logger(-1,"                                   Avg objective value last pass: "+(objective/trainingSize.toDouble).toString)
             //logger(0,"                                                       objective: "+((0 until trainingSize).map(x => gradient(None, x, weights)._2).sum/trainingSize).toString)
             avg_weights += weights
             pass += 1
         }
+        trainingObserver(pass, weights)
         if(avg) { avg_weights } else { weights }
     }
 }

@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+set -eu
+set -o pipefail
+
+OPTS="-Dsbt.log.noformat=true -Dsbt.main.class=sbt.ScriptMain -Dsbt.boot.directory=$(dirname $0)/project/boot/"
+java ${OPTS} -jar "$(dirname $0)/sbt-launch.jar" --error "$@"
