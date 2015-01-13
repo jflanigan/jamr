@@ -26,6 +26,7 @@ abstract class TrainObj[FeatureVector <: AbstractFeatureVector](options: Map[Sym
     def train : Unit
     def evalDev(options: Map[Symbol, String], pass: Int, weights: FeatureVector) : Unit
     def zeroVector : FeatureVector
+    def trainingSize : Int
 
     ////////////////// Training Setup ////////////////
 
@@ -43,9 +44,6 @@ abstract class TrainObj[FeatureVector <: AbstractFeatureVector](options: Map[Sym
     if (options.getOrElse('trainingMiniBatchSize,"1").toInt > 1) {
         optimizer = new MiniBatch(optimizer, options('trainingMiniBatchSize).toInt, numThreads)
     }
-
-    val input: Array[Input] = Input.loadInputfiles(options)
-    val training: Array[String] = Corpus.getAmrBlocks(io.Source.stdin.getLines()).toArray
 
 /*  Runtime.getRuntime().addShutdownHook(new Thread() {
         override def run() {
@@ -122,50 +120,11 @@ abstract class TrainObj[FeatureVector <: AbstractFeatureVector](options: Map[Sym
         return true
     }
 
-/*  TODO: Add eval on dev dataset
-    def evalDev(pass: Int, weights: FeatureVector) {   // TODO: doesn't account for regularizer
-        val formalism = options('formalism)
-        val devfile = "data/splits/sec20."+formalism+".sdp"
-        val (iASSave, iGSave, oGSave) = (inputAnnotatedSentences, inputGraphs, oracleGraphs)
-        inputAnnotatedSentences = Corpus.getInputAnnotatedSentences(devfile+".dependencies")
-        inputGraphs = Corpus.splitOnNewline(fromFile(devfile).getLines).map(
-            x => SDPGraph.fromGold(x.split("\n"), true)).toArray
-        oracleGraphs = Corpus.splitOnNewline(fromFile(devfile).getLines).map(
-            x => SDPGraph.fromGold(x.split("\n"), false)).toArray
-        assert(inputAnnotatedSentences.size == inputGraphs.size && inputGraphs.size == oracleGraphs.size, "sdp and dep file lengths do not match")
-
-        //val numThreads = options.getOrElse('numThreads,"1").toInt
-        val par = Range(0, inputAnnotatedSentences.size).par
-        par.tasksupport = new ForkJoinTaskSupport(new ForkJoinPool(numThreads)) // TODO: use numThread option
-        val loss = par.map(i => gradient(i, weights)).reduce((a, b) => ({ a._1 += b._1; a._1 }, a._2 + b._2))._2 / inputAnnotatedSentences.size.toDouble
-        logger(0, "Dev loss: " + loss.toString)
-
-        val predictions : String = par.map(i => decode(i, weights)._3).seq.mkString("\n\n")
-        val file = new java.io.PrintWriter(new java.io.File(options('model) + ".iter" + pass.toString+".preds"), "UTF-8")
-        try { file.print(predictions) }
-        finally { file.close }
-        //logger(0, "Command: /home/jmflanig/work/semeval-2014_HOLS/scripts/eval.sh data/splits/sec20."+formalism+".sdp " + options('model) + ".iter" + pass.toString+".preds")
-        try {
-        val externalEval = stringToProcess("/home/jmflanig/work/semeval-2014_feats/scripts/eval.sh data/splits/sec20."+formalism+".sdp " + options('model) + ".iter" + pass.toString+".preds").lines.toList
-        if (externalEval.size == 46) {
-            logger(0, "--- Performance on Dev ---\n" + externalEval.slice(14,18).mkString("\n") + "\n")
-        } else {
-            logger(0, "--- Performance on Dev ---\n" + externalEval.mkString("\n") + "\n")
-        }
-        } catch {
-            case _ : Throwable => 
-        }
-
-        inputAnnotatedSentences = iASSave
-        inputGraphs = iGSave
-        oracleGraphs = oGSave
-    } */
-
     def train(initialWeights: FeatureVector) {
         val weights = optimizer.learnParameters(
             (i,w) => gradient(i,w),
             initialWeights,
-            input.size,
+            trainingSize,
             passes,
             stepsize,
             options.getOrElse('trainingL2RegularizerStrength, "0.0").toDouble,

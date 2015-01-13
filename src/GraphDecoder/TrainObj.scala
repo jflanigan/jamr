@@ -20,7 +20,6 @@ import scala.collection.mutable.Map
 import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 import scala.util.parsing.combinator._
-import edu.cmu.lti.nlp.amr.Input.Input
 import scala.sys.process._
 
 class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Train.TrainObj[FeatureVector](options) {
@@ -33,6 +32,10 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
     //costAug.features.weights = weights
 
     def zeroVector : FeatureVector = { new FeatureVector(getLabelset(options).map(_._1)) }
+
+    val input: Array[Input] = Input.loadInputfiles(options)
+    val training: Array[String] = Corpus.getAmrBlocks(io.Source.stdin.getLines()).toArray
+    def trainingSize = training.size
 
     var optimizer = options.getOrElse('trainingOptimizer, "Adagrad") match {     // TODO: this should go back into Train/TrainObj
         case "SSGD" => new SSGD()
