@@ -20,7 +20,6 @@ import scala.collection.mutable.Map
 import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 import scala.util.parsing.combinator._
-import edu.cmu.lti.nlp.amr.Input.Input
 import scala.sys.process._
 
 class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Train.TrainObj[FeatureVector](options) {
@@ -33,6 +32,10 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
     //costAug.features.weights = weights
 
     def zeroVector : FeatureVector = { new FeatureVector(getLabelset(options).map(_._1)) }
+
+    val input: Array[Input] = Input.loadInputfiles(options)
+    val training: Array[String] = Corpus.getAmrBlocks(io.Source.stdin.getLines()).toArray
+    def trainingSize = training.size
 
     var optimizer = options.getOrElse('trainingOptimizer, "Adagrad") match {     // TODO: this should go back into Train/TrainObj
         case "SSGD" => new SSGD()
@@ -47,7 +50,7 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
         decoder.features.weights = weights
         val amrdata1 = AMRTrainingData(training(i))
         logger(0, "Sentence:\n"+amrdata1.sentence.mkString(" ")+"\n")
-        val result = decoder.decode(Input(amrdata1, input(i), i, oracle = false))
+        val result = decoder.decode(Input.Input(amrdata1, input(i), i, oracle = false))
         logger(0, "Spans:")
         for ((span, i) <- amrdata1.graph.spans.zipWithIndex) {
             logger(0, "Span "+(i+1).toString+":  "+span.words+" => "+span.amr)
@@ -72,11 +75,11 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
         val oracle = Oracle(options)
         oracle.features.weights = weights
         val amrdata = AMRTrainingData(training(i))
-        val result = oracle.decode(Input(amrdata, input(i), i, oracle = true))
+        val result = oracle.decode(Input.Input(amrdata, input(i), i, oracle = true))
 
         logger(0, "Oracle:")
         if (outputFormat.contains("AMR")) {
-           val result2 = oracle.decode(Input(amrdata, input(i), i, oracle = true, clearUnalignedNodes = false))
+           val result2 = oracle.decode(Input.Input(amrdata, input(i), i, oracle = true, clearUnalignedNodes = false))
            logger(0, result2.graph.prettyString(detail = 1, pretty = true)+"\n")
         }
         if (outputFormat.contains("triples")) {
@@ -100,7 +103,7 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
 
         val amrdata1 = AMRTrainingData(training(i))
         logger(0, "Sentence:\n"+amrdata1.sentence.mkString(" ")+"\n")
-        val result = costAug.decode(Input(amrdata1, input(i), i, oracle = true))
+        val result = costAug.decode(Input.Input(amrdata1, input(i), i, oracle = true))
         logger(0, "Spans:")
         for ((span, i) <- amrdata1.graph.spans.zipWithIndex) {
             logger(0, "Span "+(i+1).toString+":  "+span.words+" => "+span.amr)
