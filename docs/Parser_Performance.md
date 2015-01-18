@@ -18,6 +18,8 @@ Docs - Table of Contents
 Parser Performance
 =================
 
+This page lists the performance of the parser on various datasets.
+
 ## LDC2013E117
 
 Train/dev/test split used in the ACL 2014 paper.  The split is described
