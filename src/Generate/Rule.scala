@@ -4,14 +4,29 @@ import edu.cmu.lti.nlp.amr._
 import scala.util.matching.Regex
 import scala.collection.mutable.{Map, Set, ArrayBuffer}
 
-case class Rule(lhs: String,
-                args: Vector[String],
+case class Rule(args: Vector[String],
                 prefix: String,
-                left: List[(String, Int, String)],      // left realization (Int is index into vector)
+                left: List[(String, Int, String)],      // left realization (Int is index into args vector)
                 //lex: String,                          // lexical content
                 concept: PhraseConceptPair,             // PhraseConceptPair
-                right: List[(String, Int, String)],     // right realization (Int is index into vector)
+                right: List[(String, Int, String)],     // right realization (Int is index into args vector)
                 end: String) {
+    def lhs : String = {                        // TODO: cache this
+        val frag : Node = Graph.parse(concept)  // TODO: this is slow
+        if (frag.children.size + args.size == 0) {   // no children
+            if (frag.concept.startsWith("\"")) {
+                "(S "+frag.concept+")"
+            } else {
+                "(X "+frag.concept+")"
+            }
+        } else {
+            // Example: (X (X hit-01) (ARG0 ___) (ARG1 ___))
+            val list = for (x <- frag.children) yield {
+                "("+x._1+" "+(if (x._2.span == node.span || !sameSpan) { mkLhs(x._2) } else { "["+x._1+"]" } +")")
+            }
+            "(X (X "+frag.concept+") "+list.mkString(" ")+")"
+        }
+    }
     def mkRule(verbose: Boolean = true) : String = {
         //"(X "+(lhs ::: args.toList.map(x => (x,"["+x+"]"))).sortBy(_._1).map(_._2).mkString(" ")+") ||| "+rhs(verbose)
         lhs+" ||| "+rhs(verbose)
@@ -30,6 +45,7 @@ case class Rule(lhs: String,
 
 object Rule {
     def mkLhs(x: Node, includeArgs: Boolean = false, sameSpan: Boolean = true) : String = {
+        // sameSpan indicates we are in the same fragment as our parent (so don't process children that are not in our span)
         val concept = node.conceptStr
         val children = if (includeArgs || !sameSpan) {
             node.children.map(x => (labelStr(x._1), x._2)).sortBy(_._1)
@@ -44,10 +60,10 @@ object Rule {
             }
         } else {
             // Example: (X (X hit-01) (ARG0 ___) (ARG1 ___))
-            val list = for (x <- children) yield {
+            val list : List[String] = for (x <- children) yield {
                 "("+x._1+" "+(if (x._2.span == node.span || !sameSpan) { mkLhs(x._2) } else { "["+x._1+"]" } +")")
             }
-            "(X (X "+concept+") "+list.mkString(" ")+")"
+            "(X (X "+concept+") "+list.sorted.mkString(" ")+")"
         }
     }
 
@@ -57,7 +73,7 @@ object Rule {
         } else {
             node.children
         }
-        return ("#", "(X " + node.conceptStr + ")") :: children.map(x => label=labelStr(x._1); (label, "("+label+" "+mkLhs(x._2, includeArgs=false, sameSpan=sameSpan)+")"))
+        return ("#", "(X " + node.conceptStr + ")") :: children.map(x => { label=labelStr(x._1); (label, "("+label+" "+mkLhs(x._2, includeArgs=false, sameSpan=sameSpan)+")") } )
     }
 }
 

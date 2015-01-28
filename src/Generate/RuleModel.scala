@@ -61,8 +61,8 @@ class RuleModel(options: Map[Symbol, String]) {
         return phraseTable.get.getOrElse(node.concept, List()).map(x => (x, node.children.map(y => (Label(x._1),x._2))))   // TODO: should produce a possible realization if not found
     }
 
-    val argsLeft : Map[(String, String), Array[(String, String)] = new Map()    // Todo: fill in (pos, arg) -> array of realizations
-    val argsRight : Map[(String, String), Array[(String, String)] = new Map()   // make sure there are no gaps
+    val argsLeft : Map[(String, String), Array[(String, String)]] = new Map()    // Todo: fill in (pos, arg) -> array of realizations
+    val argsRight : Map[(String, String), Array[(String, String)]] = new Map()   // make sure there are no gaps
     
     def getArgsLeft(pos_arg: (String, String)) : Array[(String, String)] = {    // Array[(left, right)]
         return argsLeft.getOrElse(new Array(("","")))   // (left, right), so ("", "") means no words to left or right
@@ -73,7 +73,8 @@ class RuleModel(options: Map[Symbol, String]) {
     }
 
     def argToTag(arg: String, left_right: (String, String)) : Tag = {
-        return Tag(left_right._1.replaceAllLiterally(" ","_")+"_"+label+"_"+left_right._2.replaceAllLiterally(" ","_"), arg)
+        // Example: arg = "ARG1", left_right = ("to", "") => Tag("to_ARG1_", "ARG1")
+        return Tag(left_right._1.replaceAllLiterally(" ","_")+"_"+arg+"_"+left_right._2.replaceAllLiterally(" ","_"), arg)
     }
 
     def conceptTag /*(conceptRealization: ConceptRealization)*/ : Tag = {
@@ -81,9 +82,10 @@ class RuleModel(options: Map[Symbol, String]) {
     }
 
     case class Tag(tag: String, arg: String)
-    case class ConceptRealization(realization: String, pos: String, position: Int)
+    case class ConceptInfo(realization: String, headPos: String, position: Int)     // TODO: merge with Phrase?
 
     def syntheticRules(node: Node, graph: Graph) : List[Rule] = {
+        // Returns a rule for every concept realization
         var rules : List[Rule] = List()
         var bestRule : Option[Array[Tag]] = None
         var bestScore : Option[Double] = None
@@ -94,20 +96,30 @@ class RuleModel(options: Map[Symbol, String]) {
             val numArgs = children.size
             for (permutation <- (0 until numArgs).permutations) {
                 for (i <- 0 to numArgs) { // 0 to numArgs (inclusive)
-                    val tagList = leftTags.slice(0,i) ::: List(conceptTag)
-                    val conceptRealization = ConceptRealization(phrase.words, phrase.headPOS, i)
-                    decode(tagList, conceptRealization, node, graph)
+                    //val tagList = leftTags.slice(0,i) ::: List(conceptTag)
+                    val concept = ConceptInfo(phrase.words, phrase.headPOS, i)
+                    val tagList : List[Array[Tag]] = (permutation.slice(0,i).map(x => leftTags(x)) ++ Vector(Tag("<CONCEPT>","<CONCEPT>")) ++ permutation.slice(i,numArgs).map(x => rightTags(x))).toList  // TODO: use vector instead
+                    val result = decode(tagList, conceptRealization, node, graph)
+                    if (bestResult != None && result._3 > bestResult.get._3) {
+                        bestResult = Some(result)
+                        // Note: this code is correct because getRealizations returns the children sorted by the label, so permutations(x._2) is the correct index to rule.args
+                        bestLeftTags = bestResult.get._1.zipWithIndex.slice(0,i).map(x => { val tag = leftTags(permutation(x._2))(x._1); (tag._1, permutations(x._2), tag._2) } )
+                        bestRightTags = bestResult.get._1.zipWithIndex.slice(i+1,numArgs+1).map(x => { val tag = rightTags(permutation(x._2))(x._1); (tag._1, permutations(x._2), tag._2) } )  // TODO: fix this (should use left_right, see argToTag)
+                        bestConcept = concept
+                    }
                 }
             }
-            for (child <- children) {
-                getProduct( 
-                // http://stackoverflow.com/questions/13567543/cross-product-of-arbitrary-number-of-lists-in-scala
-            }
+            //val lhs = 
+            val args = children.map(x => x._1).toVector
+            val left = bestLeftTags
+            val right = bestRightTags
+            val rule = Rule(args, "", left, phrase, right, "")
+            rules = rule :: rules
         }
         return rules
     }
 
-    def decode(tagList: List[Array[Tag]], concept: ConceptRealization /*TODO: instead, pass PhraseConceptPair*/, node: Node, graph: Graph) : (Array[Int], FeatureVector, Double) = {
+    def decode(tagList: List[Array[Tag]], concept: ConceptInfo, node: Node, graph: Graph) : (Array[Int], FeatureVector, Double) = {
         val tags : Array[Array[Tag]] = (Array(Tag("<START>","<START>")) :: tagList ::: List((Array(Tag("<STOP>","<STOP>"))))).toArray
         def localScore(state: Viterbi.State) : Double = {
             val i = state.i
@@ -118,13 +130,13 @@ class RuleModel(options: Map[Symbol, String]) {
         return (tagseq.slice(1,tagseq.size-2), feats, weights.dot(feats))
     }
 
-    def oracle(rule: Rule, concept: PhraseConceptPair, node: Node, graph: Graph) : FeatureVector = {
+    def oracle(rule: Rule, concept: ConceptInfo, node: Node, graph: Graph) : FeatureVector = {
         val tagList = rule.left.map(x => (new Array(argToTag(rule.args(x._2), (x._1, x._3))))) ::: List(new Array(conceptTag)) ::: rule.right.map(x => (new Array(argToTag(rule.args(x._2), (x._1, x._3)))))
         val prediction = tagList.map(x => 0)
         return oracle(tagList, prediction, concept, node, graph)
     }
 
-    def oracle(tagList: List[Array[Tag]], prediction: Array[Int], concept: PhraseConceptPair, node: Node, graph: Graph) : FeatureVector = {
+    def oracle(tagList: List[Array[Tag]], prediction: Array[Int], concept: ConceptInfo, node: Node, graph: Graph) : FeatureVector = {
         // TODO: the code below has some slow copying, maybe change so it's faster (still will be O(n) though)
         val tags : Array[Array[Tag]] = (Array(Tag("<START>","<START>")) :: tagList ::: List((Array(Tag("<STOP>","<STOP>"))))).toArray
         val pred : Array[Int] = (0 :: prediction.toList ::: List(0)).toArray
@@ -135,21 +147,21 @@ class RuleModel(options: Map[Symbol, String]) {
         return feats
     }
 
-    def localFeatures(prev: Tag, cur: Tag, position: Int, concept: PhraseConceptPair, conceptPosition: Int, node: Node, graph: Graph) : FeatureVector = {
+    def localFeatures(prev: Tag, cur: Tag, position: Int, concept: ConceptInfo, node: Node, graph: Graph) : FeatureVector = {
         // cur.tag = realization tag (from argToTag) (e.g. "_ARG1_'s")
         // cur.arg = argument (e.g. "ARG1", etc)
-        val left : Boolean = i < conceptPosition
+        val left : Boolean = i < concept.position
         FeatureVector(Map(
-            "r-1="+prev.tag => 1.0,
-            "r="+cur.tag => 1.0,
-            "r-1="+prev.tag+"+"+"r="+cur.tag => 1.0,
-            "A-1="+prev.arg+"+"+"A="+cur.arg => 1.0,
-            "r="+cur.tag+"+dist" => abs(conceptPosition-position),
-            "r="+cur.tag+"+s="+(if(left) {"L"} else {"R"}) => 1.0,
-            "r="+cur.tag+"+s="+(if(left) {"L"} else {"R"})+"+dist" => abs(conceptPosition-position),
-            "A="+cur.arg+"+dist" => abs(conceptPosition-position),
-            "A="+cur.arg+"+s="+(if(left) {"L"} else {"R"}) => 1.0,
-            "A="+cur.arg+"+s="+(if(left) {"L"} else {"R"})+"+dist" => abs(conceptPosition-position)
+            "r-1="+prev.tag -> 1.0,
+            "r="+cur.tag -> 1.0,
+            "r-1="+prev.tag+"+"+"r="+cur.tag -> 1.0,
+            "A-1="+prev.arg+"+"+"A="+cur.arg -> 1.0,
+            "r="+cur.tag+"+dist" -> abs(concept.position-position),
+            "r="+cur.tag+"+s="+(if(left) {"L"} else {"R"}) -> 1.0,
+            "r="+cur.tag+"+s="+(if(left) {"L"} else {"R"})+"+dist" -> abs(concept.position-position),
+            "A="+cur.arg+"+dist" -> abs(concept.position-position),
+            "A="+cur.arg+"+s="+(if(left) {"L"} else {"R"}) -> 1.0,
+            "A="+cur.arg+"+s="+(if(left) {"L"} else {"R"})+"+dist" -> abs(concept.position-position)
             ))
     }
 
@@ -181,7 +193,7 @@ class RuleModel(options: Map[Symbol, String]) {
     def extractPhrasesConceptPairs(graph: Graph, sentence: Array[String], pos: Array[String]) {
         // Populates phraseTable
         for (span <- graph.spans) {
-            phraseTable.add(span.amr.concept -> PhraseConceptPair(span, pos)
+            phraseTable.add(span.amr.concept -> PhraseConceptPair(span, pos))
         }
     }
 
@@ -215,7 +227,7 @@ class RuleModel(options: Map[Symbol, String]) {
 
                 val args : List[Children] = children.sortBy(x => x.label)
                 val lowerChildren : Vector[(Children, Int)] = args.zipWithIndex.filter(x => x._1.start < span.start).sortBy(_._1.start).toVector
-                val upperChildren : Vector[(Children, Int)] = args.zipWithIndex.filter(x => x._1.start > span.end).start).sortBy(_._1.start).toVector
+                val upperChildren : Vector[(Children, Int)] = args.zipWithIndex.filter(x => x._1.start > span.end).sortBy(_._1.start).toVector
                 val prefix : String = sentence.slice(outsideLower, ruleStart.get)
                 val end : String = sentence.slice(myEnd.get, outsideUpper)
                 val lex : String = sentence.slice(span.start, span.end).mkString(" ")
@@ -267,7 +279,7 @@ class RuleModel(options: Map[Symbol, String]) {
 
 }
 
-object RuleModel(options: Map[Symbol, String]) {
+object RuleModel/*(options: Map[Symbol, String])*/ {
 
     val usage = """Usage: scala -classpath . edu.cmu.lti.nlp.amr.Generate.ExtractSentenceRules --dependencies deps_file --corpus amr_file --decode data """
     type OptionMap = Map[Symbol, Any]
