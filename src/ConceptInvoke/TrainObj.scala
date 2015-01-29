@@ -27,7 +27,7 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
     def zeroVector : FeatureVector = { FeatureVector() }
 
     val input: Array[Input] = Input.loadInputfiles(options)
-    val training: Array[String] = Corpus.getAmrBlocks(io.Source.stdin.getLines()).toArray
+    val training: Array[String] = Corpus.getAMRBlocks(Source.stdin.getLines()).toArray
     def trainingSize = training.size
 
     var optimizer = options.getOrElse('trainingOptimizer, "Adagrad") match {     // TODO: this should go back into Train/TrainObj

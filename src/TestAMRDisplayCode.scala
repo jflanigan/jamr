@@ -33,7 +33,7 @@ object TestAMRDisplayCode {
         val Block = """((?:\n|.)*)\n(\((?:\n|.)*)""".r  // (?: ) is non-capturing group
                                                         // and . does not match \n
 
-        for { block <- Corpus.getAmrBlocks(Source.stdin.getLines) } {
+        for { block <- Corpus.getAMRBlocks(Source.stdin.getLines) } {
             logger(0,"**** Processsing Block *****")
             logger(0,block)
             logger(0,"****************************")

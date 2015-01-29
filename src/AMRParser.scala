@@ -169,7 +169,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             val tokenized = fromFile(options('tokenized).asInstanceOf[String]).getLines/*.map(x => x)*/.toArray
             val nerFile = Corpus.splitOnNewline(fromFile(options('ner).asInstanceOf[String]).getLines).toArray
             val oracleData : Array[String] = if (options.contains('trainingData)) {
-                    Corpus.getAmrBlocks(fromFile(options('trainingData)).getLines()).toArray
+                    Corpus.getAMRBlocks(fromFile(options('trainingData)).getLines()).toArray
                 } else {
                     new Array(0)
                 }

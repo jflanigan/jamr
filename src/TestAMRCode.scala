@@ -30,7 +30,7 @@ object TestAMRCode {
             verbosity = options('verbosity).asInstanceOf[Int]
         }
 
-        for (block <- Corpus.getAmrBlocks(io.Source.stdin.getLines())) {
+        for (block <- Corpus.getAMRBlocks(io.Source.stdin.getLines())) {
             println(block)
             AMRTrainingData(block).toOracleGraph(clearUnalignedNodes = false).printTriples(0)
             println()
