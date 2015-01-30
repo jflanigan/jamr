@@ -57,7 +57,7 @@ class Decoder1(featureNames: List[String],
         logger(2, "Chart = " + bestState.toList)
 
         // Follow backpointers
-        var graph = Graph.empty
+        var graph = Graph.Null
         var score = 0.0
         val feats = new FeatureVector()
         var i = bestState.size - 1
@@ -83,7 +83,7 @@ class Decoder1(featureNames: List[String],
             i -= 1
         }
         if (graph.getNodeById.size == 0) {  // no invoked concepts
-            graph = Graph.empty
+            graph = Graph.AMREmpty
         }
         logger(1, "Decoder1 Spans:")
         for ((span, i) <- graph.spans.sortBy(x => x.words.toLowerCase).zipWithIndex) {

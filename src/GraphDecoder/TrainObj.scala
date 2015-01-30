@@ -162,7 +162,7 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
                         e.printStackTrace(new PrintWriter(sw))
                         file.println(sw.toString.split("\n").map(x => "# "+x).mkString("\n"))
                     }
-                    file.println(Graph.empty.prettyString(detail=1, pretty=true) + '\n')
+                    file.println(Graph.AMREmpty.prettyString(detail=1, pretty=true) + '\n')
                 } else {
                     throw e
                 }
