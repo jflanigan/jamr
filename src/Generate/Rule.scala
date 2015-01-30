@@ -41,9 +41,49 @@ case class Rule(args: Vector[String],
             (arg._1+" ["+arg._2.toString+"] "+arg._3).replaceAll("^ | $","")
         }
     }
+    def argF(arg: (String, Int, String)) : String = {
+        return escape(arg._1, '_') + "_" + arg._2.toString + "_" + escape(arg._3, '_'))
+    }
+    override def toString() : String = {
+        return List(args.mkString(" "), prefix, left.map(x => escape(argF(x),',')).mkString(","), concept.toString, right.map(x => escape(argF(x),',')).mkString(","), end).mkString(" ||| ")
+    }
 }
 
 object Rule {
+    def escape(str: String, esc: Char = '\\') : String = {
+        return str.replaceAllLiterally(esc.toString, esc.toString + sec.toString)
+    }
+    def escape(str: String, esc: String) : String = {
+        var s = str
+        for (c <- esc) {
+            s = s.replaceAllLiterally(esc.toString, esc.toString + esc.toString)
+        }
+        return s
+    }
+    def unEscape(str: String, esc: Char = '\\') : String = {    // unescapes to a tab
+        return str.replaceAllLiterally(esc.toString, "\t").replaceAllLiterally("\t\t", esc.toString)
+    }
+    def unEscape(str: String, esc: String) : String = {         // unescapes to a tab
+        var s = str
+        for (c <- esc) {
+            s = s.replaceAllLiterally(esc.toString, "\t")
+            s = s.replaceAllLiterally("\t\t", esc.toString)
+        }
+        return s
+    }
+    unEscapeArray(str: String, esc: Char) : Array[String] = {
+        return unEscape(str, esc).split("\t")
+    }
+    def apply(string: String) : Rule = {
+        val ruleRegex = """([^|]*) \|\|\| ([^|]*) \|\|\| ([^|]*) \|\|\| (.*) \|\|\| ([^\|]*) \|\|\| ([^|]*)""".r
+        val argRegex = """\(.*)\t[0-9]+\t\(.*\)""".r
+        val ruleRegex(argsStr, prefix, leftStr, concept, rightStr, end) = string
+        val args = argsStr.split(" ").toVector
+        val left : List[(String, Int, String)] = unEscapeArray(leftStr,',').map(x => { val argRegex(l,i,r) = unEscape(x,'_'); (l, i.toInt, r) }).toList
+        val right : List[(String, Int, String)] = unEscapeArray(rightStr,',').map(x => { val argRegex(l,i,r) = unEscape(x,'_'); (l, i.toInt, r) }).toList
+        return Rule(args, prefix, left, PhraseConceptPair(concept), right, end)
+    }
+
     def mkLhs(x: Node, includeArgs: Boolean = false, sameSpan: Boolean = true) : String = {
         // sameSpan indicates we are in the same fragment as our parent (so don't process children that are not in our span)
         val concept = node.conceptStr

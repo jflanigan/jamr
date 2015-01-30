@@ -4,42 +4,40 @@ import edu.cmu.lti.nlp.amr._
 import scala.util.matching.Regex
 import scala.collection.mutable.{Map, Set, ArrayBuffer}
 
-class SyntheticRules(options: Map[Symbol, String]) {
+class RuleInventory {
 
     val phraseTable : MultiMapCount[String, PhraseConceptPair] = new MultiMapCount()       // Map from concept to PhraseConcepPairs with counts
     val lexRules : MultiMapCount[String, Rule] = new MultiMapCount()            // Map from concept to lexicalized rules with counts
     val abstractRules : MultiMapCount[String, Rule] = new MultiMapCount()       // Map from pos to abstract rules with counts
-    val argTableLeft : Map[String, MultiMapCount[String, (String, String)]] = new MultiMapCount()  // Map from pos to map of args to realizations with counts
-    val argTableRight : Map[String, MultiMapCount[String, (String, String)]] = new MultiMapCount() // Map from pos to map of args to realizations with counts
-
-    def trainModel() {
-        
+    //val argTableLeft : Map[String, MultiMapCount[String, (String, String)]] = new MultiMapCount()  // Map from pos to map of args to realizations with counts
+    //val argTableRight : Map[String, MultiMapCount[String, (String, String)]] = new MultiMapCount() // Map from pos to map of args to realizations with counts
+    val argTableLeft : MultiMapCount[(String, String), (String, String)] = new MultiMapCount()  // Map from (pos, arg) to realizations with counts
+    val argTableRight : MultiMapCount[(String, String), (String, String)] = new MultiMapCount() // Map from (pos, arg) to realizations with counts
+    val argsLeft : Map[(String, String), Array[(String, String)]] = new Map()    // Todo: fill in (pos, arg) -> array of realizations
+    val argsRight : Map[(String, String), Array[(String, String)]] = new Map()   // make sure there are no gaps
+ 
+    def load(filename: String) {    // TODO: move to companoin object
+        phraseTable.read(filename+".phrasetable", x => x, PhraseConceptPair.apply_)
+        lexRules.read(filename+".lexrules", x => x, Rule.apply_)
+        abstractRules.read(filename+".abstractrules", x => x, Rule.apply_)
+        createArgTables()
+        createArgs()
     }
 
-    def evaluate() {
-        
+    def save(filename: String) {
+        write_to_file(phraseTable.toString)
     }
 
-    def loadModel() {
-        
-    }
-
-    def createSentenceLevelGrammars() {
-        
-    }
-
-    def extractRulesFromCorpus() {
+    def extractFromCorpus(corpus: Iterator[String], dependencies: Iterator[String]) { // TODO: move this constructor to companion object (and rename to fromCorpus)
+        //val corpus = Source.fromFile(corpusFilename).getLines
         logger(0, "****** Extracting rules from the corpus *******")
-        if (!options.contains('corpus)) { println("Must specify corpus file."); sys.exit(1) }
-        if (!options.contains('dependencies)) { println("Must specify dependencies file."); sys.exit(1) }
 
         val dependencies: Array[String] = (for {
-                block <- Corpus.splitOnNewline(Source.fromFile(options('dependencies)).getLines())
+                block <- Corpus.splitOnNewline(dependencies)
             } yield block.replaceAllLiterally("-LRB-","(").replaceAllLiterally("-RRB-",")").replaceAllLiterally("""\/""","/")).toArray
 
         var i = 0
-        for { block <- Corpus.splitOnNewline(Source.fromFile(options('corpus).getLines))
-              if (block matches "(?:.|\n)*\n\\(?:(?:.|\n)*") } {    // (?:  ) is non-capturing group
+        for (block <- Corpus.getAMRBlocks(corpus)) {
             logger(0,"**** Processsing Block *****")
             logger(0,block)
             val data = AMRTrainingData(block)
@@ -50,20 +48,21 @@ class SyntheticRules(options: Map[Symbol, String]) {
             val spanArray : Array[Boolean] = sentence.map(x => false)       // stores the endpoints of the spans
             computeSpans(graph, graph.root, spans, spanArray)
             //logger(0,"spanArray = "+spanArray.zip(sentence).toList.toString)
-            logger(0,"****** Extracted rules ******")
+            logger(0,"****** Extracting rules ******")
             extractRules(graph, graph.root, sentence, pos, spans, spanArray, rules)
+            logger(0,"****** Extracting phrase-concept pairs ******")
+            extractPhraseConceptPairs(graph, sentence, pos)
             logger(0,"")
             i += 1
         }
+        createArgTables()
+        createArgs()
     }
 
     def getRealizations(node: Node) : List[(PhraseConceptPair, List[(String, Node)])] = {   // phrase, children not consumed
         return phraseTable.get.getOrElse(node.concept, List()).map(x => (x, node.children.map(y => (Label(x._1),x._2))))   // TODO: should produce a possible realization if not found
     }
 
-    val argsLeft : Map[(String, String), Array[(String, String)]] = new Map()    // Todo: fill in (pos, arg) -> array of realizations
-    val argsRight : Map[(String, String), Array[(String, String)]] = new Map()   // make sure there are no gaps
-    
     def getArgsLeft(pos_arg: (String, String)) : Array[(String, String)] = {    // Array[(left, right)]
         return argsLeft.getOrElse(new Array(("","")))   // (left, right), so ("", "") means no words to left or right
     }
@@ -72,136 +71,46 @@ class SyntheticRules(options: Map[Symbol, String]) {
         return argsRight.getOrElse(new Array(("","")))  // (left, right), so ("", "") means no words to left or right
     }
 
-    def argToTag(arg: String, left_right: (String, String)) : Tag = {
-        // Example: arg = "ARG1", left_right = ("to", "") => Tag("to_ARG1_", "ARG1")
-        return Tag(left_right._1.replaceAllLiterally(" ","_")+"_"+arg+"_"+left_right._2.replaceAllLiterally(" ","_"), arg)
-    }
-
-    def conceptTag /*(conceptRealization: ConceptRealization)*/ : Tag = {
-        return Tag("<CONCEPT>", "<CONCEPT>")
-    }
-
-    case class Tag(tag: String, arg: String)
-    case class ConceptInfo(realization: String, headPos: String, position: Int)     // TODO: merge with Phrase?
-
-    def syntheticRules(node: Node, graph: Graph) : List[Rule] = {
-        // Returns a rule for every concept realization
-        var rules : List[Rule] = List()
-        var bestRule : Option[Array[Tag]] = None
-        var bestScore : Option[Double] = None
-        for ((phrase, children) <- getRealizations(node)) {
-            //val leftChildren = children.map((label, node) => argTableLeft.getOrElse(rule.headPos, new MultiMapCount()).get(label).keys.toArray)
-            val leftTags : List[Array[Tag]] = children.map((label, node) => getArgsLeft((rule.headPos, label)).map(x => argToTag(label,x)))
-            val rightTags : List[Array[Tag]] = children.map((label, node) => getArgsRight((rule.headPos, label)).map(x => argToTag(label,x)))
-            val numArgs = children.size
-            for (permutation <- (0 until numArgs).permutations) {
-                for (i <- 0 to numArgs) { // 0 to numArgs (inclusive)
-                    //val tagList = leftTags.slice(0,i) ::: List(conceptTag)
-                    val concept = ConceptInfo(phrase.words, phrase.headPOS, i)
-                    val tagList : List[Array[Tag]] = (permutation.slice(0,i).map(x => leftTags(x)) ++ Vector(Tag("<CONCEPT>","<CONCEPT>")) ++ permutation.slice(i,numArgs).map(x => rightTags(x))).toList  // TODO: use vector instead
-                    val result = decode(tagList, conceptRealization, node, graph)
-                    if (bestResult != None && result._3 > bestResult.get._3) {
-                        bestResult = Some(result)
-                        // Note: this code is correct because getRealizations returns the children sorted by the label, so permutations(x._2) is the correct index to rule.args
-                        bestLeftTags = bestResult.get._1.zipWithIndex.slice(0,i).map(x => { val tag = leftTags(permutation(x._2))(x._1); (tag._1, permutations(x._2), tag._2) } )
-                        bestRightTags = bestResult.get._1.zipWithIndex.slice(i+1,numArgs+1).map(x => { val tag = rightTags(permutation(x._2))(x._1); (tag._1, permutations(x._2), tag._2) } )  // TODO: fix this (should use left_right, see argToTag)
-                        bestConcept = concept
-                    }
-                }
-            }
-            //val lhs = 
-            val args = children.map(x => x._1).toVector
-            val left = bestLeftTags
-            val right = bestRightTags
-            val rule = Rule(args, "", left, phrase, right, "")
-            rules = rule :: rules
-        }
-        return rules
-    }
-
-    def decode(tagList: List[Array[Tag]], concept: ConceptInfo, node: Node, graph: Graph) : (Array[Int], FeatureVector, Double) = {
-        val tags : Array[Array[Tag]] = (Array(Tag("<START>","<START>")) :: tagList ::: List((Array(Tag("<STOP>","<STOP>"))))).toArray
-        def localScore(state: Viterbi.State) : Double = {
-            val i = state.i
-            weights.dot(localFeatures(tags(i-1)(state.prev), tags(i)(state.cur), i, concept, node, graph))
-        }
-        val Viterbi.DecoderResult(tagseq, score) = Viterbi.decode(tags.size, localScore_, i => tags(i).size)
-        val feats = oracle(tagList, tagseq.slice(1,tagseq.size-2), concept, node, graph)
-        return (tagseq.slice(1,tagseq.size-2), feats, weights.dot(feats))
-    }
-
-    def oracle(rule: Rule, concept: ConceptInfo, node: Node, graph: Graph) : FeatureVector = {
-        val tagList = rule.left.map(x => (new Array(argToTag(rule.args(x._2), (x._1, x._3))))) ::: List(new Array(conceptTag)) ::: rule.right.map(x => (new Array(argToTag(rule.args(x._2), (x._1, x._3)))))
-        val prediction = tagList.map(x => 0)
-        return oracle(tagList, prediction, concept, node, graph)
-    }
-
-    def oracle(tagList: List[Array[Tag]], prediction: Array[Int], concept: ConceptInfo, node: Node, graph: Graph) : FeatureVector = {
-        // TODO: the code below has some slow copying, maybe change so it's faster (still will be O(n) though)
-        val tags : Array[Array[Tag]] = (Array(Tag("<START>","<START>")) :: tagList ::: List((Array(Tag("<STOP>","<STOP>"))))).toArray
-        val pred : Array[Int] = (0 :: prediction.toList ::: List(0)).toArray
-        var feats = new FeatureVector()
-        for (i <- 0 until tags.size) {
-            feats += localFeatures(tags(i-1)(preds(i-1)), tags(i)(preds(i)), i, concept, node, graph)
-        }
-        return feats
-    }
-
-    def localFeatures(prev: Tag, cur: Tag, position: Int, concept: ConceptInfo, node: Node, graph: Graph) : FeatureVector = {
-        // cur.tag = realization tag (from argToTag) (e.g. "_ARG1_'s")
-        // cur.arg = argument (e.g. "ARG1", etc)
-        val left : Boolean = i < concept.position
-        FeatureVector(Map(
-            "r-1="+prev.tag -> 1.0,
-            "r="+cur.tag -> 1.0,
-            "r-1="+prev.tag+"+"+"r="+cur.tag -> 1.0,
-            "A-1="+prev.arg+"+"+"A="+cur.arg -> 1.0,
-            "r="+cur.tag+"+dist" -> abs(concept.position-position),
-            "r="+cur.tag+"+s="+(if(left) {"L"} else {"R"}) -> 1.0,
-            "r="+cur.tag+"+s="+(if(left) {"L"} else {"R"})+"+dist" -> abs(concept.position-position),
-            "A="+cur.arg+"+dist" -> abs(concept.position-position),
-            "A="+cur.arg+"+s="+(if(left) {"L"} else {"R"}) -> 1.0,
-            "A="+cur.arg+"+s="+(if(left) {"L"} else {"R"})+"+dist" -> abs(concept.position-position)
-            ))
-    }
-
-    def createArgTables() {
+    private def createArgTables() {
         // Populates argTableLeft and argTableRight
         // Must call extractRules before calling this function
-        for ((pos, rules) <- abstractRules) {
-            val tableLeft = MultiMapCount()
-            val tableRight = MultiMapCount()
+        for ((pos, rules) <- abstractRules.map) {
             for ((rule, count) <- rules if ruleOk(rule, count)) {
                 for (x <- rule.left) {
                     val arg = rule.args(x._2)
-                    tableLeft.add(arg -> (x._1, x._3), count)
+                    argTableLeft.add((pos, arg) -> (x._1, x._3), count)
                 }
                 for (x <- rule.right) {
                     val arg = rule.args(x._2)
-                    tableRight.add(arg -> (x._1, x._3), count)
+                    argTableRight.add((pos, arg) -> (x._1, x._3), count)
                 }
             }
-            argTableLeft(pos) = tableLeft
-            argTableRight(pos) = tableRight
         }
     }
 
-    def ruleOk(rule : Rule, count: Int) : Boolean = {
+    private def createArgArrays() {
+        // Populates argsLeft and argsRight
+        // Must call createArgTables before calling this function
+        for (((pos, arg), countMap) <- argTableLeft.map) {  // TODO: apply a filter on low count args?
+            argsLeft((pos, arg)) = countMap.map(x => x._1).toArray
+        }
+        for (((pos, arg), countMap) <- argTableRight.map) { // TODO: apply a filter on low count args?
+            argsRight((pos, arg)) = countMap.map(x => x._1).toArray
+        }
+    }
+
+    private def ruleOk(rule : Rule, count: Int) : Boolean = {
         return count > 1    // TODO
     }
 
-    def extractPhrasesConceptPairs(graph: Graph, sentence: Array[String], pos: Array[String]) {
+    private def extractPhraseConceptPairs(graph: Graph, sentence: Array[String], pos: Array[String]) {
         // Populates phraseTable
         for (span <- graph.spans) {
             phraseTable.add(span.amr.concept -> PhraseConceptPair(span, pos))
         }
     }
 
-    def Label(label: String) : String = { 
-        return label.drop(1).toUpperCase.replaceAll("-","")
-    }
-
-    def extractRules(graph: Graph,
+    private def extractRules(graph: Graph,
                      sentence: Array[String],
                      pos : Array[String],
                      spans: Map[String, (Option[Int], Option[Int])],    // map from nodeId to (start, end) in sent
@@ -252,7 +161,7 @@ class SyntheticRules(options: Map[Symbol, String]) {
         }
     }
 
-    def computeSpans(graph: Graph, node: Node, spans: Map[String, (Option[Int], Option[Int])], spanArray: Array[Boolean]) : (Option[Int], Option[Int]) = {
+    private def computeSpans(graph: Graph, node: Node, spans: Map[String, (Option[Int], Option[Int])], spanArray: Array[Boolean]) : (Option[Int], Option[Int]) = {
         var myStart : Option[Int] = None
         var myEnd : Option[Int] = None
         if (node.spans.size > 0) {
@@ -279,7 +188,7 @@ class SyntheticRules(options: Map[Symbol, String]) {
 
 }
 
-object RuleModel/*(options: Map[Symbol, String])*/ {
+object RuleInventory/*(options: Map[Symbol, String])*/ {
 
     val usage = """Usage: scala -classpath . edu.cmu.lti.nlp.amr.Generate.ExtractSentenceRules --dependencies deps_file --corpus amr_file --decode data """
     type OptionMap = Map[Symbol, Any]
