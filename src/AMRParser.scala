@@ -208,7 +208,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                 }
                 logger(0, "Spans:")
                 for ((span, i) <- stage1Result.graph.spans.sortBy(x => x.words.toLowerCase).zipWithIndex) {
-                    logger(0, "Span "+(i+1).toString+":  "+span.words+" => "+span.amr)
+                    logger(0, "Span "+span.start.toString+"-"+span.end.toString+":  "+span.words+" => "+span.amr)
                 }
                 logger(0, "")
 
@@ -236,7 +236,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                     val oracle = stage2Oracle.get
                     val oracleResult = oracle.decode(new Input(amrdata2, dependencies(i), oracle = true))
                     for ((span, i) <- amrdata2.graph.spans.sortBy(x => x.words.toLowerCase).zipWithIndex) {
-                        logger(0, "Oracle Span "+(i+1).toString+":  "+span.words+" => "+span.amr)
+                        logger(0, "Oracle Span "+span.start.toString+"-"+span.end.toString+":  "+span.words+" => "+span.amr)
                     }
                     logger(0, "")
                     if (options.contains('stage1Eval)) {
@@ -316,7 +316,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                     logger(-1, " ********** THERE WAS AN EXCEPTION IN THE PARSER. *********")
                     if (verbosity >= -1) { e.printStackTrace }
                     logger(-1, "Continuing. To exit on errors, please run without --ignore-parser-errors")
-                    println(Graph.empty.prettyString(detail=1, pretty=true) + '\n')
+                    println(Graph.AMREmpty.prettyString(detail=1, pretty=true) + '\n')
                 } else {
                     throw e
                 }
