@@ -29,7 +29,7 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         val root2 = if (getNodeById2.contains(root.id)) {
             getNodeById2(root.id)
         } else {
-            Graph.empty().root  // sometimes the root is not in the spans (if it is from automatically aligned spans, and the root is not in the spans).  So we create a dummy root which will get re-assigned later
+            Graph.Null().root  // sometimes the root is not in the spans (if it is from automatically aligned spans, and the root is not in the spans).  So we create a dummy root which will get re-assigned later
         }
         return Graph(root2, spans.clone, getNodeById2, getNodeByName2)
     }
@@ -567,7 +567,7 @@ object Graph {
     def parse(amr: String) : Graph = {
         val graph = parser.parseAll(parser.node, amr) match {
             case parser.Success(e, _) => Graph(e, new ArrayBuffer[Span](), Map[String, Node](), Map[String, Node]())
-            case _ => { assert(false, "Could not parse AMR: "+amr); Graph.empty }
+            case _ => { assert(false, "Could not parse AMR: "+amr); Graph.AMREmpty }
         }
         graph.makeVariables()
         graph.unifyVariables()
@@ -576,7 +576,9 @@ object Graph {
     }
 
     //def empty() : Graph = { val g = parse("(n / none)"); g.getNodeById.clear; g.getNodeByName.clear; return g }
-    //def amrEmpty() : Graph = { parse("(a / amr-empty)") }
-    def empty() : Graph = { val g = parse("(a / amr-empty)"); g.loadSpans("0-1|0", Array()); return g }
+    //def null() : Graph = { parse("(n / null)") }
+    def AMREmpty() : Graph = { val g = parse("(a / amr-empty)"); g.loadSpans("0-1|0", Array()); return g }
+    def Null() : Graph = { val g = parse("(n / null)"); g.getNodeById.clear; g.getNodeByName.clear; return g }
+    def empty() : Graph = { val g = parse("(n / null)"); g.getNodeById.clear; g.getNodeByName.clear; return g }
 }
 
