@@ -32,7 +32,7 @@ class LagrangianRelaxation(featureNames: List[String], labelSet: Array[(String, 
 
     def decode(input: Input) : DecoderResult = {
         alg2.input = input      // (this also sets features.input)
-        var result = DecoderResult(Graph.empty(), FeatureVector(features.weights.labelset), 0.0)
+        var result = DecoderResult(Graph.Null(), FeatureVector(features.weights.labelset), 0.0)
 
         val multipliers = FeatureVector(features.weights.labelset)
         var delta = 0.0         // so we know when we have converged

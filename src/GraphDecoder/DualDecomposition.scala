@@ -44,7 +44,7 @@ class DualDecomposition(featureNames: List[String], labelSet: Array[(String, Int
 
     def decode(input: Input) : DecoderResult = {
         features.input = input
-        var result = DecoderResult(Graph.empty(), FeatureVector(), 0.0)
+        var result = DecoderResult(Graph.Null(), FeatureVector(), 0.0)
         var delta = FeatureVector()
         do {
             logger(1, "weights: \n"+features.weights)

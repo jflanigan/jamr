@@ -258,7 +258,7 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
                 graph.makeTopologicalOrdering()
             }
         } else {
-            graph = Graph.empty()
+            graph = Graph.AMREmpty()
         }
 
         logger(1, "Alg2 returning score = " + score.toString)
