@@ -1,30 +1,19 @@
 package edu.cmu.lti.nlp.amr.Generate
 import edu.cmu.lti.nlp.amr._
+import edu.cmu.lti.nlp.amr.BasicFeatureVector._
 
 import scala.util.matching.Regex
 import scala.collection.mutable.{Map, Set, ArrayBuffer}
 
-class SyntheticRuleDecoder(val ruleInventory: RuleInventory) {
+class Decoder(val ruleInventory: RuleInventory) {
+    var weights = new FeatureVector()
 
     val getRealizations = ruleInventory.getRealizations_
     val getArgsLeft = ruleInventory.getArgsLeft_
     val getArgsRight = ruleInventory.getArgsRight_
 
-    def trainModel() {
-        
-    }
-
-    def evaluate() {
-        
-    }
-
-    def loadModel() {
-        
-    }
-
-    def createSentenceLevelGrammars() {
-        
-    }
+    case class Tag(tag: String, arg: String)
+    case class ConceptInfo(realization: String, headPos: String, position: Int)     // TODO: merge with Phrase?
 
     def argToTag(arg: String, left_right: (String, String)) : Tag = {
         // Example: arg = "ARG1", left_right = ("to", "") => Tag("to_ARG1_", "ARG1")
@@ -34,9 +23,6 @@ class SyntheticRuleDecoder(val ruleInventory: RuleInventory) {
     def conceptTag /*(conceptRealization: ConceptRealization)*/ : Tag = {
         return Tag("<CONCEPT>", "<CONCEPT>")
     }
-
-    case class Tag(tag: String, arg: String)
-    case class ConceptInfo(realization: String, headPos: String, position: Int)     // TODO: merge with Phrase?
 
     def syntheticRules(node: Node, graph: Graph) : List[Rule] = {
         // Returns a rule for every concept realization
@@ -117,63 +103,6 @@ class SyntheticRuleDecoder(val ruleInventory: RuleInventory) {
             "A="+cur.arg+"+s="+(if(left) {"L"} else {"R"}) -> 1.0,
             "A="+cur.arg+"+s="+(if(left) {"L"} else {"R"})+"+dist" -> abs(concept.position-position)
             ))
-    }
-
-}
-
-object SyntheticRuleModel/*(options: Map[Symbol, String])*/ {
-
-    val usage = """Usage: scala -classpath . edu.cmu.lti.nlp.amr.Generate.ExtractSentenceRules --dependencies deps_file --corpus amr_file --decode data """
-    type OptionMap = Map[Symbol, Any]
-
-    def parseOptions(map : OptionMap, list: List[String]) : OptionMap = {
-        def isSwitch(s : String) = (s(0) == '-')
-        list match {
-            case Nil => map
-            case "-h" :: value :: tail =>                parseOptions(map ++ Map('help -> value.toInt), tail)
-            case "-v" :: value :: tail =>                parseOptions(map ++ Map('verbosity -> value.toInt), tail)
-            case "--corpus" :: value :: tail =>          parseOptions(map ++ Map('corpus -> value.toInt), tail)
-            case "--decode" :: value :: tail =>          parseOptions(map ++ Map('decode -> value.toInt), tail)
-            case "--dependencies" :: value :: tail =>    parseOptions(map + ('dependencies -> value), tail)
-            case option :: tail => println("Error: Unknown option "+option) 
-                               sys.exit(1) 
-      }
-    }
-
-    def main(args: Array[String]) {
-        val options = parseOptions(Map(),args.toList)
-        if (options.contains('help)) { println(usage); sys.exit(1) }
-
-        if (options.contains('verbosity)) {
-            verbosity = options('verbosity).asInstanceOf[Int]
-        }
-
-        if (!options.contains('corpus)) { println("Must specify corpus file."); sys.exit(1) }
-        if (!options.contains('decode)) { println("Must specify decode file."); sys.exit(1) }
-        if (!options.contains('dependencies)) { println("Must specify dependencies file."); sys.exit(1) }
-
-        val dependencies: Array[String] = (for {
-                block <- Corpus.splitOnNewline(Source.fromFile(options('dependencies)).getLines())
-            } yield block.replaceAllLiterally("-LRB-","(").replaceAllLiterally("-RRB-",")").replaceAllLiterally("""\/""","/")).toArray
-
-        var i = 0
-        for { block <- Corpus.splitOnNewline(Source.fromFile(options('corpus).getLines))
-              if (block matches "(.|\n)*\n\\((.|\n)*") } {
-            logger(0,"**** Processsing Block *****")
-            logger(0,block)
-            val data = AMRTrainingData(block)
-            val pos : Array[String] = dependencies(i).split("\n").map(x => x.split("\t")(4))
-            val graph = data.toOracleGraph(clearUnalignedNodes = false)
-            val sentence = data.sentence    // Tokenized sentence
-            val spans : Map[String, (Option[Int], Option[Int])] = Map()     // stores the projected spans for each node
-            val spanArray : Array[Boolean] = sentence.map(x => false)       // stores the endpoints of the spans
-            computeSpans(graph, graph.root, spans, spanArray)
-            //logger(0,"spanArray = "+spanArray.zip(sentence).toList.toString)
-            logger(0,"****** Extracted rules ******")
-            extractRules(graph, graph.root, sentence, pos, spans, spanArray, rules)
-            logger(0,"")
-            i += 1
-        }
     }
 
 }
