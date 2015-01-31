@@ -38,7 +38,7 @@ class MultiMapCount[A,B] {
         assert(map.contains(a), "Attempted to remove an element that's not there.")
         map -= a
     }
-    def from(filename: String, aFromString: String => A, bFromString: String => B) {
+    def readFile(filename: String, aFromString: String => A, bFromString: String => B) {
         read(io.Source.fromFile(filename).getLines, aFromString, bFromString)
     }
     def read(iter: Iterator[String], aFromString: String => A, bFromString: String => B) {

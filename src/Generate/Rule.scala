@@ -41,39 +41,15 @@ case class Rule(args: Vector[String],
             (arg._1+" ["+arg._2.toString+"] "+arg._3).replaceAll("^ | $","")
         }
     }
-    def argF(arg: (String, Int, String)) : String = {
-        return escape(arg._1, '_') + "_" + arg._2.toString + "_" + escape(arg._3, '_'))
-    }
     override def toString() : String = {
+        def argF(arg: (String, Int, String)) : String = {
+            escape(arg._1, '_') + "_" + arg._2.toString + "_" + escape(arg._3, '_'))
+        }
         return List(args.mkString(" "), prefix, left.map(x => escape(argF(x),',')).mkString(","), concept.toString, right.map(x => escape(argF(x),',')).mkString(","), end).mkString(" ||| ")
     }
 }
 
 object Rule {
-    def escape(str: String, esc: Char = '\\') : String = {
-        return str.replaceAllLiterally(esc.toString, esc.toString + sec.toString)
-    }
-    def escape(str: String, esc: String) : String = {
-        var s = str
-        for (c <- esc) {
-            s = s.replaceAllLiterally(esc.toString, esc.toString + esc.toString)
-        }
-        return s
-    }
-    def unEscape(str: String, esc: Char = '\\') : String = {    // unescapes to a tab
-        return str.replaceAllLiterally(esc.toString, "\t").replaceAllLiterally("\t\t", esc.toString)
-    }
-    def unEscape(str: String, esc: String) : String = {         // unescapes to a tab
-        var s = str
-        for (c <- esc) {
-            s = s.replaceAllLiterally(esc.toString, "\t")
-            s = s.replaceAllLiterally("\t\t", esc.toString)
-        }
-        return s
-    }
-    unEscapeArray(str: String, esc: Char) : Array[String] = {
-        return unEscape(str, esc).split("\t")
-    }
     def apply(string: String) : Rule = {
         val ruleRegex = """([^|]*) \|\|\| ([^|]*) \|\|\| ([^|]*) \|\|\| (.*) \|\|\| ([^\|]*) \|\|\| ([^|]*)""".r
         val argRegex = """\(.*)\t[0-9]+\t\(.*\)""".r
@@ -116,4 +92,3 @@ object Rule {
         return ("#", "(X " + node.conceptStr + ")") :: children.map(x => { label=labelStr(x._1); (label, "("+label+" "+mkLhs(x._2, includeArgs=false, sameSpan=sameSpan)+")") } )
     }
 }
-

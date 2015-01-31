@@ -16,16 +16,17 @@ class RuleInventory {
     val argsLeft : Map[(String, String), Array[(String, String)]] = new Map()    // Todo: fill in (pos, arg) -> array of realizations
     val argsRight : Map[(String, String), Array[(String, String)]] = new Map()   // make sure there are no gaps
  
-    def load(filename: String) {    // TODO: move to companoin object
-        phraseTable.read(filename+".phrasetable", x => x, PhraseConceptPair.apply_)
-        lexRules.read(filename+".lexrules", x => x, Rule.apply_)
-        abstractRules.read(filename+".abstractrules", x => x, Rule.apply_)
+    def load(filename: String) {    // TODO: move to companion object
+        phraseTable.readFile(filename+".phrasetable", x => x, PhraseConceptPair.apply_)
+        lexRules.readFile(filename+".lexrules", x => x, Rule.apply_)
+        abstractRules.readFile(filename+".abstractrules", x => x, Rule.apply_)
         createArgTables()
         createArgs()
     }
 
     def save(filename: String) {
         write_to_file(phraseTable.toString)
+        // ...
     }
 
     def extractFromCorpus(corpus: Iterator[String], dependencies: Iterator[String]) { // TODO: move this constructor to companion object (and rename to fromCorpus)
@@ -88,7 +89,7 @@ class RuleInventory {
         }
     }
 
-    private def createArgArrays() {
+    private def createArgs() {
         // Populates argsLeft and argsRight
         // Must call createArgTables before calling this function
         for (((pos, arg), countMap) <- argTableLeft.map) {  // TODO: apply a filter on low count args?
