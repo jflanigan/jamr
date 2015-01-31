@@ -29,7 +29,11 @@ class RuleInventory {
         // ...
     }
 
-    def extractFromCorpus(corpus: Iterator[String], dependencies: Iterator[String]) { // TODO: move this constructor to companion object (and rename to fromCorpus)
+    def trainingIterator(corpus: Iterator[String], pos: Array[Annotation[Array[String]]]) : {
+        // ...
+    }
+
+    def extractFromCorpus(corpus: Iterator[String], pos: Array[Annotation[Array[String]]]) { // TODO: move this constructor to companion object (and rename to fromCorpus)
         //val corpus = Source.fromFile(corpusFilename).getLines
         logger(0, "****** Extracting rules from the corpus *******")
 
@@ -42,7 +46,7 @@ class RuleInventory {
             logger(0,"**** Processsing Block *****")
             logger(0,block)
             val data = AMRTrainingData(block)
-            val pos : Array[String] = dependencies(i).split("\n").map(x => x.split("\t")(4))
+            //val pos : Array[String] = dependencies(i).split("\n").map(x => x.split("\t")(4))
             val graph = data.toOracleGraph(clearUnalignedNodes = false)
             val sentence = data.sentence    // Tokenized sentence
             val spans : Map[String, (Option[Int], Option[Int])] = Map()     // stores the projected spans for each node

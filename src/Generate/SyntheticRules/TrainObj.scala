@@ -1,22 +1,32 @@
-package edu.cmu.lti.nlp.amr.Generate
+package edu.cmu.lti.nlp.amr.Generate.SyntheticRules
 import edu.cmu.lti.nlp.amr._
+import edu.cmu.lti.nlp.amr.Generate._
 import edu.cmu.lti.nlp.amr.Train._
 import edu.cmu.lti.nlp.amr.BasicFeatureVector._
 
 import scala.util.matching.Regex
 import scala.collection.mutable.{Map, Set, ArrayBuffer}
+import scala.io.Source.fromFile
 
-class SyntheticTrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Train.TrainObj[FeatureVector](options) {
+class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Train.TrainObj[FeatureVector](options) {
 
     // this implementation is not thread safe
-    val decoder = Decoder(options, oracle = false)
-    val oracle : Decoder = Decoder(options, oracle = true)
-    //costAugDecoder.features.weights = weights
     def zeroVector : FeatureVector = { FeatureVector() }
 
-    val input: Array[Input] = Input.loadInputfiles(options)
-    val training: Array[String] = Corpus.getAMRBlocks(Source.stdin.getLines()).toArray
+    val input: Array[Input] = Input.loadInputfiles(options)                     // TODO: we only need POS tags
+    val pos: Array[Annotation[[Array[String]]] = input.map(x => x.pos)          // this type is ridiculous
+    val ruleInventory: RuleInventory = new ruleInventory()
+    if (options.contains('rules)) {
+        ruleInventory.load(options('rules))
+    } else if (options.contains('trainingData) {
+        ruleInventory.extractFromCorpus(fromFile(options('trainingData)).getLines).toArray)
+    } else {
+        System.err.println("Error: please specify --training-data"); sys.exit(1)
+    }
+    val training: Array[Rule] = ruleInventory.lexRules.iterator.filter(x => ruleOk(x._2, x._3) /*&& x._3 > 1*/).toArray // we filter training data to good examples because poor alignments produce lots of bad rules
     def trainingSize = training.size
+
+    val decoder = new Decoder(ruleInventory)
 
     var optimizer = options.getOrElse('trainingOptimizer, "Adagrad") match {     // TODO: this should go back into Train/TrainObj
         case "SSGD" => new SSGD()
@@ -25,7 +35,7 @@ class SyntheticTrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.n
     }
 
     def decode(i: Int, weights: FeatureVector) : (FeatureVector, Double, String) = {
-        decoder.features.weights = weights
+        decoder.weights = weights
         val result = decoder.decode(input(i))
         return (result.features, result.score, "")
     }
@@ -45,7 +55,6 @@ class SyntheticTrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.n
         val result = decoder.decode(input(i), costFunction(oracleInput, scale, options('precRecallTradeoff).toDouble))
         return (result.features, result.score)
     }
-
 
     def train {
         train(FeatureVector())

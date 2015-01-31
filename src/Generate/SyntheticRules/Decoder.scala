@@ -59,6 +59,11 @@ class Decoder(val ruleInventory: RuleInventory) {
         return rules
     }
 
+    //case class DecoderResult(Rule, FeatureVector, Double)
+    def decode(oracleRule: Rule, node: Node, graph: Graph) : DecoderResult = {
+        // ...
+    }
+
     def decode(tagList: List[Array[Tag]], concept: ConceptInfo, node: Node, graph: Graph) : (Array[Int], FeatureVector, Double) = {
         val tags : Array[Array[Tag]] = (Array(Tag("<START>","<START>")) :: tagList ::: List((Array(Tag("<STOP>","<STOP>"))))).toArray
         def localScore(state: Viterbi.State) : Double = {
