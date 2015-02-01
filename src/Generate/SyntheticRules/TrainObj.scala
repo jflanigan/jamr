@@ -14,16 +14,16 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
     def zeroVector : FeatureVector = { FeatureVector() }
 
     val input: Array[Input] = Input.loadInputfiles(options)                     // TODO: we only need POS tags
-    val pos: Array[Annotation[[Array[String]]] = input.map(x => x.pos)          // this type is ridiculous
+    val pos: Array[Annotation[[Array[String]]] = input.map(x => x.pos)
     val ruleInventory: RuleInventory = new ruleInventory()
     if (options.contains('rules)) {
         ruleInventory.load(options('rules))
     } else if (options.contains('trainingData) {
-        ruleInventory.extractFromCorpus(fromFile(options('trainingData)).getLines).toArray)
+        ruleInventory.extractFromCorpus(fromFile(options('trainingData)).getLines).toArray, pos)
     } else {
         System.err.println("Error: please specify --training-data"); sys.exit(1)
     }
-    val training: Array[Rule] = ruleInventory.lexRules.iterator.filter(x => ruleOk(x._2, x._3) /*&& x._3 > 1*/).toArray // we filter training data to good examples because poor alignments produce lots of bad rules
+    val training: Array[Rule] = ruleInventory.trainingData(fromFile(options('trainingData)).getLines, pos)
     def trainingSize = training.size
 
     val decoder = new Decoder(ruleInventory)

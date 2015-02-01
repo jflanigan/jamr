@@ -60,6 +60,68 @@ object Rule {
         return Rule(args, prefix, left, PhraseConceptPair(concept), right, end)
     }
 
+    def extract(node: Node,
+                graph: Graph,
+                sentence: Array[String],
+                pos: Array[String],
+                spans: Map[String, (Int, Int)]) : Option[Rule] = {
+        case class Child(label: String, node: Node, start: Int, end: Int)
+
+        val (ruleStart, ruleEnd) = spans(node.id)
+        val children : List[Child] = (
+            for { (label, child) <- children
+                  if spans.contains(child.id)           // filter to aligned children
+                  if child.span != node.span            // that are in a different fragment
+                } yield {
+                    val (start, end) = spans(child.id)
+                    Child(Label(label), child, start.get, end.get)
+                } ).sortBy(x => x.end)
+
+        //logger(1, "children = "+children.toString)
+
+        if (children.size > 0 && !(0 until children.size-1).exists(i => children(i).start > children(i+1).end)) { // if child spans overlap then no rule can be extracted
+            var outsideLower = ruleStart.get
+            //do { outsideLower -= 1 } while (outsideLower >= 0 && !spanArray(outsideLower))
+            //outsideLower += 1
+            var outsideUpper = ruleEnd.get
+            //while (outsideUpper < sent.size && !spanArray(outsideUpper)) {
+            //    outsideUpper += 1
+            //}
+
+            val args : List[Children] = children.sortBy(x => x.label)
+            val lowerChildren : Vector[(Children, Int)] = args.zipWithIndex.filter(x => x._1.start < span.start).sortBy(_._1.start).toVector
+            val upperChildren : Vector[(Children, Int)] = args.zipWithIndex.filter(x => x._1.start > span.end).sortBy(_._1.start).toVector
+            val prefix : String = sentence.slice(outsideLower, ruleStart.get)
+            val end : String = sentence.slice(myEnd.get, outsideUpper)
+            val lex : String = sentence.slice(span.start, span.end).mkString(" ")
+            val pos : String = pos.slice(span.start, span.end).mkString(" ")
+            val headPos : String = pos.slice(span.end-1, span.end)
+
+            val argsList = args.map(x => x.label).toVector
+            var left = (0 until lowerChildren.size-1).map(
+                i => ("", x._2, sentence.slice(lowerChildren(i)._2.end, lowerChildren(i+1)._2.start))).toList
+            left = left ::: List("", lowerChilren.last._2, sentence.slice(lowerChilren.last._1.end, span.start))
+            var right = (1 until upperChildren.size).map(
+                i => (sentence.slice(upperChildren(i-1)._2.end, upperChildren(i)._2.start)), x._2, "").toList
+            right = (sentence.slice(span.end, upperChilren.head._1.end), upperChilren.last._2, "") :: right
+            val lhs = Rule.mkLhs(node, includeArgs=true)
+
+            val rule = Rule(argsList, prefix, left, PhraseConceptPair(lex, span.amr.prettyString(0, false, Set.empty[String]), pos, headPos), right, end)
+            //lexRules.add(node.concept -> rule)
+
+            //val abstractRule = Rule(argsList, prefix, left, PhraseConceptPair("###", span.amr.prettyString(0, false, Set.empty[String]), pos, headPos), right, end)
+            //abstractRules.add(pos -> abstractRule)
+            Some(rule)
+        } else {
+            None
+        }
+    }
+
+    abstractRule(rule: Rule) : Rule = {
+        val concept = PhraseConceptPair("###", rule.concept.graphFrag, rule.concept.fullPos, rule.concept.headPos)
+        return Rule(rule.args, rule.prefix, rule.left, concept, right, end)
+    }
+
     def mkLhs(x: Node, includeArgs: Boolean = false, sameSpan: Boolean = true) : String = {
         // sameSpan indicates we are in the same fragment as our parent (so don't process children that are not in our span)
         val concept = node.conceptStr
