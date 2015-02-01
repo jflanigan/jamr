@@ -23,7 +23,7 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
     } else {
         System.err.println("Error: please specify --training-data"); sys.exit(1)
     }
-    val training: Array[Rule] = ruleInventory.trainingData(fromFile(options('trainingData)).getLines, pos)
+    val training: Array[(Rule, Node, Graph)] = ruleInventory.trainingData(fromFile(options('trainingData)).getLines, pos)
     def trainingSize = training.size
 
     val decoder = new Decoder(ruleInventory)
@@ -36,15 +36,16 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
 
     def decode(i: Int, weights: FeatureVector) : (FeatureVector, Double, String) = {
         decoder.weights = weights
-        val result = decoder.decode(input(i))
+        val (rule, node, graph) = training(i)
+        val result = decoder.decode(rule, node, graph)
         return (result.features, result.score, "")
     }
 
     def oracle(i: Int, weights: FeatureVector) : (FeatureVector, Double) = {
-        oracle.features.weights = weights
-        val amrData = AMRTrainingData(training(i))
-        val result = oracle.decode(Input(amrData, input(i), i, oracle = true, clearUnalignedNodes = true))
-        return (result.features, result.score)
+        decoder.weights = weights
+        val (rule, node, graph) = training(i)
+        val features = decoder.oracle(rule, node, graph)
+        return (result.features, weights.dot(features))
     }
 
     def costAugmented(i: Int, weights: FeatureVector, scale: Double) : (FeatureVector, Double) = {

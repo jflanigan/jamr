@@ -4,11 +4,13 @@ import edu.cmu.lti.nlp.amr._
 import scala.util.matching.Regex
 import scala.collection.mutable.{Map, Set, ArrayBuffer}
 
+case class Arg(left: String, label: String, right: String)
+
 case class Rule(args: Vector[String],
                 prefix: String,
-                left: List[(String, Int, String)],      // left realization (Int is index into args vector)
+                left: List[(String, Int, String)],      // left realization (Int is index into args vector)     // TODO: could change to be (left, label: String, right) and make case class, with no args vector and produce the index on the fly (use in Tag as well)
                 //lex: String,                          // lexical content
-                concept: PhraseConceptPair,             // PhraseConceptPair
+                concept: PhraseConceptPair,             // TODO: could change to ConceptInfo and get rid of left, right
                 right: List[(String, Int, String)],     // right realization (Int is index into args vector)
                 end: String) {
     def lhs : String = {                        // TODO: cache this
@@ -89,13 +91,12 @@ object Rule {
             //}
 
             val args : List[Children] = children.sortBy(x => x.label)
+            val span = graph.spans(node.spans(0))
             val lowerChildren : Vector[(Children, Int)] = args.zipWithIndex.filter(x => x._1.start < span.start).sortBy(_._1.start).toVector
             val upperChildren : Vector[(Children, Int)] = args.zipWithIndex.filter(x => x._1.start > span.end).sortBy(_._1.start).toVector
             val prefix : String = sentence.slice(outsideLower, ruleStart.get)
             val end : String = sentence.slice(myEnd.get, outsideUpper)
-            val lex : String = sentence.slice(span.start, span.end).mkString(" ")
-            val pos : String = pos.slice(span.start, span.end).mkString(" ")
-            val headPos : String = pos.slice(span.end-1, span.end)
+            val pos : Array[String] = pos.slice(span.start, span.end)
 
             val argsList = args.map(x => x.label).toVector
             var left = (0 until lowerChildren.size-1).map(
@@ -104,13 +105,10 @@ object Rule {
             var right = (1 until upperChildren.size).map(
                 i => (sentence.slice(upperChildren(i-1)._2.end, upperChildren(i)._2.start)), x._2, "").toList
             right = (sentence.slice(span.end, upperChilren.head._1.end), upperChilren.last._2, "") :: right
-            val lhs = Rule.mkLhs(node, includeArgs=true)
+            //val lhs = Rule.mkLhs(node, includeArgs=true)
 
-            val rule = Rule(argsList, prefix, left, PhraseConceptPair(lex, span.amr.prettyString(0, false, Set.empty[String]), pos, headPos), right, end)
-            //lexRules.add(node.concept -> rule)
+            val rule = Rule(argsList, prefix, left, PhraseConceptPair.fromSpan(span, pos), right, end)
 
-            //val abstractRule = Rule(argsList, prefix, left, PhraseConceptPair("###", span.amr.prettyString(0, false, Set.empty[String]), pos, headPos), right, end)
-            //abstractRules.add(pos -> abstractRule)
             Some(rule)
         } else {
             None

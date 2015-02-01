@@ -30,7 +30,7 @@ class RuleInventory {
     }
 
     def trainingData(corpus: Iterator[String],
-                     pos: Array[Annotation[Array[String]]]) : Array[(Node, Graph, Rule)] {
+                     pos: Array[Annotation[Array[String]]]) : Array[(Rule, Node, Graph)] {
         var i = 0
         val training_data = new ArrayBuffer[(Node, Graph, Rule)]()
         for (block <- Corpus.getAMRBlocks(corpus)) {
@@ -40,7 +40,7 @@ class RuleInventory {
             //val pos : Array[String] = dependencies(i).split("\n").map(x => x.split("\t")(4))
             val pos = 
             val graph = data.toOracleGraph(clearUnalignedNodes = false)
-            training_data ++= extractRules(graph, graph.root, sentence, pos).filter(x => ruleOk(x._2)).map(x => (x._1, graph, x._2))
+            training_data ++= extractRules(graph, graph.root, sentence, pos).filter(x => ruleOk(x._2)).map(x => (x._2, x._1, graph))
             i += 1
         }
         return training_data.toArray
@@ -60,7 +60,7 @@ class RuleInventory {
             logger(0,block)
             val data = AMRTrainingData(block)
             //val pos : Array[String] = dependencies(i).split("\n").map(x => x.split("\t")(4))
-            val pos = 
+            val pos =   // TODO
             val graph = data.toOracleGraph(clearUnalignedNodes = false)
             logger(0,"****** Extracting rules ******")
             for (rule <- extractRules(graph, graph.root, sentence, pos) if ruleOk(rule)) {
@@ -76,8 +76,9 @@ class RuleInventory {
         createArgs()
     }
 
-    def getRealizations(node: Node) : List[(PhraseConceptPair, List[(String, Node)])] = {   // phrase, children not consumed
-        return phraseTable.get.getOrElse(node.concept, List()).map(x => (x, node.children.map(y => (Label(x._1),x._2))))   // TODO: should produce a possible realization if not found
+    def getRealizations(node: Node) : List[(PhraseConceptPair, Vector[String])] = {   // phrase, arg labels of children not consumed
+        // TODO: CHILDREN NOT CONSUMED
+        //return phraseTable.get.getOrElse(node.concept, List()).map(x => (x, node.children.map(y => (Label(x._1),x._2))))   // TODO: should produce a possible realization if not found
     }
 
     def getArgsLeft(pos_arg: (String, String)) : Array[(String, String)] = {    // Array[(left, right)]
