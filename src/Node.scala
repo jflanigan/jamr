@@ -17,6 +17,10 @@ case class Node(var id: String, var name: Option[String], concept: String, var r
         return (spans.map(x => !graph.spans(x).coRef) :\ false)(_ || _)
     }
 
+    def span : Option[Int] = {  // returns the primary span, if exists (span(0) is always the primary)
+        return if (spans.size > 0) { Some(spans(0)) } else { None }
+    }
+
     def addSpan(span: Int, coRef: Boolean) {
         if (coRef) {
             spans += span
@@ -26,14 +30,6 @@ case class Node(var id: String, var name: Option[String], concept: String, var r
                 logger(0,spans.toString+" + "+span.toString)
             }
             spans.+=:(span) // prepend
-        }
-    }
-
-    def someSpan() : Option[Int] = {
-        if (spans.isEmpty) {
-            None
-        } else {
-            Some(spans(0))
         }
     }
 
