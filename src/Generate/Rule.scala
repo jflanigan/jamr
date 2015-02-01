@@ -4,14 +4,26 @@ import edu.cmu.lti.nlp.amr._
 import scala.util.matching.Regex
 import scala.collection.mutable.{Map, Set, ArrayBuffer}
 
-case class Arg(left: String, label: String, right: String)
+case class Arg(left: String, label: String, right: String) {
+    val tag : String = left.replaceAllLiterally(" ","_")+"_"+label+"_"+right.replaceAllLiterally(" ","_")
+}
 
-case class Rule(args: Vector[String],
+object Arg {
+    val START : Arg = Arg("", "<START>", "")
+    val STOP : Arg = Arg("", "<STOP>", "")
+    val CONCEPT : Arg = Arg("", "<CONCEPT>", "")
+    def Default(label: String) : Arg = Arg("", label, "")   // default pass through no words left or right
+}
+
+case class ConceptInfo(realization: PhraseConceptPair, position: Int)     // TODO: merge with Phrase?   NO
+
+
+case class Rule(argRealizations: List[Arg],               // Sorted list
+                concept: ConceptInfo,                     // TODO: could change to ConceptInfo and get rid of left, right
                 prefix: String,
-                left: List[(String, Int, String)],      // left realization (Int is index into args vector)     // TODO: could change to be (left, label: String, right) and make case class, with no args vector and produce the index on the fly (use in Tag as well)
+                //left: List[(String, Int, String)],      // left realization (Int is index into args vector)     // TODO: could change to be (left, label: String, right) and make case class, with no args vector and produce the index on the fly (use in Tag as well)
                 //lex: String,                          // lexical content
-                concept: PhraseConceptPair,             // TODO: could change to ConceptInfo and get rid of left, right
-                right: List[(String, Int, String)],     // right realization (Int is index into args vector)
+                //right: List[(String, Int, String)],     // right realization (Int is index into args vector)
                 end: String) {
     def lhs : String = {                        // TODO: cache this
         val frag : Node = Graph.parse(concept)  // TODO: this is slow
@@ -29,6 +41,9 @@ case class Rule(args: Vector[String],
             "(X (X "+frag.concept+") "+list.mkString(" ")+")"
         }
     }
+    def args : List[String] = { argRealizations.map(x => x.label) }
+    def left : List[Arg] = { args.slice(0, concept.position) }
+    def right : List[Arg] = { args.slice(concept.position, args.size+1) }
     def mkRule(verbose: Boolean = true) : String = {
         //"(X "+(lhs ::: args.toList.map(x => (x,"["+x+"]"))).sortBy(_._1).map(_._2).mkString(" ")+") ||| "+rhs(verbose)
         lhs+" ||| "+rhs(verbose)

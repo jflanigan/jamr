@@ -11,10 +11,10 @@ class RuleInventory {
     val abstractRules : MultiMapCount[String, Rule] = new MultiMapCount()       // Map from pos to abstract rules with counts
     //val argTableLeft : Map[String, MultiMapCount[String, (String, String)]] = new MultiMapCount()  // Map from pos to map of args to realizations with counts
     //val argTableRight : Map[String, MultiMapCount[String, (String, String)]] = new MultiMapCount() // Map from pos to map of args to realizations with counts
-    val argTableLeft : MultiMapCount[(String, String), (String, String)] = new MultiMapCount()  // Map from (pos, arg) to realizations with counts
-    val argTableRight : MultiMapCount[(String, String), (String, String)] = new MultiMapCount() // Map from (pos, arg) to realizations with counts
-    val argsLeft : Map[(String, String), Array[(String, String)]] = new Map()    // Todo: fill in (pos, arg) -> array of realizations
-    val argsRight : Map[(String, String), Array[(String, String)]] = new Map()   // make sure there are no gaps
+    val argTableLeft : MultiMapCount[(String, String), Arg] = new MultiMapCount()  // Map from (pos, arg) to realizations with counts
+    val argTableRight : MultiMapCount[(String, String), Arg] = new MultiMapCount() // Map from (pos, arg) to realizations with counts
+    val argsLeft : Map[(String, String), Array[Arg]] = new Map()    // Todo: fill in (pos, arg) -> array of realizations
+    val argsRight : Map[(String, String), Array[Arg]] = new Map()   // make sure there are no gaps
  
     def load(filename: String) {    // TODO: move to companion object
         phraseTable.readFile(filename+".phrasetable", x => x, PhraseConceptPair.apply_)
@@ -81,12 +81,12 @@ class RuleInventory {
         //return phraseTable.get.getOrElse(node.concept, List()).map(x => (x, node.children.map(y => (Label(x._1),x._2))))   // TODO: should produce a possible realization if not found
     }
 
-    def getArgsLeft(pos_arg: (String, String)) : Array[(String, String)] = {    // Array[(left, right)]
-        return argsLeft.getOrElse(new Array(("","")))   // (left, right), so ("", "") means no words to left or right
+    def getArgsLeft(pos_arg: (String, String)) : Array[Arg] = {    // Array[(left, right)]
+        return argsLeft.getOrElse(new Array(Arg.Default(pos_arg._2)))
     }
 
-    def getArgsRight(pos_arg: (String, String)) : Array[(String, String)] = {
-        return argsRight.getOrElse(new Array(("","")))  // (left, right), so ("", "") means no words to left or right
+    def getArgsRight(pos_arg: (String, String)) : Array[Arg] = {
+        return argsRight.getOrElse(new Array(Arg.Default(pos_arg._2)))
     }
 
     private def createArgTables() {
@@ -96,11 +96,11 @@ class RuleInventory {
             for ((rule, count) <- rules if ruleOk(rule, count)) {
                 for (x <- rule.left) {
                     val arg = rule.args(x._2)
-                    argTableLeft.add((pos, arg) -> (x._1, x._3), count)
+                    argTableLeft.add((pos, arg) -> //Arg(x._1, arg, x._3), count) TODO
                 }
                 for (x <- rule.right) {
                     val arg = rule.args(x._2)
-                    argTableRight.add((pos, arg) -> (x._1, x._3), count)
+                    argTableRight.add((pos, arg) -> //Arg(x._1, arg, x._3), count) TODO
                 }
             }
         }

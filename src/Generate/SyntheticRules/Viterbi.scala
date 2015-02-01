@@ -8,10 +8,21 @@ import scala.collection.mutable.{Map, Set, ArrayBuffer}
 
 object Viterbi {
 
-    case class State(prev: Int, cur: Int, i: Int)
-    case class DecoderResult(tagseq: Array[Int], score: Double)
+    def decode[T](tags: List[Array[T]], localScore: (T,T,Int) => Double, start: T, stop: T) : (List[T], Double) = {
+        def score(state: State) : Double = {
+            val i = state.i
+            localScore(tags(i-1)(state.prev), tags(i)(state.cur), i-1)  // i-1 because we pass index into tags
+        }
+        val myTags : Array[Array[T]] = (Array(start) :: tags ::: List(Array(Arg.STOP))).toArray
+        val result = decode(tags.size, score, i => tags(i).size)
+        val resultTags : List[T] = result.tagseq.map(i => myTags(i)).slice(1,tagseq.size-2).toList
+        return (resultTags, result.score)
+    }
 
-    def decode(length: Int, localScore: State => Double, tags: Int => Int) : DecoderResult = {
+    private case class State(prev: Int, cur: Int, i: Int)
+    private case class DecoderResult(tagseq: Array[Int], score: Double)
+
+    private def decode(length: Int, localScore: State => Double, tags: Int => Int) : DecoderResult = {
         // Viterbi algorithm modified from Fig 5.17 in Speech & Language Processing (p. 147)
         //   length: the length of the input (INCLUDING start and stop padding)
         //   localScore: State(prevState, curState, position) => transition weight (log prob)
