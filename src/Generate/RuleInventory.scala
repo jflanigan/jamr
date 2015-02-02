@@ -25,12 +25,13 @@ class RuleInventory {
     }
 
     def save(filename: String) {
-        write_to_file(phraseTable.toString)
-        // ...
+        writeToFile(filename+".phrasetable", phraseTable.toString)
+        writeToFile(filename+".lexrules", lexRules.toString)
+        writeToFile(filename+".abstractrules", abstractRules.toString)
     }
 
     def trainingData(corpus: Iterator[String],
-                     pos: Array[Annotation[Array[String]]]) : Array[(Rule, Node, Graph)] {
+                     posAnno: Array[Annotation[Array[String]]]) : Array[(Rule, SyntheticRules.Input)] {
         var i = 0
         val training_data = new ArrayBuffer[(Node, Graph, Rule)]()
         for (block <- Corpus.getAMRBlocks(corpus)) {
@@ -38,15 +39,15 @@ class RuleInventory {
             logger(0,block)
             val data = AMRTrainingData(block)
             //val pos : Array[String] = dependencies(i).split("\n").map(x => x.split("\t")(4))
-            val pos = 
+            val pos =  projectPos(posAnno(i))
             val graph = data.toOracleGraph(clearUnalignedNodes = false)
-            training_data ++= extractRules(graph, graph.root, sentence, pos).filter(x => ruleOk(x._2)).map(x => (x._2, x._1, graph))
+            training_data ++= extractRules(graph, graph.root, sentence, pos).filter(x => ruleOk(x._2)).map(x => (x._2, SyntheticRules.Input(x._1, graph)))
             i += 1
         }
         return training_data.toArray
     }
 
-    def extractFromCorpus(corpus: Iterator[String], pos: Array[Annotation[Array[String]]]) { // TODO: move this constructor to companion object (and rename to fromCorpus)
+    def extractFromCorpus(corpus: Iterator[String], posAnno: Array[Annotation[Array[String]]]) { // TODO: move this constructor to companion object (and rename to fromCorpus)
         //val corpus = Source.fromFile(corpusFilename).getLines
         logger(0, "****** Extracting rules from the corpus *******")
 
@@ -60,7 +61,7 @@ class RuleInventory {
             logger(0,block)
             val data = AMRTrainingData(block)
             //val pos : Array[String] = dependencies(i).split("\n").map(x => x.split("\t")(4))
-            val pos =   // TODO
+            val pos =  projectPos(posAnno(i))
             val graph = data.toOracleGraph(clearUnalignedNodes = false)
             logger(0,"****** Extracting rules ******")
             for (rule <- extractRules(graph, graph.root, sentence, pos) if ruleOk(rule)) {
@@ -74,6 +75,16 @@ class RuleInventory {
         }
         createArgTables()
         createArgs()
+    }
+
+    def projectPos(posAnno: Annotation[Array[String]]) : Array[String] = {
+        val sentence : Array[String] = posAnno.sent // tokenized sentence
+        val pos = (0 until sentence.size).map(i => {
+            val span = posAnno.annotationSpan(i,i+1)
+            val posList = posAnno.annotation.slice(span._1, span._2)    // should always return a non-empty array
+            posList.last    // take the last one (works well in English)
+        })
+        return pos
     }
 
     def getRealizations(node: Node) : List[(PhraseConceptPair, Vector[String])] = {   // phrase, arg labels of children not consumed

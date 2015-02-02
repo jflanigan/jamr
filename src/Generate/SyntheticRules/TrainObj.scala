@@ -1,5 +1,5 @@
 package edu.cmu.lti.nlp.amr.Generate.SyntheticRules
-import edu.cmu.lti.nlp.amr._
+import edu.cmu.lti.nlp.amr
 import edu.cmu.lti.nlp.amr.Generate._
 import edu.cmu.lti.nlp.amr.Train._
 import edu.cmu.lti.nlp.amr.BasicFeatureVector._
@@ -13,8 +13,8 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
     // this implementation is not thread safe
     def zeroVector : FeatureVector = { FeatureVector() }
 
-    val input: Array[Input] = Input.loadInputfiles(options)                     // TODO: we only need POS tags
-    val pos: Array[Annotation[[Array[String]]] = input.map(x => x.pos)
+    val inputAMR: Array[amr.Input] = amr.Input.loadInputfiles(options)                     // TODO: we only need POS tags
+    val pos: Array[Annotation[[Array[String]]] = inputAMR.map(x => x.pos)
     val ruleInventory: RuleInventory = new ruleInventory()
     if (options.contains('rules)) {
         ruleInventory.load(options('rules))
@@ -23,7 +23,7 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
     } else {
         System.err.println("Error: please specify --training-data"); sys.exit(1)
     }
-    val training: Array[(Rule, Node, Graph)] = ruleInventory.trainingData(fromFile(options('trainingData)).getLines, pos)
+    val training: Array[(Rule, Input)] = ruleInventory.trainingData(fromFile(options('trainingData)).getLines, pos)
     def trainingSize = training.size
 
     val decoder = new Decoder(ruleInventory)
@@ -36,25 +36,26 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
 
     def decode(i: Int, weights: FeatureVector) : (FeatureVector, Double, String) = {
         decoder.weights = weights
-        val (rule, node, graph) = training(i)
-        val result = decoder.decode(rule, node, graph)
+        val (rule, input) = training(i)
+        val result = decoder.decode(rule.concept.realization, rule.args, input)
         return (result.features, result.score, "")
     }
 
     def oracle(i: Int, weights: FeatureVector) : (FeatureVector, Double) = {
         decoder.weights = weights
-        val (rule, node, graph) = training(i)
-        val features = decoder.oracle(rule, node, graph)
+        val (rule, input) = training(i)
+        val features = decoder.oracle(rule, input)
         return (result.features, weights.dot(features))
     }
 
     def costAugmented(i: Int, weights: FeatureVector, scale: Double) : (FeatureVector, Double) = {
-        decoder.features.weights = weights
+/*        decoder.features.weights = weights
         val amrData = AMRTrainingData(training(i))
         val oracleInput : Input = Input(amrData, input(i), i, oracle = true, clearUnalignedNodes = true)
         if (!options.contains('precRecallTradeoff)) { System.err.println("Error: must specify --training-prec-recall for this training loss function."); sys.exit(1) }
         val result = decoder.decode(input(i), costFunction(oracleInput, scale, options('precRecallTradeoff).toDouble))
-        return (result.features, result.score)
+        return (result.features, result.score) */
+        return (zeroVector, 0.0)
     }
 
     def train {
@@ -62,7 +63,7 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
     }
 
     def evalDev(options: Map[Symbol, String], pass: Int, weights: FeatureVector) {
-        if (options.contains('trainingDev)) {
+/*        if (options.contains('trainingDev)) {
         logger(-1, "Decoding dev...")
         val verbosity_save = verbosity  // TODO: could also just change the logging stream (add a var for the logging stream in amr.logger, and change it)
         verbosity = java.lang.Integer.MIN_VALUE     // Like Double.NEGATIVE_INFINITY, but for integers
@@ -127,7 +128,7 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
         /*} catch {
             case _ : Throwable =>
         } */
-        }
+        } */
     }
 
 }

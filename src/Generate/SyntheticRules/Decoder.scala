@@ -7,6 +7,8 @@ import scala.collection.mutable.{Map, Set, ArrayBuffer}
 
 case class DecoderResult(rule: Rule, features: FeatureVector, score: Double)
 
+case class Input(node: Node, graph: Graph)
+
 class Decoder(val ruleInventory: RuleInventory) {
     var weights = new FeatureVector()
 
@@ -14,27 +16,23 @@ class Decoder(val ruleInventory: RuleInventory) {
     val getArgsLeft = ruleInventory.getArgsLeft_
     val getArgsRight = ruleInventory.getArgsRight_
 
-    def syntheticRules(node: Node, graph: Graph) : List[Rule] = {
+    def syntheticRules(input: Input) : List[Rule] = {
         // Returns a rule for every concept realization
         var rules : List[Rule] = List()
         var bestRule : Option[Array[Arg]] = None
         var bestScore : Option[Double] = None
-        for ((phrase, children) <- getRealizations(node)) {
-            val DecoderResult(rule, _, _) = decode(phraseConceptPair, children, node, graph)
+        for ((phrase, children) <- getRealizations(input.node)) {
+            val DecoderResult(rule, _, _) = decode(phraseConceptPair, children, input)
             rules = rule :: rules
         }
         return rules
     }
 
-    def decode(oracleRule: Rule, node: Node, graph: Graph) : DecoderResult = {
-        return decode(rule.concept.realization, rule.args, node, graph)
-    }
-
-    def decode(conceptRealization: PhraseConceptPair, args: List[String], node: Node, graph: Graph) : DecoderResult = {
+    def decode(conceptRealization: PhraseConceptPair, args: List[String], input: Input) : DecoderResult = {
         val children = args.sorted
         val headPos = conceptRealization.headPos
         val leftTags : List[Array[Arg]] = children.map(label => getArgsLeft((headPos, label)))
-        val rightTags : List[Array[Arg]] = children.map(label => getArgsRight((headPos, label))
+        val rightTags : List[Array[Arg]] = children.map(label => getArgsRight((headPos, label)))
         val numArgs = children.size
         var bestResult : Option[DecoderResult] = None
         for (permutation <- (0 until numArgs).permutations) {
@@ -45,7 +43,7 @@ class Decoder(val ruleInventory: RuleInventory) {
                         permutation.slice(0,i).map(x => leftTags(x)) ++
                         Vector(Arg.CONCEPT) ++
                         permutation.slice(i,numArgs).map(x => rightTags(x))).toList  // TODO: use vector instead
-                val result = decode(tagList, conceptRealization, node, graph)
+                val result = decode(tagList, conceptRealization, input)
                 if (bestResult != None && result._3 > bestResult.get._3) {
                     bestResult = Some(result)
                 }
@@ -54,34 +52,34 @@ class Decoder(val ruleInventory: RuleInventory) {
         return bestResult
     }
 
-    def decode(tagList: List[Array[Arg]], concept: ConceptInfo, node: Node, graph: Graph) : DecoderResult = {
+    def decode(tagList: List[Array[Arg]], concept: ConceptInfo, input: Input) : DecoderResult = {
         def localScore(prev: Arg, cur: Arg, i: Int) : Double = {
-            weights.dot(localFeatures(prev, cur, i, concept, node, graph))
+            weights.dot(localFeatures(prev, cur, i, concept, input))
         }
         val (resultTags, score) = Viterbi.decode(tagList, localScore_, Arg.START, Arg.STOP)
-        val feats = oracle(tags, tagseq.slice(1,tagseq.size-2), concept, node, graph)
+        val feats = oracle(tags, tagseq.slice(1,tagseq.size-2), concept, input)
         return DecoderResult(Rule(resultTags, concept, "", ""), feats, weights.dot(feats))
     }
 
-    def oracle(rule: Rule, node: Node, graph: Graph) : FeatureVector = {
+    def oracle(rule: Rule, input: Input) : FeatureVector = {
         val concept = ConceptInfo(rule.concept, rule.left.size)
         val tagList = rule.left.map(x => (new Array(argToTag(rule.args(x._2), (x._1, x._3))))) ::: List(new Array(conceptTag)) ::: rule.right.map(x => (new Array(argToTag(rule.args(x._2), (x._1, x._3)))))
         val prediction = tagList.map(x => 0)
-        return oracle(tagList, prediction, concept, node, graph)
+        return oracle(tagList, prediction, concept, input)
     }
 
-    def oracle(tagList: List[Array[Tag]], prediction: Array[Int], concept: ConceptInfo, node: Node, graph: Graph) : FeatureVector = {
+    def oracle(tagList: List[Array[Tag]], prediction: Array[Int], concept: ConceptInfo, input: Input) : FeatureVector = {
         // TODO: the code below has some slow copying, maybe change so it's faster (still will be O(n) though)
         val tags : Array[Array[Tag]] = (Array(Tag("<START>","<START>")) :: tagList ::: List((Array(Tag("<STOP>","<STOP>"))))).toArray
         val pred : Array[Int] = (0 :: prediction.toList ::: List(0)).toArray
         var feats = new FeatureVector()
         for (i <- 0 until tags.size) {
-            feats += localFeatures(tags(i-1)(preds(i-1)), tags(i)(preds(i)), i, concept, node, graph)
+            feats += localFeatures(tags(i-1)(preds(i-1)), tags(i)(preds(i)), i, concept, input: Input)
         }
         return feats
     }
 
-    def localFeatures(prev: Tag, cur: Tag, position: Int, concept: ConceptInfo, node: Node, graph: Graph) : FeatureVector = {
+    def localFeatures(prev: Tag, cur: Tag, position: Int, concept: ConceptInfo, input: Input) : FeatureVector = {
         // cur.tag = realization tag (from argToTag) (e.g. "_ARG1_'s")
         // cur.arg = argument (e.g. "ARG1", etc)
         val left : Boolean = i < concept.position
