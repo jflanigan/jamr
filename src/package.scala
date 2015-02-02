@@ -1,5 +1,7 @@
 package edu.cmu.lti.nlp
 import scala.language.implicitConversions
+import java.nio.file.{Paths, Files}
+import java.nio.charset.StandardCharsets
 
 package object amr {
 /************************* Package Level Imports ********************/
@@ -22,6 +24,9 @@ package object amr {
     //type ArrayBuffer[A] = scala.collection.mutable.ArrayBuffer[A]
 
 /********************************************************************/
+    def writeToFile(filename: String, contents: String) {       // TODO: move to a utilities file
+        Files.write(Paths.get(filename), contents.getBytes(StandardCharsets.UTF_8))
+    }
 
     implicit def AnnotationToBaseAnnotation[T](a: Annotation[T]) = a.annotations
     var verbosity = 1
