@@ -8,9 +8,11 @@ case class Arg(left: String, label: String, right: String) {
     val tag : String = left.replaceAllLiterally(" ","_")+"_"+label+"_"+right.replaceAllLiterally(" ","_")
     def ruleStr(index: Int) : String = { left + " [" + index.toString +"] " + right }
     override def toString : String = { left + " [" + label +"] " + right }
+    def serialize : String = { escape(left, '_') + "_" + label + "_" + escape(right, '_')) }
 }
 
 object Arg {
+    def apply(string: String) : Arg = { val f = unEscapeArray(string); Arg(f(0), f(1), f(2) }    // deserialize
     val START : Arg = Arg("", "<START>", "")
     val STOP : Arg = Arg("", "<STOP>", "")
     val CONCEPT : Arg = Arg("", "<CONCEPT>", "")
@@ -65,10 +67,7 @@ case class Rule(argRealizations: List[Arg],               // Sorted list
     }
 
     override def toString() : String = {    // serialize the rule into string format that can loaded using Rule.apply(string) 
-        def argF(arg: (String, Int, String)) : String = {
-            escape(arg._1, '_') + "_" + arg._2.toString + "_" + escape(arg._3, '_'))
-        }
-        return List(args.mkString(" "), prefix, left.map(x => escape(argF(x),',')).mkString(","), concept.toString, right.map(x => escape(argF(x),',')).mkString(","), end).mkString(" ||| ")
+        return List(concept.toString, args.map(x => escape(x.serialize,',')).mkString(","), prefix, end).mkString(" ||| ")
     }
 
     // below is old code
@@ -101,24 +100,25 @@ case class Rule(argRealizations: List[Arg],               // Sorted list
 }
 
 object Rule {
-    def apply(string: String) : Rule = {    // inverse of Rule.toString
-        // TODO: update this to the new code
-        val ruleRegex = """([^|]*) \|\|\| ([^|]*) \|\|\| ([^|]*) \|\|\| (.*) \|\|\| ([^\|]*) \|\|\| ([^|]*)""".r
-        val argRegex = """\(.*)\t[0-9]+\t\(.*\)""".r
-        val ruleRegex(argsStr, prefix, leftStr, concept, rightStr, end) = string
-        val args = argsStr.split(" ").toVector
-        val left : List[(String, Int, String)] = unEscapeArray(leftStr,',').map(x => { val argRegex(l,i,r) = unEscape(x,'_'); (l, i.toInt, r) }).toList
-        val right : List[(String, Int, String)] = unEscapeArray(rightStr,',').map(x => { val argRegex(l,i,r) = unEscape(x,'_'); (l, i.toInt, r) }).toList
-        return Rule(args, prefix, left, PhraseConceptPair(concept), right, end)
+    def apply(string: String) : Rule = {    // inverse of Rule.toString (deserialize)
+        val ruleRegex = """(.*) \|\|\| ([^|]*) \|\|\| ([^|]*) \|\|\| ([^\|]*)""".r
+        val ruleRegex(concept, argsStr, prefix, end) = string
+        val args : List[Arg] = unEscapeArray(argStr,',').map(x => Arg(x)).toList
+        return Rule(args, PhraseConceptPair(concept), prefix, end)
     }
 
     def extract(node: Node,                 // extract a rule from a node in a graph, if it can be extracted (no overlapping children)
                 graph: Graph,
                 sentence: Array[String],
                 pos: Array[String],
-                spans: Map[String, (Int, Int)]) : Option[Rule] = {
+                spans: Map[String, (Int, Int)])     // maps node.id to start and end of the node and all its children
+            : Option[Rule] = {
         case class Child(label: String, node: Node, start: Int, end: Int)
 
+        // we shouldn't need these checks (RuleInventory.extractRules will never violate them) but they're here just in case
+        if (!spans.contains(node.id) || node.span == None) {
+            return None
+        }
         val (ruleStart, ruleEnd) = spans(node.id)
         val children : List[Child] = (
             for { (label, child) <- children
@@ -126,26 +126,26 @@ object Rule {
                   if child.span != node.span            // that are in a different fragment
                 } yield {
                     val (start, end) = spans(child.id)
-                    Child(Label(label), child, start.get, end.get)
+                    Child(Label(label), child, start, end)
                 } ).sortBy(x => x.end)
 
         //logger(1, "children = "+children.toString)
 
-        if (children.size > 0 && !(0 until children.size-1).exists(i => children(i).start > children(i+1).end)) { // if child spans overlap then no rule can be extracted
-            var outsideLower = ruleStart.get
-            //do { outsideLower -= 1 } while (outsideLower >= 0 && !spanArray(outsideLower))
+        if (children.size > 0 && !(0 until children.size-1).exists(i => children(i).start > children(i+1).end) || children(i).start < ruleStart || children(i).end > ruleEnd) { // if child spans overlap then no rule can be extracted (these last checks shouldn't ever be violated, but are there for the future)
+            var outsideLower = ruleStart
+            //do { outsideLower -= 1 } while (outsideLower >= 0 && !spanArray(outsideLower))    // spanArray indicates if the word is aligned to a span
             //outsideLower += 1
-            var outsideUpper = ruleEnd.get
+            var outsideUpper = ruleEnd
             //while (outsideUpper < sent.size && !spanArray(outsideUpper)) {
             //    outsideUpper += 1
             //}
 
-            val args : List[Children] = children.sortBy(x => x.label)
             val span = graph.spans(node.spans(0))
-            val lowerChildren : Vector[(Children, Int)] = args.zipWithIndex.filter(x => x._1.start < span.start).sortBy(_._1.start).toVector
-            val upperChildren : Vector[(Children, Int)] = args.zipWithIndex.filter(x => x._1.start > span.end).sortBy(_._1.start).toVector
-            val prefix : String = sentence.slice(outsideLower, ruleStart.get)
-            val end : String = sentence.slice(myEnd.get, outsideUpper)
+            val args : List[Children] = children.sortBy(x => x.label)
+            val lowerChildren : Vector[Children] = children.filter(x => x._1.end < span.start).sortBy(_.start).toVector
+            val upperChildren : Vector[Children] = children.filter(x => x._1.start > span.end).sortBy(_.start).toVector
+            val prefix : String = sentence.slice(outsideLower, ruleStart)
+            val end : String = sentence.slice(ruleEnd.get, outsideUpper)
             val pos : Array[String] = pos.slice(span.start, span.end)
 
  /********************** TODO ******************
@@ -154,20 +154,22 @@ object Rule {
  *
  ***********************************************/
 
-            val argsList = args.map(x => x.label).toVector
-            var left = (0 until lowerChildren.size-1).map(
-                i => ("", x._2, sentence.slice(lowerChildren(i)._2.end, lowerChildren(i+1)._2.start))).toList
-            left = left ::: List("", lowerChilren.last._2, sentence.slice(lowerChilren.last._1.end, span.start))
-            var right = (1 until upperChildren.size).map(
-                i => (sentence.slice(upperChildren(i-1)._2.end, upperChildren(i)._2.start)), x._2, "").toList
-            right = (sentence.slice(span.end, upperChilren.head._1.end), upperChilren.last._2, "") :: right
-            //val lhs = Rule.mkLhs(node, includeArgs=true)
+            var left = for { 0 until lowerChildren.size-1 } yield {
+                val label = lowerChildren(i).label
+                Arg("", label, sentence.slice(lowerChildren(i).end, lowerChildren(i+1).start)) 
+            }.toList
+            left = left ::: List("", lowerChilren.last.label, sentence.slice(lowerChildren.last.end, span.start))
 
-            val rule = Rule(argsList, prefix, left, PhraseConceptPair.fromSpan(span, pos), right, end)
+            var right = for { 1 until upperChildren.size } yield {
+                val label = upperChildren(i).label
+                Arg(sentence.slice(upperChildren(i-1)._2.end, upperChildren(i)._2.start)), label, "").toList
+            right = Arg(sentence.slice(span.end, upperChildren.head.end), upperChildren.last.label, "") :: right
 
-            Some(rule)
+            val rule = Rule(left ::: right, PhraseConceptPair.fromSpan(span, pos), prefix, end)
+
+            return Some(rule)
         } else {
-            None
+            return None
         }
     }
 

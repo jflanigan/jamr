@@ -8,7 +8,7 @@ import scala.collection.mutable.{Map, Set, ArrayBuffer}
 // Example: offer ||| offer-01 ||| NN ||| NN
 
 // I know this class is duplicated in ConceptInvoke.PhraseConceptPair.
-// There are some slight differences between the two because the application is different.
+// But it's ok there are differences between the two because the application is different (and they may diverge futher)
 
 case class PhraseConceptPair(words: String, graphFrag: String, fullPos: String, headPos: String) {
     // graphFrag shouldn't contain variable names.  Example:
@@ -17,12 +17,12 @@ case class PhraseConceptPair(words: String, graphFrag: String, fullPos: String, 
     // of ambiguities in variable names.  Remember, the graphFrag is a tree so re-entrancies
     // are not necessary.
     def mkRule : String = {
-       return Rule.mkLhs(Graph.parse(graphFrag), sameSpan=false)+") ||| "+words
+       return Rule.graphToCFG(Graph.parse(graphFrag))+") ||| "+words
     }
-    def lhs : List[(String, String)] = {
-        return Rule.mkLhsList(Graph.parse(graphFrag), sameSpan=false)
-    }
-    def realization : String = words
+    /*def lhs : List[(String, String)] = {  // TODO: if compiles, remove
+        return Rule.mkLhsList(Graph.parse(graphFrag))
+    }*/
+    //def realization : String = words      // TODO: if compiles, remove
     override def toString : String = {
         return words + " ||| " + graphFrag + " ||| " + fullPos + " ||| " + headPos
     }

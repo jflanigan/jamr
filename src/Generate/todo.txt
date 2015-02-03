@@ -1,7 +1,6 @@
-Update Rule.apply
-Update calls to mkLhs to use graphToCFG
 createArgTables()
 ruleOk
+feature for rules, and phraseTable (we're going to need them)
 Train it!
 Sentence level grammars.
 
