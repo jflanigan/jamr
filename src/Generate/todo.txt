@@ -1,0 +1,12 @@
+Update Rule.apply
+Update calls to mkLhs to use graphToCFG
+createArgTables()
+ruleOk
+Train it!
+Sentence level grammars.
+
+
+Test Rule code
+
+
+Add edge type, with alignment?

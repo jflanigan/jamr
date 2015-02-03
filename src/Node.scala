@@ -7,10 +7,6 @@ case class Var(node: Node, name: String)    // TODO: Remove this? Var is redunda
 
 case class Node(var id: String, var name: Option[String], concept: String, var relations: List[(String, Node)], var topologicalOrdering: List[(String, Node)], var variableRelations: List[(String, Var)], var alignment: Option[Int], var spans: ArrayBuffer[Int] /* TODO: change to something immutable (ie List) Interacts if a span gets copied from this span */) {
 
-    def conceptStr : String = {
-        return concept.replaceAll("""\(""", "-LBR-").replaceAll("""\)""", "-RBR-")
-    }
-
     def children: List[(String, Node)] = topologicalOrdering    // property (see Ch 18.2 stairway book)
     def children_= (c: List[(String, Node)]) {
         topologicalOrdering = c

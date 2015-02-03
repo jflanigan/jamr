@@ -62,10 +62,9 @@ class Decoder(val ruleInventory: RuleInventory) {
     }
 
     def oracle(rule: Rule, input: Input) : FeatureVector = {
-        val concept = ConceptInfo(rule.concept, rule.left.size)
         val tagList = rule.left.map(x => (new Array(argToTag(rule.args(x._2), (x._1, x._3))))) ::: List(new Array(conceptTag)) ::: rule.right.map(x => (new Array(argToTag(rule.args(x._2), (x._1, x._3)))))
         val prediction = tagList.map(x => 0)
-        return oracle(tagList, prediction, concept, input)
+        return oracle(tagList, prediction, rule.concept, input)
     }
 
     def oracle(tagList: List[Array[Tag]], prediction: Array[Int], concept: ConceptInfo, input: Input) : FeatureVector = {

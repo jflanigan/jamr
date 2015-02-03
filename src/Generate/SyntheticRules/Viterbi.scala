@@ -13,7 +13,7 @@ object Viterbi {
             val i = state.i
             localScore(tags(i-1)(state.prev), tags(i)(state.cur), i-1)  // i-1 because we pass index into tags
         }
-        val myTags : Array[Array[T]] = (Array(start) :: tags ::: List(Array(Arg.STOP))).toArray
+        val myTags : Array[Array[T]] = (Array(start) :: tags ::: List(Array(Arg.STOP))).toArray // could not do this, use arrays everywhere, and make adjustments for start and stop in score (might be faster)
         val result = decode(tags.size, score, i => tags(i).size)
         val resultTags : List[T] = result.tagseq.map(i => myTags(i)).slice(1,tagseq.size-2).toList
         return (resultTags, result.score)
