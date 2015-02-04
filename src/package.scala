@@ -25,6 +25,7 @@ package object amr {
 
 /********************************************************************/
     def writeToFile(filename: String, contents: String) {       // TODO: move to a utilities file
+        // see http://stackoverflow.com/questions/6879427/scala-write-string-to-file-in-one-statement
         Files.write(Paths.get(filename), contents.getBytes(StandardCharsets.UTF_8))
     }
 
