@@ -8,8 +8,6 @@ import scala.collection.mutable.{Map, Set, ArrayBuffer}
 
 case class DecoderResult(rule: Rule, features: FeatureVector, score: Double)
 
-case class Input(node: Node, graph: Graph)
-
 class Decoder(val ruleInventory: RuleInventory) {
     var weights = new FeatureVector()
 

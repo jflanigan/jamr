@@ -4,34 +4,6 @@ import edu.cmu.lti.nlp.amr._
 import scala.util.matching.Regex
 import scala.collection.mutable.{Map, Set, ArrayBuffer}
 
-case class Arg(left: String, label: String, right: String) {
-    val tag : String = left.replaceAllLiterally(" ","_")+"_"+label+"_"+right.replaceAllLiterally(" ","_")
-    def ruleStr(index: Int) : String = { left + " [" + index.toString +"] " + right }
-    override def toString : String = { left + " [" + label +"] " + right }
-    def serialize : String = { escape(left, '_') + "_" + label + "_" + escape(right, '_') }
-}
-
-object Arg {
-    def apply(string: String) : Arg = { val f = unEscapeArray(string,'_'); Arg(f(0), f(1), f(2)) }    // deserialize
-    val START : Arg = Arg("", "<START>", "")
-    val STOP : Arg = Arg("", "<STOP>", "")
-    val CONCEPT : Arg = Arg("", "<CONCEPT>", "")
-    def Default(label: String) : Arg = Arg("", label, "")   // default pass through no words left or right
-}
-
-case class ConceptInfo(realization: PhraseConceptPair, position: Int) {
-    override def toString : String = {
-        realization.toString + " ||| " + position.toString
-    }
-}
-
-object ConceptInfo {
-    def apply(string: String) : ConceptInfo = {
-        val splitted = string.split(""" \|\|\| """)
-        return ConceptInfo(PhraseConceptPair(splitted.init.mkString(" ")), splitted.last.toInt)
-    }
-}
-
 case class Rule(argRealizations: List[Arg],               // Sorted list
                 concept: ConceptInfo,
                 prefix: String,
