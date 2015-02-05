@@ -90,9 +90,7 @@ class RuleInventory {
     }
 
     def getRealizations(node: Node) : List[(PhraseConceptPair, List[String])] = {   // phrase, arg labels of children not consumed
-        // TODO: CHILDREN NOT CONSUMED
-        return List()
-        //return phraseTable.get.getOrElse(node.concept, List()).map(x => (x, node.children.map(y => (Label(x._1),x._2))))   // TODO: should produce a possible realization if not found
+        return phraseTable.map.getOrElse(node.concept, Map()).map(x => (x._1, node.children.map(y => y._1).diff(x._1.amrInstance.children.map(y => y._1)))).toList // TODO: should produce a possible realization if not found
     }
 
     def getArgsLeft(pos_arg: (String, String)) : Array[Arg] = {    // Array[(left, right)]

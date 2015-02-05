@@ -26,6 +26,9 @@ case class PhraseConceptPair(words: String, graphFrag: String, fullPos: String, 
     override def toString : String = {
         return words + " ||| " + graphFrag + " ||| " + fullPos + " ||| " + headPos
     }
+    def amrInstance : Node = {
+        return Graph.parse(graphFrag).root
+    }
 }
 
 object PhraseConceptPair {
