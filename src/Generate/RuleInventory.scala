@@ -13,13 +13,13 @@ class RuleInventory {
     //val argTableRight : Map[String, MultiMapCount[String, (String, String)]] = new MultiMapCount() // Map from pos to map of args to realizations with counts
     val argTableLeft : MultiMapCount[(String, String), Arg] = new MultiMapCount()  // Map from (pos, arg) to realizations with counts
     val argTableRight : MultiMapCount[(String, String), Arg] = new MultiMapCount() // Map from (pos, arg) to realizations with counts
-    val argsLeft : Map[(String, String), Array[Arg]] = new Map()    // Todo: fill in (pos, arg) -> array of realizations
-    val argsRight : Map[(String, String), Array[Arg]] = new Map()   // make sure there are no gaps
+    val argsLeft : Map[(String, String), Array[Arg]] = Map()    // Todo: fill in (pos, arg) -> array of realizations
+    val argsRight : Map[(String, String), Array[Arg]] = Map()   // make sure there are no gaps
  
     def load(filename: String) {    // TODO: move to companion object
-        phraseTable.readFile(filename+".phrasetable", x => x, PhraseConceptPair.apply_)
-        lexRules.readFile(filename+".lexrules", x => x, Rule.apply_)
-        abstractRules.readFile(filename+".abstractrules", x => x, Rule.apply_)
+        phraseTable.readFile(filename+".phrasetable", x => x, PhraseConceptPair.apply)
+        lexRules.readFile(filename+".lexrules", x => x, Rule.apply)
+        abstractRules.readFile(filename+".abstractrules", x => x, Rule.apply)
         createArgTables()
         createArgs()
     }
@@ -31,17 +31,18 @@ class RuleInventory {
     }
 
     def trainingData(corpus: Iterator[String],
-                     posAnno: Array[Annotation[Array[String]]]) : Array[(Rule, SyntheticRules.Input)] {
+                     posAnno: Array[Annotation[Array[String]]]) : Array[(Rule, SyntheticRules.Input)] = {
         var i = 0
-        val training_data = new ArrayBuffer[(Node, Graph, Rule)]()
+        val training_data = new ArrayBuffer[(Rule, SyntheticRules.Input)]()
         for (block <- Corpus.getAMRBlocks(corpus)) {
             logger(0,"**** Processsing Block *****")
             logger(0,block)
             val data = AMRTrainingData(block)
+            val sentence = data.sentence
             //val pos : Array[String] = dependencies(i).split("\n").map(x => x.split("\t")(4))
             val pos =  projectPos(posAnno(i))
             val graph = data.toOracleGraph(clearUnalignedNodes = false)
-            training_data ++= extractRules(graph, graph.root, sentence, pos).filter(x => ruleOk(x._2)).map(x => (x._2, SyntheticRules.Input(x._1, graph)))
+            training_data ++= extractRules(graph, sentence, pos).filter(x => ruleOk(x._2)).map(x => (x._2, SyntheticRules.Input(x._1, graph)))
             i += 1
         }
         return training_data.toArray
@@ -60,13 +61,14 @@ class RuleInventory {
             logger(0,"**** Processsing Block *****")
             logger(0,block)
             val data = AMRTrainingData(block)
+            val sentence = data.sentence
             //val pos : Array[String] = dependencies(i).split("\n").map(x => x.split("\t")(4))
             val pos =  projectPos(posAnno(i))
             val graph = data.toOracleGraph(clearUnalignedNodes = false)
             logger(0,"****** Extracting rules ******")
-            for (rule <- extractRules(graph, graph.root, sentence, pos) if ruleOk(rule)) {
-                lexRules.add(rule.concept -> rule)
-                abstractRules.add(rule.concept.pos -> Rule.abstractRule(rule))
+            for ((_, rule) <- extractRules(graph, sentence, pos) if ruleOk(rule)) {
+                lexRules.add(rule.concept.realization.words.split(" ")(0) -> rule)
+                abstractRules.add(rule.concept.realization.headPos -> Rule.abstractRule(rule))
             }
             logger(0,"****** Extracting phrase-concept pairs ******")
             extractPhraseConceptPairs(graph, sentence, pos)
@@ -78,26 +80,27 @@ class RuleInventory {
     }
 
     def projectPos(posAnno: Annotation[Array[String]]) : Array[String] = {
-        val sentence : Array[String] = posAnno.sent // tokenized sentence
+        val sentence : Array[String] = posAnno.snt // tokenized sentence
         val pos = (0 until sentence.size).map(i => {
             val span = posAnno.annotationSpan(i,i+1)
             val posList = posAnno.annotation.slice(span._1, span._2)    // should always return a non-empty array
             posList.last    // take the last one (works well in English)
-        })
+        }).toArray
         return pos
     }
 
-    def getRealizations(node: Node) : List[(PhraseConceptPair, Vector[String])] = {   // phrase, arg labels of children not consumed
+    def getRealizations(node: Node) : List[(PhraseConceptPair, List[String])] = {   // phrase, arg labels of children not consumed
         // TODO: CHILDREN NOT CONSUMED
+        return List()
         //return phraseTable.get.getOrElse(node.concept, List()).map(x => (x, node.children.map(y => (Label(x._1),x._2))))   // TODO: should produce a possible realization if not found
     }
 
     def getArgsLeft(pos_arg: (String, String)) : Array[Arg] = {    // Array[(left, right)]
-        return argsLeft.getOrElse(new Array(Arg.Default(pos_arg._2)))
+        return argsLeft.getOrElse(pos_arg, Array(Arg.Default(pos_arg._2)))
     }
 
     def getArgsRight(pos_arg: (String, String)) : Array[Arg] = {
-        return argsRight.getOrElse(new Array(Arg.Default(pos_arg._2)))
+        return argsRight.getOrElse(pos_arg, Array(Arg.Default(pos_arg._2)))
     }
 
     private def createArgTables() {
@@ -105,13 +108,11 @@ class RuleInventory {
         // Must call extractRules before calling this function
         for ((pos, rules) <- abstractRules.map) {
             for ((rule, count) <- rules if ruleOk(rule, count)) {
-                for (x <- rule.left) {
-                    val arg = rule.args(x._2)
-                    argTableLeft.add((pos, arg) -> //Arg(x._1, arg, x._3), count) TODO
+                for (arg <- rule.left(rule.argRealizations)) {
+                    argTableLeft.add((pos, arg.label) -> arg, count)
                 }
-                for (x <- rule.right) {
-                    val arg = rule.args(x._2)
-                    argTableRight.add((pos, arg) -> //Arg(x._1, arg, x._3), count) TODO
+                for (arg <- rule.right(rule.argRealizations)) {
+                    argTableRight.add((pos, arg.label) -> arg, count)
                 }
             }
         }
@@ -129,7 +130,7 @@ class RuleInventory {
     }
 
     private def ruleOk(rule : Rule) : Boolean = {
-        return     // TODO: check for unaligned content words
+        return true    // TODO: check for unaligned content words
     }
 
     private def ruleOk(rule : Rule, count: Int) : Boolean = {
@@ -145,17 +146,17 @@ class RuleInventory {
 
     private def extractRules(graph: Graph,
                              sentence: Array[String],
-                             pos : Array[String]) : Iterator[(Node, Rule)] {
+                             pos : Array[String]) : Iterator[(Node, Rule)] = {
 
         val spans : Map[String, (Int, Int)] = Map()                 // stores the projected spans for each node
         val spanArray : Array[Boolean] = sentence.map(x => false)   // stores the endpoints of the spans
         computeSpans(graph, graph.root, spans, spanArray)
 
-        for { span <- graph.spans
+        (for { span <- graph.spans
               node = graph.getNodeById(span.nodeIds.sorted.apply(0))
               rule = Rule.extract(node, graph, sentence, pos, spans)
               if rule != None
-        } yield (node, rule)
+        } yield (node, rule.get)).toIterator
     }
 
     private def computeSpans(graph: Graph, node: Node, spans: Map[String, (Int, Int)], spanArray: Array[Boolean]) :
@@ -187,7 +188,7 @@ class RuleInventory {
     }
 
 }
-
+/*
 object RuleInventory/*(options: Map[Symbol, String])*/ {
 
     val usage = """Usage: scala -classpath . edu.cmu.lti.nlp.amr.Generate.ExtractSentenceRules --dependencies deps_file --corpus amr_file --decode data """
@@ -244,4 +245,4 @@ object RuleInventory/*(options: Map[Symbol, String])*/ {
     }
 
 }
-
+*/

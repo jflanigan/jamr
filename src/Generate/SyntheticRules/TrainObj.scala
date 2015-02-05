@@ -1,5 +1,6 @@
 package edu.cmu.lti.nlp.amr.Generate.SyntheticRules
 import edu.cmu.lti.nlp.amr
+import edu.cmu.lti.nlp.amr.Annotation
 import edu.cmu.lti.nlp.amr.Generate._
 import edu.cmu.lti.nlp.amr.Train._
 import edu.cmu.lti.nlp.amr.BasicFeatureVector._
@@ -14,12 +15,12 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
     def zeroVector : FeatureVector = { FeatureVector() }
 
     val inputAMR: Array[amr.Input] = amr.Input.loadInputfiles(options)                     // TODO: we only need POS tags
-    val pos: Array[Annotation[[Array[String]]] = inputAMR.map(x => x.pos)
-    val ruleInventory: RuleInventory = new ruleInventory()
+    val pos: Array[Annotation[Array[String]]] = inputAMR.map(x => x.pos)
+    val ruleInventory: RuleInventory = new RuleInventory()
     if (options.contains('rules)) {
         ruleInventory.load(options('rules))
-    } else if (options.contains('trainingData) {
-        ruleInventory.extractFromCorpus(fromFile(options('trainingData)).getLines).toArray, pos)
+    } else if (options.contains('trainingData)) {
+        ruleInventory.extractFromCorpus(fromFile(options('trainingData)).getLines, pos)
     } else {
         System.err.println("Error: please specify --training-data"); sys.exit(1)
     }
@@ -45,7 +46,7 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
         decoder.weights = weights
         val (rule, input) = training(i)
         val features = decoder.oracle(rule, input)
-        return (result.features, weights.dot(features))
+        return (features, weights.dot(features))
     }
 
     def costAugmented(i: Int, weights: FeatureVector, scale: Double) : (FeatureVector, Double) = {

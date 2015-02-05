@@ -10,7 +10,7 @@ package object Generate {
     }
     def labelStr(label: String) = Label(label)
     def escape(str: String, esc: Char = '\\') : String = {
-        return str.replaceAllLiterally(esc.toString, esc.toString + sec.toString)
+        return str.replaceAllLiterally(esc.toString, esc.toString + esc.toString)
     }
     def escape(str: String, esc: String) : String = {
         var s = str

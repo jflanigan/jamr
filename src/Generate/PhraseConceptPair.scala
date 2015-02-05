@@ -17,7 +17,7 @@ case class PhraseConceptPair(words: String, graphFrag: String, fullPos: String, 
     // of ambiguities in variable names.  Remember, the graphFrag is a tree so re-entrancies
     // are not necessary.
     def mkRule : String = {
-       return Rule.graphToCFG(Graph.parse(graphFrag))+") ||| "+words
+       return Rule.graphToCFG(Graph.parse(graphFrag).root)+") ||| "+words
     }
     /*def lhs : List[(String, String)] = {  // TODO: if compiles, remove
         return Rule.mkLhsList(Graph.parse(graphFrag))
@@ -32,12 +32,12 @@ object PhraseConceptPair {
     def fromSpan(span: Span, pos: Array[String]) : PhraseConceptPair = {
         // Assumes head final for calculating headPos (ok heuristic for English)
         return PhraseConceptPair(span.words,
-                                 span.amr.prettyString(0, false, Set.empty[String]) /*no variable names*/
+                                 span.amr.prettyString(0, false, Set.empty[String]), /*no variable names*/
                                  pos.slice(span.start, span.end).mkString(" "),
-                                 pos.slice(span.end-1, span.end))
+                                 pos(span.end-1))
     }
 
-    def apply(string: String) : Rule = {    // TODO: could also do unapply, so you can do val Rule(...) = string
+    def apply(string: String) : PhraseConceptPair = {    // TODO: could also do unapply, so you can do val Rule(...) = string
         val regex = """([^|]*) \|\|\| (.*) \|\|\| ([^\|]*) \|\|\| ([^|]*)""".r
         val regex(words, graphFrag, fullPos, headPos) = string
         return PhraseConceptPair(words, graphFrag, fullPos, headPos)

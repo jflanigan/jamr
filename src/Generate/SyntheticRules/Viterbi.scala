@@ -1,21 +1,23 @@
-package edu.cmu.lti.nlp.amr.Generate
+package edu.cmu.lti.nlp.amr.Generate.SyntheticRules
 import edu.cmu.lti.nlp.amr._
 
 import scala.util.matching.Regex
 import scala.collection.mutable.{Map, Set, ArrayBuffer}
 
+import scala.reflect.ClassTag
+
 /******************************** Viterbi Decoder *******************************/
 
 object Viterbi {
 
-    def decode[T](tags: List[Array[T]], localScore: (T,T,Int) => Double, start: T, stop: T) : (List[T], Double) = {
+    def decode[T:ClassTag](tags: List[Array[T]], localScore: (T,T,Int) => Double, start: T, stop: T) : (List[T], Double) = { // for why ClassTag is needed, see http://stackoverflow.com/questions/16921168/scala-generic-method-no-classtag-available-for-t
         def score(state: State) : Double = {
             val i = state.i
             localScore(tags(i-1)(state.prev), tags(i)(state.cur), i-1)  // i-1 because we pass index into tags
         }
-        val myTags : Array[Array[T]] = (Array(start) :: tags ::: List(Array(Arg.STOP))).toArray // could not do this, use arrays everywhere, and make adjustments for start and stop in score (might be faster)
+        val myTags : Array[Array[T]] = (Array(start) :: tags ::: List(Array(stop))).toArray // could not do this, use arrays everywhere, and make adjustments for start and stop in score (might be faster)
         val result = decode(tags.size, score, i => tags(i).size)
-        val resultTags : List[T] = result.tagseq.map(i => myTags(i)).slice(1,tagseq.size-2).toList
+        val resultTags : List[T] = result.tagseq.zipWithIndex.map(x => myTags(x._2)(x._1)).slice(1,result.tagseq.size-2).toList
         return (resultTags, result.score)
     }
 
