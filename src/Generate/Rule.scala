@@ -42,7 +42,7 @@ case class Rule(argRealizations: List[Arg],               // Sorted list
         return Rule.graphToCFG(lhsToGraph)
     }
 
-    private def lhsToGraph : Node = {
+    def lhsToGraph : Node = {
         val root : Node = Graph.parse(concept.realization.graphFrag).root  // TODO: this is slow
         root.children = root.children ::: argRealizations.map(x => (x.label, Node("", None, "<VARIABLE>", List(), List(), List(), None, new ArrayBuffer())))
         return root
