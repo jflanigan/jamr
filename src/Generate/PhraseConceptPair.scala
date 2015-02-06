@@ -34,10 +34,12 @@ case class PhraseConceptPair(words: String, graphFrag: String, fullPos: String, 
 object PhraseConceptPair {
     def fromSpan(span: Span, pos: Array[String]) : PhraseConceptPair = {
         // Assumes head final for calculating headPos (ok heuristic for English)
+        //logger(1, "span: " + span.format + " " + span.words)
+        //logger(1, "pos: " + pos.toList.toString)
         return PhraseConceptPair(span.words,
                                  span.amr.prettyString(0, false, Set.empty[String]), /*no variable names*/
                                  pos.slice(span.start, span.end).mkString(" "),
-                                 pos(span.end-1))
+                                 if(span.start < span.end) { pos(span.end-1) } else { "" })
     }
 
     def apply(string: String) : PhraseConceptPair = {    // TODO: could also do unapply, so you can do val Rule(...) = string

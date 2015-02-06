@@ -113,7 +113,10 @@ object Rule {
 
         //logger(1, "children = "+children.toString)
 
-        if (children.size > 0 && !(0 until children.size-1).exists(i => children(i).start > children(i+1).end || children(i).start < ruleStart || children(i).end > ruleEnd)) { // if child spans overlap then no rule can be extracted (these last checks shouldn't ever be violated, but are there for the future)
+        val span = graph.spans(node.spans(0))
+        if (children.size > 0
+            && !(0 until children.size-1).exists(i => children(i).start > children(i+1).end || children(i).start < ruleStart || children(i).end > ruleEnd) // if child spans overlap then no rule can be extracted (these last checks shouldn't ever be violated, but are there for the future)
+            && span.start < span.end) { 
             var outsideLower = ruleStart
             //do { outsideLower -= 1 } while (outsideLower >= 0 && !spanArray(outsideLower))    // spanArray indicates if the word is aligned to a span
             //outsideLower += 1
@@ -122,13 +125,11 @@ object Rule {
             //    outsideUpper += 1
             //}
 
-            val span = graph.spans(node.spans(0))
             val args : List[Child] = children.sortBy(x => x.label)
             val lowerChildren : Vector[Child] = children.filter(x => x.end < span.start).sortBy(_.start).toVector
             val upperChildren : Vector[Child] = children.filter(x => x.start > span.end).sortBy(_.start).toVector
             val prefix : String = sentence.slice(outsideLower, ruleStart).mkString(" ")
             val end : String = sentence.slice(ruleEnd, outsideUpper).mkString(" ")
-            val mypos : Array[String] = pos.slice(span.start, span.end)
 
  /********************** TODO ******************
  *
@@ -140,15 +141,19 @@ object Rule {
                 val label = lowerChildren(i).label
                 Arg("", label, sentence.slice(lowerChildren(i).end, lowerChildren(i+1).start).mkString(" ")) 
             }).toList
-            left = left ::: List(Arg("", lowerChildren.last.label, sentence.slice(lowerChildren.last.end, span.start).mkString(" ")))
+            if (lowerChildren.size > 0) {
+                left = left ::: List(Arg("", lowerChildren.last.label, sentence.slice(lowerChildren.last.end, span.start).mkString(" ")))
+            }
 
             var right : List[Arg] = (for { i <- 1 until upperChildren.size } yield {
                 val label = upperChildren(i).label
                 Arg(sentence.slice(upperChildren(i-1).end, upperChildren(i).start).mkString(" "), label, "")
             }).toList
-            right = Arg(sentence.slice(span.end, upperChildren.head.end).mkString(" "), upperChildren.last.label, "") :: right
+            if (upperChildren.size > 0) {
+                right = Arg(sentence.slice(span.end, upperChildren.head.end).mkString(" "), upperChildren.last.label, "") :: right
+            }
 
-            val rule = Rule(left ::: right, ConceptInfo(PhraseConceptPair.fromSpan(span, mypos), left.size), prefix, end)
+            val rule = Rule(left ::: right, ConceptInfo(PhraseConceptPair.fromSpan(span, pos), left.size), prefix, end)
 
             return Some(rule)
         } else {

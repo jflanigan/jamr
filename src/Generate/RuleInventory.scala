@@ -64,6 +64,7 @@ class RuleInventory {
             val sentence = data.sentence
             //val pos : Array[String] = dependencies(i).split("\n").map(x => x.split("\t")(4))
             val pos =  projectPos(posAnno(i))
+            //logger(0, "pos = " + pos.mkString(" "))
             val graph = data.toOracleGraph(clearUnalignedNodes = false)
             logger(0,"****** Extracting rules ******")
             for ((_, rule) <- extractRules(graph, sentence, pos) if ruleOk(rule)) {

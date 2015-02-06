@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+INPUT="${TRAIN_FILE}"
+OUTPUT="${MODEL_DIR}/extract-rules"
+mkdir -p "${MODEL_DIR}"
+
+"${JAMR_HOME}/run" Generate.ExtractRules \
+    --training-output "${OUTPUT}" \
+    --training-dev "${DEV_FILE}" \
+    --dependencies "${INPUT}.snt.deps" \
+    --ner "${INPUT}.snt.IllinoisNER" \
+    --tok "${INPUT}.snt.tok" \
+    --snt "${INPUT}.snt" \
+    --output "${OUTPUT}" \
+    -v 0 \
+    < "${INPUT}.aligned"
+
+#    ${PARSER_OPTIONS} \
+#    > "${OUTPUT}" \
+#    2> "${OUTPUT}.err"
