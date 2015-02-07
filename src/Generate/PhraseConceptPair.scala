@@ -24,7 +24,7 @@ case class PhraseConceptPair(words: String, graphFrag: String, fullPos: String, 
     }*/
     //def realization : String = words      // TODO: if compiles, remove
     override def toString : String = {
-        return words + " ||| " + graphFrag + " ||| " + fullPos + " ||| " + headPos
+        return graphFrag + " ||| " + words + " ||| " + fullPos + " ||| " + headPos
     }
     def amrInstance : Node = {
         return Graph.parse(graphFrag).root
@@ -43,8 +43,8 @@ object PhraseConceptPair {
     }
 
     def apply(string: String) : PhraseConceptPair = {    // TODO: could also do unapply, so you can do val Rule(...) = string
-        val regex = """([^|]*) \|\|\| (.*) \|\|\| ([^\|]*) \|\|\| ([^|]*)""".r
-        val regex(words, graphFrag, fullPos, headPos) = string
+        val regex = """(.*) \|\|\| (.*) \|\|\| ([^\|]*) \|\|\| ([^|]*)""".r
+        val regex(graphFrag, words, fullPos, headPos) = string
         return PhraseConceptPair(words, graphFrag, fullPos, headPos)
     }
 }

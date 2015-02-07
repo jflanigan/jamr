@@ -120,16 +120,19 @@ object Rule {
         var noOverlap = true
         logger(0, "node.id = "+node.id)
         for (i <- Range(ruleStart, ruleEnd)) {
-            if (spans.exists(x => { !(x._1.startsWith(node.id)) && (x._2._1 == i || x._2._2 == i) } )) {
+            if (spans.exists(x => { !(x._1.startsWith(node.id)) && ((x._2._1 == i && x._2._2 < ruleEnd) || (x._2._2 == i && x._2._1 > ruleStart)) } )) {
+                logger(0, "i = " + i.toString)
+                logger(0, "violation: " + spans.filter(x => { !(x._1.startsWith(node.id)) && (x._2._1 == i || x._2._2 == i) } ).toList.sortBy(_._2._1))
                 noOverlap = false
             }
         }
         logger(0, "noOverlap = " + noOverlap.toString)
+        logger(0, "children: "+children.map(x => (x.label, x.node.concept, x.start, x.end)))
 
         if (children.size > 0
-            && !(0 until children.size-1).exists(i => children(i).start > children(i+1).end || children(i).start < ruleStart || children(i).end > ruleEnd) // if child spans overlap then no rule can be extracted (these last checks shouldn't ever be violated, but are there for the future)
+            && !(0 until children.size-1).exists(i => children(i).end > children(i+1).start || children(i).end < ruleStart || children(i).end > ruleEnd || (children(i).start <= span.start && children(i).end >= span.end)) // if child spans overlap then no rule can be extracted (these last checks shouldn't ever be violated, but are there for the future)
             && span.start < span.end
-            /*&& noOverlap*/) { 
+            && noOverlap) { 
             var outsideLower = ruleStart
             //do { outsideLower -= 1 } while (outsideLower >= 0 && !spanArray(outsideLower))    // spanArray indicates if the word is aligned to a span
             //outsideLower += 1
@@ -139,8 +142,8 @@ object Rule {
             //}
 
             val args : List[Child] = children.sortBy(x => x.label)
-            val lowerChildren : Vector[Child] = children.filter(x => x.end < span.start).sortBy(_.start).toVector
-            val upperChildren : Vector[Child] = children.filter(x => x.start > span.end).sortBy(_.start).toVector
+            val lowerChildren : Vector[Child] = children.filter(x => x.end <= span.start).sortBy(_.start).toVector
+            val upperChildren : Vector[Child] = children.filter(x => x.start >= span.end).sortBy(_.start).toVector
             val prefix : String = sentence.slice(outsideLower, ruleStart).mkString(" ")
             val end : String = sentence.slice(ruleEnd, outsideUpper).mkString(" ")
             logger(0, "args: "+args.map(x => (x.label, x.node.concept, x.start, x.end)))
@@ -181,8 +184,8 @@ object Rule {
     }
 
     def abstractRule(rule: Rule) : Rule = {     // turn a lexicalized rule into an abstract (unlexicalized) rule
-        val concept = ConceptInfo(PhraseConceptPair("###", rule.concept.realization.graphFrag, rule.concept.realization.fullPos, rule.concept.realization.headPos), rule.concept.position)
-        return Rule(rule.argRealizations, concept, rule.prefix, rule.end)
+        val conceptInfo = ConceptInfo(PhraseConceptPair("###", "concept", rule.concept.realization.fullPos, rule.concept.realization.headPos), rule.concept.position)
+        return Rule(rule.argRealizations, conceptInfo, rule.prefix, rule.end)
     }
 
     def conceptStr(node: Node) : String = {
