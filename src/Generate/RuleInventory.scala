@@ -68,7 +68,7 @@ class RuleInventory {
             val graph = data.toOracleGraph(clearUnalignedNodes = false)
             logger(0,"****** Extracting rules ******")
             for ((_, rule) <- extractRules(graph, sentence, pos) if ruleOk(rule)) {
-                lexRules.add(rule.concept.realization.words.split(" ")(0) -> rule)
+                lexRules.add(rule.concept.realization.amrInstance.concept -> rule)
                 abstractRules.add(rule.concept.realization.headPos -> Rule.abstractRule(rule))
             }
             logger(0,"****** Extracting phrase-concept pairs ******")
