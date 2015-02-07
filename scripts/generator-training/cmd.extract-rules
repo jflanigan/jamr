@@ -13,8 +13,8 @@ mkdir -p "${MODEL_DIR}"
     --snt "${INPUT}.snt" \
     --output "${OUTPUT}" \
     -v 0 \
-    < "${INPUT}.aligned"
+    < "${INPUT}.aligned" \
+    > "${OUTPUT}" \
+    2> "${OUTPUT}.err"
 
 #    ${PARSER_OPTIONS} \
-#    > "${OUTPUT}" \
-#    2> "${OUTPUT}.err"

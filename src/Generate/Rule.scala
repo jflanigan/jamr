@@ -96,6 +96,7 @@ object Rule {
                 spans: Map[String, (Int, Int)])     // maps node.id to start and end of the node and all its children
             : Option[Rule] = {
         case class Child(label: String, node: Node, start: Int, end: Int)
+        logger(0, "Sentence = " + sentence.mkString(" "))
 
         // we shouldn't need these checks (RuleInventory.extractRules will never violate them) but they're here just in case
         if (!spans.contains(node.id) || node.span == None) {
@@ -113,10 +114,22 @@ object Rule {
 
         //logger(1, "children = "+children.toString)
 
+        logger(0, "(ruleStart, ruleEnd) = " + sentence.slice(ruleStart, ruleEnd).mkString(" "))
+        logger(0, "spans = " + spans.toList.sortBy(_._2._1))
         val span = graph.spans(node.spans(0))
+        var noOverlap = true
+        logger(0, "node.id = "+node.id)
+        for (i <- Range(ruleStart, ruleEnd)) {
+            if (spans.exists(x => { !(x._1.startsWith(node.id)) && (x._2._1 == i || x._2._2 == i) } )) {
+                noOverlap = false
+            }
+        }
+        logger(0, "noOverlap = " + noOverlap.toString)
+
         if (children.size > 0
             && !(0 until children.size-1).exists(i => children(i).start > children(i+1).end || children(i).start < ruleStart || children(i).end > ruleEnd) // if child spans overlap then no rule can be extracted (these last checks shouldn't ever be violated, but are there for the future)
-            && span.start < span.end) { 
+            && span.start < span.end
+            /*&& noOverlap*/) { 
             var outsideLower = ruleStart
             //do { outsideLower -= 1 } while (outsideLower >= 0 && !spanArray(outsideLower))    // spanArray indicates if the word is aligned to a span
             //outsideLower += 1
@@ -130,6 +143,9 @@ object Rule {
             val upperChildren : Vector[Child] = children.filter(x => x.start > span.end).sortBy(_.start).toVector
             val prefix : String = sentence.slice(outsideLower, ruleStart).mkString(" ")
             val end : String = sentence.slice(ruleEnd, outsideUpper).mkString(" ")
+            logger(0, "args: "+args.map(x => (x.label, x.node.concept, x.start, x.end)))
+            logger(0, "lowerChildren: "+lowerChildren.map(x => (x.label, x.node.concept, sentence.slice(x.start, x.end).mkString(" "))).toList)
+            logger(0, "upperChildren: "+upperChildren.map(x => (x.label, x.node.concept, sentence.slice(x.start, x.end).mkString(" "))).toList)
 
  /********************** TODO ******************
  *
@@ -144,16 +160,19 @@ object Rule {
             if (lowerChildren.size > 0) {
                 left = left ::: List(Arg("", lowerChildren.last.label, sentence.slice(lowerChildren.last.end, span.start).mkString(" ")))
             }
+            logger(0, "left: "+left.toString)
 
             var right : List[Arg] = (for { i <- 1 until upperChildren.size } yield {
                 val label = upperChildren(i).label
                 Arg(sentence.slice(upperChildren(i-1).end, upperChildren(i).start).mkString(" "), label, "")
             }).toList
             if (upperChildren.size > 0) {
-                right = Arg(sentence.slice(span.end, upperChildren.head.end).mkString(" "), upperChildren.last.label, "") :: right
+                right = Arg(sentence.slice(span.end, upperChildren.head.start).mkString(" "), upperChildren.head.label, "") :: right
             }
+            logger(0, "right: "+right.toString)
 
             val rule = Rule(left ::: right, ConceptInfo(PhraseConceptPair.fromSpan(span, pos), left.size), prefix, end)
+            logger(0, "Rule: " + rule.toString)
 
             return Some(rule)
         } else {
