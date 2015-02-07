@@ -1,11 +1,15 @@
-createArgTables()
-ruleOk
-feature for rules, and phraseTable (we're going to need them)
-Train it!
-Sentence level grammars.
+Train synthetic rule model.
+Check for bugs in synthetic rule model.
+Add features for rules, and phraseTable.
+Extract sentence level grammars.
+Train it with MERT!
 
+Start writing paper.
 
-Test Rule code
+Later:
+Spanning tree during generation.
+Better alignments, spanning tree during training.
+Edge alignments.
 
-
+Older:
 Add edge type, with alignment?
