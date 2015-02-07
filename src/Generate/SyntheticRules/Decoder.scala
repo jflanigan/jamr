@@ -64,7 +64,7 @@ class Decoder(val ruleInventory: RuleInventory) {
             weights.dot(localFeatures(prev, cur, i, concept, input))
         }
         val (resultTags, score) = Viterbi.decode(tagList, localScore _, Arg.START, Arg.STOP)
-        val rule = Rule(resultTags.slice(0,concept.position-1) ::: resultTags.drop(concept.position+1), concept, "", "")
+        val rule = Rule(resultTags.slice(0,concept.position) ::: resultTags.drop(concept.position+1), concept, "", "")
         val feats = oracle(rule, input)
         return DecoderResult(rule, feats, weights.dot(feats))
     }
