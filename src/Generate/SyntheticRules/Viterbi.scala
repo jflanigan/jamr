@@ -11,12 +11,12 @@ import scala.reflect.ClassTag
 object Viterbi {
 
     def decode[T:ClassTag](tags: List[Array[T]], localScore: (T,T,Int) => Double, start: T, stop: T) : (List[T], Double) = { // for why ClassTag is needed, see http://stackoverflow.com/questions/16921168/scala-generic-method-no-classtag-available-for-t
+        val myTags : Array[Array[T]] = (Array(start) :: tags ::: List(Array(stop))).toArray // could not do this, use arrays everywhere, and make adjustments for start and stop in score (might be faster)
         def score(state: State) : Double = {
             val i = state.i
-            localScore(tags(i-1)(state.prev), tags(i)(state.cur), i-1)  // i-1 because we pass index into tags
+            localScore(myTags(i-1)(state.prev), myTags(i)(state.cur), i-1)  // i-1 because we pass index into tags
         }
-        val myTags : Array[Array[T]] = (Array(start) :: tags ::: List(Array(stop))).toArray // could not do this, use arrays everywhere, and make adjustments for start and stop in score (might be faster)
-        val result = decode(tags.size, score, i => tags(i).size)
+        val result = decode(myTags.size, score, i => myTags(i).size)
         val resultTags : List[T] = result.tagseq.zipWithIndex.map(x => myTags(x._2)(x._1)).slice(1,result.tagseq.size-2).toList
         return (resultTags, result.score)
     }
@@ -42,7 +42,7 @@ object Viterbi {
             // Find the most likely previous state (highest model score)
             val scores = Range(0,tags(t-1)).map(sPrev => localScore(State(sPrev,sCur,t)) + viterbi(t-1)(sPrev))
             val (max, sPrev) = scores.zipWithIndex.maxBy(_._1)
-            return (max, sPrev+1)
+            return (max, sPrev)
         }
 
         // Initialize (t = 1)
@@ -70,7 +70,7 @@ object Viterbi {
         backpointers(T-1)(0) = sPrev
     
         // Follow backpointers
-        logger(2,"-- Prediction --")  // CHANGE
+        logger(3,"-- Viterbi --")  // CHANGE
         val decode = new Array[Int](T)
         var s = 0       // Final state
         for (t : Int <- Range(T-1, 0, -1)) {

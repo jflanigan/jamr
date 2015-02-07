@@ -13,3 +13,8 @@ Edge alignments.
 
 Older:
 Add edge type, with alignment?
+
+Fixes to aligner:
+
+weapons-grade ||| weapons - grade
+align unaligned concepts to content words (in tree structure)

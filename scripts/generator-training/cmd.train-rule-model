@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+INPUT="${TRAIN_FILE}"
+OUTPUT="${MODEL_DIR}/rule-model"
+mkdir -p "${MODEL_DIR}"
+
+"${JAMR_HOME}/run" Generate.TrainRuleModel \
+    --training-data "${INPUT}.aligned" \
+    --training-dev "${DEV_FILE}" \
+    --training-output "${OUTPUT}" \
+    --dependencies "${INPUT}.snt.deps" \
+    --ner "${INPUT}.snt.IllinoisNER" \
+    --tok "${INPUT}.snt.tok" \
+    --snt "${INPUT}.snt" \
+    -v 0 \
+    > "${OUTPUT}" \
+    2> "${OUTPUT}.err"
+
+#    ${PARSER_OPTIONS} \

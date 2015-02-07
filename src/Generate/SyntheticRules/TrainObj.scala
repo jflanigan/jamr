@@ -1,6 +1,7 @@
 package edu.cmu.lti.nlp.amr.Generate.SyntheticRules
 import edu.cmu.lti.nlp.amr
 import edu.cmu.lti.nlp.amr.Annotation
+import edu.cmu.lti.nlp.amr.logger
 import edu.cmu.lti.nlp.amr.Generate._
 import edu.cmu.lti.nlp.amr.Train._
 import edu.cmu.lti.nlp.amr.BasicFeatureVector._
@@ -38,15 +39,29 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
     def decode(i: Int, weights: FeatureVector) : (FeatureVector, Double, String) = {
         decoder.weights = weights
         val (rule, input) = training(i)
-        val result = decoder.decode(rule.concept.realization, rule.args, input)
-        return (result.features, result.score, "")
+        if (rule.args.exists(x => !x.startsWith("OP"))) {
+            logger(0, "-- Prediction --")
+            val result = decoder.decode(rule.concept.realization, rule.args, input)
+            logger(0, "Result:            "+result.rule)
+            (result.features, result.score, "")
+        } else { 
+            logger(0, "decode skipping...")
+            (FeatureVector(), 0.0, "")
+        }
     }
 
     def oracle(i: Int, weights: FeatureVector) : (FeatureVector, Double) = {
         decoder.weights = weights
         val (rule, input) = training(i)
-        val features = decoder.oracle(rule, input)
-        return (features, weights.dot(features))
+        if (rule.args.exists(x => !x.startsWith("OP"))) {
+            logger(0, "-- Oracle --")
+            logger(0, "Oracle input:      "+rule)
+            val features = decoder.oracle(rule, input)
+            (features, weights.dot(features))
+        } else { 
+            logger(0, "oracle skipping...")
+            (FeatureVector(), 0.0)
+        }
     }
 
     def costAugmented(i: Int, weights: FeatureVector, scale: Double) : (FeatureVector, Double) = {
