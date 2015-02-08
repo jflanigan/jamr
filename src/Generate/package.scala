@@ -31,7 +31,7 @@ package object Generate {
         return s
     }
     def unEscapeArray(str: String, esc: Char) : Array[String] = {
-        return unEscape(str, esc).split("\t")
+        return splitStr(unEscape(str, esc), "\t")
     }
     def projectPos(posAnno: Annotation[Array[String]]) : Array[String] = {
         val sentence : Array[String] = posAnno.snt // tokenized sentence
@@ -41,6 +41,21 @@ package object Generate {
             posList.last    // take the last one (works well in English)
         }).toArray
         return pos
+    }
+    def splitStr(str: String, sep: String) : Array[String] = {
+        // String.split doesn't work the way you would think.  Here is a better version.
+        // See https://issues.scala-lang.org/browse/SI-5069
+        splitStrToList(str, sep).toArray
+    }
+    def splitStrToList(str: String, sep: String) : List[String] = {
+        val i = str.indexOfSlice(sep)
+        if(i == -1) {
+            List(str)
+        } else {
+            val (str1, str2) = str.splitAt(i)
+            val rest = str2.drop(sep.size)
+            str1 :: splitStrToList(rest, sep)
+        }
     }
 }
 

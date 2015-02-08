@@ -41,7 +41,7 @@ object SentenceLevelGrammars {
             verbosity = options('verbosity).toInt
         }
 
-        val input : Array[Input] = Input.loadInputfiles(options)
+        //val input : Array[Input] = Input.loadInputfiles(options)
 
         val ruleInventory: RuleInventory = new RuleInventory()
         ruleInventory.load(options('ruleInventory))
@@ -54,9 +54,8 @@ object SentenceLevelGrammars {
             logger(0,block)
             val data = AMRTrainingData(block)
             val sentence = data.sentence
-            //val pos : Array[String] = dependencies(i).split("\n").map(x => x.split("\t")(4))
-            val pos =  projectPos(input(i).pos)
-            val graph = data.toOracleGraph(clearUnalignedNodes = true)
+            //val pos =  projectPos(input(i).pos)
+            val graph = data.toOracleGraph(clearUnalignedNodes = true)  // TODO: don't require aligned sentence
             // see http://stackoverflow.com/questions/10887828/string-to-gzipoutputstream
             var writer : BufferedWriter = null
             try {

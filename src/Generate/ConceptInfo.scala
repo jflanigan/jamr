@@ -12,8 +12,8 @@ case class ConceptInfo(realization: PhraseConceptPair, position: Int) {
 
 object ConceptInfo {
     def apply(string: String) : ConceptInfo = {
-        val splitted = string.split(""" \|\|\| """)
-        return ConceptInfo(PhraseConceptPair(splitted.init.mkString(" ")), splitted.last.toInt)
+        val splitted = splitStr(string, " ||| ")
+        return ConceptInfo(PhraseConceptPair(splitted.init.mkString(" ||| ")), splitted.last.toInt)
     }
 }
 

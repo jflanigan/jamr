@@ -12,7 +12,7 @@ case class Arg(left: String, label: String, right: String) {
 }
 
 object Arg {
-    def apply(string: String) : Arg = { val f = unEscapeArray(string,'|'); Arg(f(0), f(1), f(2)) }    // deserialize
+    def apply(string: String) : Arg = { logger(0,"ARG = "+string); val f = unEscapeArray(string,'|'); logger(0,"unEscaped = "+f.toList); Arg(f(0), f(1), f(2)) }    // deserialize
     val START : Arg = Arg("", "<START>", "")
     val STOP : Arg = Arg("", "<STOP>", "")
     val CONCEPT : Arg = Arg("", "<CONCEPT>", "")

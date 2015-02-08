@@ -83,9 +83,33 @@ case class Rule(argRealizations: List[Arg],               // Sorted list
 
 object Rule {
     def apply(string: String) : Rule = {    // inverse of Rule.toString (deserialize)
-        val ruleRegex = """(.*) \|\|\| ([^|]*) \|\|\| ([^|]*) \|\|\| ([^\|]*)""".r
-        val ruleRegex(conceptInfo, argsStr, prefix, end) = string
-        val args : List[Arg] = unEscapeArray(argsStr,',').map(x => Arg(x)).toList
+        //val ruleRegex = """(.*) \|\|\| ([^|]*) \|\|\| ([^|]*) \|\|\| ([^\|]*)""".r
+        // Input example: "follow ||| following ||| JJ ||| JJ ||| 0 ||| |OP1| |||  ||| "
+        logger(0, "Rule.apply: "+string)
+
+/*
+        // Workaround for bug in scala: "follow ||| following ||| JJ ||| JJ ||| 0 ||| |OP1| |||  ||| ".split(" \|\|\| ").size should be 8, but in older versions of scala (2.10) it's 6
+        // newer versions 
+        val split = string.split("""\|\|\|""")
+        var conceptInfo = split.slice(0, split.size-3).mkString("|||").init // removing trailing space because we split with "|||" not " ||| "
+        var argsStr = split(split.size-3).drop(1).init  // drop(1).init removes leading and trailing space
+        var prefix = split(split.size-2).drop(1).init
+        var end = split(split.size-1).drop(1)   // remove leading space */
+
+        // This was the original code that should have worked (now it's fixed with my own implementation of splitStr).
+        // string.split doesn't work the way you would think.  See https://issues.scala-lang.org/browse/SI-5069
+        val split = splitStr(string, " ||| ")
+        val size = split.size
+        val conceptInfo = split.slice(0, size-3).mkString(" ||| ")
+        val argsStr = split(size-3)
+        val prefix = split(size-2)
+        val end = split(size-1)        //val ruleRegex(conceptInfo, argsStr, prefix, end) = string
+
+        val args : List[Arg] = if (argsStr == "") {
+                List()
+            } else {
+                unEscapeArray(argsStr,',').map(x => Arg(x)).toList
+            }
         return Rule(args, ConceptInfo(conceptInfo), prefix, end)
     }
 

@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+INPUT="${DEV_FILE}"
+OUTPUT="${MODEL_DIR}/dev-grammars"
+
+"${JAMR_HOME}/run" Generate.SentenceLevelGrammars \
+    --weights "${MODEL_DIR}/rule-model" \
+    --rule-inventory "${MODEL_DIR}/extract-rules" \
+    --dependencies "${INPUT}.snt.deps" \
+    --ner "${INPUT}.snt.IllinoisNER" \
+    --tok "${INPUT}.snt.tok" \
+    --snt "${INPUT}.snt" \
+    --output "${OUTPUT}" \
+    -v 0 \
+    < "${INPUT}.aligned"
+    #"${GENERATOR_GRAMMAR_OPTIONS}" \
+    #&> "${OUTPUT}.err"
+
+#    ${PARSER_OPTIONS} \

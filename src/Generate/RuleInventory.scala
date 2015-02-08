@@ -82,7 +82,7 @@ class RuleInventory {
 
     def getRules(node: Node) : List[Rule] = {
         val children : List[String] = node.children.map(x => x._1).sorted
-        return lexRules.map.getOrElse(node.concept, Map()).map(x => x._1).filter(x => x.concept.realization.amrInstance.children.map(y => y._1).sorted == children).toList   // TODO: filter to rules that match children as well
+        return lexRules.map.getOrElse(node.concept, Map()).map(x => x._1).filter(x => x.concept.realization.amrInstance.children.map(y => y._1).sorted == children).toList
     }
 
     def getRealizations(node: Node) : List[(PhraseConceptPair, List[String])] = {   // phrase, arg labels of children not consumed
