@@ -33,5 +33,14 @@ package object Generate {
     def unEscapeArray(str: String, esc: Char) : Array[String] = {
         return unEscape(str, esc).split("\t")
     }
+    def projectPos(posAnno: Annotation[Array[String]]) : Array[String] = {
+        val sentence : Array[String] = posAnno.snt // tokenized sentence
+        val pos = (0 until sentence.size).map(i => {
+            val span = posAnno.annotationSpan(i,i+1)
+            val posList = posAnno.annotation.slice(span._1, span._2)    // should always return a non-empty array
+            posList.last    // take the last one (works well in English)
+        }).toArray
+        return pos
+    }
 }
 

@@ -80,14 +80,8 @@ class RuleInventory {
         createArgs()
     }
 
-    def projectPos(posAnno: Annotation[Array[String]]) : Array[String] = {
-        val sentence : Array[String] = posAnno.snt // tokenized sentence
-        val pos = (0 until sentence.size).map(i => {
-            val span = posAnno.annotationSpan(i,i+1)
-            val posList = posAnno.annotation.slice(span._1, span._2)    // should always return a non-empty array
-            posList.last    // take the last one (works well in English)
-        }).toArray
-        return pos
+    def getRules(node: Node) : List[Rule] = {
+        return lexRules.map.getOrElse(node.concept, Map()).map(x => x._1).toList   // TODO: filter to rules that match children as well
     }
 
     def getRealizations(node: Node) : List[(PhraseConceptPair, List[String])] = {   // phrase, arg labels of children not consumed

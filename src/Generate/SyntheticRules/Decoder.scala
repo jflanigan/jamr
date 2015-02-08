@@ -86,7 +86,7 @@ class Decoder(val ruleInventory: RuleInventory) {
         // cur.label = argument (e.g. "ARG1", etc)
         val left : Boolean = position < concept.position
         val pos = concept.realization.headPos
-        val c = concept.realization.concept
+        val c = input.node.concept
         FeatureVector(Map(
             // TODO: add features about headPos (conjoined with distance, etc)
             "r="+cur.tag -> 1.0,
