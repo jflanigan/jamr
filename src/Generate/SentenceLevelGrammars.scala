@@ -60,7 +60,7 @@ object SentenceLevelGrammars {
             // see http://stackoverflow.com/questions/10887828/string-to-gzipoutputstream
             var writer : BufferedWriter = null
             try {
-                val gzFile = new GZIPOutputStream(new FileOutputStream(new File(options('output)+"/grammar{i}.gz")))
+                val gzFile = new GZIPOutputStream(new FileOutputStream(new File(options('output) + s"/grammar${i}.gz")))
                 writer = new BufferedWriter(new OutputStreamWriter(gzFile, "UTF-8"))
                 for (node <- graph.nodes) {
                     val corpusRules : List[Rule] = ruleInventory.getRules(node)
@@ -76,7 +76,7 @@ object SentenceLevelGrammars {
                     writer.close
                 }
             }
-            System.out.println("")  // TODO: print sentence tree and grammar file in sgml
+            System.out.println("<seg grammar=\"" + options('output) + "/grammar" + i.toString + ".gz\"> " + Rule.graphToCFG(graph.root) + " </seg>")
             i += 1
         }
     }
