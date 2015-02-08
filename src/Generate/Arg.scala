@@ -5,7 +5,7 @@ import scala.util.matching.Regex
 import scala.collection.mutable.{Map, Set, ArrayBuffer}
 
 case class Arg(left: String, label: String, right: String) {
-    val tag : String = left.replaceAllLiterally(" ","_")+"_"+label+"_"+right.replaceAllLiterally(" ","_")
+    val tag : String = left.replaceAllLiterally(" ","_")+"|"+label+"|"+right.replaceAllLiterally(" ","_")
     def ruleStr(index: Int) : String = { left + " [" + index.toString +"] " + right }
     override def toString : String = { left + " [" + label +"] " + right }
     def serialize : String = { escape(left, '|') + "|" + escape(label, '|') + "|" + escape(right, '|') }
