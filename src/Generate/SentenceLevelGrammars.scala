@@ -65,8 +65,12 @@ object SentenceLevelGrammars {
                     val corpusRules : List[Rule] = ruleInventory.getRules(node)
                     val syntheticRules : List[Rule] = ruleModel.syntheticRules(SyntheticRules.Input(node, graph))
                     val rules = corpusRules ::: syntheticRules  // TODO: features on the rules
-                    for (rule <- rules) {
-                        writer.append(rule.mkRule(withArgLabel=false))
+                    for (rule <- corpusRules) {
+                        writer.append(rule.mkRule(withArgLabel=false)+" ||| corpus=1")
+                        writer.newLine
+                    }
+                    for (rule <- syntheticRules) {
+                        writer.append(rule.mkRule(withArgLabel=false)+" ||| synthetic=1")
                         writer.newLine
                     }
                 }

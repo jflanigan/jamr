@@ -13,7 +13,7 @@ mkdir -p "${MODEL_DIR}"
     --tok "${INPUT}.snt.tok" \
     --snt "${INPUT}.snt" \
     -v 0 \
-    "${GENERATOR_TRAINING_OPTIONS}" \
+    ${GENERATOR_TRAINING_OPTIONS} \
     > "${OUTPUT}" \
     2> "${OUTPUT}.err"
 
