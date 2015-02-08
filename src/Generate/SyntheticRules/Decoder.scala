@@ -85,9 +85,10 @@ class Decoder(val ruleInventory: RuleInventory) {
         // cur.tag = realization tag (from argToTag) (e.g. "_ARG1_'s")
         // cur.label = argument (e.g. "ARG1", etc)
         val left : Boolean = position < concept.position
+        val pos = concept.realization.headPos
+        val c = concept.realization.concept
         FeatureVector(Map(
             // TODO: add features about headPos (conjoined with distance, etc)
-            "r-1="+prev.tag -> 1.0,
             "r="+cur.tag -> 1.0,
             "r-1="+prev.tag+"+"+"r="+cur.tag -> 1.0,
             "A-1="+prev.label+"+"+"A="+cur.label -> 1.0,
@@ -96,7 +97,18 @@ class Decoder(val ruleInventory: RuleInventory) {
             "r="+cur.tag+"+s="+(if(left) {"L"} else {"R"})+"+dist" -> abs(concept.position-position),
             "A="+cur.label+"+dist" -> abs(concept.position-position),
             "A="+cur.label+"+s="+(if(left) {"L"} else {"R"}) -> 1.0,
-            "A="+cur.label+"+s="+(if(left) {"L"} else {"R"})+"+dist" -> abs(concept.position-position)
+            "A="+cur.label+"+s="+(if(left) {"L"} else {"R"})+"+dist" -> abs(concept.position-position),
+            "p="+pos+"r="+cur.tag -> 1.0,
+            "p="+pos+"r-1="+prev.tag+"+"+"r="+cur.tag -> 1.0,
+            "p="+pos+"A-1="+prev.label+"+"+"A="+cur.label -> 1.0,
+            "p="+pos+"r="+cur.tag+"+dist" -> abs(concept.position-position),
+            "p="+pos+"r="+cur.tag+"+s="+(if(left) {"L"} else {"R"}) -> 1.0,
+            "p="+pos+"r="+cur.tag+"+s="+(if(left) {"L"} else {"R"})+"+dist" -> abs(concept.position-position),
+            "p="+pos+"A="+cur.label+"+dist" -> abs(concept.position-position),
+            "p="+pos+"A="+cur.label+"+s="+(if(left) {"L"} else {"R"}) -> 1.0,
+            "p="+pos+"A="+cur.label+"+s="+(if(left) {"L"} else {"R"})+"+dist" -> abs(concept.position-position)
+            //"c="+c+"r="+cur.tag -> 1.0,
+            //"w="+concept.realization.words.replaceAllLiterally(" ","_")+"r="+cur.tag -> 1.0
             ))
     }
 

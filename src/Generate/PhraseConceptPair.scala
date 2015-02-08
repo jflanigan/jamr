@@ -29,6 +29,9 @@ case class PhraseConceptPair(words: String, graphFrag: String, fullPos: String, 
     def amrInstance : Node = {
         return Graph.parse(graphFrag).root
     }
+    def concept : String = {
+        return graphFrag.split(" ")(0).replaceAllLiterally("(","")
+    }
 }
 
 object PhraseConceptPair {
