@@ -63,7 +63,9 @@ class Decoder(val ruleInventory: RuleInventory) {
         def localScore(prev: Arg, cur: Arg, i: Int) : Double = {
             weights.dot(localFeatures(prev, cur, i, concept, input))
         }
+        //logger(0, "tagList: " + tagList.map(x => x(0)))
         val (resultTags, score) = Viterbi.decode(tagList, localScore _, Arg.START, Arg.STOP)
+        //logger(0, "resultTags: " + resultTags.toList)
         val rule = Rule(resultTags.slice(0,concept.position) ::: resultTags.drop(concept.position+1), concept, "", "")
         val feats = oracle(rule, input)
         return DecoderResult(rule, feats, weights.dot(feats))
@@ -81,7 +83,7 @@ class Decoder(val ruleInventory: RuleInventory) {
 
     def localFeatures(prev: Arg, cur: Arg, position: Int, concept: ConceptInfo, input: Input) : FeatureVector = {
         // cur.tag = realization tag (from argToTag) (e.g. "_ARG1_'s")
-        // cur.arg = argument (e.g. "ARG1", etc)
+        // cur.label = argument (e.g. "ARG1", etc)
         val left : Boolean = position < concept.position
         FeatureVector(Map(
             // TODO: add features about headPos (conjoined with distance, etc)

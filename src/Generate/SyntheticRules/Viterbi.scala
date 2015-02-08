@@ -17,7 +17,7 @@ object Viterbi {
             localScore(myTags(i-1)(state.prev), myTags(i)(state.cur), i-1)  // i-1 because we pass index into tags
         }
         val result = decode(myTags.size, score, i => myTags(i).size)
-        val resultTags : List[T] = result.tagseq.zipWithIndex.map(x => myTags(x._2)(x._1)).slice(1,result.tagseq.size-2).toList
+        val resultTags : List[T] = result.tagseq.zipWithIndex.map(x => myTags(x._2)(x._1)).slice(1,result.tagseq.size-1).toList
         return (resultTags, result.score)
     }
 
