@@ -125,7 +125,7 @@ object Rule {
                   if child.span != node.span            // that are in a different fragment
                 } yield {
                     val (start, end) = spans(child.id)
-                    Child(Label(label), child, start, end)
+                    Child(label, child, start, end)
                 } ).sortBy(x => x.end)
 
         //logger(1, "children = "+children.toString)
@@ -222,8 +222,8 @@ object Rule {
         } else {
             // Example: (X (X hit-01) (ARG0 ___) (ARG1 ___))
             assert(node.concept != "<VARIABLE>", "Error: cannot have a variable with children")
-            val list : List[String] = for (x <- children) yield {
-                "("+Label(x._1)+" "+graphToCFG(x._2)+")"
+            val list : List[String] = for (x <- children) yield {   // children is already Labelized
+                "("+x._1+" "+graphToCFG(x._2)+")"
             }
             "(X (X "+concept+") "+list.sorted.mkString(" ")+")"
         }

@@ -9,6 +9,10 @@ package object Generate {
         return label.drop(1).toUpperCase.replaceAll("-","_")
     }
     //def labelStr(label: String) = Label(label)
+    //class Label(str: String)
+    //object Label {
+    //    apply(str: String) : Label = { str.drop(1).toUpperCase.replaceAll("-","_") }
+    //}
     def escape(str: String, esc: Char = '\\') : String = {
         return str.replaceAllLiterally(esc.toString, esc.toString + esc.toString)
     }
