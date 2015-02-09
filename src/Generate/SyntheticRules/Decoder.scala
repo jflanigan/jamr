@@ -28,6 +28,8 @@ class Decoder(val ruleInventory: RuleInventory) {
     }
 
     def decode(conceptRealization: PhraseConceptPair, args: List[String], input: Input) : DecoderResult = {
+        // ***** WARNING ****
+        // Args must be in upper-case without leading ":", ie "QUANT" instead of ":quant"
         if (args.size == 0) {
             val rule = Rule(List(), ConceptInfo(conceptRealization, 0), "", "")
             val feats = oracle(rule, input)

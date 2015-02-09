@@ -8,7 +8,7 @@ package object Generate {
     def Label(label: String) : String = {
         return label.drop(1).toUpperCase.replaceAll("-","_")
     }
-    def labelStr(label: String) = Label(label)
+    //def labelStr(label: String) = Label(label)
     def escape(str: String, esc: Char = '\\') : String = {
         return str.replaceAllLiterally(esc.toString, esc.toString + esc.toString)
     }

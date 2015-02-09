@@ -43,8 +43,8 @@ case class Rule(argRealizations: List[Arg],               // Sorted list
     }
 
     def lhsToGraph : Node = {
-        val root : Node = Graph.parse(concept.realization.graphFrag).root  // TODO: this is slow
-        root.children = root.children ::: argRealizations.map(x => (x.label, Node("", None, "<VARIABLE>", List(), List(), List(), None, new ArrayBuffer())))
+        val root : Node = concept.realization.amrInstance // TODO: this is slow
+        root.children = root.children ::: argRealizations.map(x => (":"+x.label /* Add prefix ":" so Label(label) returns correct thing */, Node("", None, "<VARIABLE>", List(), List(), List(), None, new ArrayBuffer())))
         return root
     }
 
@@ -210,7 +210,7 @@ object Rule {
 
     def graphToCFG(node: Node) : String = {
         val concept = conceptStr(node)
-        val children = node.children.map(x => (labelStr(x._1), x._2)).sortBy(_._1)
+        val children = node.children.map(x => (Label(x._1), x._2)).sortBy(_._1)
         if (children.size == 0) {
             if (node.concept.startsWith("\"")) {
                 "(S "+concept+")"
@@ -223,7 +223,7 @@ object Rule {
             // Example: (X (X hit-01) (ARG0 ___) (ARG1 ___))
             assert(node.concept != "<VARIABLE>", "Error: cannot have a variable with children")
             val list : List[String] = for (x <- children) yield {
-                "("+x._1+" "+graphToCFG(x._2)+")"
+                "("+Label(x._1)+" "+graphToCFG(x._2)+")"
             }
             "(X (X "+concept+") "+list.sorted.mkString(" ")+")"
         }

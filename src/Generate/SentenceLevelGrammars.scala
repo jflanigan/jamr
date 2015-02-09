@@ -62,16 +62,16 @@ object SentenceLevelGrammars {
                 val gzFile = new GZIPOutputStream(new FileOutputStream(new File(options('output) + s"/grammar${i}.gz")))
                 writer = new BufferedWriter(new OutputStreamWriter(gzFile, "UTF-8"))
                 for (node <- graph.nodes) {
-                    val corpusRules : List[Rule] = ruleInventory.getRules(node)
+                    val corpusRules /*: List[(Rule, FeatureVector)]*/ = ruleInventory.getRules(node)
                     val syntheticRules : List[Rule] = ruleModel.syntheticRules(SyntheticRules.Input(node, graph))
                     val rules = corpusRules ::: syntheticRules  // TODO: features on the rules
                     for (rule <- corpusRules) {
-                        writer.append(rule.mkRule(withArgLabel=false)+" ||| corpus=1")
-                        writer.newLine
+                        writer.append(rule.toString+" ||| corpus=1\n")
+                        writer.append(rule.mkRule(withArgLabel=false)+" ||| corpus=1\n")
                     }
                     for (rule <- syntheticRules) {
-                        writer.append(rule.mkRule(withArgLabel=false)+" ||| synthetic=1")
-                        writer.newLine
+                        writer.append(rule.toString+" ||| synthetic=1\n")
+                        writer.append(rule.mkRule(withArgLabel=false)+" ||| synthetic=1\n")
                     }
                 }
             } finally {
