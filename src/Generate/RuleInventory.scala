@@ -86,8 +86,44 @@ class RuleInventory {
     }
 
     def getRealizations(node: Node) : List[(PhraseConceptPair, List[String])] = {   // phrase, arg labels of children not consumed
-        return phraseTable.map.getOrElse(node.concept, Map()).map(x => (x._1, node.children.map(y => y._1).diff(x._1.amrInstance.children.map(y => y._1)))).toList // TODO: should produce a possible realization if not found
+        return phraseTable.map.getOrElse(node.concept, Map()).map(x => (x._1, node.children.map(y => y._1).diff(x._1.amrInstance.children.map(y => y._1)))).toList /*::: passThroughRealizations(node)*/ // TODO: should produce a possible realization if not found
     }
+
+/*    def opRealizations(node: Node) : List[(PhraseConceptPair, List[String])] = {
+        if (node.children.exists(_._2.concept == "name")) {
+            nameNode = node.children.filter(x => x._2.concept == "name")(0)
+            otherArgs : List[String] = node.children.filter(x => x._2.id != nameNode.id).map(x => x._1)
+            val phraseConceptPair = PhraseConceptPair(
+            List((phraseConceptPair, otherArgs))
+        } else {
+            List()
+        }
+    } */
+
+    def passThroughRules(node: Node) : List[Rule] = {
+        if(node.children.size > 0) {    // check that it matches list of deleteble concepts
+                List(Rule(node.children.sortBy(_._1).map(x => Arg("", x._1, "")),
+                          ConceptInfo(PhraseConceptPair("", node.concept, "NN", "NN"), 0), "", ""))
+        } else {
+            if (node.concept.matches("\".*\"")) {
+                List(Rule(List(), ConceptInfo(PhraseConceptPair(node.concept.drop(1).init, node.concept, "NNP", "NNP"), 0), "", ""))
+            } else {
+                List(Rule(List(), ConceptInfo(PhraseConceptPair(node.concept.replaceAll("""-[0-9][0-9]$""",""), node.concept, "NN", "NN"), 0), "", ""))
+            }
+        }
+    }
+
+/*    def passThroughRealizations(node: Node) : List[(PhraseConceptPair, List[String])] = {
+        if(node.children.size > 0) {
+                List((PhraseConceptPair("", node.concept, "NN", "NN"), node.children.map(x => x._1)))
+        } else {
+            if (node.concept.matches("\".*\"")) {
+                List((PhraseConceptPair(node.concept.drop(1).init, node.concept, "NNP", "NNP"), List()))
+            } else {
+                List((PhraseConceptPair(node.concept.replaceAll("""-[0-9][0-9]$""",""), node.concept, "NN", "NN"), List()))
+            }
+        }
+    } */
 
     def getArgsLeft(pos_arg: (String, String)) : Array[Arg] = {    // Array[(left, right)]
         return argsLeft.getOrElse(pos_arg, Array(Arg.Default(pos_arg._2)))

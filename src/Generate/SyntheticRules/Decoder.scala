@@ -21,8 +21,10 @@ class Decoder(val ruleInventory: RuleInventory) {
         var bestRule : Option[Array[Arg]] = None
         var bestScore : Option[Double] = None
         for ((phrase, children) <- getRealizations(input.node)) {
-            val DecoderResult(rule, _, _) = decode(phrase, children, input)
-            rules = rule :: rules
+            if (children.exists(x => !x.startsWith(":op"))) {   // Pure op rules we ignore (handled with rule-based system)
+                val DecoderResult(rule, _, _) = decode(phrase, children, input)
+                rules = rule :: rules
+            }
         }
         return rules
     }

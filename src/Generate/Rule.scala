@@ -35,7 +35,7 @@ case class Rule(argRealizations: List[Arg],               // Sorted list
             }
         }
 
-        return (prefix+" "+printArg(left(argsWithIndices))+" "+concept.realization.words+" "+printArg(right(argsWithIndices))+" "+end).replaceAll("^ | $","")
+        return (prefix+" "+printArg(left(argsWithIndices))+" "+concept.realization.words+" "+printArg(right(argsWithIndices))+" "+end).replaceAll("^ +| +$","")
     }
 
     def lhs : String = {
@@ -213,7 +213,7 @@ object Rule {
         val children = node.children.map(x => (Label(x._1), x._2)).sortBy(_._1)
         if (children.size == 0) {
             if (node.concept.startsWith("\"")) {
-                "(S "+concept+")"
+                "(X "+concept+")"   // used to be "(S "+concept+")"
             } else if (node.concept == "<VARIABLE>") {
                 "[X]"
             } else {
