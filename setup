@@ -4,13 +4,13 @@ set -e
 ./compile
 mkdir -p tools
 cd tools
-#wget http://cs.cmu.edu/~jmflanig/IllinoisNerExtended-2.7.tar.gz
+wget http://cs.cmu.edu/~jmflanig/IllinoisNerExtended-2.7.tar.gz
 wget https://github.com/jflanigan/jamr/releases/download/JAMR_v0.2/IllinoisNerExtended-2.7.tgz
 wget http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz
-wget http://demo.clab.cs.cmu.edu/cdec/cdec-2014-06-15.tar.gz
+wget http://demo.clab.cs.cmu.edu/cdec/cdec-2014-10-12.tar.gz
 wget http://downloads.typesafe.com/scala/2.11.2/scala-2.11.2.tgz
 tar -xzf IllinoisNerExtended-2.7.tgz 
 tar -xzf WordNet-3.0.tar.gz
-tar -xzf cdec-2014-06-15.tar.gz
+tar -xzf cdec-2014-10-12.tar.gz
 tar -xzf scala-2.11.2.tgz
-ln -s cdec-2014-06-15 cdec
+ln -s cdec-2014-10-12 cdec
