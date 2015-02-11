@@ -20,6 +20,7 @@ object SentenceLevelGrammars {
         list match {
             case Nil => map
             case "--weights" :: value :: l =>            parseOptions(map + ('weights -> value), l)
+            case "--dev" :: l =>                         parseOptions(map + ('dev -> "true"), l)
             case "--rule-inventory" :: value :: l =>     parseOptions(map + ('ruleInventory -> value), l)
             case "--output" :: value :: l =>             parseOptions(map + ('output -> value), l)
             case "--dependencies" :: value :: tail =>    parseOptions(map + ('dependencies -> value), tail)
@@ -81,7 +82,8 @@ object SentenceLevelGrammars {
                     writer.close
                 }
             }
-            System.out.println("<seg grammar=\"" + options('output) + "/grammar" + i.toString + ".gz\"> " + Rule.graphToCFG(graph.root) + " </seg>")
+            //System.out.println("<seg grammar=\"" + options('output) + "/grammar" + i.toString + ".gz\"> " + Rule.graphToCFG(graph.root) + " </seg>")
+            System.out.println("<seg id=\"" + i.toString + "\" grammar=\"" + options('output) + "/grammar" + i.toString + ".gz\"> " + Rule.graphToCFG(graph.root) + " ||| " + data.sentence.mkString(" ") + " </seg>")
             i += 1
         }
     }

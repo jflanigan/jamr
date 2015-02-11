@@ -31,7 +31,7 @@ case class Rule(argRealizations: List[Arg],               // Sorted list
                 list.map(x => x._1.toString).mkString(" ")
             } else {
                 // output is "left [1] right"
-                list.map(x => x._1.ruleStr(x._2)).mkString(" ")
+                list.map(x => x._1.ruleStr(x._2+1)).mkString(" ")   // +1 because we start counting at 1, not 0 (this is cdec's format)
             }
         }
 
@@ -44,7 +44,7 @@ case class Rule(argRealizations: List[Arg],               // Sorted list
 
     def lhsToGraph : Node = {
         val root : Node = concept.realization.amrInstance // TODO: this is slow
-        root.children = root.children ::: argRealizations.map(x => (":"+x.label /* Add prefix ":" so Label(label) returns correct thing */, Node("", None, "<VARIABLE>", List(), List(), List(), None, new ArrayBuffer())))
+        root.children = root.children ::: argRealizations.map(x => (x.label, Node("", None, "<VARIABLE>", List(), List(), List(), None, new ArrayBuffer())))
         return root
     }
 

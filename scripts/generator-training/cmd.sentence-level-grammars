@@ -6,7 +6,7 @@ OUTPUT="${MODEL_DIR}/dev-grammars"
 mkdir -p "${OUTPUT}"
 
 "${JAMR_HOME}/run" Generate.SentenceLevelGrammars \
-    --weights "${MODEL_DIR}/rule-model.iter1" \
+    --weights "${MODEL_DIR}/rule-model" \
     --rule-inventory "${MODEL_DIR}/extract-rules" \
     --dependencies "${INPUT}.snt.deps" \
     --ner "${INPUT}.snt.IllinoisNER" \
