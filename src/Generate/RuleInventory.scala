@@ -101,14 +101,29 @@ class RuleInventory {
     } */
 
     def passThroughRules(node: Node) : List[Rule] = {
-        if(node.children.size > 0) {    // check that it matches list of deleteble concepts
+        if(node.children.size > 0) {
+            if (Set("name", "date-entity").contains(node.concept) || node.children.exists(_._1 == ":name")) {
+                // matches list of deleteble concepts
                 List(Rule(node.children.sortBy(_._1).map(x => Arg("", x._1, "")),
                           ConceptInfo(PhraseConceptPair("", node.concept, "NN", "NN"), 0), "", ""))
+            } else if (getRealizations(node).size == 0) {
+                // concept has no realization
+                List(Rule(node.children.sortBy(_._1).map(x => Arg("", x._1, "")),
+                          ConceptInfo(PhraseConceptPair(node.concept.replaceAll("""-[0-9][0-9]$""",""), node.concept, "NN", "NN"), 0), "", ""))
+            } else {
+                // it has a realization, so we won't provide one
+                List()
+            }
         } else {
             if (node.concept.matches("\".*\"")) {
+                // Pass through for string literals
                 List(Rule(List(), ConceptInfo(PhraseConceptPair(node.concept.drop(1).init, node.concept, "NNP", "NNP"), 0), "", ""))
-            } else {
+            } else if (getRealizations(node).size == 0) {
+                // concept has no realization
                 List(Rule(List(), ConceptInfo(PhraseConceptPair(node.concept.replaceAll("""-[0-9][0-9]$""",""), node.concept, "NN", "NN"), 0), "", ""))
+            } else {
+                // it has a realization, so we won't provide one
+                List()
             }
         }
     }
