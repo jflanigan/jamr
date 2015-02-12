@@ -48,6 +48,7 @@ object SentenceLevelGrammars {
         ruleInventory.load(options('ruleInventory))
 
         val ruleModel = new SyntheticRules.Decoder(ruleInventory)
+        ruleModel.weights.read(Source.fromFile(options('weights)).getLines)
 
         var i = 0
         for (block <- Corpus.getAMRBlocks(Source.stdin.getLines)) {

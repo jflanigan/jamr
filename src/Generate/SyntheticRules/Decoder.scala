@@ -9,7 +9,7 @@ import scala.collection.mutable.{Map, Set, ArrayBuffer}
 case class DecoderResult(rule: Rule, features: FeatureVector, score: Double)
 
 class Decoder(val ruleInventory: RuleInventory) {
-    var weights = new FeatureVector()
+    var weights = new FeatureVector()   // TODO: get rid of this! (add to constructor)
 
     val getRealizations = ruleInventory.getRealizations _
     val getArgsLeft = ruleInventory.getArgsLeft _
@@ -110,7 +110,7 @@ class Decoder(val ruleInventory: RuleInventory) {
             "P="+pos+"+A="+cur.label+"+s="+(if(left) {"L"} else {"R"}) -> 1.0,
             "P="+pos+"+A="+cur.label+"+s="+(if(left) {"L"} else {"R"})+"+dist" -> abs(concept.position-position),
             //"c="+c+"r="+cur.tag -> 1.0,
-            "W="+concept.realization.words.replaceAllLiterally(" ","_")+"R="+cur.tag -> 1.0
+            "W="+concept.realization.words.replaceAllLiterally(" ","_")+"+R="+cur.tag -> 1.0
             ))
     }
 
