@@ -145,8 +145,8 @@ object Rule {
         logger(1, "noOverlap = " + noOverlap.toString)
         logger(1, "children: "+children.map(x => (x.label, x.node.concept, x.start, x.end)))
 
-        if (children.size > 0
-            && !(0 until children.size-1).exists(i => children(i).end > children(i+1).start || children(i).end < ruleStart || children(i).end > ruleEnd || (children(i).start <= span.start && children(i).end >= span.end)) // if child spans overlap then no rule can be extracted (these last checks shouldn't ever be violated, but are there for the future)
+        if (/*children.size > 0
+            && */ !(0 until children.size-1).exists(i => children(i).end > children(i+1).start || children(i).end < ruleStart || children(i).end > ruleEnd || (children(i).start <= span.start && children(i).end >= span.end)) // if child spans overlap then no rule can be extracted (these last checks shouldn't ever be violated, but are there for the future)
             && span.start < span.end
             && noOverlap) { 
             var outsideLower = ruleStart

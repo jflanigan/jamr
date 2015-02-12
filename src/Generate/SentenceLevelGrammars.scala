@@ -74,6 +74,7 @@ object SentenceLevelGrammars {
                         writer.append(rule.mkRule(withArgLabel=false)+" ||| passthrough=1\n")
                     }
                     for (rule <- syntheticRules) {
+                        //writer.append(rule.toString+" ||| synthetic=1\n")
                         writer.append(rule.mkRule(withArgLabel=false)+" ||| synthetic=1\n")
                     }
                 }

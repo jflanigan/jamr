@@ -100,7 +100,7 @@ class RuleInventory {
         }
     } */
 
-    def passThroughRules(node: Node) : List[Rule] = {
+    def passThroughRules(node: Node) : List[Rule] = {   // TODO: change to passThroughRealizations (and add features for syntheticRules)
         if(node.children.size > 0) {
             if (Set("name", "date-entity").contains(node.concept) || node.children.exists(_._1 == ":name")) {
                 // matches list of deleteble concepts
@@ -111,7 +111,7 @@ class RuleInventory {
                 List(Rule(node.children.sortBy(_._1).map(x => Arg("", x._1, "")),
                           ConceptInfo(PhraseConceptPair(node.concept.replaceAll("""-[0-9][0-9]$""",""), node.concept, "NN", "NN"), 0), "", ""))
             } else {
-                // it has a realization, so we won't provide one
+                // it has a realization, so we won't provide one (since the synthetic rule model will provide one)
                 List()
             }
         } else {
@@ -122,7 +122,7 @@ class RuleInventory {
                 // concept has no realization
                 List(Rule(List(), ConceptInfo(PhraseConceptPair(node.concept.replaceAll("""-[0-9][0-9]$""",""), node.concept, "NN", "NN"), 0), "", ""))
             } else {
-                // it has a realization, so we won't provide one
+                // it has a realization, so we won't provide one (since the synthetic rule model will provide one)
                 List()
             }
         }
