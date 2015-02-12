@@ -21,7 +21,7 @@ class Decoder(val ruleInventory: RuleInventory) {
         var bestRule : Option[Array[Arg]] = None
         var bestScore : Option[Double] = None
         for ((phrase, children) <- getRealizations(input.node)) {
-            if (children.exists(x => !x.startsWith(":op"))) {   // Pure op rules we ignore (handled with rule-based system)
+            if (children.exists(x => !x.startsWith(":op")) || children.size == 0) {   // Pure op rules we ignore (handled with rule-based system)
                 val DecoderResult(rule, _, _) = decode(phrase, children, input)
                 rules = rule :: rules
             }
@@ -30,8 +30,6 @@ class Decoder(val ruleInventory: RuleInventory) {
     }
 
     def decode(conceptRealization: PhraseConceptPair, args: List[String], input: Input) : DecoderResult = {
-        // ***** WARNING ****
-        // Args must be in upper-case without leading ":", ie "QUANT" instead of ":quant"
         if (args.size == 0) {
             val rule = Rule(List(), ConceptInfo(conceptRealization, 0), "", "")
             val feats = oracle(rule, input)
@@ -92,25 +90,25 @@ class Decoder(val ruleInventory: RuleInventory) {
         val pos = concept.realization.headPos
         val c = input.node.concept
         FeatureVector(Map(
-            // TODO: add features about headPos (conjoined with distance, etc)
+            // TODO: features of where the concept is, lexical unigrams
             "r="+cur.tag -> 1.0,
-            "r-1="+prev.tag+"+"+"r="+cur.tag -> 1.0,
-            "A-1="+prev.label+"+"+"A="+cur.label -> 1.0,
+            "r-1="+prev.tag+"+r="+cur.tag -> 1.0,
+            "A-1="+prev.label+"+A="+cur.label -> 1.0,
             "r="+cur.tag+"+dist" -> abs(concept.position-position),
             "r="+cur.tag+"+s="+(if(left) {"L"} else {"R"}) -> 1.0,
             "r="+cur.tag+"+s="+(if(left) {"L"} else {"R"})+"+dist" -> abs(concept.position-position),
             "A="+cur.label+"+dist" -> abs(concept.position-position),
             "A="+cur.label+"+s="+(if(left) {"L"} else {"R"}) -> 1.0,
             "A="+cur.label+"+s="+(if(left) {"L"} else {"R"})+"+dist" -> abs(concept.position-position),
-            "p="+pos+"r="+cur.tag -> 1.0,
-            "p="+pos+"r-1="+prev.tag+"+"+"r="+cur.tag -> 1.0,
-            "p="+pos+"A-1="+prev.label+"+"+"A="+cur.label -> 1.0,
-            "p="+pos+"r="+cur.tag+"+dist" -> abs(concept.position-position),
-            "p="+pos+"r="+cur.tag+"+s="+(if(left) {"L"} else {"R"}) -> 1.0,
-            "p="+pos+"r="+cur.tag+"+s="+(if(left) {"L"} else {"R"})+"+dist" -> abs(concept.position-position),
-            "p="+pos+"A="+cur.label+"+dist" -> abs(concept.position-position),
-            "p="+pos+"A="+cur.label+"+s="+(if(left) {"L"} else {"R"}) -> 1.0,
-            "p="+pos+"A="+cur.label+"+s="+(if(left) {"L"} else {"R"})+"+dist" -> abs(concept.position-position)
+            "p="+pos+"+r="+cur.tag -> 1.0,
+            "p="+pos+"+r-1="+prev.tag+"+"+"r="+cur.tag -> 1.0,
+            "p="+pos+"+A-1="+prev.label+"+"+"A="+cur.label -> 1.0,
+            "p="+pos+"+r="+cur.tag+"+dist" -> abs(concept.position-position),
+            "p="+pos+"+r="+cur.tag+"+s="+(if(left) {"L"} else {"R"}) -> 1.0,
+            "p="+pos+"+r="+cur.tag+"+s="+(if(left) {"L"} else {"R"})+"+dist" -> abs(concept.position-position),
+            "p="+pos+"+A="+cur.label+"+dist" -> abs(concept.position-position),
+            "p="+pos+"+A="+cur.label+"+s="+(if(left) {"L"} else {"R"}) -> 1.0,
+            "p="+pos+"+A="+cur.label+"+s="+(if(left) {"L"} else {"R"})+"+dist" -> abs(concept.position-position)
             //"c="+c+"r="+cur.tag -> 1.0,
             //"w="+concept.realization.words.replaceAllLiterally(" ","_")+"r="+cur.tag -> 1.0
             ))
