@@ -89,6 +89,9 @@ class Decoder(val ruleInventory: RuleInventory) {
         val left : Boolean = position < concept.position
         val pos = concept.realization.headPos
         val c = input.node.concept
+        val words = concept.realization.words.replaceAllLiterally(" ","_")
+        val side = if(left) {"L"} else {"R"}
+        val distance = abs(concept.position-position)
         FeatureVector(Map(
             // TODO: features of where the concept is, lexical unigrams
             //"R="+cur.tag -> 1.0,
@@ -109,8 +112,12 @@ class Decoder(val ruleInventory: RuleInventory) {
             "P="+pos+"+A="+cur.label+"+dist" -> abs(concept.position-position),
             "P="+pos+"+A="+cur.label+"+s="+(if(left) {"L"} else {"R"}) -> 1.0,
             "P="+pos+"+A="+cur.label+"+s="+(if(left) {"L"} else {"R"})+"+dist" -> abs(concept.position-position),
+            "W="+words+"+A="+cur.label+"+dist" -> abs(concept.position-position),
+            "W="+words+"+A="+cur.label+"+s="+(if(left) {"L"} else {"R"}) -> 1.0,
+            "W="+words+"+A="+cur.label+"+s="+(if(left) {"L"} else {"R"})+"+dist" -> abs(concept.position-position),
             //"c="+c+"r="+cur.tag -> 1.0,
-            "W="+concept.realization.words.replaceAllLiterally(" ","_")+"+R="+cur.tag -> 1.0
+            //"W="+words+"+R="+cur.tag -> 1.0
+            "W="+words+"+R="+cur.tag+"+s="+side -> 1.0
             ))
     }
 

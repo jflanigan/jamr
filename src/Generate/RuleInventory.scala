@@ -166,10 +166,10 @@ class RuleInventory {
     private def createArgs() {
         // Populates argsLeft and argsRight
         // Must call createArgTables before calling this function
-        for (((pos, arg), countMap) <- argTableLeft.map) {  // TODO: apply a filter on low count args?
+        for (((pos, arg), countMap) <- argTableLeft.map) {
             argsLeft((pos, arg)) = countMap.map(x => x._1).toArray
         }
-        for (((pos, arg), countMap) <- argTableRight.map) { // TODO: apply a filter on low count args?
+        for (((pos, arg), countMap) <- argTableRight.map) {
             argsRight((pos, arg)) = countMap.map(x => x._1).toArray
         }
     }
@@ -179,7 +179,7 @@ class RuleInventory {
     }
 
     private def ruleOk(rule : Rule, count: Int) : Boolean = {
-        return ruleOk(rule) && count > 1
+        return ruleOk(rule) && count > 0    // could apply filter on low count args
     }
 
     private def extractPhraseConceptPairs(graph: Graph, sentence: Array[String], pos: Array[String]) {

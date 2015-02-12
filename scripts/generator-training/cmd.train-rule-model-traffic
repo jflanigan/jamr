@@ -14,6 +14,8 @@ mkdir -p "${MODEL_DIR}"
     --snt "${INPUT}.snt" \
     -v 0 \
     ${GENERATOR_TRAINING_OPTIONS} \
+    --training-passes 100 \
+    --training-save-interval 25 \
     > "${OUTPUT}" \
     2> "${OUTPUT}.err"
 
