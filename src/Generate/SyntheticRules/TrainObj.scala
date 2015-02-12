@@ -18,8 +18,8 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
     val inputAMR: Array[amr.Input] = amr.Input.loadInputfiles(options)                     // TODO: we only need POS tags
     val pos: Array[Annotation[Array[String]]] = inputAMR.map(x => x.pos)
     val ruleInventory: RuleInventory = new RuleInventory()
-    if (options.contains('rules)) {
-        ruleInventory.load(options('rules))
+    if (options.contains('ruleInventory)) {
+        ruleInventory.load(options('ruleInventory))
     } else if (options.contains('trainingData)) {
         ruleInventory.extractFromCorpus(fromFile(options('trainingData)).getLines, pos)
     } else {

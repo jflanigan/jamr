@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+INPUT="${MODEL_DIR}/train.traffic"
+OUTPUT="${MODEL_DIR}/extract-rules-traffic"
+mkdir -p "${MODEL_DIR}"
+
+"${JAMR_HOME}/run" Generate.ExtractRules \
+    --training-output "${OUTPUT}" \
+    --training-dev "${DEV_FILE}" \
+    --dependencies "${INPUT}.snt.deps" \
+    --ner "${INPUT}.snt.IllinoisNER" \
+    --tok "${INPUT}.snt.tok" \
+    --snt "${INPUT}.snt" \
+    --output "${OUTPUT}" \
+    -v 0 \
+    < "${INPUT}.aligned" \
+    > "${OUTPUT}" \
+    2> "${OUTPUT}.err"
+
+#    ${PARSER_OPTIONS} \

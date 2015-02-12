@@ -91,26 +91,26 @@ class Decoder(val ruleInventory: RuleInventory) {
         val c = input.node.concept
         FeatureVector(Map(
             // TODO: features of where the concept is, lexical unigrams
-            "r="+cur.tag -> 1.0,
-            "r-1="+prev.tag+"+r="+cur.tag -> 1.0,
-            "A-1="+prev.label+"+A="+cur.label -> 1.0,
-            "r="+cur.tag+"+dist" -> abs(concept.position-position),
-            "r="+cur.tag+"+s="+(if(left) {"L"} else {"R"}) -> 1.0,
-            "r="+cur.tag+"+s="+(if(left) {"L"} else {"R"})+"+dist" -> abs(concept.position-position),
-            "A="+cur.label+"+dist" -> abs(concept.position-position),
-            "A="+cur.label+"+s="+(if(left) {"L"} else {"R"}) -> 1.0,
-            "A="+cur.label+"+s="+(if(left) {"L"} else {"R"})+"+dist" -> abs(concept.position-position),
-            "p="+pos+"+r="+cur.tag -> 1.0,
-            "p="+pos+"+r-1="+prev.tag+"+"+"r="+cur.tag -> 1.0,
-            "p="+pos+"+A-1="+prev.label+"+"+"A="+cur.label -> 1.0,
-            "p="+pos+"+r="+cur.tag+"+dist" -> abs(concept.position-position),
-            "p="+pos+"+r="+cur.tag+"+s="+(if(left) {"L"} else {"R"}) -> 1.0,
-            "p="+pos+"+r="+cur.tag+"+s="+(if(left) {"L"} else {"R"})+"+dist" -> abs(concept.position-position),
-            "p="+pos+"+A="+cur.label+"+dist" -> abs(concept.position-position),
-            "p="+pos+"+A="+cur.label+"+s="+(if(left) {"L"} else {"R"}) -> 1.0,
-            "p="+pos+"+A="+cur.label+"+s="+(if(left) {"L"} else {"R"})+"+dist" -> abs(concept.position-position)
+            //"R="+cur.tag -> 1.0,
+            //"R-1="+prev.tag+"+R="+cur.tag -> 1.0,
+            //"A-1="+prev.label+"+A="+cur.label -> 1.0,
+            //"R="+cur.tag+"+dist" -> abs(concept.position-position),
+            //"R="+cur.tag+"+s="+(if(left) {"L"} else {"R"}) -> 1.0,
+            //"R="+cur.tag+"+s="+(if(left) {"L"} else {"R"})+"+dist" -> abs(concept.position-position),
+            //"A="+cur.label+"+dist" -> abs(concept.position-position),
+            //"A="+cur.label+"+s="+(if(left) {"L"} else {"R"}) -> 1.0,
+            //"A="+cur.label+"+s="+(if(left) {"L"} else {"R"})+"+dist" -> abs(concept.position-position),
+            //"P="+pos+"+R="+cur.tag -> 1.0,
+            //"P="+pos+"+R-1="+prev.tag+"+"+"r="+cur.tag -> 1.0,
+            //"P="+pos+"+A-1="+prev.label+"+"+"A="+cur.label -> 1.0,
+            //"P="+pos+"+R="+cur.tag+"+dist" -> abs(concept.position-position),
+            //"P="+pos+"+R="+cur.tag+"+s="+(if(left) {"L"} else {"R"}) -> 1.0,
+            //"P="+pos+"+R="+cur.tag+"+s="+(if(left) {"L"} else {"R"})+"+dist" -> abs(concept.position-position),
+            "P="+pos+"+A="+cur.label+"+dist" -> abs(concept.position-position),
+            "P="+pos+"+A="+cur.label+"+s="+(if(left) {"L"} else {"R"}) -> 1.0,
+            "P="+pos+"+A="+cur.label+"+s="+(if(left) {"L"} else {"R"})+"+dist" -> abs(concept.position-position),
             //"c="+c+"r="+cur.tag -> 1.0,
-            //"w="+concept.realization.words.replaceAllLiterally(" ","_")+"r="+cur.tag -> 1.0
+            "W="+concept.realization.words.replaceAllLiterally(" ","_")+"R="+cur.tag -> 1.0
             ))
     }
 
