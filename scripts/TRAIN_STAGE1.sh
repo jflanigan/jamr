@@ -8,9 +8,9 @@ if [ -z "$JAMR_HOME" ]; then
     exit 1
 fi
 
-pushd "$JAMR_HOME/scripts/preprocessing"
-./PREPROCESS.sh
-popd
+#pushd "$JAMR_HOME/scripts/preprocessing"
+#./PREPROCESS.sh
+#popd
 
 # Train
 pushd "$JAMR_HOME/scripts/training"
@@ -21,8 +21,7 @@ echo "Training stage 1"
 # Evaluate on test set
 echo ""
 ./cmd.test.decode.stage1only
-"${JAMR_HOME}/scripts/smatch_v1_0/smatch_modified.py" --pr -f "${MODEL_DIR}/test.decode.stage1only" "${TEST_FILE}" 2>&1 | tee -a "${MODEL_DIR}/RESULTS.txt"
-echo "  ----- Evaluation on Test: Spans -----" | tee -a "${MODEL_DIR}/RESULTS.txt"
+echo "  ----- Evaluation on Test: Spans -----" | tee "${MODEL_DIR}/RESULTS.txt"
 tail -n 3 "${MODEL_DIR}/test.decode.stage1only.err" | tee -a "${MODEL_DIR}/RESULTS.txt"
 echo ""
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 INPUT="${TEST_FILE}"
-OUTPUT="${MODEL_DIR}/test.decode.stage1-only"
+OUTPUT="${MODEL_DIR}/test.decode.stage1only"
 
 STAGE1_WEIGHTS="${MODEL_DIR}/stage1-weights"
 STAGE2_WEIGHTS="${MODEL_DIR}/stage2-weights.iter5"
