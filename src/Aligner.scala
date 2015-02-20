@@ -43,9 +43,9 @@ object Aligner {
             verbosity = options('verbosity).asInstanceOf[Int]
         }
 
-        var aligner2 = true
+        var aligner3 = true
         if (options.contains('aligner1)) {
-            aligner2 = false
+            aligner3 = false
         }
 
         val sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
@@ -61,7 +61,7 @@ object Aligner {
                 val extras = AMRTrainingData.getUlfString(extrastr)
                 val tokenized = extras("::tok").split(" ")
                 val wordAlignments = AlignWords.alignWords(tokenized, amr)
-                val spanAlignments = if (aligner2) {
+                val spanAlignments = if (aligner3) {
                         AlignSpans3.align(tokenized, amr)
                     } else {
                         AlignSpans.alignSpans(tokenized, amr, wordAlignments)
@@ -73,7 +73,11 @@ object Aligner {
                     logger(1, "Span "+(i+1).toString+":  "+span.words+" => "+span.amr)
                     logger(3, "* "+span.format)
                 }
-                println("# ::alignments "+spans.map(_.format).mkString(" ")+" ::annotator Aligner v.02 ::date "+sdf.format(new Date))
+                if (aligner3) {
+                    println("# ::alignments "+spans.map(_.format).mkString(" ")+" ::annotator Aligner v.03 ::date "+sdf.format(new Date))
+                } else {
+                    println("# ::alignments "+spans.map(_.format).mkString(" ")+" ::annotator Aligner v.01 ::date "+sdf.format(new Date))
+                }
                 println(amr.printNodes.map(x => "# ::node\t" + x).mkString("\n"))
                 println(amr.printRoot)
                 if (amr.root.relations.size > 0) {
