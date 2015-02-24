@@ -13,12 +13,14 @@ class SSGD extends Optimizer[FeatureVector] {
     def learnParameters(gradient: (Option[Int], Int, FeatureVector) => (FeatureVector, Double),
                         initialWeights: FeatureVector,
                         trainingSize: Int,
-                        passes: Int,
-                        stepsize: Double,
-                        l2reg: Double,
                         noreg: List[String],
                         trainingObserver: (Int, FeatureVector) => Boolean,
-                        avg: Boolean) : FeatureVector = {
+                        options: Map[Symbol, String]) : FeatureVector = {
+        val passes = options('trainingPasses).toInt
+        val stepsize = options('trainingStepsize).toDouble
+        val l2reg = options('trainingL2RegularizerStrength).toDouble
+        val avg = options.contains('trainingAvgWeights)
+
         val weights = FeatureVector(initialWeights.labelset)
         weights += initialWeights
         var avg_weights = FeatureVector(weights.labelset)

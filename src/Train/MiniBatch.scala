@@ -23,12 +23,11 @@ class MiniBatch[FeatureVector <: AbstractFeatureVector](optimizer: Optimizer[Fea
     def learnParameters(gradient: (Option[Int], Int, FeatureVector) => (FeatureVector, Double),
                         initialWeights: FeatureVector,
                         trainingSize: Int,
-                        passes: Int,
-                        stepsize: Double,
-                        l2reg: Double,
                         noreg: List[String],
                         trainingObserver: (Int, FeatureVector) => Boolean,
-                        avg: Boolean) : FeatureVector = {
+                        options: Map[Symbol, String]) : FeatureVector = {
+        val passes = options('trainingPasses).toInt
+
         val numMiniBatches = ceil(trainingSize.toDouble / miniBatchSize.toDouble).toInt
         val trainShuffle : Array[Array[Int]] = Range(0, passes).map(x => Random.shuffle(Range(0, trainingSize).toList).toArray).toArray
         val miniGradient : (Option[Int], Int, FeatureVector) => (FeatureVector, Double) = (pass, i, weights) => {
@@ -41,15 +40,19 @@ class MiniBatch[FeatureVector <: AbstractFeatureVector](optimizer: Optimizer[Fea
                 par.map(x => gradient(None, x, weights)).reduce((a, b) => ({ a._1 += b._1; a._1 }, a._2 + b._2))    // Don't randomize if pass = None
             }
         }
+
+        val stepsize = options('trainingStepsize).toDouble
+        val l2reg = options('trainingL2RegularizerStrength).toDouble
+
+        val newOptions = options.clone
+        newOptions('trainingStepsize) = (stepsize / miniBatchSize.toDouble).toString
+        newOptions('trainingL2RegularizerStrength) = (l2reg * miniBatchSize).toString
         return optimizer.learnParameters(miniGradient,
                                          initialWeights,
                                          numMiniBatches,
-                                         passes,
-                                         stepsize / miniBatchSize.toDouble,
-                                         l2reg * miniBatchSize,
                                          noreg,
                                          trainingObserver,
-                                         avg)
+                                         newOptions)
     }
 }
 

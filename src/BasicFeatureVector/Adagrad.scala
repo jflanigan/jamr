@@ -23,12 +23,14 @@ class Adagrad extends Optimizer[FeatureVector] {
     def learnParameters(gradient: (Option[Int], Int, FeatureVector) => (FeatureVector, Double),
                         weights: FeatureVector,
                         trainingSize: Int,
-                        passes: Int,
-                        stepsize: Double,
-                        l2reg: Double,
                         noreg: List[String],    // TODO: implement
                         trainingObserver: (Int, FeatureVector) => Boolean,
-                        avg: Boolean) : FeatureVector = {
+                        options: Map[Symbol, String]) : FeatureVector = {
+        val passes = options('trainingPasses).toInt
+        val stepsize = options('trainingStepsize).toDouble
+        val l2reg = options('trainingL2RegularizerStrength).toDouble
+        val avg = options.contains('trainingAvgWeights)
+
         var avg_weights = FeatureVector()
         var sumSq = FeatureVector()         // G_{i,i}
         var pass = 0

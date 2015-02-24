@@ -28,11 +28,14 @@ abstract class TrainObj[FeatureVector <: AbstractFeatureVector](options: Map[Sym
     def zeroVector : FeatureVector
     def trainingSize : Int
 
+    ////////////////// Default Options ////////////////
+
+    options('trainingPasses) = options.getOrElse('trainingPasses, "20")
+    options('trainingStepsize) = options.getOrElse('trainingStepsize, "1.0")
+    options('trainingL2RegularizerStrength) = options.getOrElse('trainingL2RegularizerStrength, "0.0")
+
     ////////////////// Training Setup ////////////////
 
-    val passes = options.getOrElse('trainingPasses, "20").toInt
-    val stepsize = options.getOrElse('trainingStepsize, "1.0").toDouble
-    val l2RegularizerStrength = options.getOrElse('trainingL2RegularizerStrength, "0.0").toDouble
     val loss = options.getOrElse('trainingLoss, "Perceptron")
     if (options.contains('trainingSaveInterval) && !options.contains('trainingOutputFile)) {
         System.err.println("Error: trainingSaveInterval specified but output weights filename given"); sys.exit(1)
@@ -125,12 +128,9 @@ abstract class TrainObj[FeatureVector <: AbstractFeatureVector](options: Map[Sym
             (i,w) => gradient(i,w),
             initialWeights,
             trainingSize,
-            passes,
-            stepsize,
-            options.getOrElse('trainingL2RegularizerStrength, "0.0").toDouble,
             List("Bias"),   // don't regularize the bias terms
             trainingObserver,
-            avg = options.contains('trainingAvgWeights))
+            options)
 
         System.err.print("Writing out weights... ")
         if (options.contains('trainingWeightsFile)) {
