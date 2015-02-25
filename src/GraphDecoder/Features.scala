@@ -13,9 +13,9 @@ class Features(private var myFeatureNames: List[String], labelSet: Array[String]
     private var inputSave: Input = _
     private var graph: Graph = _
     private var sentence: Array[String] = _
-    private var dependencies: Annotation[Array[Dependency]] = _
-    private var fullPos: Annotation[Array[String]] = _
-    //private var pos: Annotation[Array[String]] = _
+    private var dependencies: Annotation[Dependency] = _
+    private var fullPos: Annotation[String] = _
+    //private var pos: Annotation[String] = _
     private var node1 : Node = _
     private var node2 : Node = _
     private var feats : List[(String, Value, immutable.Map[Int, Double])] = _
@@ -419,7 +419,7 @@ class Features(private var myFeatureNames: List[String], labelSet: Array[String]
         return (rootDependencyPaths(word1).drop(prefix-1).reverse, rootDependencyPaths(word2).drop(prefix-1))
     }
 
-    def dependencyPathString(path: (List[Int], List[Int]), pos: Annotation[Array[String]]) : List[String] = {
+    def dependencyPathString(path: (List[Int], List[Int]), pos: Annotation[String]) : List[String] = {
         // Assumes that the POS tags use the same tokenization as the dependencies
         //logger(2, "path="+path.toString)
         var pathList : List[String] = List()
