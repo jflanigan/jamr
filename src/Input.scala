@@ -6,10 +6,10 @@ import scala.io.Source.fromFile
 
 case class Input(var graph: Option[Graph],  // var so we can update for the input to stage 2. TODO: maybe should remove?
                  sentence: Array[String],
-                 notTokenized: Annotation[Array[String]],
-                 dependencies: Annotation[Array[Dependency]],
-                 pos: Annotation[Array[String]],
-                 ner: Annotation[Array[Entity]],
+                 notTokenized: Annotation[String],
+                 dependencies: Annotation[Dependency],
+                 pos: Annotation[String],
+                 ner: Annotation[Entity],
                  trainingIndex: Option[Int]) {
 
     // TODO: clean up these constructors
