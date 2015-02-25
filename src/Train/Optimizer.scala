@@ -36,17 +36,12 @@ abstract class Optimizer[FeatureVector <: AbstractFeatureVector] {
         return learnParameters(myGrad, initialWeights, trainingSize, noreg, trainingObserver, options)
     }
 
-    def learnParameters(gradient: (Option[Int], Int, FeatureVector) => (FeatureVector, Double),              // Input: (pass, i, weights) Output: (gradient, objective value)
+    def learnParameters(gradient: (Option[Int], Int, FeatureVector) => (FeatureVector, Double),  // Input: (pass, i, weights) Output: (gradient, objective value)
                         initialWeights: FeatureVector,
                         trainingSize: Int,
-                        //passes: Int,
-                        //stepsize: Double,
-                        //l2reg: Double,
                         noreg: List[String],    // features not regularized
                         trainingObserver: (Int, FeatureVector) => Boolean,  // Input: pass, weights  Output: true stops training loop
-                        options: Map[Symbol, String]
-                        //warmStartFile: String,
-                        /*avg: Boolean*/) : FeatureVector
+                        options: Map[Symbol, String]) : FeatureVector
 
 }
 

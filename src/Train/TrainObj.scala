@@ -33,6 +33,7 @@ abstract class TrainObj[FeatureVector <: AbstractFeatureVector](options: Map[Sym
     options('trainingPasses) = options.getOrElse('trainingPasses, "20")
     options('trainingStepsize) = options.getOrElse('trainingStepsize, "1.0")
     options('trainingL2RegularizerStrength) = options.getOrElse('trainingL2RegularizerStrength, "0.0")
+    options('trainingWarmStartSaveInterval) = options.getOrElse('trainingWarmStartSaveInterval, "200")
 
     ////////////////// Training Setup ////////////////
 

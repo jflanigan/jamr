@@ -9,13 +9,17 @@ import java.lang.Math.random
 import java.lang.Math.floor
 import java.lang.Math.min
 import java.lang.Math.max
-import scala.io.Source
+import scala.io.Source.fromFile
 import scala.util.matching.Regex
 import scala.collection.mutable.Map
 import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
 import scala.math.sqrt
+
+import java.nio.file.{Paths, Files}  // see http://stackoverflow.com/questions/21177107/how-to-check-if-path-or-file-exist-in-scala
+import resource.managed
+import scala.pickling.Defaults._, scala.pickling.json._
 
 class Adagrad extends Optimizer[FeatureVector] {
     def learnParameters(gradient: (Option[Int], Int, FeatureVector) => (FeatureVector, Double),
@@ -28,17 +32,35 @@ class Adagrad extends Optimizer[FeatureVector] {
         val stepsize = options('trainingStepsize).toDouble
         val l2strength = options('trainingL2RegularizerStrength).toDouble
         val avg = options.contains('trainingAvgWeights)
+        val warmStartInterval = options('trainingWarmStartSaveInterval).toInt
+        val warmStartFilename : Option[String] = options.get('trainingWarmStartSaveFile)
 
         val weights = FeatureVector(initialWeights.labelset)
         weights += initialWeights
         var avg_weights = FeatureVector(weights.labelset)
         var sumSq = FeatureVector(weights.labelset)         // G_{i,i}
         var pass = 0
+
+        ////////////// Reload for warm start ////////////
+        case class WarmStart(pass: Int, t: Int, trainSequence: List[Int], weights: String, avg_weights: String)
+        var warmStart : Option[WarmStart] = None
+        if (warmStartFilename != None && Files.exists(Paths.get(warmStartFilename.get))) {
+            val lines : String = fromFile(warmStartFilename.get).getLines().mkString("\n")
+            warmStart = Some(lines.unpickle[WarmStart]) // see http://stackoverflow.com/questions/23072118/scala-pickling-how
+            weights.read(warmStart.get.weights.split("\n").iterator)
+            avg_weights.read(warmStart.get.avg_weights.split("\n").iterator)
+        }
+
         while (pass < passes && (pass == 0 || trainingObserver(pass,avg_weights))) {
             logger(-1,"Pass "+(pass+1).toString)
             var objective = 0.0 // objective is 1/N \sum_i=1^N Loss(i) + 1/2 * \lambda * ||weights||^2 (var objective is N times this)
-            //for (t <- Range(0, trainingSize).toList) {
-            for (t <- Random.shuffle(Range(0, trainingSize).toList)) {
+            var trainSequence : List[Int] = Random.shuffle(Range(0, trainingSize).toList)
+            if (warmStart != None) {
+                trainSequence = warmStart.get.trainSequence
+                warmStart = None
+            }
+
+            for (t <- trainSequence) {
                 // normally we would do weights -= stepsize * gradient(t)._1
                 // but instead we do this: (see equation 8 in SocherBauerManningNg_ACL2013.pdf)
                 val (grad, score) = gradient(Some(pass), t, weights)
@@ -69,6 +91,15 @@ class Adagrad extends Optimizer[FeatureVector] {
                     })
                     noregSaveValues.map(x => { weights.fmap(x._1) = x._2 })
                 }
+
+                ///////////// Save for warm start /////////////
+                if (warmStartFilename != None) {
+                    val save = WarmStart(pass, t, trainSequence, weights.toString, avg_weights.toString)
+                    val str : String = save.pickle.value     // see http://stackoverflow.com/questions/23072118/scala-pickling-how
+                    for (outputFile <- managed(new java.io.PrintWriter(new java.io.File(warmStartFilename.get), "UTF-8"))) { // see http://jsuereth.com/scala-arm/usage.html
+                        outputFile.println(str)
+                    }
+                }
             }
             logger(-1,"                                   Avg objective value last pass: "+(objective/trainingSize.toDouble).toString)
             //logger(0,"                                                       objective: "+((0 until trainingSize).map(x => gradient(None, x, weights)._2).sum/trainingSize).toString)
@@ -76,6 +107,11 @@ class Adagrad extends Optimizer[FeatureVector] {
             pass += 1
         }
         trainingObserver(pass,avg_weights)
+        /////////// Remove warmStart file //////////
+        if (warmStartFilename != None) {
+            Files.delete(Paths.get(warmStartFilename.get))
+        }
+
         if(avg) { avg_weights } else { weights }
     }
 }

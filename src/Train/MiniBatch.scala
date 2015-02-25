@@ -28,6 +28,8 @@ class MiniBatch[FeatureVector <: AbstractFeatureVector](optimizer: Optimizer[Fea
                         options: Map[Symbol, String]) : FeatureVector = {
         val passes = options('trainingPasses).toInt
 
+        // WARNING: This code does not work properly with warm starts
+
         val numMiniBatches = ceil(trainingSize.toDouble / miniBatchSize.toDouble).toInt
         val trainShuffle : Array[Array[Int]] = Range(0, passes).map(x => Random.shuffle(Range(0, trainingSize).toList).toArray).toArray
         val miniGradient : (Option[Int], Int, FeatureVector) => (FeatureVector, Double) = (pass, i, weights) => {
