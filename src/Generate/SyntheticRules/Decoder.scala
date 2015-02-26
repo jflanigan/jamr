@@ -86,6 +86,7 @@ class Decoder(val ruleInventory: RuleInventory) {
     def localFeatures(prev: Arg, cur: Arg, position: Int, concept: ConceptInfo, input: Input) : FeatureVector = {
         // cur.tag = realization tag (from argToTag) (e.g. "_ARG1_'s")
         // cur.label = argument (e.g. "ARG1", etc)
+        /*********** TODO: the tag level features that don't depend on position can be cached ***************/
         val left : Boolean = position < concept.position
         val pos = concept.realization.headPos
         val c = input.node.concept
@@ -123,8 +124,9 @@ class Decoder(val ruleInventory: RuleInventory) {
             "W="+words+"+R="+cur.tag+"+s="+side -> 1.0,
             "count" -> (leftCount + rightCount),
             "count_l" -> leftCount,
-            "count_r" -> rightCount
-            //"SWcount" -> stopWordCount
+            "count_r" -> rightCount,
+            "SWcount" -> stopWordCount,
+            "nonSWcount" -> (leftCount + rightCount - stopWordCount)
             ))
     }
 

@@ -25,7 +25,7 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
     } else {
         System.err.println("Error: please specify --training-data"); sys.exit(1)
     }
-    val training: Array[(Rule, Input)] = ruleInventory.trainingData(fromFile(options('trainingData)).getLines, pos)
+    val training: Array[(Rule, Input)] = ruleInventory.trainingData(fromFile(options('trainingData)).getLines, pos).filter(x => goodExample(x._1))
     def trainingSize = training.size
 
     val decoder = new Decoder(ruleInventory)
@@ -36,32 +36,27 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
         case x => { System.err.println("Error: unknown training optimizer " + x); sys.exit(1) }
     }
 
+    def goodExample(rule: Rule) : Boolean = {
+        // Returns true if it's a rule we should use as a training example (used to filter the rules)
+        return rule.args.exists(x => !x.startsWith(":op")) && rule.args.distinct.size > 1
+    }
+
     def decode(i: Int, weights: FeatureVector) : (FeatureVector, Double, String) = {
         decoder.weights = weights
         val (rule, input) = training(i)
-        if (rule.args.exists(x => !x.startsWith(":op"))) {
-            logger(0, "-- Prediction --")
-            val result = decoder.decode(rule.concept.realization, rule.args, input)
-            logger(0, "Result:            "+result.rule)
-            (result.features, result.score, "")
-        } else { 
-            logger(0, "decode skipping...")
-            (FeatureVector(), 0.0, "")
-        }
+        logger(0, "-- Prediction --")
+        val result = decoder.decode(rule.concept.realization, rule.args, input)
+        logger(0, "Result:            "+result.rule)
+        (result.features, result.score, "")
     }
 
     def oracle(i: Int, weights: FeatureVector) : (FeatureVector, Double) = {
         decoder.weights = weights
         val (rule, input) = training(i)
-        if (rule.args.exists(x => !x.startsWith(":op"))) {
-            logger(0, "-- Oracle --")
-            logger(0, "Oracle input:      "+rule)
-            val features = decoder.oracle(rule, input)
-            (features, weights.dot(features))
-        } else { 
-            logger(0, "oracle skipping...")
-            (FeatureVector(), 0.0)
-        }
+        logger(0, "-- Oracle --")
+        logger(0, "Oracle input:      "+rule)
+        val features = decoder.oracle(rule, input)
+        (features, weights.dot(features))
     }
 
     def costAugmented(i: Int, weights: FeatureVector, scale: Double) : (FeatureVector, Double) = {
