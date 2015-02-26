@@ -92,6 +92,9 @@ class Decoder(val ruleInventory: RuleInventory) {
         val words = concept.realization.words.replaceAllLiterally(" ","_")
         val side = if(left) {"L"} else {"R"}
         val distance = abs(concept.position-position)
+        val leftCount = cur.left.count(_ == ' ')
+        val rightCount = cur.right.count(_ == ' ')
+        val stopWordCount = splitStr(cur.left + " " + cur.right," ").count(x => stopwords.contains(x))
         FeatureVector(Map(
             // TODO: features of where the concept is, lexical unigrams
             //"R="+cur.tag -> 1.0,
@@ -117,7 +120,11 @@ class Decoder(val ruleInventory: RuleInventory) {
             "W="+words+"+A="+cur.label+"+s="+(if(left) {"L"} else {"R"})+"+dist" -> abs(concept.position-position),
             //"c="+c+"r="+cur.tag -> 1.0,
             //"W="+words+"+R="+cur.tag -> 1.0
-            "W="+words+"+R="+cur.tag+"+s="+side -> 1.0
+            "W="+words+"+R="+cur.tag+"+s="+side -> 1.0,
+            "count" -> (leftCount + rightCount),
+            "count_l" -> leftCount,
+            "count_r" -> rightCount
+            //"SWcount" -> stopWordCount
             ))
     }
 
