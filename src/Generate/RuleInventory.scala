@@ -13,9 +13,11 @@ class RuleInventory {
     //val argTableRight : Map[String, MultiMapCount[String, (String, String)]] = new MultiMapCount() // Map from pos to map of args to realizations with counts
     val argTableLeft : MultiMapCount[(String, String), Arg] = new MultiMapCount()  // Map from (pos, arg) to realizations with counts
     val argTableRight : MultiMapCount[(String, String), Arg] = new MultiMapCount() // Map from (pos, arg) to realizations with counts
-    val argsLeft : Map[(String, String), Array[Arg]] = Map()    // Todo: fill in (pos, arg) -> array of realizations
-    val argsRight : Map[(String, String), Array[Arg]] = Map()   // make sure there are no gaps
- 
+    val argsLeft : Map[(String, String), Array[Arg]] = Map()            // Todo: fill in (pos, arg) -> array of realizations
+    val argsRight : Map[(String, String), Array[Arg]] = Map()           // make sure there are no gaps
+    val conceptArgsLeft : Map[(String, String), Array[Arg]] = Map()     // (concept, arg) -> array of realizations
+    val conceptArgsRight : Map[(String, String), Array[Arg]] = Map()    // (concept, arg) -> array of realizations
+  
     def load(filename: String) {    // TODO: move to companion object
         phraseTable.readFile(filename+".phrasetable", x => x, PhraseConceptPair.apply)
         lexRules.readFile(filename+".lexrules", x => x, Rule.apply)
@@ -140,12 +142,22 @@ class RuleInventory {
         }
     } */
 
-    def getArgsLeft(pos_arg: (String, String)) : Array[Arg] = {    // Array[(left, right)]
-        return argsLeft.getOrElse(pos_arg, Array(Arg.Default(pos_arg._2)))
+    def getArgsLeft(conceptRel: PhraseConceptPair, arg: String) : Array[Arg] = {
+        val concept = conceptRel.concept
+        if (conceptArgsLeft.contains((concept,arg))) {
+            conceptArgsLeft((concept,arg))
+        } else {
+            argsLeft.getOrElse((conceptRel.headPos,arg), Array(Arg.Default(arg)))   // TODO: filter to most common args
+        }
     }
 
-    def getArgsRight(pos_arg: (String, String)) : Array[Arg] = {
-        return argsRight.getOrElse(pos_arg, Array(Arg.Default(pos_arg._2)))
+    def getArgsRight(conceptRel: PhraseConceptPair, arg: String) : Array[Arg] = {
+        val concept = conceptRel.concept
+        if (conceptArgsRight.contains((concept,arg))) {
+            conceptArgsRight((concept,arg))
+        } else {
+            argsRight.getOrElse((conceptRel.headPos,arg), Array(Arg.Default(arg)))  // TODO: filter to most common args
+        }
     }
 
     private def createArgTables() {
@@ -171,6 +183,21 @@ class RuleInventory {
         }
         for (((pos, arg), countMap) <- argTableRight.map) {
             argsRight((pos, arg)) = countMap.map(x => x._1).toArray
+        }
+    }
+
+    private def createConceptArgs() {
+        // Populates conceptArgsLeft and conceptArgsRight
+        // Must call extractRules before calling this function
+        for ((concept, rules) <- lexRules.map) {    // lexRules indexes by root concept
+            for ((rule, count) <- rules if ruleOk(rule, count)) {
+                for (arg <- rule.left(rule.argRealizations)) {
+                    argTableLeft.add((concept, arg.label) -> arg, count)
+                }
+                for (arg <- rule.right(rule.argRealizations)) {
+                    argTableRight.add((concept, arg.label) -> arg, count)
+                }
+            }
         }
     }
 

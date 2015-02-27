@@ -39,8 +39,8 @@ class Decoder(val ruleInventory: RuleInventory) {
         logger(0, "args: "+args.toString)
         val children = args.sorted
         val headPos = conceptRealization.headPos
-        val leftTags : List[Array[Arg]] = children.map(label => getArgsLeft((headPos, label)))
-        val rightTags : List[Array[Arg]] = children.map(label => getArgsRight((headPos, label)))
+        val leftTags : List[Array[Arg]] = children.map(label => getArgsLeft(conceptRealization, label))
+        val rightTags : List[Array[Arg]] = children.map(label => getArgsRight(conceptRealization, label))
         val numArgs = children.size
         var bestResult : Option[DecoderResult] = None
         for (permutation <- (0 until numArgs).permutations) {
