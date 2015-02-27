@@ -57,7 +57,7 @@ object SentenceLevelGrammars {
             val data = AMRTrainingData(block)
             val sentence = data.sentence
             //val pos =  projectPos(input(i).pos)
-            val graph = data.toOracleGraph(clearUnalignedNodes = true)  // TODO: don't require aligned sentence
+            val graph = data.toOracleGraph(clearUnalignedNodes = false)  // TODO: don't require aligned sentence
             // see http://stackoverflow.com/questions/10887828/string-to-gzipoutputstream
             var writer : BufferedWriter = null
             try {

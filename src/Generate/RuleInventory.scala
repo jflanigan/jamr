@@ -145,14 +145,14 @@ class RuleInventory {
                 // matches list of deleteble concepts
                 List(Rule(node.children.sortBy(_._1).map(x => Arg("", x._1, "")),
                           ConceptInfo(PhraseConceptPair("", node.concept, "NN", "NN"), 0), "", ""))
-            } else if (getRealizations(node).size == 0) {
+            } else /*if (getRealizations(node).size == 0)*/ {
                 // concept has no realization
                 // TODO: change to passThroughRealizations
                 List(Rule(node.children.sortBy(_._1).map(x => Arg("", x._1, "")),
                           ConceptInfo(PhraseConceptPair(node.concept.replaceAll("""-[0-9][0-9]$""",""), node.concept, "NN", "NN"), 0), "", ""))
-            } else {
+            /*} else {
                 // it has a realization, so we won't provide one (since the synthetic rule model will provide one)
-                List()
+                List() */
             }
         } else {
             if (node.concept.matches("\".*\"")) {
