@@ -34,7 +34,7 @@ class RuleInventory {
     }
 
     def trainingData(corpus: Iterator[String],
-                     posAnno: Array[Annotation[Array[String]]]) : Array[(Rule, SyntheticRules.Input)] = {
+                     posAnno: Array[Annotation[String]]) : Array[(Rule, SyntheticRules.Input)] = {
         var i = 0
         val training_data = new ArrayBuffer[(Rule, SyntheticRules.Input)]()
         for (block <- Corpus.getAMRBlocks(corpus)) {
@@ -51,7 +51,7 @@ class RuleInventory {
         return training_data.toArray
     }
 
-    def extractFromCorpus(corpus: Iterator[String], posAnno: Array[Annotation[Array[String]]]) { // TODO: move this constructor to companion object (and rename to fromCorpus)
+    def extractFromCorpus(corpus: Iterator[String], posAnno: Array[Annotation[String]]) { // TODO: move this constructor to companion object (and rename to fromCorpus)
         //val corpus = Source.fromFile(corpusFilename).getLines
         logger(0, "****** Extracting rules from the corpus *******")
 
@@ -147,6 +147,7 @@ class RuleInventory {
                           ConceptInfo(PhraseConceptPair("", node.concept, "NN", "NN"), 0), "", ""))
             } else if (getRealizations(node).size == 0) {
                 // concept has no realization
+                // TODO: change to passThroughRealizations
                 List(Rule(node.children.sortBy(_._1).map(x => Arg("", x._1, "")),
                           ConceptInfo(PhraseConceptPair(node.concept.replaceAll("""-[0-9][0-9]$""",""), node.concept, "NN", "NN"), 0), "", ""))
             } else {
@@ -159,7 +160,12 @@ class RuleInventory {
                 List(Rule(List(), ConceptInfo(PhraseConceptPair(node.concept.drop(1).init, node.concept, "NNP", "NNP"), 0), "", ""))
             } else if (getRealizations(node).size == 0) {
                 // concept has no realization
-                List(Rule(List(), ConceptInfo(PhraseConceptPair(node.concept.replaceAll("""-[0-9][0-9]$""",""), node.concept, "NN", "NN"), 0), "", ""))
+                if (node.concept.matches(""".*-[0-9][0-9]""")) {
+                    // TODO: add inverse rules of WordNet's Morphy: http://wordnet.princeton.edu/man/morphy.7WN.html
+                    List(Rule(List(), ConceptInfo(PhraseConceptPair(node.concept.replaceAll("""-[0-9][0-9]$""",""), node.concept, "VB", "VB"), 0), "", ""))
+                } else {
+                    List(Rule(List(), ConceptInfo(PhraseConceptPair(node.concept, node.concept, "NN", "NN"), 0), "", ""))
+                }
             } else {
                 // it has a realization, so we won't provide one (since the synthetic rule model will provide one)
                 List()

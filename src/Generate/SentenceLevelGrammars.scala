@@ -69,12 +69,15 @@ object SentenceLevelGrammars {
                     val syntheticRules : List[Rule] = ruleModel.syntheticRules(SyntheticRules.Input(node, graph))
                     val rules = corpusRules ::: syntheticRules  // TODO: features on the rules
                     for (rule <- corpusRules) {
+                        // Features: rule given concept, realization given concept, and inverses
                         writer.append(rule.mkRule(withArgLabel=false)+" ||| corpus=1\n")
                     }
                     for (rule <- passThroughRules) {
+                        // Features: which kind of pass through, were inverse Morphy rules used
                         writer.append(rule.mkRule(withArgLabel=false)+" ||| passthrough=1\n")
                     }
                     for (rule <- syntheticRules) {
+                        // Features: realization given concept, model score
                         //writer.append(rule.toString+" ||| synthetic=1\n")
                         writer.append(rule.mkRule(withArgLabel=false)+" ||| synthetic=1\n")
                     }

@@ -37,7 +37,7 @@ package object Generate {
     def unEscapeArray(str: String, esc: Char) : Array[String] = {
         return splitStr(unEscape(str, esc), "\t")
     }
-    def projectPos(posAnno: Annotation[Array[String]]) : Array[String] = {
+    def projectPos(posAnno: Annotation[String]) : Array[String] = {
         val sentence : Array[String] = posAnno.snt // tokenized sentence
         val pos = (0 until sentence.size).map(i => {
             val span = posAnno.annotationSpan(i,i+1)
