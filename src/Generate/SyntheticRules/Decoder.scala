@@ -14,6 +14,8 @@ class Decoder(val ruleInventory: RuleInventory) {
     val getRealizations = ruleInventory.getRealizations _
     val getArgsLeft = ruleInventory.getArgsLeft _
     val getArgsRight = ruleInventory.getArgsRight _
+    val argOnLeft = ruleInventory.argOnLeft _
+    val argOnRight = ruleInventory.argOnRight _
 
     def syntheticRules(input: Input) : List[Rule] = {
         // Returns a rule for every concept realization
@@ -45,8 +47,16 @@ class Decoder(val ruleInventory: RuleInventory) {
         logger(0, "rightTags: "+children.zip(rightTags.map(x => x.size)).toString)
         val numArgs = children.size
         var bestResult : Option[DecoderResult] = None
+        def permutationOk(argsLeft: List[String], argsRight: List[String]) : Boolean = {
+            // permutation is ok if we've seen all the args on that side in the rule inventory
+            !argsLeft.contains((arg: String) => !argOnLeft(conceptRealization, arg)) && !argsRight.contains((arg: String) => !argOnRight(conceptRealization, arg))
+        }
         for (permutation <- (0 until numArgs).permutations) {
-            for (i <- 0 to numArgs) { // 0 to numArgs (inclusive)
+            for { i <- 0 to numArgs  // 0 to numArgs (inclusive)
+                  argsLeft : List[String] = permutation.slice(i,numArgs).map(x => children(x)).toList
+                  argsRight : List[String] = permutation.slice(i,numArgs).map(x => children(x)).toList
+                  if permutationOk(argsLeft, argsRight)      // filter to allowed permutations
+                } {
                 //val tagList = leftTags.slice(0,i) ::: List(conceptTag)
                 val conceptInfo = ConceptInfo(conceptRealization, i)
                 val tagList : List[Array[Arg]] = (

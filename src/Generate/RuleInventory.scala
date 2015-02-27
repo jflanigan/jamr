@@ -144,13 +144,22 @@ class RuleInventory {
         }
     } */
 
+    def argOnLeft(concept: PhraseConceptPair, arg: String) : Boolean = {
+        // return true if we observed it on the left or we can back off to it on the left, or we didn't observe it at all
+        return conceptArgsLeft.contains((concept.concept, arg)) || argsLeft.contains((concept.headPos, arg)) || !argsRight.contains((concept.headPos, arg))
+    }
+
+    def argOnRight(concept: PhraseConceptPair, arg: String) : Boolean = {
+        // return true if we observed it on the right or we can back off to it on the right, or we didn't observe it at all
+        return conceptArgsRight.contains((concept.concept, arg)) || argsRight.contains((concept.headPos, arg)) || !argsLeft.contains((concept.headPos, arg))
+    }
+
     def getArgsLeft(conceptRel: PhraseConceptPair, arg: String) : Array[Arg] = {
         val concept = conceptRel.concept
         //logger(0, "arg: " + arg)
         if (conceptArgsLeft.contains((concept,arg))) {
             conceptArgsLeft((concept,arg)).toArray
         } else {
-            //assert(false)
             logger(0, "WARNING: Can't find " + (concept, arg).toString + " in conceptArgsLeft")
             argsLeft.getOrElse((conceptRel.headPos,arg), Array(Arg.Default(arg)))   // TODO: filter to most common args
         }
@@ -162,7 +171,6 @@ class RuleInventory {
         if (conceptArgsRight.contains((concept,arg))) {
             conceptArgsRight((concept,arg)).toArray
         } else {
-            //assert(false)
             logger(0, "WARNING: Can't find " + (concept, arg).toString + " in conceptArgsRight")
             argsRight.getOrElse((conceptRel.headPos,arg), Array(Arg.Default(arg)))  // TODO: filter to most common args
         }
@@ -201,6 +209,7 @@ class RuleInventory {
         for ((concept, rules) <- lexRules.map) {    // lexRules indexes by root concept
             for ((rule, count) <- rules /*if ruleOk(rule, count)*/) {
                 logger(0,"rule: "+rule.toString)
+                val pos = rule.concept.realization.headPos
                 for (arg <- rule.left(rule.argRealizations)) {
                     logger(0,"Adding left: "+(concept, arg.label).toString+" -> " + arg.toString)
                     conceptArgsLeft((concept, arg.label)) = arg :: conceptArgsLeft.getOrElse((concept, arg.label), List())
