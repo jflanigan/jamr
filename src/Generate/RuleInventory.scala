@@ -15,8 +15,8 @@ class RuleInventory {
     val argTableRight : MultiMapCount[(String, String), Arg] = new MultiMapCount() // Map from (pos, arg) to realizations with counts
     val argsLeft : Map[(String, String), Array[Arg]] = Map()            // Todo: fill in (pos, arg) -> array of realizations
     val argsRight : Map[(String, String), Array[Arg]] = Map()           // make sure there are no gaps
-    val conceptArgsLeft : Map[(String, String), List[Arg]] = Map()     // (concept, arg) -> array of realizations
-    val conceptArgsRight : Map[(String, String), List[Arg]] = Map()    // (concept, arg) -> array of realizations
+    val conceptArgsLeft : Map[(String, String, String), List[Arg]] = Map()     // (concept, pos, arg) -> array of realizations
+    val conceptArgsRight : Map[(String, String, String), List[Arg]] = Map()    // (concept, pos, arg) -> array of realizations
   
     def load(filename: String) {    // TODO: move to companion object
         phraseTable.readFile(filename+".phrasetable", x => x, PhraseConceptPair.apply)
@@ -93,6 +93,41 @@ class RuleInventory {
         return phraseTable.map.getOrElse(node.concept, Map()).map(x => (x._1, node.children.map(y => y._1).diff(x._1.amrInstance.children.map(y => y._1)))).toList /*::: passThroughRealizations(node)*/ // TODO: should produce a possible realization if not found
     }
 
+    def argOnLeft(concept: PhraseConceptPair, arg: String) : Boolean = {
+        // return true if we observed it on the left or we can back off to it on the left, or we didn't observe it at all
+        return conceptArgsLeft.contains((concept.concept, concept.headPos, arg)) || argsLeft.contains((concept.headPos, arg)) || !argsRight.contains((concept.headPos, arg))
+    }
+
+    def argOnRight(concept: PhraseConceptPair, arg: String) : Boolean = {
+        // return true if we observed it on the right or we can back off to it on the right, or we didn't observe it at all
+        return conceptArgsRight.contains((concept.concept, concept.headPos, arg)) || argsRight.contains((concept.headPos, arg)) || !argsLeft.contains((concept.headPos, arg))
+    }
+
+    def getArgsLeft(conceptRel: PhraseConceptPair, arg: String) : Array[Arg] = {
+        val concept = conceptRel.concept
+        val pos = conceptRel.headPos
+        //logger(0, "arg: " + arg)
+        if (conceptArgsLeft.contains((concept,pos,arg))) {
+            conceptArgsLeft((concept,pos,arg)).toArray
+        } else {
+            logger(0, "WARNING: Can't find " + (concept, pos, arg).toString + " in conceptArgsLeft")
+            argsLeft.getOrElse((pos,arg), Array(Arg.Default(arg)))   // TODO: filter to most common args
+        }
+    }
+
+    def getArgsRight(conceptRel: PhraseConceptPair, arg: String) : Array[Arg] = {
+        val concept = conceptRel.concept
+        val pos = conceptRel.headPos
+        //logger(0, "arg: " + arg)
+        if (conceptArgsRight.contains((concept,pos,arg))) {
+            conceptArgsRight((concept,pos,arg)).toArray
+        } else {
+            logger(0, "WARNING: Can't find " + (concept, pos, arg).toString + " in conceptArgsRight")
+            argsRight.getOrElse((pos,arg), Array(Arg.Default(arg)))  // TODO: filter to most common args
+        }
+    }
+
+
 /*    def opRealizations(node: Node) : List[(PhraseConceptPair, List[String])] = {
         if (node.children.exists(_._2.concept == "name")) {
             nameNode = node.children.filter(x => x._2.concept == "name")(0)
@@ -144,38 +179,6 @@ class RuleInventory {
         }
     } */
 
-    def argOnLeft(concept: PhraseConceptPair, arg: String) : Boolean = {
-        // return true if we observed it on the left or we can back off to it on the left, or we didn't observe it at all
-        return conceptArgsLeft.contains((concept.concept, arg)) || argsLeft.contains((concept.headPos, arg)) || !argsRight.contains((concept.headPos, arg))
-    }
-
-    def argOnRight(concept: PhraseConceptPair, arg: String) : Boolean = {
-        // return true if we observed it on the right or we can back off to it on the right, or we didn't observe it at all
-        return conceptArgsRight.contains((concept.concept, arg)) || argsRight.contains((concept.headPos, arg)) || !argsLeft.contains((concept.headPos, arg))
-    }
-
-    def getArgsLeft(conceptRel: PhraseConceptPair, arg: String) : Array[Arg] = {
-        val concept = conceptRel.concept
-        //logger(0, "arg: " + arg)
-        if (conceptArgsLeft.contains((concept,arg))) {
-            conceptArgsLeft((concept,arg)).toArray
-        } else {
-            logger(0, "WARNING: Can't find " + (concept, arg).toString + " in conceptArgsLeft")
-            argsLeft.getOrElse((conceptRel.headPos,arg), Array(Arg.Default(arg)))   // TODO: filter to most common args
-        }
-    }
-
-    def getArgsRight(conceptRel: PhraseConceptPair, arg: String) : Array[Arg] = {
-        val concept = conceptRel.concept
-        //logger(0, "arg: " + arg)
-        if (conceptArgsRight.contains((concept,arg))) {
-            conceptArgsRight((concept,arg)).toArray
-        } else {
-            logger(0, "WARNING: Can't find " + (concept, arg).toString + " in conceptArgsRight")
-            argsRight.getOrElse((conceptRel.headPos,arg), Array(Arg.Default(arg)))  // TODO: filter to most common args
-        }
-    }
-
     private def createArgTables() {
         // Populates argTableLeft and argTableRight
         // Must call extractRules before calling this function
@@ -211,14 +214,14 @@ class RuleInventory {
                 logger(0,"rule: "+rule.toString)
                 val pos = rule.concept.realization.headPos
                 for (arg <- rule.left(rule.argRealizations)) {
-                    logger(0,"Adding left: "+(concept, arg.label).toString+" -> " + arg.toString)
-                    conceptArgsLeft((concept, arg.label)) = arg :: conceptArgsLeft.getOrElse((concept, arg.label), List())
-                    logger(0,"conceptArgsLeft: "+conceptArgsLeft((concept, arg.label)).toString)
+                    logger(0,"Adding left: "+(concept, pos, arg.label).toString+" -> " + arg.toString)
+                    conceptArgsLeft((concept, pos, arg.label)) = arg :: conceptArgsLeft.getOrElse((concept, pos, arg.label), List())
+                    logger(0,"conceptArgsLeft: "+conceptArgsLeft((concept, pos, arg.label)).toString)
                 }
                 for (arg <- rule.right(rule.argRealizations)) {
-                    logger(0,"Adding right: "+(concept, arg.label).toString+" -> " + arg.toString)
-                    conceptArgsRight((concept, arg.label)) = arg :: conceptArgsRight.getOrElse((concept, arg.label), List())
-                    logger(0,"conceptArgsRight: "+conceptArgsRight((concept, arg.label)).toString)
+                    logger(0,"Adding right: "+(concept, pos, arg.label).toString+" -> " + arg.toString)
+                    conceptArgsRight((concept, pos, arg.label)) = arg :: conceptArgsRight.getOrElse((concept, pos, arg.label), List())
+                    logger(0,"conceptArgsRight: "+conceptArgsRight((concept, pos, arg.label)).toString)
                 }
             }
         }
@@ -229,12 +232,12 @@ class RuleInventory {
             conceptArgsRight(key) = values.distinct
         }
         logger(0, "******************* ARG TABLE LEFT *******************")
-        for (((concept, label), arg) <- conceptArgsLeft.toArray.sortBy(x => x._1)) {
-            logger(0, concept + " ||| " + label + " ||| " + arg.toString)
+        for (((concept, pos, label), arg) <- conceptArgsLeft.toArray.sortBy(x => x._1)) {
+            logger(0, concept + " " + pos + " ||| " + label + " ||| " + arg.toString)
         }
         logger(0, "******************* ARG TABLE RIGHT *******************")
-        for (((concept, label), arg) <- conceptArgsRight.toArray.sortBy(x => x._1)) {
-            logger(0, concept + " ||| " + label + " ||| " + arg.toString)
+        for (((concept, pos, label), arg) <- conceptArgsRight.toArray.sortBy(x => x._1)) {
+            logger(0, concept + " " + pos + " ||| " + label + " ||| " + arg.toString)
         }
     }
 
