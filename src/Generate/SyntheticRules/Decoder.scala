@@ -41,6 +41,8 @@ class Decoder(val ruleInventory: RuleInventory) {
         val headPos = conceptRealization.headPos
         val leftTags : List[Array[Arg]] = children.map(label => getArgsLeft(conceptRealization, label))
         val rightTags : List[Array[Arg]] = children.map(label => getArgsRight(conceptRealization, label))
+        logger(0, "leftTags: "+args.zip(leftTags.map(x => x.size)).toString)
+        logger(0, "rightTags: "+args.zip(rightTags.map(x => x.size)).toString)
         val numArgs = children.size
         var bestResult : Option[DecoderResult] = None
         for (permutation <- (0 until numArgs).permutations) {
@@ -87,15 +89,19 @@ class Decoder(val ruleInventory: RuleInventory) {
         // cur.tag = realization tag (from argToTag) (e.g. "_ARG1_'s")
         // cur.label = argument (e.g. "ARG1", etc)
         /*********** TODO: the tag level features that don't depend on position can be cached ***************/
-        val left : Boolean = position < concept.position
-        val pos = concept.realization.headPos
-        val c = input.node.concept
-        val words = concept.realization.words.replaceAllLiterally(" ","_")
-        val side = if(left) {"L"} else {"R"}
-        val distance = abs(concept.position-position)
-        val leftCount = cur.left.count(_ == ' ')
-        val rightCount = cur.right.count(_ == ' ')
-        val stopWordCount = splitStr(cur.left + " " + cur.right," ").count(x => stopwords.contains(x))
+        val arg             = "+A="    + cur.label
+        val curTag          = "+R="    + cur.tag
+        val prevTag         = "+R-1="  + prev.tag
+        val pos             = "+P="    + concept.realization.headPos
+        val side            = "+s="    + (if(position < concept.position) {"L"} else {"R"})  // left = position < concept.position 
+        //val left          = position < concept.position
+        val words           = "+W="    + concept.realization.words.replaceAllLiterally(" ","_")
+        val distance        = abs(concept.position-position)
+        val dist            = "+dist"
+        val leftCount       = cur.left.count(_ == ' ')
+        val rightCount      = cur.right.count(_ == ' ')
+        val stopWordCount   = splitStr(cur.left + " " + cur.right," ").count(x => stopwords.contains(x))
+        //{ val concept       = "+c="    + input.node.concept  // concept
         FeatureVector(Map(
             // TODO: features of where the concept is, lexical unigrams
             //"R="+cur.tag -> 1.0,
@@ -113,21 +119,33 @@ class Decoder(val ruleInventory: RuleInventory) {
             //"P="+pos+"+R="+cur.tag+"+dist" -> abs(concept.position-position),
             //"P="+pos+"+R="+cur.tag+"+s="+(if(left) {"L"} else {"R"}) -> 1.0,
             //"P="+pos+"+R="+cur.tag+"+s="+(if(left) {"L"} else {"R"})+"+dist" -> abs(concept.position-position),
-            "P="+pos+"+A="+cur.label+"+dist" -> abs(concept.position-position),
-            "P="+pos+"+A="+cur.label+"+s="+(if(left) {"L"} else {"R"}) -> 1.0,
-            "P="+pos+"+A="+cur.label+"+s="+(if(left) {"L"} else {"R"})+"+dist" -> abs(concept.position-position),
-            "W="+words+"+A="+cur.label+"+dist" -> abs(concept.position-position),
-            "W="+words+"+A="+cur.label+"+s="+(if(left) {"L"} else {"R"}) -> 1.0,
-            "W="+words+"+A="+cur.label+"+s="+(if(left) {"L"} else {"R"})+"+dist" -> abs(concept.position-position),
-            //"c="+c+"r="+cur.tag -> 1.0,
-            //"W="+words+"+R="+cur.tag -> 1.0
-            "W="+words+"+R="+cur.tag+"+s="+side -> 1.0,
+
+            //curTag -> 1.0,                                // bias for tags
+            //arg + dist -> distance,
+            //arg + side -> 1.0,
+            //arg + side + dist -> distance,
+
+            pos + arg + dist -> distance,
+            pos + arg + side -> 1.0,
+            pos + arg + side + dist -> distance,
+            //pos + curTag -> 1.0,                          // no, should depend on side at least
+            pos + curTag + side -> 1.0,
+            //pos + curTag + side + dist -> distance,       // no, should not depend on distance
+
+            words + arg + dist -> distance,                 // should depend on words, not concept
+            words + arg + side -> 1.0,
+            words + arg + side + dist -> distance,
+            //concept + curTag -> 1.0,                      // no, should depend on words, not concept
+            //words + curTag -> 1.0                         // no, should depend on side
+            words + curTag + side -> 1.0,
+
             "count" -> (leftCount + rightCount),
             "count_l" -> leftCount,
             "count_r" -> rightCount,
             "SWcount" -> stopWordCount,
             "nonSWcount" -> (leftCount + rightCount - stopWordCount)
             ))
+        //}
     }
 
 }
