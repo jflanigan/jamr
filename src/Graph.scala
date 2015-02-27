@@ -3,7 +3,7 @@ package edu.cmu.lti.nlp.amr
 import scala.collection.mutable.Map
 import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
-import scala.collection.immutable.Queue
+import scala.collection.mutable.Queue
 import scala.collection.immutable
 import scala.util.parsing.combinator._
 
@@ -309,6 +309,32 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
     }
 */
 
+    def breadthFirst(visit: (Node, String, Node) => Unit, revisit: (Node, String, Node) => Unit) {
+        // Assumes a topological ordering has been made.
+        // Breadth first search from the root.
+        // When it visits a node, it calls either 'visit(parent, relation, node)' on the first visit
+        // or 'revisit(parent, relation, node)' if the visit is a re-entrancy
+        // For a DAG, it will never visit the root, since it has no parent
+        // Crucially, it calls 'visit' after it has enqueued it's children and called 'revisit' (needed for breadthFirstTopologicalOrdering)
+        val queue = Queue[(Node, String, Node)](root.children.map(x => (root, x._1, x._2)) ++ root.variableRelations.map(x => (root, x._1, x._2)))
+        val visited = Set[Node](root)
+        while queue.size > 0 {
+            val (parent, relation, node) = queue.dequeue
+            visited += node
+            for ((rel, child) <- (node.topologialOrdering ::: node.variableRelations).sortBy(_._1) {
+                if (visited.contains(child)) {
+                    revisit(node, rel, child)
+                } else {
+                    queue += (node, rel, child)
+                }
+            }
+            for ((rel, Var(child, _)) <- node.variableRelations if !visited.contains(child)) {
+                queue += (rel, child)
+            }
+            visit(parent, relation, node)
+        }
+    }
+
     def sortRelations() {
         // Sorts the nodes in topological ordering by the label name
         // WARNING: This should be called only after assignOpN
@@ -434,13 +460,12 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         //   getNodeById is defined for all nodes
         // Postcondition: This function populates node.variableRelations and node.topologicalOrdering by 
         // breadth-first-search from the root.
-        var queue = Queue[Node](root)
+        val queue = Queue[Node](root)
         val visited = Set.empty[String]
         val inverse = inverseRelations
         do {
-            val (node, dequeue) = queue.dequeue
+            val node = queue.dequeue
             logger(2, "Node = "+node.id)
-            queue = dequeue
             visited += node.id
             node.topologicalOrdering = List()
             node.variableRelations = List()
@@ -464,13 +489,38 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
                     // this node goes into the topological ordering
                     logger(3, "Adding "+child.id+" as a child of "+node.id)
                     visited += child.id
-                    queue = queue.enqueue(child)
+                    queue.enqueue(child)
                     node.topologicalOrdering = (relation, child) :: node.topologicalOrdering
                 }
             }
         } while (queue.size != 0)
         logger(2, "visited = "+visited)
         assert(visited.size == nodes.size, "The graph does not span the nodes")
+    }
+
+    def breadthFirstTopologicalOrdering() {
+        // Remakes the topological ordering to be as shallow as possible (used by the Generator)
+        // Assumes a preliminary topological ordering has been made
+        def 
+    }
+        def breadthFirst(f: (Node, String, Node) => Unit) {
+        // Assumes a topological ordering has been made
+        // Breadth first search from the root. When it visits a node, it calls f(parent, relation, node) (it never visits root, since it has no parent)
+        // crucially, it calls f after it has enqueued it's children (needed for breadthFirstTopologicalOrdering)
+        val queue = Queue[(Node, String, Node)](root.children.map(x => (root, x._1, x._2)) ++ root.variableRelations.map(x => (root, x._1, x._2)))
+        val visited = Set[Node](root)
+        while queue.size > 0 {
+            val (parent, relation, node) = queue.dequeue
+            visited += node
+            for ((rel, child) <- node.topologialOrdering if !visited.contains(child)) {
+                if (visited.contains
+                queue += (node, rel, child)
+            }
+            for ((rel, Var(child, _)) <- node.variableRelations if !visited.contains(child)) {
+                queue += (rel, child)
+            }
+            f(parent, relation, node)
+        }
     }
 
     private def getNextVariableName(c: Char) : String = {
