@@ -21,7 +21,7 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
             val node2 = getNodeById2(node.id)
             node2.relations = node.relations.map(x => (x._1, getNodeById2(x._2.id)))
             node2.topologicalOrdering = node.topologicalOrdering.map(x => (x._1, getNodeById2(x._2.id)))
-            node2.variableRelations = node.variableRelations.map(x => (x._1, Var(getNodeById2(x._2.node.id), x._2.name)))
+            node2.variableRelations = node.variableRelations.map(x => (x._1, getNodeById2(x._2.id)))
         }
         val getNodeByName2 = getNodeByName.map(x => (x._1, getNodeById2(x._2.id)))
         logger(1, "getNodeById = " + getNodeById)
@@ -52,7 +52,7 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         for (node <- nodes) {
             node.topologicalOrdering = node.topologicalOrdering.filter(x => getNodeById.contains(x._2.id)) // Warning this may break the topological ordering
             node.relations = node.relations.filter(x => getNodeById.contains(x._2.id))
-            node.variableRelations = node.variableRelations.filter(x => getNodeById.contains(x._2.node.id))
+            node.variableRelations = node.variableRelations.filter(x => getNodeById.contains(x._2.id))
         }
     }
 
@@ -431,7 +431,7 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         val relations = node.topologicalOrdering
         node.relations = List[(String, Node)]()
         node.topologicalOrdering = List[(String, Node)]()
-        node.variableRelations = List[(String, Var)]()
+        node.variableRelations = List[(String, Node)]()
         for ((relation, child) <- relations) {
             // figure out if child is a node, or a variable
             if (child.name == None && getNodeByName.contains(child.concept) && child.topologicalOrdering.size == 0) { // variables have concepts, but no names
@@ -439,7 +439,7 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
                 val varName = child.concept
                 val actualNode = getNodeByName(varName)
                 node.relations = node.relations ::: List((relation, actualNode))
-                node.variableRelations = node.variableRelations ::: List((relation, Var(actualNode, varName)))
+                node.variableRelations = node.variableRelations ::: List((relation, actualNode))
             } else {
                 // child is a legit node (not a variable)
                 node.relations = node.relations ::: List((relation, child))
@@ -480,7 +480,7 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
                     if (child.name != None) {
                         val Some(name) = child.name
                         assert(getNodeByName.contains(name), "Variable name not in getNodeByName")
-                        node.variableRelations = (relation, Var(child, name)) :: node.variableRelations
+                        node.variableRelations = (relation, child) :: node.variableRelations
                     } else {
                         logger(0, "WARNGING: Creating a variable relation to a node without a variable name - ignoring this relation in the topological ordering")
                         assert(false, "WARNGING: Attempted to create a variable relation to a node without a variable name")
@@ -557,7 +557,7 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         if (root.name != None) {
             vars += root.name.get
         }
-        doRecursive(node => vars ++= node.variableRelations.map(_._2.name))
+        doRecursive(node => vars ++= node.variableRelations.map(_._2.name.get)) // if it's in variableRelations, it should have a variable name
         return root.prettyString(detail, pretty, vars)
     }
 
@@ -568,9 +568,9 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
             val notOps = relations.filter(x => x._1 != ":op")
             return opNs ::: notOps
         }
-        def numberOpsVar(relations: List[(String, Var)]) : List[(String, Var)] = {
+        def numberOpsVar(relations: List[(String, Node)]) : List[(String, Node)] = {
             val ops = relations.filter(x => x._1 == ":op")
-            val opNs = ops.sortBy(x => spans(x._2.node.spans(0)).start).zipWithIndex.map(x => (x._1._1 + (x._2+1).toString, x._1._2))
+            val opNs = ops.sortBy(x => spans(x._2.spans(0)).start).zipWithIndex.map(x => (x._1._1 + (x._2+1).toString, x._1._2))
             val notOps = relations.filter(x => x._1 != ":op")
             return opNs ::: notOps
         }
@@ -597,13 +597,13 @@ object Graph {
         }
         def relations : Parser[List[(String, Node)]] = rep(relation)
         def internalNode : Parser[Node] = "("~>variable~"/"~concept~relations<~")" ^^ {
-            case variable~"/"~concept~relations => Node("", Some(variable), concept, List[(String, Node)](), relations, List[(String, Var)](), None, ArrayBuffer[Int]())
+            case variable~"/"~concept~relations => Node("", Some(variable), concept, List[(String, Node)](), relations, List[(String, Node)](), None, ArrayBuffer[Int]())
         }
         def unnamedInternalNode : Parser[Node] = "("~>concept~relations<~")" ^^ {
-            case concept~relations => Node("", None, concept, List[(String, Node)](), relations, List[(String, Var)](), None, ArrayBuffer[Int]())
+            case concept~relations => Node("", None, concept, List[(String, Node)](), relations, List[(String, Node)](), None, ArrayBuffer[Int]())
         }
         def terminalNode : Parser[Node] = concept ^^ { 
-            case concept => Node("", None, concept, List[(String, Node)](), List[(String, Node)](), List[(String, Var)](), None, ArrayBuffer[Int]())
+            case concept => Node("", None, concept, List[(String, Node)](), List[(String, Node)](), List[(String, Node)](), None, ArrayBuffer[Int]())
         }
         def node : Parser[Node] = terminalNode | internalNode | unnamedInternalNode
     }

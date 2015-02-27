@@ -64,8 +64,8 @@ object SpanLoader {
             case e : Throwable => throw new RuntimeException("Cannot find node ["+nodes(0)+"]")
         }
         var unprocessed = nodes.tail
-        // Node(var id: String, name: Option[String], concept: String, var relations: List[(String, Node)], var topologicalOrdering: List[(String, Node)], var variableRelations: List[(String, Var)], var alignment: Option[Int], var span: Option[Int])
-        val myNode = Node(id = node.id, name = node.name, concept = node.concept, relations = List[(String, Node)](), topologicalOrdering = List[(String, Node)](), variableRelations = List[(String, Var)](), alignment = node.alignment, spans = node.spans)
+        // Node(var id: String, name: Option[String], concept: String, var relations: List[(String, Node)], var topologicalOrdering: List[(String, Node)], var variableRelations: List[(String, Node)], var alignment: Option[Int], var span: Option[Int])
+        val myNode = Node(id = node.id, name = node.name, concept = node.concept, relations = List[(String, Node)](), topologicalOrdering = List[(String, Node)](), variableRelations = List[(String, Node)](), alignment = node.alignment, spans = node.spans)
         var childNumber = 0
         var done = false
         while (unprocessed.size > 0 && !done) {
