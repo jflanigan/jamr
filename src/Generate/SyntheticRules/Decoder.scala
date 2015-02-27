@@ -41,8 +41,8 @@ class Decoder(val ruleInventory: RuleInventory) {
         val headPos = conceptRealization.headPos
         val leftTags : List[Array[Arg]] = children.map(label => getArgsLeft(conceptRealization, label))
         val rightTags : List[Array[Arg]] = children.map(label => getArgsRight(conceptRealization, label))
-        logger(0, "leftTags: "+args.zip(leftTags.map(x => x.size)).toString)
-        logger(0, "rightTags: "+args.zip(rightTags.map(x => x.size)).toString)
+        logger(0, "leftTags: "+children.zip(leftTags.map(x => x.size)).toString)
+        logger(0, "rightTags: "+children.zip(rightTags.map(x => x.size)).toString)
         val numArgs = children.size
         var bestResult : Option[DecoderResult] = None
         for (permutation <- (0 until numArgs).permutations) {
@@ -90,6 +90,7 @@ class Decoder(val ruleInventory: RuleInventory) {
         // cur.label = argument (e.g. "ARG1", etc)
         /*********** TODO: the tag level features that don't depend on position can be cached ***************/
         val arg             = "+A="    + cur.label
+        val prevArg         = "+A-1="  + prev.label
         val curTag          = "+R="    + cur.tag
         val prevTag         = "+R-1="  + prev.tag
         val pos             = "+P="    + concept.realization.headPos
@@ -104,10 +105,10 @@ class Decoder(val ruleInventory: RuleInventory) {
         //{ val concept       = "+c="    + input.node.concept  // concept
         FeatureVector(Map(
             // TODO: features of where the concept is, lexical unigrams
-            //"R="+cur.tag -> 1.0,
-            //"R-1="+prev.tag+"+R="+cur.tag -> 1.0,
-            //"A-1="+prev.label+"+A="+cur.label -> 1.0,
-            //"R="+cur.tag+"+dist" -> abs(concept.position-position),
+            //curTag -> 1.0,
+            //prevTag + curTag -> 1.0,
+            //prevArg + arg -> 1.0,
+            //curTag + dist -> distance,
             //"R="+cur.tag+"+s="+(if(left) {"L"} else {"R"}) -> 1.0,
             //"R="+cur.tag+"+s="+(if(left) {"L"} else {"R"})+"+dist" -> abs(concept.position-position),
             //"A="+cur.label+"+dist" -> abs(concept.position-position),
