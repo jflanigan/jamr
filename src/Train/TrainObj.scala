@@ -69,32 +69,32 @@ abstract class TrainObj[FeatureVector <: AbstractFeatureVector](options: Map[Sym
                 val o = oracle(i, weights)
                 grad -= o._1
                 //logger(0, "Gradient:\n"+grad.toString)
-                (grad, score + o._2)
+                (grad, score - o._2)
             } else if (loss == "SVM") {
                 val (grad, score) = costAugmented(i, weights, scale)
                 val o = oracle(i, weights)
                 grad -= o._1
-                (grad, score + o._2)
+                (grad, score - o._2)
             } else if (loss == "Ramp1") {
                 val (grad, score) = costAugmented(i, weights, scale)
                 val o = decode(i, weights)
                 grad -= o._1
-                (grad, score + o._2)
+                (grad, score - o._2)
             } else if (loss == "Ramp2") {
                 val (grad, score, _) = decode(i, weights)
                 val o = costAugmented(i, weights, -1.0 * scale)
                 grad -= o._1
-                (grad, score + o._2)
+                (grad, score - o._2)
             } else if (loss == "Ramp3") {
                 val (grad, score) = costAugmented(i, weights, scale)
                 val o = costAugmented(i, weights, -1.0 * scale)
                 grad -= o._1
-                (grad, score + o._2)
-            } else if (loss == "Latent_Hinge") {
+                (grad, score - o._2)
+            } else if (lostt == "Infinite_Ramp" || loss == "Latent_Hinge") {    // I called this Latent_Hinge earlier
                 val (grad, score) = costAugmented(i, weights, scale)
                 val o = costAugmented(i, weights, -10000000.0)
                 grad -= o._1
-                (grad, score + o._2)
+                (grad, score - o._2)
             } else {
                 System.err.println("Error: unknown training loss " + loss); sys.exit(1).asInstanceOf[Nothing]
             }
