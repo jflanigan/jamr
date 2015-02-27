@@ -30,7 +30,8 @@ case class PhraseConceptPair(words: String, graphFrag: String, fullPos: String, 
         return Graph.parse(graphFrag).root
     }
     def concept : String = {
-        return graphFrag.split(" ")(0).replaceAllLiterally("(","")
+        //return graphFrag.split(" ")(0).replaceAllLiterally("(","")
+        return amrInstance.concept
     }
 }
 

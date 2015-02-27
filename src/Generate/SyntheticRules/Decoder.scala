@@ -105,21 +105,22 @@ class Decoder(val ruleInventory: RuleInventory) {
         //{ val concept       = "+c="    + input.node.concept  // concept
         FeatureVector(Map(
             // TODO: features of where the concept is, lexical unigrams
+
             //curTag -> 1.0,
             //prevTag + curTag -> 1.0,
             //prevArg + arg -> 1.0,
             //curTag + dist -> distance,
-            //"R="+cur.tag+"+s="+(if(left) {"L"} else {"R"}) -> 1.0,
-            //"R="+cur.tag+"+s="+(if(left) {"L"} else {"R"})+"+dist" -> abs(concept.position-position),
-            //"A="+cur.label+"+dist" -> abs(concept.position-position),
-            //"A="+cur.label+"+s="+(if(left) {"L"} else {"R"}) -> 1.0,
-            //"A="+cur.label+"+s="+(if(left) {"L"} else {"R"})+"+dist" -> abs(concept.position-position),
-            //"P="+pos+"+R="+cur.tag -> 1.0,
-            //"P="+pos+"+R-1="+prev.tag+"+"+"r="+cur.tag -> 1.0,
-            //"P="+pos+"+A-1="+prev.label+"+"+"A="+cur.label -> 1.0,
-            //"P="+pos+"+R="+cur.tag+"+dist" -> abs(concept.position-position),
-            //"P="+pos+"+R="+cur.tag+"+s="+(if(left) {"L"} else {"R"}) -> 1.0,
-            //"P="+pos+"+R="+cur.tag+"+s="+(if(left) {"L"} else {"R"})+"+dist" -> abs(concept.position-position),
+            //curTag + side -> 1.0,
+            //curTag + side + dist -> distance,
+            //arg + dist -> distance,
+            //arg + side -> 1.0,
+            //arg + side + dist -> distance,
+            //pos + curTag -> 1.0,
+            //pos + prevTag + curTag -> 1.0,
+            //pos + prevArg + arg -> 1.0,
+            //pos + curTag + dist -> distance,
+            //pos + curTag + side -> 1.0,
+            //pos + curTag + side + dist -> distance,
 
             //curTag -> 1.0,                                // bias for tags
             //arg + dist -> distance,

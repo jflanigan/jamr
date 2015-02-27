@@ -15,8 +15,8 @@ class RuleInventory {
     val argTableRight : MultiMapCount[(String, String), Arg] = new MultiMapCount() // Map from (pos, arg) to realizations with counts
     val argsLeft : Map[(String, String), Array[Arg]] = Map()            // Todo: fill in (pos, arg) -> array of realizations
     val argsRight : Map[(String, String), Array[Arg]] = Map()           // make sure there are no gaps
-    val conceptArgsLeft : Map[(String, String), Array[Arg]] = Map()     // (concept, arg) -> array of realizations
-    val conceptArgsRight : Map[(String, String), Array[Arg]] = Map()    // (concept, arg) -> array of realizations
+    val conceptArgsLeft : Map[(String, String), List[Arg]] = Map()     // (concept, arg) -> array of realizations
+    val conceptArgsRight : Map[(String, String), List[Arg]] = Map()    // (concept, arg) -> array of realizations
   
     def load(filename: String) {    // TODO: move to companion object
         phraseTable.readFile(filename+".phrasetable", x => x, PhraseConceptPair.apply)
@@ -24,6 +24,7 @@ class RuleInventory {
         abstractRules.readFile(filename+".abstractrules", x => x, Rule.apply)
         createArgTables()
         createArgs()
+        createConceptArgs()
     }
 
     def save(filename: String) {
@@ -80,6 +81,7 @@ class RuleInventory {
         }
         createArgTables()
         createArgs()
+        createConceptArgs()
     }
 
     def getRules(node: Node) : List[Rule] = {
@@ -144,18 +146,24 @@ class RuleInventory {
 
     def getArgsLeft(conceptRel: PhraseConceptPair, arg: String) : Array[Arg] = {
         val concept = conceptRel.concept
+        //logger(0, "arg: " + arg)
         if (conceptArgsLeft.contains((concept,arg))) {
-            conceptArgsLeft((concept,arg))
+            conceptArgsLeft((concept,arg)).toArray
         } else {
+            //assert(false)
+            logger(0, "WARNING: Can't find " + (concept, arg).toString + " in conceptArgsLeft")
             argsLeft.getOrElse((conceptRel.headPos,arg), Array(Arg.Default(arg)))   // TODO: filter to most common args
         }
     }
 
     def getArgsRight(conceptRel: PhraseConceptPair, arg: String) : Array[Arg] = {
         val concept = conceptRel.concept
+        //logger(0, "arg: " + arg)
         if (conceptArgsRight.contains((concept,arg))) {
-            conceptArgsRight((concept,arg))
+            conceptArgsRight((concept,arg)).toArray
         } else {
+            //assert(false)
+            logger(0, "WARNING: Can't find " + (concept, arg).toString + " in conceptArgsRight")
             argsRight.getOrElse((conceptRel.headPos,arg), Array(Arg.Default(arg)))  // TODO: filter to most common args
         }
     }
@@ -189,15 +197,35 @@ class RuleInventory {
     private def createConceptArgs() {
         // Populates conceptArgsLeft and conceptArgsRight
         // Must call extractRules before calling this function
+        logger(0, "******************* CREATING ARG TABLES *******************")
         for ((concept, rules) <- lexRules.map) {    // lexRules indexes by root concept
-            for ((rule, count) <- rules if ruleOk(rule, count)) {
+            for ((rule, count) <- rules /*if ruleOk(rule, count)*/) {
+                logger(0,"rule: "+rule.toString)
                 for (arg <- rule.left(rule.argRealizations)) {
-                    argTableLeft.add((concept, arg.label) -> arg, count)
+                    logger(0,"Adding left: "+(concept, arg.label).toString+" -> " + arg.toString)
+                    conceptArgsLeft((concept, arg.label)) = arg :: conceptArgsLeft.getOrElse((concept, arg.label), List())
+                    logger(0,"conceptArgsLeft: "+conceptArgsLeft((concept, arg.label)).toString)
                 }
                 for (arg <- rule.right(rule.argRealizations)) {
-                    argTableRight.add((concept, arg.label) -> arg, count)
+                    logger(0,"Adding right: "+(concept, arg.label).toString+" -> " + arg.toString)
+                    conceptArgsRight((concept, arg.label)) = arg :: conceptArgsRight.getOrElse((concept, arg.label), List())
+                    logger(0,"conceptArgsRight: "+conceptArgsRight((concept, arg.label)).toString)
                 }
             }
+        }
+        for ((key, values) <- conceptArgsLeft) {
+            conceptArgsLeft(key) = values.distinct
+        }
+        for ((key, values) <- conceptArgsRight) {
+            conceptArgsRight(key) = values.distinct
+        }
+        logger(0, "******************* ARG TABLE LEFT *******************")
+        for (((concept, label), arg) <- conceptArgsLeft.toArray.sortBy(x => x._1)) {
+            logger(0, concept + " ||| " + label + " ||| " + arg.toString)
+        }
+        logger(0, "******************* ARG TABLE RIGHT *******************")
+        for (((concept, label), arg) <- conceptArgsRight.toArray.sortBy(x => x._1)) {
+            logger(0, concept + " ||| " + label + " ||| " + arg.toString)
         }
     }
 
