@@ -35,8 +35,8 @@ object AlignSpans {
     def createSpans(sentence: Array[String], /*stemmedSentence: Array[List[String]],*/ node: Node, wordAlignments: Array[Option[Node]], spanAlignments: Array[Option[Int]], spanIndex: Option[Int], spans: ArrayBuffer[Span]) : Option[Span] = {
     // Returns the span for 'node'
 //Span(var start: Int, var end: Int, var nodeIds: List[String], var words: String, var amr: Node
-//Node(var id: String, name: Option[String], concept: String, var relations: List[(String, Node)], var topologicalOrdering: List[(String, Node)], var variableRelations: List[(String, Var)], var alignment: Option[Int], var span: Option[Int])
-        var mySpan = Span(sentence.size, 0, List(node.id), "", Node("", node.name, node.concept, List[(String, Node)](), List[(String, Node)](), List[(String, Var)](), None, ArrayBuffer()), false) // will update later
+//Node(var id: String, name: Option[String], concept: String, var relations: List[(String, Node)], var topologicalOrdering: List[(String, Node)], var variableRelations: List[(String, Node)], var alignment: Option[Int], var span: Option[Int])
+        var mySpan = Span(sentence.size, 0, List(node.id), "", Node("", node.name, node.concept, List[(String, Node)](), List[(String, Node)](), List[(String, Node)](), None, ArrayBuffer()), false) // will update later
         var valid = false
         if (specialConcepts contains node.concept) {
             var mySpanIndex = spanIndex
