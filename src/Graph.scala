@@ -510,6 +510,40 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         }
         breadthFirst(visit = addChildRelation, revisit = addVariableRelation)
     }
+/*
+    def MstTopologocalOrdering(weight: (Node, String, Node, Int) => Double) {
+        val nodes: Array[Node] = getNodeById.valuesIterator.toArray     // caching this
+        val set: Map[Node, Set[Node]] = Map() ++ nodes.map(x => (x, Set(x)))
+        def connected : Boolean = if (nodes.size > 0) { nodes.size == set(nodes(0)) } else { true }
+        def addEdge(node1: Node, node2: Node) {
+            if (set(node1) != set(node2)) {   // If different sets, then merge them
+                set(node1) ++= set(node2)
+                for (node <- set(node2)) {
+                    set(node) = set(node1)
+                }
+            }
+        }
+
+        val queue = new PriorityQueue[(Double, Node, Node, String)]()(Ordering.by(x => x._1))
+        def recursiveAdd(node1: Node, relation: String, node2: String, depth: Int) {
+            queue.enqueue((weight, node1, node2, label)
+        }
+        root.children.maprecursiveAdd(
+
+            for { (node1, index1) <- nodeArray.zipWithIndex
+                  ((label, weight), index2) <- neighbors(index1).zipWithIndex
+                  if node1 != node2 } {
+                queue.enqueue((weight, node1, node2, label))
+            }
+
+        // Kruskal's algorithm
+        while (!connected) {
+            val (weight, node1, node2, label) = queue.dequeue
+            if (set(node1) != set(node2)) {
+                addEdge(node1, node2)
+            }
+        }
+    }*/
 
     private def getNextVariableName(c: Char) : String = {
         if (!getNodeByName.contains(c.toString)) {
