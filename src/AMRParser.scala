@@ -56,6 +56,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             case "--training-data" :: value :: tail =>   parseOptions(map + ('trainingData -> value), tail) // used to be "--amr-oracle-data"
             case "--training-dev" :: value :: tail =>    parseOptions(map + ('trainingDev -> value), tail)
             //case "--amr-oracle-data" :: value :: tail => parseOptions(map + ('amrOracleData -> value), tail)
+            case "--normalize-mod" :: tail =>            parseOptions(map + ('normalizeMod -> "true"), tail)
             case "--smatch-eval" :: value :: tail =>     parseOptions(map + ('smatchEval -> value), tail)
             case "--output-format" :: value :: l =>      parseOptions(map + ('outputFormat -> value), l)
             case "--ignore-parser-errors" :: l =>        parseOptions(map + ('ignoreParserErrors -> "true"), l)
@@ -90,6 +91,8 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
 
         val outputFormat = options.getOrElse('outputFormat,"triples").split(",").toList
         // Output format is comma separated list of: nodes,edges,AMR,triples
+
+        Graph.normalizeMod = options.contains('normalizeMod)
 
         val stage1 : ConceptInvoke.Decoder = {
             if (!options.contains('stage1Oracle) && !options.contains('stage2Train)) {
