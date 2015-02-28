@@ -383,23 +383,22 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         }
     }
 
-    def normalizeInverseRelations /*(normalizeMod: Boolean = false)*/ {
+    def normalizeInverseRelations {
         // For all nodes, converts all inverse relations in node.relations into forward relations for the corresponding nodes
-        // Also converts 'domain' edge into opposite direction 'mod' edge
-        val normalizeMod = false     // TODO: test to see if there is a performance difference
+        // Optionally converts 'domain' edge into opposite direction 'mod' edge (see normalizeMod in Graph object)
         for (node1 <- nodes ) {
             for ((rel, node2) <- node1.relations) {
                 if (rel.endsWith("-of")) {
                     // Add non-inverse relation to node2
                     node2.relations = node2.relations ::: List((rel.slice(0,rel.size-3), node1))
                 }
-                if (rel.matches("domain") && normalizeMod) {
+                if (rel.matches("domain") && Graph.normalizeMod) {
                     node2.relations = node2.relations ::: List(("mod", node1))
                 }
             }
             // Remove inverse relations and domain from node1
             node1.relations = node1.relations.filterNot(x => x._1.endsWith("-of") ||
-                (x._1.matches("domain") && normalizeMod) )
+                (x._1.matches("domain") && Graph.normalizeMod) )
         }
     }
 
@@ -595,6 +594,8 @@ object Graph {
         graph.makeIds()
         return graph
     }
+
+    var normalizeMod = false    // static option to normalize 'domain' to 'mod' in normalizeInverseRelations
 
     //def empty() : Graph = { val g = parse("(n / none)"); g.getNodeById.clear; g.getNodeByName.clear; return g }
     //def null() : Graph = { parse("(n / null)") }
