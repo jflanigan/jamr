@@ -90,7 +90,7 @@ class RuleInventory {
     }
 
     def getRealizations(node: Node) : List[(PhraseConceptPair, List[String])] = {   // phrase, arg labels of children not consumed
-        return phraseTable.map.getOrElse(node.concept, Map()).map(x => (x._1, node.children.map(y => y._1).diff(x._1.amrInstance.children.map(y => y._1)))).toList /*::: passThroughRealizations(node)*/ // TODO: should produce a possible realization if not found
+        return phraseTable.map.getOrElse(node.concept, Map()).map(x => (x._1, node.children.map(y => y._1).diff(x._1.amrInstance.children.map(y => y._1)))).toList /*::: passThroughRealizations(node)*/ // TODO: should filter to realizations that could match
     }
 
     def argOnLeft(concept: PhraseConceptPair, arg: String) : Boolean = {
@@ -158,7 +158,7 @@ class RuleInventory {
             if (node.concept.matches("\".*\"")) {
                 // Pass through for string literals
                 List(Rule(List(), ConceptInfo(PhraseConceptPair(node.concept.drop(1).init, node.concept, "NNP", "NNP"), 0), "", ""))
-            } else if (getRealizations(node).size == 0) {
+            } else if (getRealizations(node).contains((x: (PhraseConceptPair, List[String]))  => x._1.amrInstance.children.size == 0)) {
                 // concept has no realization
                 if (node.concept.matches(""".*-[0-9][0-9]""")) {
                     // TODO: add inverse rules of WordNet's Morphy: http://wordnet.princeton.edu/man/morphy.7WN.html
