@@ -139,6 +139,37 @@ class RuleInventory {
         }
     } */
 
+    def passThroughRealization(node: Node) : List[PhraseConceptPair] = {   // TODO: add features for syntheticRules
+        if (node.children.size > 0) {
+            if (Set("name", "date-entity").contains(node.concept) || node.concept.matches(".+-.*[a-z]+") || node.children.exists(_._1 == ":name")) {
+                // matches list of deleteble concepts
+                List(PhraseConceptPair("", node.concept, "NN", "NN"))
+            } else /*if (getRealizations(node).size == 0)*/ {
+                // concept has no realization
+                List(PhraseConceptPair(node.concept.replaceAll("""-[0-9][0-9]$""",""), node.concept, "NN", "NN"))
+            /*} else {
+                // it has a realization, so we won't provide one (since the synthetic rule model will provide one)
+                List() */
+            }
+        } else {
+            if (node.concept.matches("\".*\"")) {
+                // Pass through for string literals
+                List(PhraseConceptPair(node.concept.drop(1).init, node.concept, "NNP", "NNP"))
+            } else if (getRealizations(node).contains((x: (PhraseConceptPair, List[String]))  => x._1.amrInstance.children.size == 0)) {
+                // concept has no realization
+                if (node.concept.matches(""".*-[0-9][0-9]""")) {
+                    // TODO: add inverse rules of WordNet's Morphy: http://wordnet.princeton.edu/man/morphy.7WN.html
+                    List(PhraseConceptPair(node.concept.replaceAll("""-[0-9][0-9]$""",""), node.concept, "VB", "VB"))
+                } else {
+                    List(PhraseConceptPair(node.concept, node.concept, "NN", "NN"))
+                }
+            } else {
+                // it has a realization, so we won't provide one (since the synthetic rule model will provide one)
+                List()
+            }
+        }
+    }
+
     def passThroughRules(node: Node) : List[Rule] = {   // TODO: change to passThroughRealizations (and add features for syntheticRules)
         if(node.children.size > 0) {
             if (Set("name", "date-entity").contains(node.concept) || node.children.exists(_._1 == ":name")) {
