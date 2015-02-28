@@ -369,17 +369,37 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         
     } */
 
-    def normalizeInverseRelations() {
-        // For all nodes, converts all inverse relations in node.relations into forward relations for the corresponding nodes
-        for (node1 <- nodes ) {
-            for { (rel, node2) <- node1.relations
-                  if rel.endsWith("-of")
-                  relation = rel.slice(0,rel.size-3) } {
-                // Add non-inverse relation to node2
-                node2.relations = node2.relations ::: List((relation, node1))
+    def normalizeModOfAndDomainOf() {
+        // converts domain-of and mod-of into mod and domain, respectively (see AMR guidelines)
+        def normalize(relation: String) : String = {
+            relation match {
+                case "mod-of" => "domain"
+                case "domain-of" => "mod"
+                case x => x
             }
-            // Remove inverse relations from node1
-            node1.relations = node1.relations.filter(x => !x._1.endsWith("-of"))
+        }
+        for (node <- nodes) {
+            node.relations = node.relations.map(x => (normalize(x._1), x._2))
+        }
+    }
+
+    def normalizeInverseRelations /*(normalizeMod: Boolean = false)*/ {
+        // For all nodes, converts all inverse relations in node.relations into forward relations for the corresponding nodes
+        // Also converts 'domain' edge into opposite direction 'mod' edge
+        val normalizeMod = false     // TODO: test to see if there is a performance difference
+        for (node1 <- nodes ) {
+            for ((rel, node2) <- node1.relations) {
+                if (rel.endsWith("-of")) {
+                    // Add non-inverse relation to node2
+                    node2.relations = node2.relations ::: List((rel.slice(0,rel.size-3), node1))
+                }
+                if (rel.matches("domain") && normalizeMod) {
+                    node2.relations = node2.relations ::: List(("mod", node1))
+                }
+            }
+            // Remove inverse relations and domain from node1
+            node1.relations = node1.relations.filterNot(x => x._1.endsWith("-of") ||
+                (x._1.matches("domain") && normalizeMod) )
         }
     }
 
@@ -469,6 +489,7 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         } while (queue.size != 0)
         logger(2, "visited = "+visited)
         assert(visited.size == nodes.size, "The graph does not span the nodes")
+        normalizeModOfAndDomainOf
     }
 
     private def getNextVariableName(c: Char) : String = {
