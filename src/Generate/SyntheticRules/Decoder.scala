@@ -149,7 +149,9 @@ class Decoder(val ruleInventory: RuleInventory) {
             words + arg + side + dist -> distance,
             //concept + curTag -> 1.0,                      // no, should depend on words, not concept
             //words + curTag -> 1.0                         // no, should depend on side
-            words + curTag + side -> 1.0,
+            //words + curTag + side -> 1.0,
+            words + pos + curTag + side -> 1.0,             // should depend on POS of realization (for example Output: Leinburd stated that the use the money for funding terrorist is known  Ref: Leinburd stated that it was known that the money was used to fund terrorism .  The use_NN of vs use_VB the)
+            //concept + pos +curTag + side -> 1.0,            // this should be ok
 
             "count" -> (leftCount + rightCount),
             "count_l" -> leftCount,
