@@ -380,6 +380,8 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         }
         for (node <- nodes) {
             node.relations = node.relations.map(x => (normalize(x._1), x._2))
+            node.topologicalOrdering = node.topologicalOrdering.map(x => (normalize(x._1), x._2))
+            node.variableRelations = node.variableRelations.map(x => (normalize(x._1), x._2))
         }
     }
 
@@ -592,6 +594,7 @@ object Graph {
         graph.makeVariables()
         graph.unifyVariables()
         graph.makeIds()
+        graph.normalizeModOfDomainOf()
         return graph
     }
 
