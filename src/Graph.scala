@@ -412,7 +412,7 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
 
     def normalizeInverseRelations {
         // For all nodes, converts all inverse relations in node.relations into forward relations for the corresponding nodes
-        // Optionally converts 'domain' edge into opposite direction 'mod' edge (see normalizeMod in Graph object)
+        // Optionally converts 'domain' edge into opposite direction 'mod' edge (see normalizeMod static member in Graph object)
         for (node1 <- nodes ) {
             for ((rel, node2) <- node1.relations) {
                 if (rel.endsWith("-of")) {
@@ -668,7 +668,7 @@ object Graph {
         graph.makeVariables()
         graph.unifyVariables()
         graph.makeIds()
-        graph.normalizeModOfDomainOf()
+        graph.normalizeModOfAndDomainOf()
         return graph
     }
 
