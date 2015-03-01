@@ -1,0 +1,26 @@
+jmflanig@supercomputer:/disk2/work/amr/internal/generate-supercomputer/models/LDC-2013-Sep/dev-grammars$ zcat grammar190.gz | grep -v 'name\|person' | grep 'broadcast' | less
+(X (X broadcast-01) (MANNER [X])) ||| broadcast [1] ||| passthrough=1
+(X (X broadcast-01) (MANNER [X])) ||| [1] been broadcast ||| synthetic=1
+
+'[1] been broadcast' seems like a bug.
+
+jmflanig@supercomputer:/disk2/work/amr/internal/generate-supercomputer/models/LDC-2013-Sep$ cat rule-model | awk '{print $2,$1}' | sort -gr | grep 'manner' | grep -v '+W' | grep 'VBN' | less
+2.123621089325179 +P=VBN+A=:manner+s=R
+1.5555126403315032 +P=VBN+R=|:manner|+s=R
+1.251804212663416 +P=VBN+R=by|:manner|+s=R
+1.0 +P=VBN+R=at_a|:manner|+s=R
+0.7243850237382571 +P=VBN+R=in|:manner|+s=R
+0.3803119776091357 +P=VBN+R=without_any|:manner|+s=R
+0.29289321881345254 +P=VBN+R=with|:manner|+s=R
+0.29289321881345254 +P=VBN+R=without_being|:manner|+s=R
+0.29289321881345254 +P=VBN+R=and_with_the|:manner|+s=R
+-0.29289321881345254 +P=VBN+R=|:manner|be+s=R
+-1.0 +P=VBN+R=|:manner|been+s=L
+-1.0 +P=VBN+R=|:manner|be+s=L
+-1.201294291550946 +P=VBN+R=|:manner|+s=L
+-1.5676439113453946 +P=VBN+A=:manner+s=R+dist
+-1.6297565119969217 +P=VBN+R=|:manner|been+s=R
+-1.9978721380866336 +P=VBN+A=:manner+dist
+-2.123621089325179 +P=VBN+A=:manner+s=L+dist
+-2.123621089325179 +P=VBN+A=:manner+s=L
+
