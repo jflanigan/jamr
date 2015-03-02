@@ -212,23 +212,28 @@ case class FeatureVector(labelset : Array[String],
           logger( 1, f"FastFeatureVector.FeatureVector.read counter=$counter" )
         }
         counter += 1
-        val newRegex( feature, _, label, value ) = line
-        if( !fmap.contains( feature ) ) {
-          fmap( feature ) = ValuesMap( 0.0, Map( ) )
-        }
-        if( label == null ) {
-          fmap( feature ).unconjoined = value.toDouble
-        }
-        else {
-          try {
-            fmap( feature ).conjoined( labelToIndex( label ) ) = value.toDouble
-          } catch {
-            case e: java.util.NoSuchElementException =>
-              if (missingFeatures.contains(label))
-                missingFeatures(label) += 1
-              else
-                missingFeatures(label) = 1
+      try {
+          val newRegex(feature, _, label, value) = line
+          if (!fmap.contains(feature)) {
+              fmap(feature) = ValuesMap(0.0, Map())
           }
+          if (label == null) {
+              fmap(feature).unconjoined = value.toDouble
+          }
+          else {
+              try {
+                  fmap(feature).conjoined(labelToIndex(label)) = value.toDouble
+              } catch {
+                  case e: java.util.NoSuchElementException =>
+                      if (missingFeatures.contains(label))
+                          missingFeatures(label) += 1
+                      else
+                          missingFeatures(label) = 1
+              }
+          }
+      } catch {
+            case e: scala.MatchError =>
+                logger(0, f"FastFeatureVector.FeatureVector.read scala.MatchError on line $line")
         }
       }
       missingFeatures.foreach(f => logger(0, f"Label ${f._1} not found ${f._2} times in FastFeatureVector.FeatureVector.read"))
