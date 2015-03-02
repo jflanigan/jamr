@@ -40,7 +40,10 @@ class Decoder1(featureNames: List[String],
         for (i <- Range(0, sentence.size)) {
             logger(2, "word = "+sentence(i))
             var conceptList = conceptInvoker.invoke(input,i)
-            logger(2, "Possible invoked concepts: "+conceptList)
+            if (conceptList.length > 0)
+                logger(2, "Possible invoked concepts: "+conceptList)
+            else
+                logger(1, f"* Unknown concept '${sentence(i)}'")
             // WARNING: the code below assumes that anything in the conceptList will not extend beyond the end of the sentence (and it shouldn't based on the code in Concepts)
             for (concept <- conceptList) {
                 val score = features.localScore(input, concept, i, i + concept.words.size)
