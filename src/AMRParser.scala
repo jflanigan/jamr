@@ -92,6 +92,8 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
   // the weights if JAMR is re-invoked in the same process. Save multiple version using modelName is a key
     var previousStage2: Map[String, GraphDecoder.Decoder] = Map()
 
+    var previousStage1: Map[String, ConceptInvoke.Decoder] = Map()
+
   // an optional callback that lets us get direct access to decoderResultGraph when parsing
     var resultHandler: Option[Graph => Unit] = None
 
@@ -107,22 +109,23 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
         val outputFormat = options.getOrElse('outputFormat,"triples").split(",").toList
         // Output format is comma separated list of: nodes,edges,AMR,triples
 
-        val stage1 : ConceptInvoke.Decoder = {
+        val stage1 : Option[ConceptInvoke.Decoder] = if (previousStage1.contains(modelName)) previousStage1.get(modelName) else {
             if (!options.contains('stage1Oracle) && !options.contains('stage2Train)) {
-                ConceptInvoke.Decoder(options, oracle = false)
+                Some(ConceptInvoke.Decoder(options, oracle = false))
             } else {
                 assert(!options.contains('stage1Train), "Error: --stage1-oracle should not be specified with --stage1-train")
-                ConceptInvoke.Decoder(options, oracle = true)
+                Some(ConceptInvoke.Decoder(options, oracle = true))
             }
         }
 
 
-        val stage2 : Option[GraphDecoder.Decoder] = if (previousStage2.contains(modelName)) previousStage2.get(modelName) else {
-        if((options.contains('stage1Only) || options.contains('stage1Train)) && !options.contains('stage2Train)) {
-                None
-            } else {
-                Some(GraphDecoder.Decoder(options))
-            }
+        val stage2 : Option[GraphDecoder.Decoder] = if (previousStage2.contains(modelName)) previousStage2.get(modelName)
+        else {
+            if((options.contains('stage1Only) || options.contains('stage1Train)) && !options.contains('stage2Train)) {
+                    None
+                } else {
+                    Some(GraphDecoder.Decoder(options))
+                }
         }
 
         if (stage2.isDefined) previousStage2 += (modelName -> stage2.get)
@@ -165,7 +168,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             if (!options.contains('stage1Weights)) {
                 logger(0,"Error: No stage1 weights file specified"); sys.exit(1)
             }
-            stage1.features.weights.read(Source.fromFile(options('stage1Weights).asInstanceOf[String]).getLines())
+            stage1.get.features.weights.read(Source.fromFile(options('stage1Weights).asInstanceOf[String]).getLines())
 
             //logger(0, "Stage1 weights:\n"+stage1.features.weights.toString)
 
@@ -223,7 +226,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                 val tok = tokenized(i)
                 val ner = nerFile(i)
                 val inputGraph = if (options.contains('stage1Oracle)) { Some(AMRTrainingData(oracleData(i)).toInputGraph) } else { None }
-                val stage1Result = stage1.decode(new Input(inputGraph,
+                val stage1Result = stage1.get.decode(new Input(inputGraph,
                                                            tok.split(" "),
                                                            line.split(" "),
                                                            dependencies(i),
