@@ -38,21 +38,21 @@ class Adagrad extends Optimizer[FeatureVector] {
 
         val weights = FeatureVector(initialWeights.labelset)
         weights += initialWeights
-        val avgWeights = FeatureVector(weights.labelset)
+        val avg_weights = FeatureVector(weights.labelset)
         val sumSq = FeatureVector(weights.labelset)         // G_{i,i}
         var pass = 0
 
         ////////////// Reload for warm start ////////////
-        case class WarmStart(pass: Int, t: Int, trainSequence: Array[Int], weights: String, avgWeights: String)
+        case class WarmStart(pass: Int, t: Int, trainSequence: Array[Int], weights: String, avg_weights: String)
         var warmStart : Option[WarmStart] = None
         if (warmStartFilename != None && Files.exists(Paths.get(warmStartFilename.get))) {
             val lines : String = managed(fromFile(warmStartFilename.get)).acquireAndGet(_.getLines().mkString("\n"))
             warmStart = Some(lines.unpickle[WarmStart]) // see http://stackoverflow.com/questions/23072118/scala-pickling-how
             weights.read(warmStart.get.weights.split("\n").iterator)
-            avgWeights.read(warmStart.get.avgWeights.split("\n").iterator)
+            avg_weights.read(warmStart.get.avg_weights.split("\n").iterator)
         }
 
-        while (pass < passes && (pass == 0 || trainingObserver(pass,avgWeights))) {
+        while (pass < passes && (pass == 0 || trainingObserver(pass,avg_weights))) {
             logger(-1,"Pass "+(pass+1).toString)
             var objective = 0.0 // objective is 1/N \sum_i=1^N Loss(i) + 1/2 * \lambda * ||weights||^2 (var objective is N times this)
             var trainSequence : Array[Int] = Random.shuffle(Range(0, trainingSize).toList).toArray
@@ -95,7 +95,7 @@ class Adagrad extends Optimizer[FeatureVector] {
 
                 ///////////// Save for warm start /////////////
                 if (warmStartFilename != None && t % warmStartInterval == warmStartInterval - 1) {
-                    val save = WarmStart(pass, t, trainSequence, weights.toString, avgWeights.toString)
+                    val save = WarmStart(pass, t, trainSequence, weights.toString, avg_weights.toString)
                     val str : String = save.pickle.value     // see http://stackoverflow.com/questions/23072118/scala-pickling-how
                     for (outputFile <- managed(new java.io.PrintWriter(new java.io.File(warmStartFilename.get), "UTF-8"))) { // see http://jsuereth.com/scala-arm/usage.html
                         outputFile.println(str)
@@ -104,16 +104,16 @@ class Adagrad extends Optimizer[FeatureVector] {
             }
             logger(-1,"                                   Avg objective value last pass: "+(objective/trainingSize.toDouble).toString)
             //logger(0,"                                                       objective: "+((0 until trainingSize).map(x => gradient(None, x, weights)._2).sum/trainingSize).toString)
-            avgWeights += weights
+            avg_weights += weights
             pass += 1
         }
-        trainingObserver(pass,avgWeights)
+        trainingObserver(pass,avg_weights)
         /////////// Remove warmStart file //////////
         if (warmStartFilename != None) {
             Files.delete(Paths.get(warmStartFilename.get))
         }
 
-        if(avg) { avgWeights } else { weights }
+        if(avg) { avg_weights } else { weights }
     }
 }
 
