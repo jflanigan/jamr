@@ -155,7 +155,7 @@ class RuleInventory {
             if (node.concept.matches("\".*\"")) {
                 // Pass through for string literals
                 List(PhraseConceptPair(node.concept.drop(1).init, node.concept, "NNP", "NNP"))
-            } else if (getRealizations(node).contains((x: (PhraseConceptPair, List[String]))  => x._1.amrInstance.children.size == 0)) {
+            } else if (getRealizations(node).contains((x: (PhraseConceptPair, List[String])) => x._1.amrInstance.children.size == 0)) {
                 // concept has no realization
                 if (node.concept.matches(""".*-[0-9][0-9]""")) {
                     // TODO: add inverse rules of WordNet's Morphy: http://wordnet.princeton.edu/man/morphy.7WN.html
@@ -172,7 +172,7 @@ class RuleInventory {
 
     def passThroughRules(node: Node) : List[Rule] = {   // TODO: change to passThroughRealizations (and add features for syntheticRules)
         if(node.children.size > 0) {
-            if (Set("name", "date-entity").contains(node.concept) || node.children.exists(_._1 == ":name")) {
+            if (Set("name", "date-entity").contains(node.concept) || node.concept.matches(".+-.*[a-z]+") || node.children.exists(_._1 == ":name")) {
                 // matches list of deleteble concepts
                 List(Rule(node.children.sortBy(_._1).map(x => Arg("", x._1, "")),
                           ConceptInfo(PhraseConceptPair("", node.concept, "NN", "NN"), 0), "", ""))
@@ -189,7 +189,7 @@ class RuleInventory {
             if (node.concept.matches("\".*\"")) {
                 // Pass through for string literals
                 List(Rule(List(), ConceptInfo(PhraseConceptPair(node.concept.drop(1).init, node.concept, "NNP", "NNP"), 0), "", ""))
-            } else if (getRealizations(node).contains((x: (PhraseConceptPair, List[String]))  => x._1.amrInstance.children.size == 0)) {
+            } else if (getRealizations(node).contains((x: (PhraseConceptPair, List[String])) => x._1.amrInstance.children.size == 0)) {
                 // concept has no realization
                 if (node.concept.matches(""".*-[0-9][0-9]""")) {
                     // TODO: add inverse rules of WordNet's Morphy: http://wordnet.princeton.edu/man/morphy.7WN.html
