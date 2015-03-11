@@ -69,14 +69,14 @@ object Viterbi {
         backpointers(T-1)(0) = sPrev
     
         // Follow backpointers
-        logger(3,"-- Viterbi --")  // CHANGE
+        //logger(3,"-- Viterbi --")  // CHANGE
         val decode = new Array[Int](T)
         var s = 0       // Final state
         for (t : Int <- Range(T-1, 0, -1)) {
             decode(t) = s
             if(verbosity >= 3) {
-                logger(3,"Viterbi("+t+") = "+viterbi(t).toList.toString)
-                logger(3,"backpointers("+t+") = "+backpointers(t).toList.toString)
+                //logger(3,"Viterbi("+t+") = "+viterbi(t).toList.toString)
+                //logger(3,"backpointers("+t+") = "+backpointers(t).toList.toString)
             }
             s = backpointers(t)(s)
         }

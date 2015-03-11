@@ -84,20 +84,20 @@ class Decoder(val ruleInventory: RuleInventory) {
             // TODO: remove all the logging
             val feats = localFeatures(prev, cur, i, adjustedConcept, input)
             val score = weights.dot(localFeatures(prev, cur, i, adjustedConcept, input))
-            logger(0, "prev: "+prev.toString+"  cur: "+cur.toString+"  localScore: " + score)
-            //logger(0, "local features:\n" + feats)
-            //logger(0, "relevant weights:\n"+weights.slice(feats))
+            logger(1, "prev: "+prev.toString+"  cur: "+cur.toString+"  localScore: " + score)
+            //logger(1, "local features:\n" + feats)
+            //logger(1, "relevant weights:\n"+weights.slice(feats))
             weights.dot(localFeatures(prev, cur, i, adjustedConcept, input))
         }
 
         val (resultTags, score) = Viterbi.decode(tags, localScore _)
-        logger(0, "resultTags: " + resultTags)
+        logger(1, "resultTags: " + resultTags)
         val rule = Rule(resultTags.slice(1,adjustedConcept.position) ::: resultTags.slice(adjustedConcept.position+1,tags.size-1), conceptInfo, "", "")
         val feats = oracle(rule, input)
-        logger(0, "Decoder returning score: " + weights.dot(feats))
-        logger(0, "Viterbi score: "+ score)
+        //logger(1, "Decoder returning score: " + weights.dot(feats))
+        logger(1, "Viterbi score: "+ score)
         assert(score == weights.dot(feats), "Internal inconsistancy Viterbi synthetic rule model")
-        return DecoderResult(rule, feats, weights.dot(feats))
+        return DecoderResult(rule, feats, score)
     }
 
     def oracle(rule: Rule, input: Input) : FeatureVector = {
@@ -177,7 +177,7 @@ class Decoder(val ruleInventory: RuleInventory) {
             "nonSWcount" -> (leftCount + rightCount - stopWordCount)
             ))
         //}
-        logger(0, "localFeatures returning local score = " + weights.dot(feats))
+        //logger(1, "localFeatures returning local score = " + weights.dot(feats))
         return feats
     }
 
