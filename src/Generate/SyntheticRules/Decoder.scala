@@ -43,17 +43,17 @@ class Decoder(val ruleInventory: RuleInventory) {
         val headPos = conceptRealization.headPos
         val leftTags : List[Array[Arg]] = children.map(label => getArgsLeft(conceptRealization, label))
         val rightTags : List[Array[Arg]] = children.map(label => getArgsRight(conceptRealization, label))
-        logger(0, "leftTags: "+children.zip(leftTags.map(x => x.size)).toString)
-        logger(0, "rightTags: "+children.zip(rightTags.map(x => x.size)).toString)
+        logger(0, "leftTag sizes: "+children.zip(leftTags.map(x => x.size)).toString)
+        logger(0, "rightTag sizes: "+children.zip(rightTags.map(x => x.size)).toString)
         val numArgs = children.size
         var bestResult : Option[DecoderResult] = None
         def permutationOk(argsLeft: List[String], argsRight: List[String]) : Boolean = {
-            // permutation is ok if we've seen all the args on that side in the rule inventory
+            // permutation is ok if we've seen the args on that side in the rule inventory
             !argsLeft.contains((arg: String) => !argOnLeft(conceptRealization, arg)) && !argsRight.contains((arg: String) => !argOnRight(conceptRealization, arg))
         }
         for (permutation <- (0 until numArgs).permutations) {
             for { i <- 0 to numArgs  // 0 to numArgs (inclusive)
-                  argsLeft : List[String] = permutation.slice(i,numArgs).map(x => children(x)).toList
+                  argsLeft : List[String] = permutation.slice(0,i).map(x => children(x)).toList
                   argsRight : List[String] = permutation.slice(i,numArgs).map(x => children(x)).toList
                   if permutationOk(argsLeft, argsRight)      // filter to allowed permutations
                 } {
@@ -73,24 +73,41 @@ class Decoder(val ruleInventory: RuleInventory) {
         return bestResult.get
     }
 
-    def decode(tagList: List[Array[Arg]], concept: ConceptInfo, input: Input) : DecoderResult = {
+    def decode(tagList: List[Array[Arg]], conceptInfo: ConceptInfo, input: Input) : DecoderResult = {
+        // TODO: the code below has some slow copying, maybe change so it's faster (still will be O(n) though)
+        val tags : Array[Array[Arg]] = (Array(Arg.START) :: tagList ::: List(Array(Arg.STOP))).toArray
+        logger(0, "tags: " + tags.map(x => x.toList).toList)
+        // Adjust the position of the concept because we added start tags
+        val adjustedConcept = ConceptInfo(conceptInfo.realization, conceptInfo.position+1)
+
         def localScore(prev: Arg, cur: Arg, i: Int) : Double = {
-            weights.dot(localFeatures(prev, cur, i, concept, input))
+            // TODO: remove all the logging
+            val feats = localFeatures(prev, cur, i, adjustedConcept, input)
+            val score = weights.dot(localFeatures(prev, cur, i, adjustedConcept, input))
+            logger(0, "prev: "+prev.toString+"  cur: "+cur.toString+"  localScore: " + score)
+            //logger(0, "local features:\n" + feats)
+            //logger(0, "relevant weights:\n"+weights.slice(feats))
+            weights.dot(localFeatures(prev, cur, i, adjustedConcept, input))
         }
-        //logger(0, "tagList: " + tagList.map(x => x(0)))
-        val (resultTags, score) = Viterbi.decode(tagList, localScore _, Arg.START, Arg.STOP)
-        //logger(0, "resultTags: " + resultTags.toList)
-        val rule = Rule(resultTags.slice(0,concept.position) ::: resultTags.drop(concept.position+1), concept, "", "")
+
+        val (resultTags, score) = Viterbi.decode(tags, localScore _)
+        logger(0, "resultTags: " + resultTags)
+        val rule = Rule(resultTags.slice(1,adjustedConcept.position) ::: resultTags.slice(adjustedConcept.position+1,tags.size-1), conceptInfo, "", "")
         val feats = oracle(rule, input)
+        logger(0, "Decoder returning score: " + weights.dot(feats))
+        logger(0, "Viterbi score: "+ score)
+        assert(score == weights.dot(feats), "Internal inconsistancy Viterbi synthetic rule model")
         return DecoderResult(rule, feats, weights.dot(feats))
     }
 
     def oracle(rule: Rule, input: Input) : FeatureVector = {
         // TODO: the code below has some slow copying, maybe change so it's faster (still will be O(n) though)
         val tags : Array[Arg] = (Arg.START :: rule.left(rule.argRealizations) ::: List(Arg.CONCEPT) ::: rule.right(rule.argRealizations) ::: List(Arg.STOP)).toArray
+        // Adjust the position of the concept because we added start tags
+        val adjustedConcept = ConceptInfo(rule.concept.realization, rule.concept.position+1)
         var feats = new FeatureVector()
         for (i <- 1 until tags.size) {
-            feats += localFeatures(tags(i-1), tags(i), i, rule.concept, input)
+            feats += localFeatures(tags(i-1), tags(i), i, adjustedConcept, input)
         }
         return feats
     }
@@ -113,7 +130,7 @@ class Decoder(val ruleInventory: RuleInventory) {
         val rightCount      = cur.right.count(_ == ' ')
         val stopWordCount   = splitStr(cur.left + " " + cur.right," ").count(x => stopwords.contains(x))
         //{ val concept       = "+c="    + input.node.concept  // concept
-        FeatureVector(Map(
+        val feats = FeatureVector(Map(
             // TODO: features of where the concept is, lexical unigrams
 
             //curTag -> 1.0,
@@ -160,6 +177,8 @@ class Decoder(val ruleInventory: RuleInventory) {
             "nonSWcount" -> (leftCount + rightCount - stopWordCount)
             ))
         //}
+        logger(0, "localFeatures returning local score = " + weights.dot(feats))
+        return feats
     }
 
 }
