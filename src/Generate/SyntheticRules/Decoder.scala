@@ -76,7 +76,7 @@ class Decoder(val ruleInventory: RuleInventory) {
     def decode(tagList: List[Array[Arg]], conceptInfo: ConceptInfo, input: Input) : DecoderResult = {
         // TODO: the code below has some slow copying, maybe change so it's faster (still will be O(n) though)
         val tags : Array[Array[Arg]] = (Array(Arg.START) :: tagList ::: List(Array(Arg.STOP))).toArray
-        logger(0, "tags: " + tags.map(x => x.toList).toList)
+        //logger(0, "tags: " + tags.map(x => x.toList).toList)
         // Adjust the position of the concept because we added start tags
         val adjustedConcept = ConceptInfo(conceptInfo.realization, conceptInfo.position+1)
 
@@ -96,7 +96,11 @@ class Decoder(val ruleInventory: RuleInventory) {
         val feats = oracle(rule, input)
         //logger(1, "Decoder returning score: " + weights.dot(feats))
         logger(1, "Viterbi score: "+ score)
-        assert(score == weights.dot(feats), "Internal inconsistancy Viterbi synthetic rule model")
+        if (java.lang.Math.abs(score - weights.dot(feats)) > .001) {
+            logger(0, "***** Internal inconsistancy in synthetic rule model *****")
+            logger(0, "score = " + score)
+            logger(0, "weights.dot(feats) = " + weights.dot(feats))
+        }
         return DecoderResult(rule, feats, score)
     }
 
