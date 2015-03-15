@@ -93,14 +93,44 @@ class RuleInventory {
         return phraseTable.map.getOrElse(node.concept, Map()).map(x => (x._1, node.children.map(y => y._1).diff(x._1.amrInstance.children.map(y => y._1)))).toList /*::: passThroughRealizations(node)*/ // TODO: should filter to realizations that could match
     }
 
-    def argOnLeft(concept: PhraseConceptPair, arg: String) : Boolean = {
+    def argOnLeft(conceptRel: PhraseConceptPair, arg: String) : Boolean = {
         // return true if we observed it on the left or we can back off to it on the left, or we didn't observe it at all
-        return conceptArgsLeft.contains((concept.concept, concept.headPos, arg)) || argsLeft.contains((concept.headPos, arg)) || !argsRight.contains((concept.headPos, arg))
+        //return conceptArgsLeft.contains((concept.concept, concept.headPos, arg)) || argsLeft.contains((concept.headPos, arg)) || !argsRight.contains((concept.headPos, arg))
+        val concept = conceptRel.concept
+        val pos = conceptRel.headPos
+        if (conceptArgsLeft.contains((concept, pos, arg))) {            // we observed it on the left
+            true
+        } else if (!conceptArgsRight.contains(concept, pos, arg)) {     // or we didn't observe it on the right
+            if (argsLeft.contains((pos, arg))) {                        // and we can back off to in on the left
+                true
+            } else if (!argsRight.contains((pos, arg))) {               // or we didn't observe it at all
+                true
+            } else {
+                false                                                   // false because we can back off on the right
+            }
+        } else { 
+            false                                                       // false because we observed it on the right
+        }
     }
 
     def argOnRight(concept: PhraseConceptPair, arg: String) : Boolean = {
         // return true if we observed it on the right or we can back off to it on the right, or we didn't observe it at all
-        return conceptArgsRight.contains((concept.concept, concept.headPos, arg)) || argsRight.contains((concept.headPos, arg)) || !argsLeft.contains((concept.headPos, arg))
+        //return conceptArgsRight.contains((concept.concept, concept.headPos, arg)) || argsRight.contains((concept.headPos, arg)) || !argsLeft.contains((concept.headPos, arg))
+        val concept = conceptRel.concept
+        val pos = conceptRel.headPos
+        if (conceptArgsRight.contains((concept, pos, arg))) {           // we observed it on the right
+            true
+        } else if (!conceptArgsLeft.contains(concept, pos, arg)) {      // or we didn't observe it on the left
+            if (argsRight.contains((pos, arg))) {                       // and we can back off to in on the right
+                true
+            } else if (!argsLeft.contains((pos, arg))) {                // or we didn't observe it at all
+                true
+            } else {
+                false                                                   // false because we can back off on the left
+            }
+        } else { 
+            false                                                       // false because we observed it on the left
+        }
     }
 
     def getArgsLeft(conceptRel: PhraseConceptPair, arg: String) : Array[Arg] = {
@@ -110,7 +140,7 @@ class RuleInventory {
         if (conceptArgsLeft.contains((concept,pos,arg))) {
             conceptArgsLeft((concept,pos,arg)).toArray
         } else {
-            logger(0, "WARNING: Can't find " + (concept, pos, arg).toString + " in conceptArgsLeft")
+            logger(0, "Can't find " + (concept, pos, arg).toString + " in conceptArgsLeft. Returning full list for the pos.")
             argsLeft.getOrElse((pos,arg), Array(Arg.Default(arg)))   // TODO: filter to most common args
         }
     }
@@ -122,7 +152,7 @@ class RuleInventory {
         if (conceptArgsRight.contains((concept,pos,arg))) {
             conceptArgsRight((concept,pos,arg)).toArray
         } else {
-            logger(0, "WARNING: Can't find " + (concept, pos, arg).toString + " in conceptArgsRight")
+            logger(0, "Can't find " + (concept, pos, arg).toString + " in conceptArgsRight. Returning full list for the pos.")
             argsRight.getOrElse((pos,arg), Array(Arg.Default(arg)))  // TODO: filter to most common args
         }
     }
