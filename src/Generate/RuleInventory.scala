@@ -108,12 +108,12 @@ class RuleInventory {
             } else {
                 false                                                   // false because we can back off on the right
             }
-        } else { 
+        } else {
             false                                                       // false because we observed it on the right
         }
     }
 
-    def argOnRight(concept: PhraseConceptPair, arg: String) : Boolean = {
+    def argOnRight(conceptRel: PhraseConceptPair, arg: String) : Boolean = {
         // return true if we observed it on the right or we can back off to it on the right, or we didn't observe it at all
         //return conceptArgsRight.contains((concept.concept, concept.headPos, arg)) || argsRight.contains((concept.headPos, arg)) || !argsLeft.contains((concept.headPos, arg))
         val concept = conceptRel.concept
@@ -128,7 +128,7 @@ class RuleInventory {
             } else {
                 false                                                   // false because we can back off on the left
             }
-        } else { 
+        } else {
             false                                                       // false because we observed it on the left
         }
     }
@@ -219,7 +219,7 @@ class RuleInventory {
             if (node.concept.matches("\".*\"")) {
                 // Pass through for string literals
                 List(Rule(List(), ConceptInfo(PhraseConceptPair(node.concept.drop(1).init, node.concept, "NNP", "NNP"), 0), "", ""))
-            } else if (getRealizations(node).contains((x: (PhraseConceptPair, List[String])) => x._1.amrInstance.children.size == 0)) {
+            } else if (!getRealizations(node).contains((x: (PhraseConceptPair, List[String])) => x._1.amrInstance.children.size == 1)) {
                 // concept has no realization
                 if (node.concept.matches(""".*-[0-9][0-9]""")) {
                     // TODO: add inverse rules of WordNet's Morphy: http://wordnet.princeton.edu/man/morphy.7WN.html
