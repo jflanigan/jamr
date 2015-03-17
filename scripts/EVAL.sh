@@ -63,6 +63,7 @@ ${JAMR_HOME}/run AMRParser \
   --stage1-weights "${STAGE1_WEIGHTS}" \
   --stage2-weights "${STAGE2_WEIGHTS}" \
   --dependencies "${OUTPUT}.deps" \
+  --training-data "${OUTPUT}.aligned.no_opN" \
   --ner "${OUTPUT}.IllinoisNER" \
   --tok "${OUTPUT}.snt.tok" \
   -v 0 \
