@@ -23,16 +23,23 @@ export MODEL_DIR="${JAMR_HOME}/models/ConceptInvoke_LDC2014T12"  # ideally keep 
 # The options specified below will override any options specified in the scripts
 # CONCEPT_ID_TRAINING_OPTIONS and RELATION_ID_TRAINING_OPTIONS will override PARSER_OPTIONS
 
+#export STAGE1_FEATURES="bias,length,fromNERTagger,conceptGivenPhrase"
+export STAGE1_FEATURES="bias,length,fromNERTagger,conceptGivenPhrase,count,phraseGivenConcept"
+
 export PARSER_OPTIONS="
     --stage1-synthetic-concepts NER,DateExpr,OntoNotes,NEPassThrough,PassThrough,WordNetPassThrough,verbs,nominalizations
     --stage1-predicates ${JAMR_HOME}/resources/OntoNotes-v4-predicates.txt
-    --stage1-features bias,length,fromNERTagger,conceptGivenPhrase
+    --stage1-features ${STAGE1_FEATURES}
     --stage2-decoder LR
     --stage2-features rootConcept,rootDependencyPathv1,bias,typeBias,self,fragHead,edgeCount,distance,logDistance,posPathv3,dependencyPathv4,conceptBigram
     --stage2-labelset ${JAMR_HOME}/resources/labelset-r4
     --output-format AMR,nodes,edges,root
     --ignore-parser-errors
     --print-stack-trace-on-errors
+"
+
+export CONCEPT_EXTRACT_OPTIONS="
+    --stage1-features $STAGE1_FEATURES
 "
 
 export CONCEPT_ID_TRAINING_OPTIONS="
