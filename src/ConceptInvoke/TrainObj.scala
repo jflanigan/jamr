@@ -58,11 +58,11 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
     }
 
     def costAugmented(input: Input, oracleInput: Input, trainingIndex: Option[Int], scale: Double) : DecoderResult = {    // TODO: move this into a cost augmented decoder object? Yes
-        if (!options.contains('precRecallTradeoff)) {
+        if (!options.contains('trainingPrecRecallTradeoff)) {
             System.err.println("Error: must specify --training-prec-recall")
             sys.exit(1)
         }
-        return decoder.decode(input, trainingIndex, costFunction(oracleInput, scale, options('precRecallTradeoff).toDouble))
+        return decoder.decode(input, trainingIndex, costFunction(oracleInput, scale, options('trainingPrecRecallTradeoff).toDouble))
     }
 
     private def costFunction(oracle: Input, scale: Double, prec: Double) : (Input, PhraseConceptPair, Int, Int) => Double = {
