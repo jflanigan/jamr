@@ -31,7 +31,10 @@ class Oracle(options: Map[Symbol, String],
 
     val conceptInvoker = new Concepts(options, phraseConceptPairs)
 
-    def decode(input: Input, cost: (Input, PhraseConceptPair, Int, Int) => Double) : DecoderResult = {
+    def decode(input: Input,
+               trainingIndex: Option[Int],
+               cost: (Input, PhraseConceptPair, Int, Int) => Double) : DecoderResult = {
+
         assert(input.graph != None, "Error: stage1 oracle decoder was not given a graph")
         val graph = input.graph.get
         val sentence = input.sentence
@@ -45,7 +48,7 @@ class Oracle(options: Map[Symbol, String],
 
         for (span <- graph.spans) {
             val words = span.words.split(" ").toList
-            val conceptList = conceptInvoker.invoke(input, span.start)
+            val conceptList = conceptInvoker.invoke(input, span.start, trainingIndex)
             //logger(1, "words = "+words.toString)
             //logger(1, "conceptList = "+conceptList.toString)
             val matching = conceptList.filter(x => x.words == words && x.graphFrag == span.amr.prettyString(detail = 0, pretty = false, vars = Set.empty[String]))

@@ -49,7 +49,7 @@ class Concepts(options: Map[Symbol, String],
         }
     }
 
-    def invoke(input: Input, i: Int) : List[PhraseConceptPair] = {
+    def invoke(input: Input, i: Int, trainingIndex: Option[Int]) : List[PhraseConceptPair] = {
         // returns a list of all concepts that can be invoke starting at 
         // position i in input.sentence (i.e. position i in the tokenized input)
         // Note: none of the concepts returned have spans that go past the end of the sentence
@@ -58,7 +58,16 @@ class Concepts(options: Map[Symbol, String],
             return List()
         }
 
-        var conceptList = conceptTable.getOrElse(sentence(i), List()).filter(x => x.words == sentence.slice(i, i+x.words.size).toList) // TODO: is this case insensitive??
+        var conceptList = if (options.contains('stage1TrainingLeaveOneOut) && trainingIndex != None) {
+            conceptTable.getOrElse(sentence(i), List()).filter(
+                    x => x.words == sentence.slice(i, i+x.words.size) &&    // TODO: is this case insensitive??
+                         x.trainingIndices.filter(j => j != trainingIndex.get).size > 0 // filter to concepts seen in other training examples (not just this one)
+            ).toList
+        } else {
+            conceptTable.getOrElse(sentence(i), List()).filter(
+                    x => x.words == sentence.slice(i, i+x.words.size)       // TODO: is this case insensitive??
+            ).toList
+        }
 
         if (conceptSources.contains("NER") && options.contains('ner)) {
             conceptList = input.ner.annotation.filter(_.start == i).map(x => namedEntity(input, x)).toList ::: conceptList

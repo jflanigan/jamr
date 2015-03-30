@@ -31,7 +31,10 @@ class Decoder1(options: Map[Symbol, String],
 
     val conceptInvoker = new Concepts(options, phraseConceptPairs)
 
-    def decode(input: Input, cost: (Input, PhraseConceptPair, Int, Int) => Double) : DecoderResult = {
+    def decode(input: Input,
+               trainingIndex: Option[Int],
+               cost: (Input, PhraseConceptPair, Int, Int) => Double) : DecoderResult = {
+
         logger(1, "\n--- Decoder1 ---\n")
         logger(1, "Sentence: "+input.sentence.mkString(" "))
         //logger(1, "Weights:\n"+features.weights.toString)
@@ -39,7 +42,7 @@ class Decoder1(options: Map[Symbol, String],
         val bestState : Array[Option[(Double, PhraseConceptPair, Int)]] = sentence.map(x => None)    // (score, concept, backpointer)
         for (i <- Range(0, sentence.size)) {
             logger(2, "word = "+sentence(i))
-            var conceptList = conceptInvoker.invoke(input,i)
+            var conceptList = conceptInvoker.invoke(input, i, trainingIndex)
             logger(2, "Possible invoked concepts: "+conceptList)
             // WARNING: the code below assumes that anything in the conceptList will not extend beyond the end of the sentence (and it shouldn't based on the code in Concepts)
             for (concept <- conceptList) {
@@ -69,7 +72,7 @@ class Decoder1(options: Map[Symbol, String],
                 val (localScore, concept, backpointer) = bestState(i).get
                 logger(2, "Adding concept: "+concept.graphFrag)
                 graph.addSpan(sentence, backpointer, i+1, concept.graphFrag)
-                for (c <- conceptInvoker.invoke(input,i).filter(x => x.words == concept.words && x.graphFrag == concept.graphFrag)) { // add features for all matching phraseConceptPairs (this is what the Oracle decoder does, so we do the same here)
+                for (c <- conceptInvoker.invoke(input, i, trainingIndex).filter(x => x.words == concept.words && x.graphFrag == concept.graphFrag)) { // add features for all matching phraseConceptPairs (this is what the Oracle decoder does, so we do the same here)
                     val f = features.localFeatures(input, c, i, i + concept.words.size)
                     feats += f
                     score += features.weights.dot(f) + cost(input, c, i, i + concept.words.size)

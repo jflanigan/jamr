@@ -32,6 +32,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             case "--stage1-only" :: l =>                 parseOptions(map + ('stage1Only -> "true"), l)
             case "--stage1-oracle" :: l =>               parseOptions(map + ('stage1Oracle -> "true"), l)
             case "--stage1-train" :: l =>                parseOptions(map + ('stage1Train -> "true"), l)
+            case "--stage1-training-leave-one-out"::l => parseOptions(map + ('stage1TrainingLeaveOneOut -> "true"), l)
             case "--stage1-eval" :: l =>                 parseOptions(map + ('stage1Eval -> "true"), l)
             case "--stage1-features" :: value :: l =>    parseOptions(map + ('stage1Features -> value), l)
             case "--stage1-synthetic-concepts" :: value :: l => parseOptions(map + ('stage1SyntheticConcepts -> value), l)
@@ -209,7 +210,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                                                            line.split(" "),
                                                            dependencies(i),
                                                            ner,
-                                                           None))
+                                                           None), None)  // Last None is no training index
                 logger(1, "Concepts:")
                 for ((id, node) <- stage1Result.graph.getNodeById) {
                     logger(1, "id = "+id+" concept = "+node.concept)

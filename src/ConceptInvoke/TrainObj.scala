@@ -38,14 +38,14 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
 
     def decode(i: Int, weights: FeatureVector) : (FeatureVector, Double, String) = {
         decoder.features.weights = weights
-        val result = decoder.decode(input(i))
+        val result = decoder.decode(input(i), Some(i))
         return (result.features, result.score, "")
     }
 
     def oracle(i: Int, weights: FeatureVector) : (FeatureVector, Double) = {
         oracle.features.weights = weights
         val amrData = AMRTrainingData(training(i))
-        val result = oracle.decode(Input(amrData, input(i), i, oracle = true, clearUnalignedNodes = true))
+        val result = oracle.decode(Input(amrData, input(i), i, oracle = true, clearUnalignedNodes = true), Some(i))
         return (result.features, result.score)
     }
 
@@ -54,7 +54,7 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
         val amrData = AMRTrainingData(training(i))
         val oracleInput : Input = Input(amrData, input(i), i, oracle = true, clearUnalignedNodes = true)
         if (!options.contains('precRecallTradeoff)) { System.err.println("Error: must specify --training-prec-recall for this training loss function."); sys.exit(1) }
-        val result = decoder.decode(input(i), costFunction(oracleInput, scale, options('precRecallTradeoff).toDouble))
+        val result = decoder.decode(input(i), Some(i), costFunction(oracleInput, scale, options('precRecallTradeoff).toDouble))
         return (result.features, result.score)
     }
 
@@ -143,9 +143,9 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
                                                         snt(i).split(" "),
                                                         dependencies(i),
                                                         ner(i),
-                                                        None))
+                                                        None), None)
             val amrData = AMRTrainingData(block)
-            val oracleResult = oracle.decode(Input(amrData, input(i), i, oracle = true, clearUnalignedNodes = true))  // TODO: check clearUnalignedNodes in AMRParser line 233
+            val oracleResult = oracle.decode(Input(amrData, input(i), i, oracle = true, clearUnalignedNodes = true), None)  // TODO: check clearUnalignedNodes in AMRParser line 233
 
             for (span <- stage1Result.graph.spans) {
                 if (oracleResult.graph.spans.count(x => x.start == span.start && x.end == span.end && x.amr.toString == span.amr.toString) > 0) {

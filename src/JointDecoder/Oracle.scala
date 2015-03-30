@@ -29,7 +29,7 @@ class Oracle(options: Map[Symbol, String],
         // ConceptInvoke features
         for (span <- graph.spans) {
             val words = span.words.split(" ").toList
-            val conceptList = conceptInvoker.invoke(input, span.start)
+            val conceptList = conceptInvoker.invoke(input, span.start, None) // TODO: make this work with leave-one-out training
             val matching = conceptList.filter(x => x.words == words && x.graphFrag == span.amr.prettyString(detail = 0, pretty = false, vars = Set.empty[String]))
             for (concept <- matching) {
                 feats += FastFeatureVector.fromBasicFeatureVector(stage1Features.localFeatures(input, concept, span.start, span.end), weights.labelset)
