@@ -39,7 +39,7 @@ class Concepts(options: Map[Symbol, String],
 
     private var tokens : Array[String] = Array()  // stores sentence.drop(i) (used in the dateEntity code to make it more concise)
     var ontoNotes : Set[String] = Set()           // could be multi-map instead
-    var lemmas : Set[String] = Set()
+    var lemmas : Set[String] = Set()              // TODO: check for lemma in a large morph-analyzed corpus
 
     if (options.contains('stage1Predicates)) {
         val Pred = """(.+)-([0-9]+)""".r
@@ -101,10 +101,11 @@ class Concepts(options: Map[Symbol, String],
     }
 
     def stemPassThrough(input: Input, i: Int) : List[PhraseConceptPair] = {
+        val word = input.sentence(i)
         val stems = Wordnet.stemmer(word)
-        if (stems.size > ) {
+        if (stems.size > 0) {
             List(PhraseConceptPair(
-                List(input.sentence(i)),
+                List(word),
                 stems.minBy(_.size),
                 FeatureVector(Map("stemPassThrough" -> 1.0)),
                 List()))
@@ -113,11 +114,10 @@ class Concepts(options: Map[Symbol, String],
 
     def verbs(input: Input, i: Int) : List[PhraseConceptPair] = {
         var concepts = List[PhraseConceptPair]()
-        val (start, stop) = input.pos.annotationSpan(start,stop)
-        val pos : Array[String] = input.annotation.slice(start,stop)
-        if (pos.size > 0 && pos.size(0).startsWith("V")) {  // it's a verb
+        val pos : Array[String] = input.pos.slice(i,i+1)    // NOTE: pos.slice is defined in Annotation.slice
+        if (pos.size > 0 && pos(pos.size-1).startsWith("V")) {  // it's a verb
             val word = input.sentence(i)
-            val stems = WordNet.stemmer(word)
+            val stems = Wordnet.stemmer(word)
             val stem = if (stems.size > 0) { stems.minBy(_.size) } else { word }
             concepts = List(PhraseConceptPair(
                 List(word),
