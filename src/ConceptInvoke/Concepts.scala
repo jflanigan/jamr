@@ -39,6 +39,7 @@ class Concepts(options: Map[Symbol, String],
 
     private var tokens : Array[String] = Array()  // stores sentence.drop(i) (used in the dateEntity code to make it more concise)
     var ontoNotes : Set[String] = Set()           // could be multi-map instead
+    var lemmas : Set[String] = Set()
 
     if (options.contains('stage1Predicates)) {
         val Pred = """(.+)-([0-9]+)""".r
@@ -70,7 +71,7 @@ class Concepts(options: Map[Symbol, String],
     }
 
     def ontoNotesLookup(input: Input, i: Int) : List[PhraseConceptPair] = {
-        val stems = WordNet.stemmer(input.sentence(i))
+        val stems = Wordnet.stemmer(input.sentence(i))
         val concepts = stems.filter(stem => ontoNotes.contains(stem)).map(stem => PhraseConceptPair(
             List(input.sentence(i)),
             stem+"-01",         // first sense is most common
@@ -83,10 +84,10 @@ class Concepts(options: Map[Symbol, String],
         var concepts = List[PhraseConceptPair]()
         for (j <- Range(1,7) if i + j < input.sentence.size) {
             concepts = PhraseConceptPair(
-                input.sentence.slice(i+j).toList,
+                input.sentence.slice(i,i+j).toList,
                 "(thing :name (name "+input.sentence.slice(i,i+j).map(x => ":op "+x).mkString(" ")+"))",
                 FeatureVector(Map("NEPassThrough" -> 1.0, "NEPassThrough_len" -> j)),
-                List())) :: concepts
+                List()) :: concepts
         }
         return concepts
     }
@@ -100,7 +101,7 @@ class Concepts(options: Map[Symbol, String],
     }
 
     def stemPassThrough(input: Input, i: Int) : List[PhraseConceptPair] = {
-        val stems = WordNet.stemmer(word)
+        val stems = Wordnet.stemmer(word)
         if (stems.size > ) {
             List(PhraseConceptPair(
                 List(input.sentence(i)),
