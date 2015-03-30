@@ -53,9 +53,16 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
         decoder.features.weights = weights
         val amrData = AMRTrainingData(training(i))
         val oracleInput : Input = Input(amrData, input(i), i, oracle = true, clearUnalignedNodes = true)
-        if (!options.contains('precRecallTradeoff)) { System.err.println("Error: must specify --training-prec-recall for this training loss function."); sys.exit(1) }
-        val result = decoder.decode(input(i), Some(i), costFunction(oracleInput, scale, options('precRecallTradeoff).toDouble))
+        val result = costAugmented(input(i), oracleInput, Some(i), scale)
         return (result.features, result.score)
+    }
+
+    def costAugmented(input: Input, oracleInput: Input, trainingIndex: Option[Int], scale: Double) : DecoderResult = {    // TODO: move this into a cost augmented decoder object? Yes
+        if (!options.contains('precRecallTradeoff)) {
+            System.err.println("Error: must specify --training-prec-recall")
+            sys.exit(1)
+        }
+        return decoder.decode(input, trainingIndex, costFunction(oracleInput, scale, options('precRecallTradeoff).toDouble))
     }
 
     private def costFunction(oracle: Input, scale: Double, prec: Double) : (Input, PhraseConceptPair, Int, Int) => Double = {
@@ -145,7 +152,20 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
                                                         ner(i),
                                                         None), None)
             val amrData = AMRTrainingData(block)
-            val oracleResult = oracle.decode(Input(amrData, input(i), i, oracle = true, clearUnalignedNodes = true), None)  // TODO: check clearUnalignedNodes in AMRParser line 233
+            //val oracleResult = oracle.decode(Input(amrData, input(i), i, oracle = true, clearUnalignedNodes = true), None)  // TODO: check clearUnalignedNodes in AMRParser line 233
+            val oracleResult = costAugmented(new Input(None,
+                                                        tokenized(i).split(" "),
+                                                        snt(i).split(" "),
+                                                        dependencies(i),
+                                                        ner(i),
+                                                        None),
+                                             Input(amrData,
+                                                   input(i),
+                                                   i,
+                                                   oracle = true,
+                                                   clearUnalignedNodes = true), // TODO: check clearUnalignedNodes in AMRParser line 233
+                                             None,
+                                             10000000)
 
             for (span <- stage1Result.graph.spans) {
                 if (oracleResult.graph.spans.count(x => x.start == span.start && x.end == span.end && x.amr.toString == span.amr.toString) > 0) {

@@ -45,6 +45,7 @@ export CONCEPT_EXTRACT_OPTIONS="
 export CONCEPT_ID_TRAINING_OPTIONS="
     --stage1-training-leave-one-out
     --training-optimizer Adagrad
+    --training-loss Infinite_Ramp
     --training-passes 10
     --training-stepsize 1
     -v 1
