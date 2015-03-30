@@ -1,16 +1,18 @@
 #!/bin/bash
 set -eo pipefail
 
-# usage: create a config.sh script, source it, and then run ./TRAIN.sh to train the model
+# Use this script if you want to train and evaluate stage1 only (concept identification)
+
+# usage: create a config.sh script, source it, and then run ./TRAIN_STAGE1.sh to train the model
 
 if [ -z "$JAMR_HOME" ]; then
     echo 'Error: please source config script'
     exit 1
 fi
 
-#pushd "$JAMR_HOME/scripts/preprocessing"
-#./PREPROCESS.sh
-#popd
+pushd "$JAMR_HOME/scripts/preprocessing"
+./PREPROCESS.sh
+popd
 
 # Train
 pushd "$JAMR_HOME/scripts/training"
