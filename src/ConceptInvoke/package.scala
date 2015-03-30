@@ -18,11 +18,10 @@ package object ConceptInvoke {
         }
         val conceptFile = options('stage1ConceptTable)
         val conceptTable = Source.fromFile(conceptFile).getLines.map(x => PhraseConceptPair(x)).toArray
-        val useNER = options.contains('ner)
-        if (oracle) {
-            new Oracle(options, stage1Features, conceptTable, useNER)
+        if (oracle) {   // TODO: what about cost augmented as oracle?
+            new Oracle(options, stage1Features, conceptTable)
         } else {
-            new Decoder1(options, stage1Features, conceptTable, useNER)
+            new Decoder1(options, stage1Features, conceptTable)
         }
     }
 }

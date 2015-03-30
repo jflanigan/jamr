@@ -22,9 +22,7 @@ object Concepts {
 }
 
 class Concepts(options: Map[Symbol, String],
-               phraseConceptPairs: Array[PhraseConceptPair],
-               useNER: Boolean = true,
-               useDateExpr: Boolean = true) {
+               phraseConceptPairs: Array[PhraseConceptPair]) {
 
 // This class contains the code used to invoke concepts.
 // Concepts are invoked by calling the invoke() method, which returns a list of all
@@ -36,6 +34,8 @@ class Concepts(options: Map[Symbol, String],
         conceptTable(word) = pair :: conceptTable.getOrElse(word, List())
         //logger(2, "conceptTable("+word+") = "+conceptTable(word))
     }
+
+    val conceptSources = options.getOrElse('stage1SyntheticConcepts, "NER,DateExpr").split(",").toSet
 
     private var tokens : Array[String] = Array()  // stores sentence.drop(i) (used in the dateEntity code to make it more concise)
     var ontoNotes : Set[String] = Set()           // could be multi-map instead
@@ -59,12 +59,31 @@ class Concepts(options: Map[Symbol, String],
         }
 
         var conceptList = conceptTable.getOrElse(sentence(i), List()).filter(x => x.words == sentence.slice(i, i+x.words.size).toList) // TODO: is this case insensitive??
-        if (useNER) {
+
+        if (conceptSources.contains("NER") && options.contains('ner)) {
             conceptList = input.ner.annotation.filter(_.start == i).map(x => namedEntity(input, x)).toList ::: conceptList
             //conceptList = input.ner.annotation.filter(_.start == i).map(x => PhraseConceptPair.entity(input, x)).toList ::: conceptList
         }
-        if (useDateExpr) {
+        if (conceptSources.contains("DateExpr")) {
             conceptList = dateEntities(input, i) ::: conceptList
+        }
+        if (conceptSources.contains("OntoNotes")) {
+            conceptList = ontoNotesLookup(input, i) ::: conceptList
+        }
+        if (conceptSources.contains("NEPassThrough")) {
+            conceptList = passThrough(input, i) ::: conceptList
+        }
+        if (conceptSources.contains("PassThrough")) {
+            conceptList = passThrough(input, i) ::: conceptList
+        }
+        if (conceptSources.contains("WordNetPassThrough")) {
+            conceptList = wordnetPassThrough(input, i) ::: conceptList
+        }
+        if (conceptSources.contains("verbs")) {
+            conceptList = verbs(input, i) ::: conceptList
+        }
+        if (conceptSources.contains("nominalizations")) {
+            conceptList = nominalizations(input, i) ::: conceptList
         }
 
         return conceptList
@@ -100,14 +119,15 @@ class Concepts(options: Map[Symbol, String],
             List()))
     }
 
-    def stemPassThrough(input: Input, i: Int) : List[PhraseConceptPair] = {
+    def wordnetPassThrough(input: Input, i: Int) : List[PhraseConceptPair] = {
         val word = input.sentence(i)
         val stems = Wordnet.stemmer(word)
+        // TODO: add stems from large annotated corpus
         if (stems.size > 0) {
             List(PhraseConceptPair(
                 List(word),
                 stems.minBy(_.size),
-                FeatureVector(Map("stemPassThrough" -> 1.0)),
+                FeatureVector(Map("WordnetPassThrough" -> 1.0)),
                 List()))
         } else { List() }
     }
@@ -118,7 +138,7 @@ class Concepts(options: Map[Symbol, String],
         if (pos.size > 0 && pos(pos.size-1).startsWith("V")) {  // it's a verb
             val word = input.sentence(i)
             val stems = Wordnet.stemmer(word)
-            val stem = if (stems.size > 0) { stems.minBy(_.size) } else { word }
+            val stem = if (stems.size > 0) { stems.minBy(_.size) } else { word }    // TODO: check in large corpus
             concepts = List(PhraseConceptPair(
                 List(word),
                 stem+"-00",     // 00 sense for missing predicates

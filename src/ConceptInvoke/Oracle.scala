@@ -24,8 +24,7 @@ type PhraseConceptPair = (List[String], String, PhraseConceptFeatures)
 
 class Oracle(options: Map[Symbol, String],
              featureNames: List[String],
-             phraseConceptPairs: Array[PhraseConceptPair],
-             useNER: Boolean = true)
+             phraseConceptPairs: Array[PhraseConceptPair])
     extends Decoder(featureNames) {
     // Base class has defined:
     // val features: Features
