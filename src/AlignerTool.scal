@@ -365,7 +365,7 @@ object AlignerTool extends SimpleSwingApplication {
                             var spanIndex : Option[Int] = None
                             if (i == 0) { // amrList
                                 val nodeIndex : Int = indices.toList(0)
-                                spanIndex = graph.getNodeById(ids(nodeIndex)).someSpan
+                                spanIndex = graph.getNodeById(ids(nodeIndex)).span
                             } else {      // wordList
                                 val wordIndex : Int = indices.toList(0)
                                 val spanIndexArray = wordIndexToSpan(wordIndex)

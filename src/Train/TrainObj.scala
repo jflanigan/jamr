@@ -26,12 +26,17 @@ abstract class TrainObj[FeatureVector <: AbstractFeatureVector](options: Map[Sym
     def train : Unit
     def evalDev(options: Map[Symbol, String], pass: Int, weights: FeatureVector) : Unit
     def zeroVector : FeatureVector
+    def trainingSize : Int
+
+    ////////////////// Default Options ////////////////
+
+    options('trainingPasses) = options.getOrElse('trainingPasses, "20")
+    options('trainingStepsize) = options.getOrElse('trainingStepsize, "1.0")
+    options('trainingL2RegularizerStrength) = options.getOrElse('trainingL2RegularizerStrength, "0.0")
+    options('trainingWarmStartSaveInterval) = options.getOrElse('trainingWarmStartSaveInterval, "200")
 
     ////////////////// Training Setup ////////////////
 
-    val passes = options.getOrElse('trainingPasses, "20").toInt
-    val stepsize = options.getOrElse('trainingStepsize, "1.0").toDouble
-    val l2RegularizerStrength = options.getOrElse('trainingL2RegularizerStrength, "0.0").toDouble
     val loss = options.getOrElse('trainingLoss, "Perceptron")
     if (options.contains('trainingSaveInterval) && !options.contains('trainingOutputFile)) {
         System.err.println("Error: trainingSaveInterval specified but output weights filename given"); sys.exit(1)
@@ -43,9 +48,6 @@ abstract class TrainObj[FeatureVector <: AbstractFeatureVector](options: Map[Sym
     if (options.getOrElse('trainingMiniBatchSize,"1").toInt > 1) {
         optimizer = new MiniBatch(optimizer, options('trainingMiniBatchSize).toInt, numThreads)
     }
-
-    val input: Array[Input] = Input.loadInputfiles(options)
-    val training: Array[String] = Corpus.getAmrBlocks(io.Source.stdin.getLines()).toArray
 
 /*  Runtime.getRuntime().addShutdownHook(new Thread() {
         override def run() {
@@ -71,32 +73,32 @@ abstract class TrainObj[FeatureVector <: AbstractFeatureVector](options: Map[Sym
                 val o = oracle(i, weights)
                 grad -= o._1
                 //logger(0, "Gradient:\n"+grad.toString)
-                (grad, score + o._2)
+                (grad, score - o._2)
             } else if (loss == "SVM") {
                 val (grad, score) = costAugmented(i, weights, scale)
                 val o = oracle(i, weights)
                 grad -= o._1
-                (grad, score + o._2)
+                (grad, score - o._2)
             } else if (loss == "Ramp1") {
                 val (grad, score) = costAugmented(i, weights, scale)
                 val o = decode(i, weights)
                 grad -= o._1
-                (grad, score + o._2)
+                (grad, score - o._2)
             } else if (loss == "Ramp2") {
                 val (grad, score, _) = decode(i, weights)
                 val o = costAugmented(i, weights, -1.0 * scale)
                 grad -= o._1
-                (grad, score + o._2)
+                (grad, score - o._2)
             } else if (loss == "Ramp3") {
                 val (grad, score) = costAugmented(i, weights, scale)
                 val o = costAugmented(i, weights, -1.0 * scale)
                 grad -= o._1
-                (grad, score + o._2)
-            } else if (loss == "Latent_Hinge") {
+                (grad, score - o._2)
+            } else if (loss == "Infinite_Ramp" || loss == "Latent_Hinge") {    // I called this Latent_Hinge earlier
                 val (grad, score) = costAugmented(i, weights, scale)
                 val o = costAugmented(i, weights, -10000000.0)
                 grad -= o._1
-                (grad, score + o._2)
+                (grad, score - o._2)
             } else {
                 System.err.println("Error: unknown training loss " + loss); sys.exit(1).asInstanceOf[Nothing]
             }
@@ -122,56 +124,14 @@ abstract class TrainObj[FeatureVector <: AbstractFeatureVector](options: Map[Sym
         return true
     }
 
-/*  TODO: Add eval on dev dataset
-    def evalDev(pass: Int, weights: FeatureVector) {   // TODO: doesn't account for regularizer
-        val formalism = options('formalism)
-        val devfile = "data/splits/sec20."+formalism+".sdp"
-        val (iASSave, iGSave, oGSave) = (inputAnnotatedSentences, inputGraphs, oracleGraphs)
-        inputAnnotatedSentences = Corpus.getInputAnnotatedSentences(devfile+".dependencies")
-        inputGraphs = Corpus.splitOnNewline(fromFile(devfile).getLines).map(
-            x => SDPGraph.fromGold(x.split("\n"), true)).toArray
-        oracleGraphs = Corpus.splitOnNewline(fromFile(devfile).getLines).map(
-            x => SDPGraph.fromGold(x.split("\n"), false)).toArray
-        assert(inputAnnotatedSentences.size == inputGraphs.size && inputGraphs.size == oracleGraphs.size, "sdp and dep file lengths do not match")
-
-        //val numThreads = options.getOrElse('numThreads,"1").toInt
-        val par = Range(0, inputAnnotatedSentences.size).par
-        par.tasksupport = new ForkJoinTaskSupport(new ForkJoinPool(numThreads)) // TODO: use numThread option
-        val loss = par.map(i => gradient(i, weights)).reduce((a, b) => ({ a._1 += b._1; a._1 }, a._2 + b._2))._2 / inputAnnotatedSentences.size.toDouble
-        logger(0, "Dev loss: " + loss.toString)
-
-        val predictions : String = par.map(i => decode(i, weights)._3).seq.mkString("\n\n")
-        val file = new java.io.PrintWriter(new java.io.File(options('model) + ".iter" + pass.toString+".preds"), "UTF-8")
-        try { file.print(predictions) }
-        finally { file.close }
-        //logger(0, "Command: /home/jmflanig/work/semeval-2014_HOLS/scripts/eval.sh data/splits/sec20."+formalism+".sdp " + options('model) + ".iter" + pass.toString+".preds")
-        try {
-        val externalEval = stringToProcess("/home/jmflanig/work/semeval-2014_feats/scripts/eval.sh data/splits/sec20."+formalism+".sdp " + options('model) + ".iter" + pass.toString+".preds").lines.toList
-        if (externalEval.size == 46) {
-            logger(0, "--- Performance on Dev ---\n" + externalEval.slice(14,18).mkString("\n") + "\n")
-        } else {
-            logger(0, "--- Performance on Dev ---\n" + externalEval.mkString("\n") + "\n")
-        }
-        } catch {
-            case _ : Throwable => 
-        }
-
-        inputAnnotatedSentences = iASSave
-        inputGraphs = iGSave
-        oracleGraphs = oGSave
-    } */
-
     def train(initialWeights: FeatureVector) {
         val weights = optimizer.learnParameters(
             (i,w) => gradient(i,w),
             initialWeights,
-            input.size,
-            passes,
-            stepsize,
-            options.getOrElse('trainingL2RegularizerStrength, "0.0").toDouble,
+            trainingSize,
             List("Bias"),   // don't regularize the bias terms
             trainingObserver,
-            avg = options.contains('trainingAvgWeights))
+            options)
 
         System.err.print("Writing out weights... ")
         if (options.contains('trainingWeightsFile)) {

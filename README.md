@@ -3,7 +3,9 @@ JAMR - AMR Parser
 
 JAMR is a semantic parser and aligner for the [Abstract Meaning Representation](http://amr.isi.edu/). 
 
-We have also released [hand-alignments](docs/Hand_Alignments.md) for 200 sentences of the AMR corpus.
+We have released [hand-alignments](docs/Hand_Alignments.md) for 200 sentences of the AMR corpus.
+
+For the performance of the parser, see [docs/Parser_Performance](docs/Parser_Performance.md).
 
 #Building
 

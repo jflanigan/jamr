@@ -6,11 +6,13 @@ import scala.io.Source.fromFile
 
 case class Input(var graph: Option[Graph],  // var so we can update for the input to stage 2. TODO: maybe should remove?
                  sentence: Array[String],
-                 notTokenized: Annotation[Array[String]],
-                 dependencies: Annotation[Array[Dependency]],
-                 pos: Annotation[Array[String]],
-                 ner: Annotation[Array[Entity]],
+                 notTokenized: Annotation[String],
+                 dependencies: Annotation[Dependency],
+                 pos: Annotation[String],
+                 ner: Annotation[Entity],
                  trainingIndex: Option[Int]) {
+
+    // TODO: clean up these constructors
 
     // TODO: switch everything to this constructor (the others are unnessary)
     // This constructor is used for stage1 training, stage2 training, and decoding (called from loadInputfiles and Input.Input from below, and AMRParser)
@@ -89,7 +91,7 @@ object Input {
         return inputs.toArray
     }
 
-    def Input(amrdata: AMRTrainingData, input: Input, trainingIndex: Int, oracle: Boolean, clearUnalignedNodes: Boolean = true) : Input = { // used in stage1 and stage2 training
+    def apply(amrdata: AMRTrainingData, input: Input, trainingIndex: Int, oracle: Boolean, clearUnalignedNodes: Boolean = true) : Input = { // used in stage1 and stage2 training
         new Input(
             Some(if (oracle) {
                 amrdata.toOracleGraph(clearUnalignedNodes)

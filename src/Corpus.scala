@@ -18,7 +18,7 @@ object Corpus {
      * Takes an iterator of lines, splits on empty lines, and yields only
      * blocks of lines that contain some AMR content
      */
-    def getAmrBlocks(iterator: Iterator[String]) : Iterator[String] = for (
+    def getAMRBlocks(iterator: Iterator[String]) : Iterator[String] = for (
       block <- splitOnNewline(iterator)
       if block.split("\n").exists(_.startsWith("(")) // needs to contain some AMR
     ) yield block

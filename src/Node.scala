@@ -3,9 +3,9 @@ package edu.cmu.lti.nlp.amr
 import scala.util.matching.Regex
 import scala.collection.mutable.{Map, Set, ArrayBuffer}
 
-case class Var(node: Node, name: String)    // TODO: Remove this? Var is redundant, because the name can be found using node.name (but node.name sometimes can be None, which it should not be)
+//case class Var(node: Node, name: String)    // TODO: Remove this? Var is redundant, because the name can be found using node.name (but node.name sometimes can be None, which it should not be)
 
-case class Node(var id: String, var name: Option[String], concept: String, var relations: List[(String, Node)], var topologicalOrdering: List[(String, Node)], var variableRelations: List[(String, Var)], var alignment: Option[Int], var spans: ArrayBuffer[Int] /* TODO: change to something immutable (ie List) Interacts if a span gets copied from this span */) {
+case class Node(var id: String, var name: Option[String], concept: String, var relations: List[(String, Node)], var topologicalOrdering: List[(String, Node)], var variableRelations: List[(String, Node)], var alignment: Option[Int], var spans: ArrayBuffer[Int] /* TODO: change to something immutable (ie List) Interacts if a span gets copied from this span */) {
 
     def children: List[(String, Node)] = topologicalOrdering    // property (see Ch 18.2 stairway book)
     def children_= (c: List[(String, Node)]) {
@@ -17,6 +17,10 @@ case class Node(var id: String, var name: Option[String], concept: String, var r
         return (spans.map(x => !graph.spans(x).coRef) :\ false)(_ || _)
     }
 
+    def span : Option[Int] = {  // returns the primary span, if exists (span(0) is always the primary)
+        return if (spans.size > 0) { Some(spans(0)) } else { None }
+    }
+
     def addSpan(span: Int, coRef: Boolean) {
         if (coRef) {
             spans += span
@@ -26,14 +30,6 @@ case class Node(var id: String, var name: Option[String], concept: String, var r
                 logger(0,spans.toString+" + "+span.toString)
             }
             spans.+=:(span) // prepend
-        }
-    }
-
-    def someSpan() : Option[Int] = {
-        if (spans.isEmpty) {
-            None
-        } else {
-            Some(spans(0))
         }
     }
 
@@ -72,13 +68,13 @@ case class Node(var id: String, var name: Option[String], concept: String, var r
                 detail match {
                     case 0 =>
                 "("+concept+" "+(topologicalOrdering.map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, vars, nextIndent)) :::
-                                 variableRelations.map(x => prefix+x._1+" "+x._2.node.concept)).mkString(" ")+")"
+                                 variableRelations.map(x => prefix+x._1+" "+x._2.concept)).mkString(" ")+")"
                     case 1 =>
                 "("+n+" / "+concept+" "+(topologicalOrdering.map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, vars, nextIndent)) :::
                                  variableRelations.map(x => prefix+x._1+" "+x._2.name)).mkString(" ")+")"
                     case 2 =>
                 "(["+id+"] "+n+" / "+concept+" "+(topologicalOrdering.map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, vars, nextIndent)) :::
-                                 variableRelations.map(x => prefix+x._1+" ["+x._2.node.id+"] "+x._2.name)).mkString(" ")+")"
+                                 variableRelations.map(x => prefix+x._1+" ["+x._2.id+"] "+x._2.name)).mkString(" ")+")"
                 }
             } else {                        // Concept with name, but no children
                 detail match {
@@ -104,13 +100,13 @@ case class Node(var id: String, var name: Option[String], concept: String, var r
         } else {                            // Concept with no name but has children
             if (detail == 0) {
                 "("+concept+" "+(topologicalOrdering.map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, vars, nextIndent)) :::
-                                 variableRelations.map(x => prefix+x._1+" "+x._2.node.concept)).mkString(" ")+")"
+                                 variableRelations.map(x => prefix+x._1+" "+x._2.concept)).mkString(" ")+")"
             } else if (detail == 1) {
                 "("+concept+" "+(topologicalOrdering.map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, vars, nextIndent)) :::
                                  variableRelations.map(x => prefix+x._1+" "+x._2.name)).mkString(" ")+")"
             } else {
                 "(["+id+"] "+concept+" "+(topologicalOrdering.map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, vars, nextIndent)) :::
-                            variableRelations.map(x => prefix+x._1+" ["+x._2.node.id+"] "+x._2.name)).mkString(" ")+")"
+                            variableRelations.map(x => prefix+x._1+" ["+x._2.id+"] "+x._2.name)).mkString(" ")+")"
             }
         }
     }

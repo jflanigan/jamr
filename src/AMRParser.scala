@@ -54,9 +54,12 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             case "--training-passes" :: value :: l =>    parseOptions(map + ('trainingPasses -> value), l)
             case "--training-avg-weights" :: l =>        parseOptions(map + ('trainingAvgWeights -> "true"), l)
             case "--training-save-interval"::value::l => parseOptions(map + ('trainingSaveInterval -> value), l)
+            case "--training-warmstart-interval"::v::l =>  parseOptions(map + ('trainingWarmStartSaveInterval -> v), l)
+            case "--training-warmstart-save-file"::v::l => parseOptions(map + ('trainingWarmStartSaveFile -> v), l)
             case "--training-data" :: value :: tail =>   parseOptions(map + ('trainingData -> value), tail) // used to be "--amr-oracle-data"
             case "--training-dev" :: value :: tail =>    parseOptions(map + ('trainingDev -> value), tail)
             //case "--amr-oracle-data" :: value :: tail => parseOptions(map + ('amrOracleData -> value), tail)
+            case "--normalize-mod" :: tail =>            parseOptions(map + ('normalizeMod -> "true"), tail)
             case "--smatch-eval" :: value :: tail =>     parseOptions(map + ('smatchEval -> value), tail)
             case "--output-format" :: value :: l =>      parseOptions(map + ('outputFormat -> value), l)
             case "--ignore-parser-errors" :: l =>        parseOptions(map + ('ignoreParserErrors -> "true"), l)
@@ -91,6 +94,8 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
 
         val outputFormat = options.getOrElse('outputFormat,"triples").split(",").toList
         // Output format is comma separated list of: nodes,edges,AMR,triples
+
+        Graph.normalizeMod = options.contains('normalizeMod)
 
         val stage1 : ConceptInvoke.Decoder = {
             if (!options.contains('stage1Oracle) && !options.contains('stage2Train)) {
@@ -170,7 +175,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             val tokenized = fromFile(options('tokenized).asInstanceOf[String]).getLines/*.map(x => x)*/.toArray
             val nerFile = Corpus.splitOnNewline(fromFile(options('ner).asInstanceOf[String]).getLines).toArray
             val oracleData : Array[String] = if (options.contains('trainingData)) {
-                    Corpus.getAmrBlocks(fromFile(options('trainingData)).getLines()).toArray
+                    Corpus.getAMRBlocks(fromFile(options('trainingData)).getLines()).toArray
                 } else {
                     new Array(0)
                 }
@@ -210,7 +215,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                 }
                 logger(0, "Spans:")
                 for ((span, i) <- stage1Result.graph.spans.sortBy(x => x.words.toLowerCase).zipWithIndex) {
-                    logger(0, "Span "+(i+1).toString+":  "+span.words+" => "+span.amr)
+                    logger(0, "Span "+span.start.toString+"-"+span.end.toString+":  "+span.words+" => "+span.amr)
                 }
                 logger(0, "")
 
@@ -238,7 +243,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                     val oracle = stage2Oracle.get
                     val oracleResult = oracle.decode(new Input(amrdata2, dependencies(i), oracle = true))
                     for ((span, i) <- amrdata2.graph.spans.sortBy(x => x.words.toLowerCase).zipWithIndex) {
-                        logger(0, "Oracle Span "+(i+1).toString+":  "+span.words+" => "+span.amr)
+                        logger(0, "Oracle Span "+span.start.toString+"-"+span.end.toString+":  "+span.words+" => "+span.amr)
                     }
                     logger(0, "")
                     if (options.contains('stage1Eval)) {
@@ -318,7 +323,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                     logger(-1, " ********** THERE WAS AN EXCEPTION IN THE PARSER. *********")
                     if (verbosity >= -1) { e.printStackTrace }
                     logger(-1, "Continuing. To exit on errors, please run without --ignore-parser-errors")
-                    println(Graph.empty.prettyString(detail=1, pretty=true) + '\n')
+                    println(Graph.AMREmpty.prettyString(detail=1, pretty=true) + '\n')
                 } else {
                     throw e
                 }

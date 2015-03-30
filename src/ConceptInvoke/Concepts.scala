@@ -158,16 +158,16 @@ class Concepts(options: Map[Symbol, String],
             case "LOC" => "country"         // also city, world-region, continent, county
             case "MISC" => "thing"         // also treaty, publication, newspaper, product, war
         }
-        val (start, end) = ner.getSpan((entity.start, entity.end))    // start and end in ner.snt, which should be the unTokenized text
-        val graphFrag = "(" + entityType + " :name (name " + ner.snt.slice(start, end).map(x => ":op \"" + x + "\"").mkString(" ") + "))"
+        val (start, end) = ner.getSpan((entity.start, entity.end))         // start and end in ner.snt, which is the tokenized text
+        val (notTokStart, notTokEnd) = notTokenized.getSpan((start, end))  // start and end in notTokenized.snt, which is the original untokenized text
+        val graphFrag = "(" + entityType + " :name (name " + notTokenized.snt.slice(notTokStart, notTokEnd).map(x => ":op \"" + x + "\"").mkString(" ") + "))"
         logger(0, "NER Entity: "+graphFrag)
         //logger(1, "(start, end) = "+(start,end))
         //logger(1, "ner.snt = "+ner.snt.toList)
         //logger(1, "ner.tok = "+ner.tok.toList)
         //logger(1, "notTokenized.snt = "+notTokenized.snt.toList)
         //logger(1, "notTokenized.tok = "+notTokenized.tok.toList)
-        val (tokStart, tokEnd) = notTokenized.getSpan((start, end))
-        return PhraseConceptPair(sentence.slice(tokStart, tokEnd).toList,
+        return PhraseConceptPair(sentence.slice(start, end).toList,
                                  graphFrag,
                                  FeatureVector(Map("ner" -> 1.0)))
     }

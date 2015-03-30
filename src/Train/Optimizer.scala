@@ -20,37 +20,28 @@ abstract class Optimizer[FeatureVector <: AbstractFeatureVector] {
     def learnParameters(gradient: (Int, FeatureVector) => (FeatureVector, Double),
                         initialWeights: FeatureVector,
                         trainingSize: Int,
-                        passes: Int,
-                        stepsize: Double,
-                        l2reg: Double,
                         noreg: List[String],
-                        avg: Boolean) : FeatureVector = {
+                        options: Map[Symbol, String]) : FeatureVector = {
         val myGrad : (Option[Int], Int, FeatureVector) => (FeatureVector, Double) = (pass, i, w) => gradient(i,w)
-        return learnParameters(myGrad, initialWeights, trainingSize, passes, stepsize, l2reg, noreg, (x: Int, w: FeatureVector) => true, avg)
+        return learnParameters(myGrad, initialWeights, trainingSize, noreg, (x: Int, w: FeatureVector) => true, options)
     }
 
     def learnParameters(gradient: (Int, FeatureVector) => (FeatureVector, Double),
                         initialWeights: FeatureVector,
                         trainingSize: Int,
-                        passes: Int,
-                        stepsize: Double,
-                        l2reg: Double,
                         noreg: List[String],
                         trainingObserver: (Int, FeatureVector) => Boolean,
-                        avg: Boolean) : FeatureVector = {
+                        options: Map[Symbol, String]) : FeatureVector = {
         val myGrad : (Option[Int], Int, FeatureVector) => (FeatureVector, Double) = (pass, i, w) => gradient(i,w)
-        return learnParameters(myGrad, initialWeights, trainingSize, passes, stepsize, l2reg, noreg, trainingObserver, avg)
+        return learnParameters(myGrad, initialWeights, trainingSize, noreg, trainingObserver, options)
     }
 
-    def learnParameters(gradient: (Option[Int], Int, FeatureVector) => (FeatureVector, Double),              // Input: (pass, i, weights) Output: (gradient, objective value)
+    def learnParameters(gradient: (Option[Int], Int, FeatureVector) => (FeatureVector, Double),  // Input: (pass, i, weights) Output: (gradient, objective value)
                         initialWeights: FeatureVector,
                         trainingSize: Int,
-                        passes: Int,
-                        stepsize: Double,
-                        l2reg: Double,
-                        noreg: List[String],
+                        noreg: List[String],    // features not regularized
                         trainingObserver: (Int, FeatureVector) => Boolean,  // Input: pass, weights  Output: true stops training loop
-                        avg: Boolean) : FeatureVector
+                        options: Map[Symbol, String]) : FeatureVector
 
 }
 

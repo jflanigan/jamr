@@ -115,7 +115,7 @@ class Alg1(featureNames: List[String], labelSet: Array[(String, Int)], connected
             graph.makeTopologicalOrdering()   // won't work if not connected
         }
         } else {
-            graph = Graph.empty()
+            graph = Graph.AMREmpty()
         }
         logger(1, "Alg1 returning")
         return DecoderResult(graph, graphObj.feats, graphObj.score)
