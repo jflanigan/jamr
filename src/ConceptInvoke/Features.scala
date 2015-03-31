@@ -3,26 +3,8 @@ import edu.cmu.lti.nlp.amr._
 import edu.cmu.lti.nlp.amr.Train._
 import edu.cmu.lti.nlp.amr.BasicFeatureVector._
 
-import java.io.File
-import java.io.FileOutputStream
-import java.io.PrintStream
-import java.io.BufferedOutputStream
-import java.io.OutputStreamWriter
-import java.lang.Math
-import java.lang.Math.abs
-import java.lang.Math.log
-import java.lang.Math.exp
-import java.lang.Math.random
-import java.lang.Math.floor
-import java.lang.Math.min
-import java.lang.Math.max
-import scala.io.Source
-import scala.util.matching.Regex
-import scala.collection.mutable.Map
-import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
-import scala.util.parsing.combinator._
-
+import scala.collection.{mutable => m, immutable => i}
 
 /**************************** Feature Functions *****************************/
 // TODO: Would this be faster if the ffTable was replaced with boolean variables and 
@@ -35,7 +17,7 @@ class Features(featureNames: List[String]) {
 
     type FeatureFunction = (Input, PhraseConceptPair, Int, Int) => FeatureVector
 
-    val ffTable = Map[String, FeatureFunction](
+    val ffTable = m.Map[String, FeatureFunction](
         "bias" -> ffBias,
         "length" -> ffLength,
         "phraseConceptPair" -> ffPhraseConceptPair,
@@ -43,15 +25,15 @@ class Features(featureNames: List[String]) {
     )
 
     def ffBias(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
-        return FeatureVector(Map("bias" -> 1.0))
+        return FeatureVector(m.Map("bias" -> 1.0))
     }
 
     def ffLength(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
-        return FeatureVector(Map("len" -> concept.words.size))
+        return FeatureVector(m.Map("len" -> concept.words.size))
     }
 
     def ffPhraseConceptPair(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
-        return FeatureVector(Map("CP="+concept.words.mkString("_")+"=>"+concept.graphFrag.replaceAllLiterally(" ","_") -> 1.0))
+        return FeatureVector(m.Map("CP="+concept.words.mkString("_")+"=>"+concept.graphFrag.replaceAllLiterally(" ","_") -> 1.0))
     }
 
     def ffPairWith2WordContext(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
