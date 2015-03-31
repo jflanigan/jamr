@@ -3,22 +3,11 @@ import edu.cmu.lti.nlp.amr._
 import edu.cmu.lti.nlp.amr.Train._
 import edu.cmu.lti.nlp.amr.BasicFeatureVector._
 
-import java.lang.Math.abs
-import java.lang.Math.log
-import java.lang.Math.exp
-import java.lang.Math.random
-import java.lang.Math.floor
-import java.lang.Math.min
-import java.lang.Math.max
-import scala.io.Source
-import scala.io.Source.stdin
-import scala.io.Source.fromFile
-import scala.util.matching.Regex
-import scala.collection.mutable.Map
-import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.{mutable => m, immutable => i}
+import scala.io.Source.fromFile
 
-class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Train.TrainObj[FeatureVector](options) {
+class TrainObj(val options : m.Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Train.TrainObj[FeatureVector](options) {
 
     // TODO: this implementation is not thread safe
     val decoder = Decoder(options, oracle = false)
@@ -60,16 +49,15 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
 
     private def costFunction(oracle: Input, scale: Double, prec: Double) : (Input, PhraseConceptPair, Int, Int) => Double = {
         assert(oracle.graph != None, "CostAugmented decoder was not passed an oracle graph")
-        import scala.collection.immutable.Set
         val oracleGraph = oracle.graph.get
-        val oracleConcepts : Set[String] = oracleGraph.nodes.map(_.concept).toSet
-        val oracleSpans : Set[(Int,Int)] = oracleGraph.nodes.filter(_.spans.size != 0).map(x => {
+        val oracleConcepts : i.Set[String] = oracleGraph.nodes.map(_.concept).toSet
+        val oracleSpans : i.Set[(Int,Int)] = oracleGraph.nodes.filter(_.spans.size != 0).map(x => {
             val span = oracleGraph.spans(x.spans(0))
             (span.start, span.end)
             }).toSet
-        val oracleEdges : Set[(String, String, String)] = oracleGraph.edges.map(x => (x._1.concept, x._2, x._3.concept)).toSet
-        val oracleEdges1 : Set[(String, String)] = oracleGraph.edges.map(x => (x._1.concept, x._2)).toSet
-        val oracleEdges2 : Set[(String, String)] = oracleGraph.edges.map(x => (x._2, x._3.concept)).toSet
+        val oracleEdges : i.Set[(String, String, String)] = oracleGraph.edges.map(x => (x._1.concept, x._2, x._3.concept)).toSet
+        val oracleEdges1 : i.Set[(String, String)] = oracleGraph.edges.map(x => (x._1.concept, x._2)).toSet
+        val oracleEdges2 : i.Set[(String, String)] = oracleGraph.edges.map(x => (x._2, x._3.concept)).toSet
 
         //def costFunc(input: Input, concept: PhraseConceptPair, start: Int, stop: Int) : Double = {
         val costFunc = (input: Input, concept: PhraseConceptPair, start: Int, stop: Int) => {
@@ -109,7 +97,7 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
         train(FeatureVector())
     }
 
-    def evalDev(options: Map[Symbol, String], pass: Int, weights: FeatureVector) {
+    def evalDev(options: m.Map[Symbol, String], pass: Int, weights: FeatureVector) {
         if (options.contains('trainingDev)) {
         logger(-1, "Decoding dev...")
         val verbosity_save = verbosity  // TODO: could also just change the logging stream (add a var for the logging stream in amr.logger, and change it)
