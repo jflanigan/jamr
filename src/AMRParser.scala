@@ -1,11 +1,10 @@
 package edu.cmu.lti.nlp.amr
 
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.{mutable => m, immutable => i}
 import java.io.StringWriter
 import java.io.PrintWriter
 import scala.io.Source.fromFile
-import scala.collection.mutable.Map
-import scala.collection.mutable.Set
-import scala.collection.mutable.ArrayBuffer
 import java.util.Date
 import java.text.SimpleDateFormat
 
@@ -23,7 +22,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage1-decode --stage1-weight
 scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-train -l labelset < trainfile > output_weights
 scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l labelset < input > output"""
 //TODO: tagset option
-    type OptionMap = Map[Symbol, String]
+    type OptionMap = m.Map[Symbol, String]
 
     def parseOptions(map : OptionMap, list: List[String]) : OptionMap = {
         def isSwitch(s : String) = (s(0) == '-')
@@ -68,12 +67,12 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             case "--print-stack-trace-on-errors" :: l => parseOptions(map + ('printStackTraceOnErrors -> "true"), l)
             case "--dependencies" :: value :: tail =>    parseOptions(map + ('dependencies -> value), tail)
             case "--ner" :: value :: tail =>             parseOptions(map + ('ner -> value), tail)
-            case "--snt" :: value :: tail =>             parseOptions(map ++ Map('notTokenized -> value), tail)
-            case "--tok" :: value :: tail =>             parseOptions(map ++ Map('tokenized -> value), tail)
-            case "-v" :: value :: tail =>                parseOptions(map ++ Map('verbosity -> value), tail)
+            case "--snt" :: value :: tail =>             parseOptions(map ++ m.Map('notTokenized -> value), tail)
+            case "--tok" :: value :: tail =>             parseOptions(map ++ m.Map('tokenized -> value), tail)
+            case "-v" :: value :: tail =>                parseOptions(map ++ m.Map('verbosity -> value), tail)
 
-            //case string :: opt2 :: tail if isSwitch(opt2) => parseOptions(map ++ Map('infile -> string), list.tail)
-            //case string :: Nil =>  parseOptions(map ++ Map('infile -> string), list.tail)
+            //case string :: opt2 :: tail if isSwitch(opt2) => parseOptions(map ++ m.Map('infile -> string), list.tail)
+            //case string :: Nil =>  parseOptions(map ++ m.Map('infile -> string), list.tail)
             case option :: tail => println("Error: Unknown option "+option) 
                                    sys.exit(1)
       }
@@ -90,7 +89,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
     def main(args: Array[String]) {
 
         if (args.length == 0) { println(usage); sys.exit(1) }
-        val options = parseOptions(Map(),args.toList)
+        val options = parseOptions(m.Map(), args.toList)
 
         verbosity = options.getOrElse('verbosity, "0").toInt
 
@@ -251,7 +250,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                     if (options.contains('stage1Eval)) {
                         for (span <- stage1Result.graph.spans) {
                             //if (oracleResult.graph.spans.count(x => x.start == span.start && x.end == span.end /*&& x.amr.prettyString(detail = 0, pretty = false).replaceAll("""\([^ ]* :name ""","") == span.amr.prettyString(detail = 0, pretty = false).replaceAll("""\([^ ]* :name ""","")*/) > 0) {
-                            //if (oracleResult.graph.spans.count(x => x.start == span.start && x.end == span.end && x.amr.prettyString(detail = 0, pretty = false, vars = Set()).replaceAll("""\([^ ]* :name ""","") == span.amr.prettyString(detail = 0, pretty = false, vars = Set()).replaceAll("""\([^ ]* :name ""","")) > 0) {
+                            //if (oracleResult.graph.spans.count(x => x.start == span.start && x.end == span.end && x.amr.prettyString(detail = 0, pretty = false, vars = m.Set()).replaceAll("""\([^ ]* :name ""","") == span.amr.prettyString(detail = 0, pretty = false, vars = m.Set()).replaceAll("""\([^ ]* :name ""","")) > 0) {
                             if (oracleResult.graph.spans.count(x => x.start == span.start && x.end == span.end && x.amr.toString == span.amr.toString) > 0) {
                                 spanF1.correct += 1
                             } else {
