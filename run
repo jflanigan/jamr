@@ -12,7 +12,8 @@ export JAVA_OPTS="-ea -Dfile.encoding=UTF-8 -XX:ParallelGCThreads=2 -Xmx4g -XX:+
 klass="edu.cmu.lti.nlp.amr.$1"
 shift
 
+# To run using sbt (useful for incremental compiling).
 # (cd "${MY_DIR}" > /dev/null; ./sbt --error "runMain $klass $*")
 
-# Alternatively (assumes you've already run `./compile`):
+# Alternatively (assumes you've already run `./sbt assembly`):
 java ${JAVA_OPTS} -cp "${CLASSPATH}" "$klass" "$@"
