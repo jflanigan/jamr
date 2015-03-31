@@ -308,6 +308,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                 println()
             } // time
             } catch { // try
+                case e : java.lang.VirtualMachineError => throw e
                 case e : Throwable => if (options.contains('ignoreParserErrors)) {
                     println("# ::snt "+input(i))
                     println("# ::tok "+tokenized(i))
