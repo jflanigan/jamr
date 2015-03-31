@@ -27,9 +27,9 @@ class Concepts(options: m.Map[Symbol, String],
 
     val conceptSources = options.getOrElse('stage1SyntheticConcepts, "NER,DateExpr").split(",").toSet
 
-    private var tokens : Array[String] = Array()  // stores sentence.drop(i) (used in the dateEntity code to make it more concise)
-    var ontoNotes : Set[String] = Set()           // could be multi-map instead
-    var lemmas : Set[String] = Set()              // TODO: check for lemma in a large morph-analyzed corpus
+    private var tokens : Array[String] = Array()    // stores sentence.drop(i) (used in the dateEntity code to make it more concise)
+    var ontoNotes : m.Set[String] = m.Set()         // could be multi-map instead
+    var lemmas : m.Set[String] = m.Set()            // TODO: check for lemma in a large morph-analyzed corpus
 
     if (options.contains('stage1Predicates)) {
         val Pred = """(.+)-([0-9]+)""".r
@@ -85,7 +85,23 @@ class Concepts(options: m.Map[Symbol, String],
             conceptList = nominalizations(input, i) ::: conceptList
         }
 
-        return conceptList
+        // Normalize the concept list so there are no duplicates by adding all their features
+        val conceptSet : m.Map[(List[String], String), PhraseConceptPair] = m.Map()
+        for (concept <- conceptList) {
+            val key = (concept.words, concept.graphFrag)
+            if (conceptSet.contains(key)) {
+                val old = conceptSet(key)
+                val feats = new FeatureVector()
+                feats += old.features
+                feats += concept.features
+                val trainingIndices = concept.trainingIndices ::: old.trainingIndices
+                conceptSet(key) = PhraseConceptPair(old.words, old.graphFrag, feats, trainingIndices)
+            } else {
+                conceptSet(key) = concept
+            }
+        }
+
+        return conceptSet.values.toList
     }
 
     def ontoNotesLookup(input: Input, i: Int) : List[PhraseConceptPair] = {
@@ -93,29 +109,34 @@ class Concepts(options: m.Map[Symbol, String],
         val concepts = stems.filter(stem => ontoNotes.contains(stem)).map(stem => PhraseConceptPair(
             List(input.sentence(i)),
             stem+"-01",         // first sense is most common
-            FeatureVector(Map("OntoNotes" -> 1.0)),
+            FeatureVector(m.Map("OntoNotes" -> 1.0)),
             List()))
         return concepts
     }
 
     def NEPassThrough(input: Input, i: Int) : List[PhraseConceptPair] = {
         var concepts = List[PhraseConceptPair]()
-        for (j <- Range(1,7) if i + j < input.sentence.size) {
+        for { j <- Range(1,7)
+              if i + j < input.sentence.size
+              words = input.sentence.slice(i,i+j).toList 
+              if words.filterNot(x => x.matches("[A-Za-z0-9.-]*")).size == 0 } {    // TODO: improve this regex
             concepts = PhraseConceptPair(
-                input.sentence.slice(i,i+j).toList,
-                "(thing :name (name "+input.sentence.slice(i,i+j).map(x => ":op "+x).mkString(" ")+"))",
-                FeatureVector(Map("NEPassThrough" -> 1.0, "NEPassThrough_len" -> j)),
+                words,
+                "(thing :name (name "+words.map(x => ":op "+x).mkString(" ")+"))",
+                FeatureVector(m.Map("NEPassThrough" -> 1.0, "NEPassThrough_len" -> j)),
                 List()) :: concepts
         }
         return concepts
     }
 
     def passThrough(input: Input, i: Int) : List[PhraseConceptPair] = {
-        return List(PhraseConceptPair(
-            List(input.sentence(i)),
-            input.sentence(i),
-            FeatureVector(Map("PassThrough" -> 1.0)),
-            List()))
+        if(input.sentence(i).matches("[A-Za-z0-9]*")) {     // TODO: improve this regex
+            List(PhraseConceptPair(
+                List(input.sentence(i)),
+                input.sentence(i),
+                FeatureVector(m.Map("PassThrough" -> 1.0)),
+                List()))
+        } else { List() }
     }
 
     def wordnetPassThrough(input: Input, i: Int) : List[PhraseConceptPair] = {
@@ -126,7 +147,7 @@ class Concepts(options: m.Map[Symbol, String],
             List(PhraseConceptPair(
                 List(word),
                 stems.minBy(_.size),
-                FeatureVector(Map("WordnetPassThrough" -> 1.0)),
+                FeatureVector(m.Map("WordnetPassThrough" -> 1.0)),
                 List()))
         } else { List() }
     }
@@ -141,7 +162,7 @@ class Concepts(options: m.Map[Symbol, String],
             concepts = List(PhraseConceptPair(
                 List(word),
                 stem+"-00",     // 00 sense for missing predicates
-                FeatureVector(Map("AddedVerb" -> 1.0)),
+                FeatureVector(m.Map("AddedVerb" -> 1.0)),
                 List()))
         }
         return concepts

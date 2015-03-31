@@ -52,6 +52,9 @@ class Oracle(options: Map[Symbol, String],
             //logger(1, "words = "+words.toString)
             //logger(1, "conceptList = "+conceptList.toString)
             val matching = conceptList.filter(x => x.words == words && x.graphFrag == span.amr.prettyString(detail = 0, pretty = false, vars = Set.empty[String]))
+            if (matching.size > 1) {
+                logger(0, "WARNING: There is more than one matching concept fragment.  This should not occur.  Please check that Concepts.invoke does not return duplicates")
+            }
             for (concept <- matching) {
                 val f = features.localFeatures(input, concept, span.start, span.end)
                 feats += f
