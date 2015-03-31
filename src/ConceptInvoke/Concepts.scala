@@ -4,31 +4,21 @@ import edu.cmu.lti.nlp.amr.Train._
 import edu.cmu.lti.nlp.amr.BasicFeatureVector._
 import edu.cmu.lti.nlp.amr.ConceptInvoke.PhraseConceptPair._
 
-import java.lang.Math.abs
-import java.lang.Math.log
-import java.lang.Math.exp
-import java.lang.Math.random
-import java.lang.Math.floor
-import java.lang.Math.min
-import java.lang.Math.max
-import scala.io.Source
-import scala.util.matching.Regex
-import scala.collection.mutable.Map
-import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.{mutable => m, immutable => i}
 
 object Concepts {
-    val implementedFeatures = Set("fromNERTagger", "dateExpression")
+    val implementedFeatures = m.Set("fromNERTagger", "dateExpression")
 }
 
-class Concepts(options: Map[Symbol, String],
+class Concepts(options: m.Map[Symbol, String],
                phraseConceptPairs: Array[PhraseConceptPair]) {
 
 // This class contains the code used to invoke concepts.
 // Concepts are invoked by calling the invoke() method, which returns a list of all
 // the concepts that match a span starting at index i of the tokenized sentence.
 
-    val conceptTable: Map[String, List[PhraseConceptPair]] = Map()  // maps the first word in the phrase to a list of phraseConceptPairs
+    val conceptTable: m.Map[String, List[PhraseConceptPair]] = m.Map()  // maps the first word in the phrase to a list of phraseConceptPairs
     for (pair <- phraseConceptPairs) {
         val word = pair.words(0)
         conceptTable(word) = pair :: conceptTable.getOrElse(word, List())
@@ -198,7 +188,7 @@ class Concepts(options: Map[Symbol, String],
         //logger(1, "notTokenized.tok = "+notTokenized.tok.toList)
         return PhraseConceptPair(sentence.slice(start, end).toList,
                                  graphFrag,
-                                 FeatureVector(Map("ner" -> 1.0)))
+                                 FeatureVector(m.Map("ner" -> 1.0)))
     }
 
     def dateEntities(input: Input, start: Int) : List[PhraseConceptPair] = {
@@ -283,25 +273,25 @@ class Concepts(options: Map[Symbol, String],
         logger(0, "mkDayMonthYear("+matching+","+day+","+month+","+year+")")
         PhraseConceptPair(tokens.take(matching.count(_ == '\t')+1).toList,
                           "(date-entity :day "+day.toInt.toString+" :month "+monthStr(month)+" :year "+year+")",
-                          FeatureVector(Map("datex" -> 1.0)))
+                          FeatureVector(m.Map("datex" -> 1.0)))
     }
 
     def mkMonthYear(matching: String, month: String, year: String) : PhraseConceptPair = {
         PhraseConceptPair(tokens.take(matching.count(_ == '\t')+1).toList,
                           "(date-entity :month "+monthStr(month)+" :year "+year+")",
-                          FeatureVector(Map("datex" -> 1.0)))
+                          FeatureVector(m.Map("datex" -> 1.0)))
     }
 
     def mkMonth(matching: String, month: String) : PhraseConceptPair = {
         PhraseConceptPair(tokens.take(matching.count(_ == '\t')+1).toList,
                           "(date-entity :month "+monthStr(month)+")",
-                          FeatureVector(Map("datex" -> 1.0)))
+                          FeatureVector(m.Map("datex" -> 1.0)))
     }
 
     def mkYear(matching: String, year: String) : PhraseConceptPair = {
         PhraseConceptPair(tokens.take(matching.count(_ == '\t')+1).toList,
                           "(date-entity :year "+year+")",
-                          FeatureVector(Map("datex" -> 1.0)))
+                          FeatureVector(m.Map("datex" -> 1.0)))
     }
 
     def monthStr(month: String) : String = {
