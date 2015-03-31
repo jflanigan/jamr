@@ -284,33 +284,34 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                         "" //TODO: put back in "\t"+decoder.features.ffDependencyPathv2(node1, node2, relation).toString.split("\n").filter(_.matches("^C1.*")).toList.toString+"\t"+decoder.features.localScore(node1, node2, relation).toString
                         //"\n"+decoder.features.ffDependencyPathv2(node1, node2, relation).toString.split("\n").filter(_.matches("^C1.*")).toList.toString+"\nScore = "+decoder.features.localScore(node1, node2, relation).toString+"  Relevent weights:\n"+decoder.features.weights.slice(decoder.features.localFeatures(node1, node2, relation)).toString
                     })+"\n")
-                }
 
-                println("# ::snt "+line)
-                println("# ::tok "+tok)
-                val sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
-                decoderResultGraph.assignOpN()
-                decoderResultGraph.sortRelations()
-                decoderResultGraph.makeIds()
-                println("# ::alignments "+decoderResultGraph.spans.map(_.format).mkString(" ")+" ::annotator "+VERSION+" ::date "+sdf.format(new Date))
-                if (outputFormat.contains("nodes")) {
-                    println(decoderResultGraph.printNodes.map(x => "# ::node\t" + x).mkString("\n"))
+                    println("# ::snt "+line)
+                    println("# ::tok "+tok)
+                    val sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
+                    decoderResultGraph.assignOpN()
+                    decoderResultGraph.sortRelations()
+                    decoderResultGraph.makeIds()
+                    println("# ::alignments "+decoderResultGraph.spans.map(_.format).mkString(" ")+" ::annotator "+VERSION+" ::date "+sdf.format(new Date))
+                    if (outputFormat.contains("nodes")) {
+                        println(decoderResultGraph.printNodes.map(x => "# ::node\t" + x).mkString("\n"))
+                    }
+                    if (outputFormat.contains("root")) {
+                        println(decoderResultGraph.printRoot)
+                    }
+                    if (outputFormat.contains("edges") && decoderResultGraph.root.relations.size > 0) {
+                        println(decoderResultGraph.printEdges.map(x => "# ::edge\t" + x).mkString("\n"))
+                    }
+                    if (outputFormat.contains("AMR")) {
+                        println(decoderResultGraph.prettyString(detail=1, pretty=true))
+                    }
+                    if (outputFormat.contains("triples")) {
+                        println(decoderResultGraph.printTriples(detail = 1))
+                    }
+                    println()
                 }
-                if (outputFormat.contains("root")) {
-                    println(decoderResultGraph.printRoot)
-                }
-                if (outputFormat.contains("edges") && decoderResultGraph.root.relations.size > 0) {
-                    println(decoderResultGraph.printEdges.map(x => "# ::edge\t" + x).mkString("\n"))
-                }
-                if (outputFormat.contains("AMR")) {
-                    println(decoderResultGraph.prettyString(detail=1, pretty=true))
-                }
-                if (outputFormat.contains("triples")) {
-                    println(decoderResultGraph.printTriples(detail = 1))
-                }
-                println()
             } // time
             } catch { // try
+                case e : java.lang.VirtualMachineError => throw e
                 case e : Throwable => if (options.contains('ignoreParserErrors)) {
                     println("# ::snt "+input(i))
                     println("# ::tok "+tokenized(i))
