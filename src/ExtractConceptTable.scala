@@ -51,7 +51,9 @@ object ExtractConceptTable {
         // Collect all phrase concept pairs
         val phraseConceptPairs : Map[(List[String], String), (PhraseConceptPair, Int, Int)] = Map()
         val tokenized: Array[Array[String]] = corpus.map(x => Array.empty[String])
-        val conceptCounts: Map[String, Int] = Map()
+        val fragmentCounts: Map[String, Int] = Map()
+        val singleConceptCounts: Map[String, Int] = Map()
+        var totalConcepts = 0.0
         var i = 0
         for (b <- corpus if b.split("\n").exists(_.startsWith("("))) {  // needs to contain some AMR
             val block = AMRTrainingData(b)
@@ -59,13 +61,17 @@ object ExtractConceptTable {
             block.loadSpans()
             for (span <- block.graph.spans) {
                 val amr = span.amr.toString.replaceAll(""":op[0-9]*""",":op")
-                conceptCounts(amr) = conceptCounts.getOrElse(amr,0) + 1
+                fragmentCounts(amr) = fragmentCounts.getOrElse(amr,0) + 1
+                for (concept <- span.nodeIds.map(id => block.graph.getNodeById(id).concept)) {
+                    singleConceptCounts(concept) = singleConceptCounts.getOrElse(concept,0) + 1
+                    totalConcepts += 1.0
+                }
                 val words = span.words.split(" ").toList
                 val key = (words, amr)
                 if (phraseConceptPairs.contains(key)) {
                     // Could extract more features here, and add them to existing features from the pair
-                    var (concept, ruleCount, trainingInstanceCount) = phraseConceptPairs(key)
-                    var trainingIndices = concept.trainingIndices
+                    var (phraseConceptPair, phraseConceptPairCount, trainingInstanceCount) = phraseConceptPairs(key)
+                    var trainingIndices = phraseConceptPair.trainingIndices
                     if (trainingIndices.head != i) {
                         trainingIndices = i :: trainingIndices    // don't add training example twice
                         trainingInstanceCount += 1                // this # is wrong if > maxCount, but in that case we don't care
@@ -73,8 +79,8 @@ object ExtractConceptTable {
                     if (trainingInstanceCount > maxCount) {
                         trainingIndices = List()
                     }
-                    ruleCount += 1
-                    phraseConceptPairs(key) = (PhraseConceptPair(words, amr, FeatureVector(), trainingIndices), ruleCount, trainingInstanceCount)
+                    phraseConceptPairCount += 1
+                    phraseConceptPairs(key) = (PhraseConceptPair(words, amr, FeatureVector(), trainingIndices), phraseConceptPairCount, trainingInstanceCount)
                 } else {
                     // Could extract more features here
                     phraseConceptPairs(key) = (PhraseConceptPair(words, amr, FeatureVector(), List(i)), 1, 1)
@@ -85,39 +91,44 @@ object ExtractConceptTable {
         
         // Make the map from words to phraseConceptPairs (conceptTable), and initialize phraseCounts to zero
         val phraseCounts : Map[List[String], Int] = Map()
-        val conceptTable: Map[String, List[PhraseConceptPair]] = Map()  // map from first word in the phrase to list of PhraseConceptPair
-        for ((_, (concept, _, _)) <- phraseConceptPairs) {
-            val word = concept.words(0)
-            conceptTable(word) = concept :: conceptTable.getOrElse(word, List())
-            phraseCounts(concept.words) = 0
+        val phraseConceptPairTable: Map[String, List[PhraseConceptPair]] = Map()  // map from first word in the phrase to list of PhraseConceptPair
+        for ((_, (phraseConceptPair, _, _)) <- phraseConceptPairs) {
+            val word = phraseConceptPair.words(0)
+            phraseConceptPairTable(word) = phraseConceptPair :: phraseConceptPairTable.getOrElse(word, List())
+            phraseCounts(phraseConceptPair.words) = 0
         }
 
         // Count the phrases in the corpus
         for (sentence <- tokenized) {
             for ((word, i) <- sentence.zipWithIndex) {
-                val matching = conceptTable.getOrElse(word, List()).filter(x => x.words == sentence.slice(i, i+x.words.size).toList)
-                for (concept <- matching) {
-                    phraseCounts(concept.words) = phraseCounts(concept.words) + 1
+                val matching = phraseConceptPairTable.getOrElse(word, List()).filter(x => x.words == sentence.slice(i, i+x.words.size).toList)
+                for (phraseConceptPair <- matching) {
+                    phraseCounts(phraseConceptPair.words) = phraseCounts(phraseConceptPair.words) + 1
                 }
             }
         }
 
         // Update the conceptTable features
-        for { (_, list) <- conceptTable
-              concept <- list } {
-            val count = phraseConceptPairs((concept.words, concept.graphFrag))._2.toDouble
+        for { (_, list) <- phraseConceptPairTable
+              phraseConceptPair <- list } {
+            val count = phraseConceptPairs((phraseConceptPair.words, phraseConceptPair.graphFrag))._2.toDouble
             if (featureNames.contains("count")) {
-                concept.features += FeatureVector(Map("N" -> count))
+                phraseConceptPair.features += FeatureVector(Map("N" -> count))
+            }
+            if (featureNames.contains("logPrConcept")) {
+                for (node <- phraseConceptPair.graph.nodes) {
+                    phraseConceptPair.features += FeatureVector(Map("logPrConcept" -> log(singleConceptCounts(node.concept)/totalConcepts)))
+                }
             }
             if (featureNames.contains("conceptGivenPhrase")) {
-                concept.features += FeatureVector(Map("c|p" -> log(count/phraseCounts(concept.words).toDouble)))
+                phraseConceptPair.features += FeatureVector(Map("c|p" -> log(count/phraseCounts(phraseConceptPair.words).toDouble)))
             }
             if (featureNames.contains("phraseGivenConcept")) {
-                concept.features += FeatureVector(Map("p|c" -> log(count/conceptCounts(concept.graphFrag).toDouble)))
+                phraseConceptPair.features += FeatureVector(Map("p|c" -> log(count/fragmentCounts(phraseConceptPair.graphFrag).toDouble)))
             }
         }
 
-        return conceptTable
+        return phraseConceptPairTable
     }
 
 /*

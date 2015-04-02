@@ -27,6 +27,10 @@ expert ||| (person :ARG1-of expert-41) ||| Count=4 ConceptGivenPhrase=0.3077
         return words.mkString(" ")+" ||| "+graphFrag+" ||| "+features.fmap.toList.map(x => x._1+"="+x._2).sorted.mkString(" ")+" ||| "+trainingIndices.mkString(" ")
     }
 
+    def graph : Graph = {
+        return Graph.parse(graphFrag)
+    }
+
 }
 
 object PhraseConceptPair {
