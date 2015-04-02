@@ -3,26 +3,10 @@ import edu.cmu.lti.nlp.amr._
 import edu.cmu.lti.nlp.amr.Train._
 import edu.cmu.lti.nlp.amr.BasicFeatureVector._
 
-import java.lang.Math.abs
-import java.lang.Math.log
-import java.lang.Math.exp
-import java.lang.Math.random
-import java.lang.Math.floor
-import java.lang.Math.min
-import java.lang.Math.max
-import scala.io.Source
-import scala.util.matching.Regex
-import scala.collection.mutable.Map
-import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.PriorityQueue
-import Double.{NegativeInfinity => minusInfty}
+import scala.collection.{mutable => m, immutable => i}
 
-/*** Defined in package.scala ***
-type PhraseConceptPair = (List[String], String, PhraseConceptFeatures)
-********************************/
-
-class Oracle(options: Map[Symbol, String],
+class Oracle(options: m.Map[Symbol, String],
              featureNames: List[String],
              phraseConceptPairs: Array[PhraseConceptPair])
     extends Decoder(featureNames) {
@@ -51,7 +35,7 @@ class Oracle(options: Map[Symbol, String],
             val conceptList = conceptInvoker.invoke(input, span.start, None /*trainingIndex*/)
             //logger(1, "words = "+words.toString)
             //logger(1, "conceptList = "+conceptList.toString)
-            val matching = conceptList.filter(x => x.words == words && x.graphFrag == span.amr.prettyString(detail = 0, pretty = false, vars = Set.empty[String]))
+            val matching = conceptList.filter(x => x.words == words && x.graphFrag == span.amr.prettyString(detail = 0, pretty = false, vars = m.Set.empty[String]))
             if (matching.size > 1) {
                 logger(0, "WARNING: There is more than one matching concept fragment.  This should not occur.  Please check that Concepts.invoke does not return duplicates")
             }
