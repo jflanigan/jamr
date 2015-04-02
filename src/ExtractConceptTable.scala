@@ -2,19 +2,16 @@ package edu.cmu.lti.nlp.amr
 import edu.cmu.lti.nlp.amr.BasicFeatureVector._
 import edu.cmu.lti.nlp.amr.ConceptInvoke.PhraseConceptPair
 
-import scala.util.matching.Regex
-import scala.collection.mutable.Map
-import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
-//import scala.collection.Iterable
+import scala.collection.{mutable => m, immutable => i}
 
 import Corpus._
 
 object ExtractConceptTable {
     val usage = """Usage: scala -classpath . edu.cmu.lti.nlp.amr.ExtractConceptTable < aligned_amr_corpus > concept_table"""
-    type OptionMap = Map[Symbol, String]
+    type OptionMap = m.Map[Symbol, String]
 
-    val implementedFeatures : Set[String] = Set("count", "conceptGivenPhrase", "phraseGivenConcept") 
+    val implementedFeatures : m.Set[String] = m.Set("count", "conceptGivenPhrase", "phraseGivenConcept") 
 
     def parseOptions(map : OptionMap, list: List[String]) : OptionMap = {
         def isSwitch(s : String) = (s(0) == '-')
@@ -30,7 +27,7 @@ object ExtractConceptTable {
 
     def main(args: Array[String]) {
 
-        val options = parseOptions(Map(),args.toList)
+        val options = parseOptions(m.Map(),args.toList)
         if (options.contains('verbosity)) {
             verbosity = options('verbosity).toInt
         }
@@ -40,19 +37,19 @@ object ExtractConceptTable {
         val stage1Features = options('stage1Features).split(",").toList
         val maxCount = options.getOrElse('maxTrainingInstances, "10000").toInt
 
-        val conceptTable : Map[String, List[PhraseConceptPair]] = extract(splitOnNewline(Source.stdin.getLines).toArray, stage1Features, maxCount)
+        val conceptTable : m.Map[String, List[PhraseConceptPair]] = extract(splitOnNewline(Source.stdin.getLines).toArray, stage1Features, maxCount)
         for { (_, list) <- conceptTable
               concept <- list } {
             println(concept)
         }
     }
 
-    def extract(corpus: Array[String], featureNames: List[String], maxCount: Int) : Map[String, List[PhraseConceptPair]] = {
+    def extract(corpus: Array[String], featureNames: List[String], maxCount: Int) : m.Map[String, List[PhraseConceptPair]] = {
         // Collect all phrase concept pairs
-        val phraseConceptPairs : Map[(List[String], String), (PhraseConceptPair, Int, Int)] = Map()
+        val phraseConceptPairs : m.Map[(List[String], String), (PhraseConceptPair, Int, Int)] = m.Map()
         val tokenized: Array[Array[String]] = corpus.map(x => Array.empty[String])
-        val fragmentCounts: Map[String, Int] = Map()
-        val singleConceptCounts: Map[String, Int] = Map()
+        val fragmentCounts: m.Map[String, Int] = m.Map()
+        val singleConceptCounts: m.Map[String, Int] = m.Map()
         var totalConcepts = 0.0
         var i = 0
         for (b <- corpus if b.split("\n").exists(_.startsWith("("))) {  // needs to contain some AMR
@@ -90,8 +87,8 @@ object ExtractConceptTable {
         }
         
         // Make the map from words to phraseConceptPairs (conceptTable), and initialize phraseCounts to zero
-        val phraseCounts : Map[List[String], Int] = Map()
-        val phraseConceptPairTable: Map[String, List[PhraseConceptPair]] = Map()  // map from first word in the phrase to list of PhraseConceptPair
+        val phraseCounts : m.Map[List[String], Int] = m.Map()
+        val phraseConceptPairTable: m.Map[String, List[PhraseConceptPair]] = m.Map()  // map from first word in the phrase to list of PhraseConceptPair
         for ((_, (phraseConceptPair, _, _)) <- phraseConceptPairs) {
             val word = phraseConceptPair.words(0)
             phraseConceptPairTable(word) = phraseConceptPair :: phraseConceptPairTable.getOrElse(word, List())
@@ -113,18 +110,18 @@ object ExtractConceptTable {
               phraseConceptPair <- list } {
             val count = phraseConceptPairs((phraseConceptPair.words, phraseConceptPair.graphFrag))._2.toDouble
             if (featureNames.contains("count")) {
-                phraseConceptPair.features += FeatureVector(Map("N" -> count))
+                phraseConceptPair.features += FeatureVector(m.Map("N" -> count))
             }
             if (featureNames.contains("logPrConcept")) {
                 for (node <- phraseConceptPair.graph.nodes) {
-                    phraseConceptPair.features += FeatureVector(Map("logPrConcept" -> log(singleConceptCounts(node.concept)/totalConcepts)))
+                    phraseConceptPair.features += FeatureVector(m.Map("logPrConcept" -> log(singleConceptCounts(node.concept)/totalConcepts)))
                 }
             }
             if (featureNames.contains("conceptGivenPhrase")) {
-                phraseConceptPair.features += FeatureVector(Map("c|p" -> log(count/phraseCounts(phraseConceptPair.words).toDouble)))
+                phraseConceptPair.features += FeatureVector(m.Map("c|p" -> log(count/phraseCounts(phraseConceptPair.words).toDouble)))
             }
             if (featureNames.contains("phraseGivenConcept")) {
-                phraseConceptPair.features += FeatureVector(Map("p|c" -> log(count/fragmentCounts(phraseConceptPair.graphFrag).toDouble)))
+                phraseConceptPair.features += FeatureVector(m.Map("p|c" -> log(count/fragmentCounts(phraseConceptPair.graphFrag).toDouble)))
             }
         }
 
@@ -143,7 +140,7 @@ object ExtractConceptTable {
         }
     }
 
-    def mkConceptTable(corpus: Array[String]) : Map[String, List[PhraseConceptPair]] = {
+    def mkConceptTable(corpus: Array[String]) : m.Map[String, List[PhraseConceptPair]] = {
         val spans : List[(String, Int)] = countUniq(extractSpans_NoOpN(corpus))
 
 
