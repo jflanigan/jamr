@@ -47,27 +47,24 @@ class TrainObj(val options : m.Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.
     }
 
     def costAugmented(input: Input, oracleInput: Input, trainingIndex: Option[Int], scale: Double) : DecoderResult = {    // TODO: move this into a cost augmented decoder object? Yes
-        if (!options.contains('trainingPrecRecallTradeoff)) {
-            System.err.println("Error: must specify --training-prec-recall")
-            sys.exit(1)
-        }
-        return decoder.decode(input, trainingIndex, costFunction(oracleInput, scale, options('trainingPrecRecallTradeoff).toDouble))
+        return decoder.decode(input, trainingIndex, costFunction(oracleInput, scale, options.getOrElse('trainingPrecRecallTradeoff, ".5").toDouble))
     }
 
     private def costFunction(oracle: Input, scale: Double, prec: Double) : (Input, PhraseConceptPair, Int, Int) => Double = {
         assert(oracle.graph != None, "CostAugmented decoder was not passed an oracle graph")
         val oracleGraph = oracle.graph.get
         val oracleConcepts : i.Set[String] = oracleGraph.nodes.map(_.concept).toSet
-        val oracleSpans : i.Set[(Int,Int)] = oracleGraph.nodes.filter(_.spans.size != 0).map(x => {
+        val oracleSpans : i.Map[(Int,Int), String] = oracleGraph.nodes.filter(_.spans.size != 0).map(x => {
             val span = oracleGraph.spans(x.spans(0))
-            (span.start, span.end)
-            }).toSet
+            ((span.start, span.end), span.amr.toString)
+            }).toMap
+        val oracleStart : i.Map[Int, (Int, String)] = oracleSpans.map(x => (x._1._1, (x._1._2, x._2)))
         val oracleEdges : i.Set[(String, String, String)] = oracleGraph.edges.map(x => (x._1.concept, x._2, x._3.concept)).toSet
         val oracleEdges1 : i.Set[(String, String)] = oracleGraph.edges.map(x => (x._1.concept, x._2)).toSet
         val oracleEdges2 : i.Set[(String, String)] = oracleGraph.edges.map(x => (x._2, x._3.concept)).toSet
 
         //def costFunc(input: Input, concept: PhraseConceptPair, start: Int, stop: Int) : Double = {
-        val costFunc = (input: Input, concept: PhraseConceptPair, start: Int, stop: Int) => {
+        val costFunc1 = (input: Input, concept: PhraseConceptPair, start: Int, stop: Int) => {
             val graphFrag = Graph.parse(concept.graphFrag)
             var cost : Double = 0
             if (!oracleSpans.contains(start, stop)) {
@@ -97,7 +94,25 @@ class TrainObj(val options : m.Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.
             cost * scale
         }
 
-        return costFunc
+        val costFunc2 = (input: Input, concept: PhraseConceptPair, start: Int, stop: Int) => {
+            val graphFrag = Graph.parse(concept.graphFrag)
+            var cost : Double = 0
+            if (!oracleSpans.contains(start, stop) || oracleSpans(start, stop) != concept.graphFrag) {
+                // Predicting a fragment that shouldn't be there
+                // This is a precision type error
+                cost += prec
+                if (oracleStart.contains(start)) {
+                    // We are also missing the start of another span, which is a recall-type error
+                    cost += (1 - prec)
+                }
+            } else {
+                // Predicting a fragment that should be there
+                // Correct prediction, so cost = 0
+            }
+            cost * scale
+        }
+
+        return costFunc2
     }
 
     def train {

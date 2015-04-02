@@ -17,7 +17,7 @@ expert ||| (person :ARG1-of expert-41) ||| Count=4 ConceptGivenPhrase=0.3077
         return words.mkString(" ")+" ||| "+graphFrag+" ||| "+features.fmap.toList.map(x => x._1+"="+x._2).sorted.mkString(" ")+" ||| "+trainingIndices.mkString(" ")
     }
 
-    def graph : Graph = {
+    def graph : Graph = {   // Be careful, this is a potentially expensive operation
         return Graph.parse(graphFrag)
     }
 
@@ -37,5 +37,17 @@ object PhraseConceptPair {
             }
         return new PhraseConceptPair(words, graphFrag, FeatureVector(features), trainingIndices)
     }
+
+/*  This would be usefull for having an explit None concept (requires changes to the decoder, may not be compatible with joint decoder)
+    def None(input: Input, start: Int, end: Int, nonBias: Boolean, nonLength: Boolean) = {
+        val feats : m.Map[String, Double] = m.Map()
+        if (nonLength) {
+            feats("NONELen") = end - start
+        }
+        if (nonBias) {
+            feats("NONEBias") = 1.0
+        }
+        return PhraseConceptPair(input.sentence.slice(start, end), "<NONE_CONCEPT>", FeatureVector(feats), List())
+    } */
 }
 
