@@ -46,7 +46,7 @@ package object GraphDecoder {
             case "Alg1a" => new Alg1(features, labelset, connectedConstraint = "and")
             case "Alg2" => new Alg2(features, labelset, connected)
             //case "DD" => new DualDecomposition(features, labelset, 1)
-            case "LR" => new LagrangianRelaxation(features, labelset, 1, 500)
+            case "LR" => new LagrangianRelaxation(features, labelset, 1, options.getOrElse('stage2LRIterations, "500").toInt)
             case x => { System.err.println("Error: unknown stage2 decoder " + x); sys.exit(1) }
         }
 

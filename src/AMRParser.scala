@@ -36,6 +36,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             case "--stage1-weights" :: value :: l =>     parseOptions(map + ('stage1Weights -> value), l)
             case "--stage1-concept-table" :: v :: l =>   parseOptions(map + ('stage1ConceptTable -> v), l)
             case "--stage2-decoder" :: value :: l =>     parseOptions(map + ('stage2Decoder -> value), l)
+            case "--stage2-LR-iterations" :: value::l=>  parseOptions(map + ('stage2LRIterations -> value), l)
             case "--stage2-train" :: l =>                parseOptions(map + ('stage2Train -> "true"), l)
             case "--stage2-features" :: value :: l =>    parseOptions(map + ('stage2Features -> value), l)
             case "--stage2-weights" :: value :: l =>     parseOptions(map + ('stage2Weights -> value), l)
