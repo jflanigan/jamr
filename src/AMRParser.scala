@@ -295,7 +295,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                     if (outputFormat.contains("root")) {
                         println(decoderResultGraph.printRoot)
                     }
-                    if (outputFormat.contains("edges") && decoderResultGraph.root.relations.size > 0) {
+                    if (outputFormat.contains("edges") && decoderResultGraph.root.children.size > 0) {
                         println(decoderResultGraph.printEdges.map(x => "# ::edge\t" + x).mkString("\n"))
                     }
                     if (outputFormat.contains("AMR")) {
