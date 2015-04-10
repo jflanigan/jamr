@@ -17,6 +17,7 @@ import scala.util.matching.Regex
 import scala.collection.mutable.Map
 import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
+import Double.{NegativeInfinity => minusInfty}
 
 abstract class TrainObj[FeatureVector <: AbstractFeatureVector](options: Map[Symbol, String])  {
 
@@ -96,7 +97,7 @@ abstract class TrainObj[FeatureVector <: AbstractFeatureVector](options: Map[Sym
                 (grad, score - o._2)
             } else if (loss == "Infinite_Ramp" || loss == "Latent_Hinge") {    // I called this Latent_Hinge earlier
                 val (grad, score) = costAugmented(i, weights, scale)
-                val o = costAugmented(i, weights, -10000000.0)
+                val o = costAugmented(i, weights, minusInfty)
                 grad -= o._1
                 (grad, score - o._2)
             } else {
