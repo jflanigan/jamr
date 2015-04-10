@@ -81,6 +81,7 @@ class LagrangianRelaxation(options: Map[Symbol, String], featureNames: List[Stri
             logger(0, "WARNING: Lagrangian relaxation did not converge after "+counter.toString+" iterations. Delta = "+delta.toString)
             if (options.contains('stage2ApproxDecoder)) {
                 logger(0, "Running approximate decoder " + options('stage2ApproxDecoder))
+                approxDecoder.features.weights = features.weights
                 result = approxDecoder.decode(input)
             }
         } else {
