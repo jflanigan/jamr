@@ -7,7 +7,7 @@ import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 
 abstract class Decoder {
-    val features : Features
+    var features : Features
 
     def decode(i: Input) : DecoderResult
 }

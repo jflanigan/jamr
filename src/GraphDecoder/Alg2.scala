@@ -19,7 +19,7 @@ import scala.collection.mutable.PriorityQueue
 class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected: Boolean = true) extends Decoder {
     // Base class has defined:
     // val features: Features
-    val features = new Features(featureNames, labelSet.map(_._1))
+    var features = new Features(featureNames, labelSet.map(_._1))
 
     private var inputSave: Input = _
     def input : Input = inputSave

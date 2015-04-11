@@ -92,7 +92,7 @@ class Greedy(featureNames: List[String], labelSet: Array[(String, Int)]) extends
         var feats = new FeatureVector(features.weights.labelset)
         def addEdge(node1: Node, index1: Int, node2: Node, index2: Int, label: String, weight: Double, addRelation: Boolean = true) {
             if (!node1.relations.exists(x => ((x._1 == label) && (x._2.id == node2.id))) || !addRelation) { // Prevent adding an edge twice
-                //logger(1, "Adding edge ("+node1.concept+", "+label +", "+node2.concept + ") with weight "+weight.toString)
+                logger(1, "Adding edge ("+node1.concept+", "+label +", "+node2.concept + ") with weight "+weight.toString)
                 if (addRelation) {
                     node1.relations = (label, node2) :: node1.relations
                 }
@@ -104,10 +104,12 @@ class Greedy(featureNames: List[String], labelSet: Array[(String, Int)]) extends
             //logger(2, "setArray = " + setArray.toList)
             if (set(index1) != set(index2)) {   // If different sets, then merge them
                 //logger(2, "Merging sets")
-                getSet(index1) ++= getSet(index2)
-                val set2 = getSet(index2)
+                val lower = min(index1, index2) // Merge into lower set, because we check set 0 to see if we're done
+                val upper = max(index1, index2)
+                getSet(lower) ++= getSet(upper)
+                val set2 = getSet(upper)
                 for (index <- set2) {
-                    set(index) = set(index1)
+                    set(index) = set(lower)
                 }
                 set2.clear()
             }
@@ -116,7 +118,7 @@ class Greedy(featureNames: List[String], labelSet: Array[(String, Int)]) extends
             //logger(2, "setArray = " + setArray.toList)
         }
 
-        //logger(1, "Adding edges already there")
+        logger(1, "Adding edges already there")
         val nodeIds : Array[String] = nodes.map(_.id)
         for { (node1, index1) <- nodes.zipWithIndex
               (label, node2) <- node1.relations } {
@@ -157,27 +159,27 @@ class Greedy(featureNames: List[String], labelSet: Array[(String, Int)]) extends
         }
 
         // Uncomment to print neighbors matrix
-        /* logger(1, "Neighbors matrix")
+        logger(1, "Neighbors matrix")
         for { (node1, index1) <- nodes.zipWithIndex
               ((label, weight), index2) <- neighbors(index1).zipWithIndex } {
             logger(1,"neighbors("+index1.toString+","+index2.toString+")="+label+" "+weight.toString)
-        } */
+        }
 
         // Add all weights to the queue
         val queue = new PriorityQueue[(Double, Int, Int, String)]()(Ordering.by(x => x._1))
         if (set.size != 0 && getSet(0).size != nodes.size) {
             for { (node1, index1) <- nodes.zipWithIndex
                   ((label, weight), index2) <- neighbors(index1).zipWithIndex
-                  if index1 != index2 && set(index2) != set(index2) } {
+                  if set(index1) != set(index2) } {
                 queue.enqueue((weight, index1, index2, label))
             }
         }
 
         // Greedy algorithm
-        //logger(1, "queue = " + queue.toString)
-        //logger(1, "set = " + set.toList)
-        //logger(1, "nodes = " + nodes.map(x => x.concept).toList)
-        //logger(1, "setArray = " + setArray.toList)
+        logger(1, "queue = " + queue.toString)
+        logger(1, "set = " + set.toList)
+        logger(1, "nodes = " + nodes.map(x => x.concept).toList)
+        logger(1, "setArray = " + setArray.toList)
         while (set.size != 0 && getSet(0).size != nodes.size) {
             //logger(2, queue.toString)
             val (weight, index1, index2, label) = queue.dequeue
@@ -192,7 +194,7 @@ class Greedy(featureNames: List[String], labelSet: Array[(String, Int)]) extends
 
         //logger(1, "nodes = "+nodes.toList)
         logger(1, "Greedy decoder returning graph: ")
-        logger(1, graph.printTriples(detail = 1/*, (n1, n2, r) => */)+"\n")
+        logger(1, graph.printTriples(detail = 1)+"\n")
         if(nodes.size > 0) {
             if (features.rootFeatureFunctions.size != 0 && nodes.filter(node => !node.concept.startsWith("\"") && !node.concept.matches("[0-9].*")).size != 0) {
                 graph.root = nodes.filter(node => !node.concept.startsWith("\"") && !node.concept.matches("[0-9].*")).map(x => (x, features.rootScore(x))).maxBy(_._2)._1

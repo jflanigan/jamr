@@ -29,7 +29,8 @@ class LagrangianRelaxation(options: Map[Symbol, String], featureNames: List[Stri
     options('stage2Decoder) = options.getOrElse('stage2ApproxDecoder, "Alg2")
     val approxDecoder = Decoder(options)
     options('stage2Decoder) = "LR"
-    val features = alg2.features    // Set alg2 features same our features (so weights get updated during training)
+    var features = alg2.features    // Set alg2 features same our features (so weights get updated during training, features are updated during cost augmented and LR)
+    approxDecoder.features = alg2.features
 
     val labelConstraint = labelSet.toMap    // TODO: could change to array for speed
 
@@ -81,7 +82,6 @@ class LagrangianRelaxation(options: Map[Symbol, String], featureNames: List[Stri
             logger(0, "WARNING: Lagrangian relaxation did not converge after "+counter.toString+" iterations. Delta = "+delta.toString)
             if (options.contains('stage2ApproxDecoder)) {
                 logger(0, "Running approximate decoder " + options('stage2ApproxDecoder))
-                approxDecoder.features.weights = features.weights
                 result = approxDecoder.decode(input)
             }
         } else {

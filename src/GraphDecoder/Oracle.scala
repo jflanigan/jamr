@@ -7,7 +7,7 @@ import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 
 class Oracle(featureNames: List[String], labelSet: Array[String]) extends Decoder {
-    val features = new Features(featureNames, labelSet)
+    var features = new Features(featureNames, labelSet)
 
     def decode(input: Input) : DecoderResult = {
         features.input = input
