@@ -97,9 +97,10 @@ The trained model will be saved into the `$MODEL_DIR` specified in the config sc
 To evaluate a trained model against a gold standard AMR file, do:
 
     . scripts/my_config_file.sh
-    scripts/EVAL.sh gold_amr_file
+    scripts/EVAL.sh gold_amr_file optional_iteration
 
-The predicted output will be in `models/my_directory/gold_amr_file.parsed-gold-concepts` for the parser with oracle
-concept ID, `models/my_directory/gold_amr_file.parsed` for the full pipeline, and the results saved in
+The `optional_iteration` specifies which weight file iteration to use, otherwise `stage2-weights` is used. The predicted
+output will be in `models/my_directory/gold_amr_file.parsed-gold-concepts` for the parser with oracle concept ID,
+`models/my_directory/gold_amr_file.parsed` for the full pipeline, and the results saved in
 `models/my_directory/gold_amr_file.results`.
 
