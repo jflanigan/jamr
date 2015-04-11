@@ -21,9 +21,9 @@ if [ -z "$1" ]; then
 fi
 
 TEST_FILE="$(cd "$(dirname "$1")"; pwd)"/"$(basename $1)"
-INPUT="$OUTPUT.snt"
 
 STAGE1_WEIGHTS="${MODEL_DIR}/stage1-weights"
+
 if [ -z "$2" ]; then
     STAGE2_WEIGHTS="${MODEL_DIR}/stage2-weights"
     OUTPUT="${MODEL_DIR}/$(basename $1)"
@@ -31,6 +31,8 @@ else
     STAGE2_WEIGHTS="${MODEL_DIR}/stage2-weights.iter$2"
     OUTPUT="${MODEL_DIR}/$(basename $1).iter$2"
 fi
+
+INPUT="$OUTPUT.snt"
 
 #### Tokenize ####
 
@@ -40,7 +42,7 @@ ${JAMR_HOME}/run CorpusTool < "$TEST_FILE" --tokenized "$OUTPUT.snt.tok" > "$OUT
 
 #### NER ####
 
-if [ ! -f "${TEST_FILE}.IllinoisNER" ]; then
+if [ ! -f "${TEST_FILE}.snt.IllinoisNER" ]; then
     inputfile="$INPUT"
     outputfile="$OUTPUT.IllinoisNER.tmp"
     tmp="$OUTPUT.tmp"
@@ -55,15 +57,15 @@ if [ ! -f "${TEST_FILE}.IllinoisNER" ]; then
     rm "$outputfile"
     rm "$tmp"
 else
-    ln -s "${TEST_FILE}.IllinoisNER" "$OUTPUT.IllinoisNER"
+    ln -s "${TEST_FILE}.snt.IllinoisNER" "$OUTPUT.IllinoisNER"
 fi
 
 #### Dependencies ####
 
-if [ ! -f "${TEST_FILE}.deps" ]; then
+if [ ! -f "${TEST_FILE}.snt.deps" ]; then
     "${JAMR_HOME}/run" RunStanfordParser < "$INPUT" > "$OUTPUT.deps"
 else
-    ln -s "${TEST_FILE}.deps" "$OUTPUT.deps"
+    ln -s "${TEST_FILE}.snt.deps" "$OUTPUT.deps"
 fi
 
 #### Align gold data ###
