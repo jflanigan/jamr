@@ -9,4 +9,22 @@ TODO
 
  - `RelationID` Bug with :op inside strings
 
+#`RelationID`
+
+ - stage2 bias feature scale, and use regularization when using infinite ramp
+
+ - stage2 LR stepsize option
+
+ - stage2 LR stepsize strategy
+
+ - print out LR objective during LR decoding
+
+ - print out size of smallest abs(weight) edge, as well as avg, max, and median excluding costs
+
+ - adjust stepsize based on size of weights? (option to set stepsize to a multiple of the smallest abs(weight) edge in the dense graph, but not smaller than stepsize and give warning if it would be smaller)
+
+ - stage2 LR stepsizes (try different ones in parallel)
+
+ - L2 constrained for SSGD (maybe adjust stepsize so it's like unconstrained?) so that LR doesn't get harder as weights are updated
+
 
