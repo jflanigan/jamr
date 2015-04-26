@@ -203,9 +203,13 @@ class RuleInventory {
     def passThroughRules(node: Node) : List[Rule] = {   // TODO: change to passThroughRealizations (and add features for syntheticRules)
         if(node.children.size > 0) {
             if (Set("name", "date-entity").contains(node.concept) || node.concept.matches(".+-.*[a-z]+") || node.children.exists(_._1 == ":name")) {
-                // matches list of deleteble concepts
-                List(Rule(node.children.sortBy(_._1).map(x => Arg("", x._1, "")),
-                          ConceptInfo(PhraseConceptPair("", node.concept, "NN", "NN"), 0), "", ""))
+                //if (node.concept == "date-entity") {
+                //    dateEntity(node)
+                //} else {
+                    // matches list of deleteble concepts
+                    List(Rule(node.children.sortBy(_._1).map(x => Arg("", x._1, "")),
+                              ConceptInfo(PhraseConceptPair("", node.concept, "NN", "NN"), 0), "", ""))
+                //}
             } else /*if (getRealizations(node).size == 0)*/ {
                 // concept has no realization
                 // TODO: change to passThroughRealizations
@@ -233,6 +237,10 @@ class RuleInventory {
             }
         }
     }
+
+/*    def dateEntity(node: Node) : List[Rule] = {
+        
+    } */
 
 /*    def passThroughRealizations(node: Node) : List[(PhraseConceptPair, List[String])] = {
         if(node.children.size > 0) {

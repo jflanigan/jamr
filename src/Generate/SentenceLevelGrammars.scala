@@ -1,5 +1,6 @@
 package edu.cmu.lti.nlp.amr.Generate
 import edu.cmu.lti.nlp.amr._
+import edu.cmu.lti.nlp.amr.BasicFeatureVector._
 
 import scala.util.matching.Regex
 import scala.collection.mutable.{Map, Set, ArrayBuffer}
@@ -64,9 +65,9 @@ object SentenceLevelGrammars {
                 val gzFile = new GZIPOutputStream(new FileOutputStream(new File(options('output) + s"/grammar${i}.gz")))
                 writer = new BufferedWriter(new OutputStreamWriter(gzFile, "UTF-8"))
                 for (node <- graph.nodes) {
-                    val corpusRules /*: List[(Rule, FeatureVector)]*/ = ruleInventory.getRules(node)
-                    val passThroughRules /*: List[(Rule, FeatureVector)]*/ = ruleInventory.passThroughRules(node)
-                    val syntheticRules : List[Rule] = ruleModel.syntheticRules(SyntheticRules.Input(node, graph))
+                    val corpusRules : List[(Rule, FeatureVector)] = ruleInventory.getRules(node)
+                    val passThroughRules : List[(Rule, FeatureVector)] = ruleInventory.passThroughRules(node)
+                    val syntheticRules : List[(Rule, FeatureVector)] = ruleModel.syntheticRules(SyntheticRules.Input(node, graph))
                     val rules = corpusRules ::: syntheticRules  // TODO: features on the rules
                     for (rule <- corpusRules) {
                         // Features: rule given concept, realization given concept, and inverses
