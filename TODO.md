@@ -1,6 +1,8 @@
 TODO
 ====
 
+ - Move splitStr (in `Generate`) to amr package in `dev`, and use implit.  Update style guide to recomend use.
+
 #Known bugs
 
  - `dev` Bug in MSCG? See Alg2 decoder [here](https://github.com/jflanigan/jamr-internal/blob/10360b0ca055087605375e3c450471c1d273780f/src/GraphDecoder/Alg2.scala#L116).  Basically, doesn't merge the sets into the lower set like it should.
