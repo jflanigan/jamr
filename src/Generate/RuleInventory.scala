@@ -1,11 +1,13 @@
 package edu.cmu.lti.nlp.amr.Generate
 import edu.cmu.lti.nlp.amr._
+import edu.cmu.lti.nlp.amr.BasicFeatureVector._
 
 import scala.util.matching.Regex
 import scala.collection.mutable.{Map, Set, ArrayBuffer}
 
-class RuleInventory {
+class RuleInventory(featureNames: Set[String]) {
 
+    val conceptCounts : Map[String, Int] = new Map()
     val phraseTable : MultiMapCount[String, PhraseConceptPair] = new MultiMapCount()       // Map from concept to PhraseConcepPairs with counts
     val lexRules : MultiMapCount[String, Rule] = new MultiMapCount()            // Map from concept to lexicalized rules with counts
     val abstractRules : MultiMapCount[String, Rule] = new MultiMapCount()       // Map from pos to abstract rules with counts
@@ -84,9 +86,20 @@ class RuleInventory {
         createConceptArgs()
     }
 
-    def getRules(node: Node) : List[Rule] = {
+    def getRules(node: Node) : List[(Rule, FeatureVector)] = {
         val children : List[String] = node.children.map(x => x._1).sorted
-        return lexRules.map.getOrElse(node.concept, Map()).map(x => x._1).filter(x => x.concept.realization.amrInstance.children.map(y => y._1).sorted == children).toList
+        var rules : List[(Rule, FeatureVector)] = List()
+        for { (rule, ruleCount) <- lexRules.map.getOrElse(node.concept, Map())
+              if rule.concept.realization.amrInstance.children.map(x => x._1).sorted == children
+            } {
+                val conceptCount = conceptCounts(node.concept).toDouble
+                val feats = new FeatureVector(Map(
+                    "r|c" -> log(ruleCount / conceptCount)
+                    // "c|r" -> log(  // need to be able to look up count of rule (for any concept) to do this
+                ))
+                rules = (rule, feats.slice(feat => featureNames.contains(feat))) :: rules
+        }
+        return rules
     }
 
     def getRealizations(node: Node) : List[(PhraseConceptPair, List[String])] = {   // phrase, arg labels of children not consumed
