@@ -5,9 +5,14 @@ import edu.cmu.lti.nlp.amr.BasicFeatureVector._
 import scala.util.matching.Regex
 import scala.collection.mutable.{Map, Set, ArrayBuffer}
 
-class RuleInventory(featureNames: Set[String]) {
+class RuleInventory(featureNames: Set[String] = Set()) {
 
-    val conceptCounts : Map[String, Int] = new Map()
+    val featuresToUse : Set[String] = featureNames.map(x => x match {
+        case "ruleGivenConcept" => Some("r|c")
+        case _ => None
+    }).filter(x => x != None).map(x => x.get)
+
+    val conceptCounts : Map[String, Int] = Map()
     val phraseTable : MultiMapCount[String, PhraseConceptPair] = new MultiMapCount()       // Map from concept to PhraseConcepPairs with counts
     val lexRules : MultiMapCount[String, Rule] = new MultiMapCount()            // Map from concept to lexicalized rules with counts
     val abstractRules : MultiMapCount[String, Rule] = new MultiMapCount()       // Map from pos to abstract rules with counts
@@ -78,6 +83,7 @@ class RuleInventory(featureNames: Set[String]) {
             }
             logger(0,"****** Extracting phrase-concept pairs ******")
             extractPhraseConceptPairs(graph, sentence, pos)
+            extractConcepts(graph)
             logger(0,"")
             i += 1
         }
@@ -97,7 +103,7 @@ class RuleInventory(featureNames: Set[String]) {
                     "r|c" -> log(ruleCount / conceptCount)
                     // "c|r" -> log(  // need to be able to look up count of rule (for any concept) to do this
                 ))
-                rules = (rule, feats.slice(feat => featureNames.contains(feat))) :: rules
+                rules = (rule, feats.slice(feat => featuresToUse.contains(feat))) :: rules
         }
         return rules
     }
@@ -170,7 +176,6 @@ class RuleInventory(featureNames: Set[String]) {
         }
     }
 
-
 /*    def opRealizations(node: Node) : List[(PhraseConceptPair, List[String])] = {
         if (node.children.exists(_._2.concept == "name")) {
             nameNode = node.children.filter(x => x._2.concept == "name")(0)
@@ -213,21 +218,24 @@ class RuleInventory(featureNames: Set[String]) {
         }
     }
 
-    def passThroughRules(node: Node) : List[Rule] = {   // TODO: change to passThroughRealizations (and add features for syntheticRules)
+    def passThroughRules(node: Node) : List[(Rule, FeatureVector)] = {   // TODO: change to passThroughRealizations (and add features for syntheticRules)
+        // TODO: filter the features to those in featureNames
         if(node.children.size > 0) {
             if (Set("name", "date-entity").contains(node.concept) || node.concept.matches(".+-.*[a-z]+") || node.children.exists(_._1 == ":name")) {
                 //if (node.concept == "date-entity") {
                 //    dateEntity(node)
                 //} else {
-                    // matches list of deleteble concepts
-                    List(Rule(node.children.sortBy(_._1).map(x => Arg("", x._1, "")),
-                              ConceptInfo(PhraseConceptPair("", node.concept, "NN", "NN"), 0), "", ""))
+                    // matches list of deletable concepts
+                    List((Rule(node.children.sortBy(_._1).map(x => Arg("", x._1, "")),
+                               ConceptInfo(PhraseConceptPair("", node.concept, "NN", "NN"), 0), "", ""),
+                          FeatureVector(Map("deletableConceptPassThrough" -> 1.0))))
                 //}
             } else /*if (getRealizations(node).size == 0)*/ {
                 // concept has no realization
                 // TODO: change to passThroughRealizations
-                List(Rule(node.children.sortBy(_._1).map(x => Arg("", x._1, "")),
-                          ConceptInfo(PhraseConceptPair(node.concept.replaceAll("""-[0-9][0-9]$""",""), node.concept, "NN", "NN"), 0), "", ""))
+                List((Rule(node.children.sortBy(_._1).map(x => Arg("", x._1, "")),
+                           ConceptInfo(PhraseConceptPair(node.concept.replaceAll("""-[0-9][0-9]$""",""), node.concept, "NN", "NN"), 0), "", ""),
+                      FeatureVector(Map("withChildrenPassThrough" -> 1.0))))
             /*} else {
                 // it has a realization, so we won't provide one (since the synthetic rule model will provide one)
                 List() */
@@ -235,14 +243,14 @@ class RuleInventory(featureNames: Set[String]) {
         } else {
             if (node.concept.matches("\".*\"")) {
                 // Pass through for string literals
-                List(Rule(List(), ConceptInfo(PhraseConceptPair(node.concept.drop(1).init, node.concept, "NNP", "NNP"), 0), "", ""))
+                List((Rule(List(), ConceptInfo(PhraseConceptPair(node.concept.drop(1).init, node.concept, "NNP", "NNP"), 0), "", ""), FeatureVector(Map("StringPassThrough" -> 1.0))))
             } else if (!getRealizations(node).contains((x: (PhraseConceptPair, List[String])) => x._1.amrInstance.children.size == 1)) {
                 // concept has no realization
                 if (node.concept.matches(""".*-[0-9][0-9]""")) {
                     // TODO: add inverse rules of WordNet's Morphy: http://wordnet.princeton.edu/man/morphy.7WN.html
-                    List(Rule(List(), ConceptInfo(PhraseConceptPair(node.concept.replaceAll("""-[0-9][0-9]$""",""), node.concept, "VB", "VB"), 0), "", ""))
+                    List((Rule(List(), ConceptInfo(PhraseConceptPair(node.concept.replaceAll("""-[0-9][0-9]$""",""), node.concept, "VB", "VB"), 0), "", ""), FeatureVector(Map("eventConceptNoChildrenPassThrough" -> 1.0))))
                 } else {
-                    List(Rule(List(), ConceptInfo(PhraseConceptPair(node.concept, node.concept, "NN", "NN"), 0), "", ""))
+                    List((Rule(List(), ConceptInfo(PhraseConceptPair(node.concept, node.concept, "NN", "NN"), 0), "", ""), FeatureVector(Map("nonEventConceptNoChildrenPassThrough" -> 1.0))))
                 }
             } else {
                 // it has a realization, so we won't provide one (since the synthetic rule model will provide one)
@@ -335,6 +343,14 @@ class RuleInventory(featureNames: Set[String]) {
 
     private def ruleOk(rule : Rule, count: Int) : Boolean = {
         return ruleOk(rule) && count > 0    // could apply filter on low count args
+    }
+
+    private def extractConcepts(graph: Graph) {
+        // Populates the conceptCounts table
+        for (span <- graph.spans) {
+            val concept = span.amr.concept
+            conceptCounts(span.amr.concept) = conceptCounts.getOrElse(concept, 0) + 1
+        }
     }
 
     private def extractPhraseConceptPairs(graph: Graph, sentence: Array[String], pos: Array[String]) {

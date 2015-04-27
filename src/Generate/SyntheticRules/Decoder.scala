@@ -6,7 +6,7 @@ import edu.cmu.lti.nlp.amr.BasicFeatureVector._
 import scala.util.matching.Regex
 import scala.collection.mutable.{Map, Set, ArrayBuffer}
 
-case class DecoderResult(rule: Rule, features: FeatureVector, score: Double)
+case class DecoderResult(rule: (Rule, FeatureVector), features: FeatureVector, score: Double)
 
 class Decoder(val ruleInventory: RuleInventory) {
     var weights = new FeatureVector()   // TODO: get rid of this! (add to constructor)
@@ -17,9 +17,9 @@ class Decoder(val ruleInventory: RuleInventory) {
     val argOnLeft = ruleInventory.argOnLeft _
     val argOnRight = ruleInventory.argOnRight _
 
-    def syntheticRules(input: Input) : List[Rule] = {
+    def syntheticRules(input: Input) : List[(Rule, FeatureVector)] = {
         // Returns a rule for every concept realization
-        var rules : List[Rule] = List()
+        var rules : List[(Rule, FeatureVector)] = List()
         var bestRule : Option[Array[Arg]] = None
         var bestScore : Option[Double] = None
         for ((phrase, children) <- getRealizations(input.node)) {
@@ -35,7 +35,7 @@ class Decoder(val ruleInventory: RuleInventory) {
         if (args.size == 0) {
             val rule = Rule(List(), ConceptInfo(conceptRealization, 0), "", "")
             val feats = oracle(rule, input)
-            return DecoderResult(rule, feats, weights.dot(feats))
+            return DecoderResult((rule, FeatureVector(Map("syntheticRuleNoArgs" -> 1.0))), feats, weights.dot(feats))
         }
         logger(0, "conceptRealization: "+conceptRealization.toString)
         logger(0, "args: "+args.toString)
@@ -101,7 +101,8 @@ class Decoder(val ruleInventory: RuleInventory) {
             logger(0, "score = " + score)
             logger(0, "weights.dot(feats) = " + weights.dot(feats))
         }
-        return DecoderResult(rule, feats, score)
+        val ruleFeats = FeatureVector(Map("syntheticRule" -> 1.0, "syntheticRuleScore" -> score))
+        return DecoderResult((rule, ruleFeats), feats, score)
     }
 
     def oracle(rule: Rule, input: Input) : FeatureVector = {

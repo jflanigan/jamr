@@ -20,6 +20,7 @@ object SentenceLevelGrammars {
         def isSwitch(s : String) = (s(0) == '-')
         list match {
             case Nil => map
+            case "--features" :: value :: l =>           parseOptions(map + ('features -> value), l)
             case "--weights" :: value :: l =>            parseOptions(map + ('weights -> value), l)
             case "--dev" :: l =>                         parseOptions(map + ('dev -> "true"), l)
             case "--rule-inventory" :: value :: l =>     parseOptions(map + ('ruleInventory -> value), l)
@@ -43,9 +44,11 @@ object SentenceLevelGrammars {
             verbosity = options('verbosity).toInt
         }
 
+        val featureNames : Set[String] = Set() ++ options.getOrElse('stage2Features, "").splitStr(",")
+
         //val input : Array[Input] = Input.loadInputfiles(options)
 
-        val ruleInventory: RuleInventory = new RuleInventory()
+        val ruleInventory: RuleInventory = new RuleInventory(featureNames)
         ruleInventory.load(options('ruleInventory))
 
         val ruleModel = new SyntheticRules.Decoder(ruleInventory)
@@ -71,16 +74,16 @@ object SentenceLevelGrammars {
                     val rules = corpusRules ::: syntheticRules  // TODO: features on the rules
                     for (rule <- corpusRules) {
                         // Features: rule given concept, realization given concept, and inverses
-                        writer.append(rule.mkRule(withArgLabel=false)+" ||| corpus=1\n")
+                        writer.append(rule._1.mkRule(withArgLabel=false)+" ||| corpus=1\n") // TODO: features here
                     }
                     for (rule <- passThroughRules) {
                         // Features: which kind of pass through, were inverse Morphy rules used
-                        writer.append(rule.mkRule(withArgLabel=false)+" ||| passthrough=1\n")
+                        writer.append(rule._1.mkRule(withArgLabel=false)+" ||| passthrough=1\n")
                     }
                     for (rule <- syntheticRules) {
                         // Features: realization given concept, model score
                         //writer.append(rule.toString+" ||| synthetic=1\n")
-                        writer.append(rule.mkRule(withArgLabel=false)+" ||| synthetic=1\n")
+                        writer.append(rule._1.mkRule(withArgLabel=false)+" ||| synthetic=1\n")
                     }
                 }
             } finally {

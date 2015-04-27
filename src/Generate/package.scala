@@ -1,5 +1,6 @@
 package edu.cmu.lti.nlp.amr
 import edu.cmu.lti.nlp.amr._
+import scala.language.implicitConversions
 
 import scala.util.matching.Regex
 import scala.collection.mutable.{Map, Set, ArrayBuffer}
@@ -46,6 +47,17 @@ package object Generate {
         }).toArray
         return pos
     }
+
+    implicit def StringToMyString(s: String) = new MyString(s)
+
+    class MyString(private val str: String) {
+        def splitStr(sep: String) : Array[String] = {
+            // String.split doesn't work the way you would think.  Here is a better version.
+            // See https://issues.scala-lang.org/browse/SI-5069
+            splitStrToList(str, sep).toArray
+        }
+    }
+
     def splitStr(str: String, sep: String) : Array[String] = {
         // String.split doesn't work the way you would think.  Here is a better version.
         // See https://issues.scala-lang.org/browse/SI-5069
