@@ -74,7 +74,7 @@ case class FeatureVector(fmap : Map[String, Double] = Map[String, Double]()) ext
         }
         return f
     }
-    def read(iterator: Iterator[String]) = {    // TODO: make this another constructor
+    def read(iterator: Iterator[String]) {    // TODO: make this another constructor
         val regex = """(.*)[ \t]([^ \t]*)""".r
         //val iterator = Source.fromFile(filename).getLines()
         fmap.clear()
@@ -88,6 +88,15 @@ case class FeatureVector(fmap : Map[String, Double] = Map[String, Double]()) ext
             }
         }
         return string.toString
+    }
+    def toCdecFormat() : String = { 
+        // converts the feature vector to a one-line string format compatible with cdec's format
+        return fmap.toList.map(x => { assert(!x._1.contains(' '), "Cannot convert to cdec format (there should be no spaces in the feature names)");  x._1+"="+x._2 }).sorted.mkString(" ")
+    }
+    def fromCdecFormat(string: String) {
+        val regex = """(.*)=([^=]*)""".r
+        fmap.clear()
+        fmap ++= string.split(" ").map((s : String) => { val regex(f,v) = s; (f,v.toDouble) })
     }
     def unsorted() : String = {
         val string = new StringBuilder
