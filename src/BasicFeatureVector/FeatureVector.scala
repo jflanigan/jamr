@@ -1,24 +1,10 @@
 package edu.cmu.lti.nlp.amr.BasicFeatureVector
+import edu.cmu.lti.nlp.amr._
 import edu.cmu.lti.nlp.amr.Train.AbstractFeatureVector
 
-import java.io.File
-import java.io.FileOutputStream
-import java.io.PrintStream
-import java.io.BufferedOutputStream
-import java.io.OutputStreamWriter
-import java.lang.Math.abs
-import java.lang.Math.log
-import java.lang.Math.exp
-import java.lang.Math.random
-import java.lang.Math.floor
-import java.lang.Math.min
-import java.lang.Math.max
-import scala.io.Source
-import scala.util.matching.Regex
-import scala.collection.mutable.Map
-import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
-import scala.util.parsing.combinator._
+import scala.collection.{mutable => m, immutable => i}  // m.Set, m.Map, i.Set, i.Map
+
 
 /**************************** Feature Vectors *******************************/
 
@@ -28,7 +14,7 @@ case class MulAssoc(x: Double) { def * (v: FeatureVector) = mul(x, v) }
 // in package.scala:
 // implicit def doubleToMulAssoc(x: Double) = new MulAssoc(x)
 
-case class FeatureVector(fmap : Map[String, Double] = Map[String, Double]()) extends AbstractFeatureVector(Array()) {
+case class FeatureVector(fmap : m.Map[String, Double] = m.Map[String, Double]()) extends AbstractFeatureVector(Array()) {
 //    def copy(v: FeatureVector) = { FeatureVector(v.fmap.clone()) }
     def dot(v: FeatureVector) : Double = {
         if (fmap.size <= v.fmap.size) {
