@@ -96,7 +96,7 @@ case class FeatureVector(fmap : Map[String, Double] = Map[String, Double]()) ext
     def fromCdecFormat(string: String) {
         val regex = """(.*)=([^=]*)""".r
         fmap.clear()
-        fmap ++= string.split(" ").map((s : String) => { val regex(f,v) = s; (f,v.toDouble) })
+        fmap ++= string.splitStr(" ").map((s : String) => { val regex(f,v) = s; (f,v.toDouble) })
     }
     def unsorted() : String = {
         val string = new StringBuilder

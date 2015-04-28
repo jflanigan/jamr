@@ -1,7 +1,7 @@
 TODO
 ====
 
- - Move splitStr (in `Generate`) to amr package in `dev`, and use implit.  Update style guide to recomend use.
+ - Change all instances of string.split to string.splitStr.  Update style guide to recomend use.
 
 #Known bugs
 
