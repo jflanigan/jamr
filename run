@@ -13,7 +13,8 @@ klass="edu.cmu.lti.nlp.amr.$1"
 shift
 
 # To run using sbt (useful for incremental compiling):
-# (cd "${MY_DIR}" > /dev/null; ./sbt --error "runMain $klass $*" | grep -v '^[[]success[]] Total time:.*completed.*')   # Hack to get rid of sbt logging message
+(cd "${MY_DIR}" > /dev/null; ./sbt --error "runMain $klass $*" | grep -v '^[[]success[]] Total time:.*completed.*')   # Hack to get rid of sbt logging message
 
 # To run directly (assumes you've built an assembly with `./compile` or `./sbt assembly`):
-java ${JAVA_OPTS} -cp "${CLASSPATH}" "$klass" "$@"
+#java ${JAVA_OPTS} -cp "${CLASSPATH}" "$klass" "$@"
+
