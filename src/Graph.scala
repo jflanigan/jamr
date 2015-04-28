@@ -398,8 +398,8 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         // converts domain-of and mod-of into mod and domain, respectively (see AMR guidelines)
         def normalize(relation: String) : String = {
             relation match {
-                case "mod-of" => "domain"
-                case "domain-of" => "mod"
+                case ":mod-of" => ":domain"
+                case ":domain-of" => ":mod"
                 case x => x
             }
         }
@@ -419,13 +419,13 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
                     // Add non-inverse relation to node2
                     node2.relations = node2.relations ::: List((rel.slice(0,rel.size-3), node1))
                 }
-                if (rel.matches("domain") && Graph.normalizeMod) {
-                    node2.relations = node2.relations ::: List(("mod", node1))
+                if (rel.matches(":domain") && Graph.normalizeMod) {
+                    node2.relations = node2.relations ::: List((":mod", node1))
                 }
             }
             // Remove inverse relations and domain from node1
             node1.relations = node1.relations.filterNot(x => x._1.endsWith("-of") ||
-                (x._1.matches("domain") && Graph.normalizeMod) )
+                (x._1.matches(":domain") && Graph.normalizeMod) )
         }
     }
 

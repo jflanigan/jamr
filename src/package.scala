@@ -1,5 +1,6 @@
 package edu.cmu.lti.nlp
 import scala.language.implicitConversions
+import scala.annotation.tailrec
 import java.nio.file.{Paths, Files}
 import java.nio.charset.StandardCharsets
 
@@ -22,8 +23,8 @@ package object amr {
     //type Map[A,B] = scala.collection.mutable.Map
     //type Set[A] = scala.collection.mutable.Set
     //type ArrayBuffer[A] = scala.collection.mutable.ArrayBuffer[A]
-
 /********************************************************************/
+
     def writeToFile(filename: String, contents: String) {       // TODO: move to a utilities file
         // see http://stackoverflow.com/questions/6879427/scala-write-string-to-file-in-one-statement
         Files.write(Paths.get(filename), contents.getBytes(StandardCharsets.UTF_8))
@@ -32,6 +33,31 @@ package object amr {
     implicit def AnnotationToBaseAnnotation[T](a: Annotation[T]) = a.annotations
     var verbosity = 1
     def logger(n: Int, s: Any) { if(n<=verbosity) System.err.println(s) }
+
+
+    /*********** string.splitStr ***********/
+    implicit def StringToMyString(s: String) = new MyString(s)
+
+    class MyString(private val str: String) {
+        def splitStr(sep: String) : Array[String] = {
+            // String.split doesn't work the way you would think.  Here is a better version.
+            // See https://issues.scala-lang.org/browse/SI-5069
+            splitStrToList(str, sep, List()).toArray
+        }
+    }
+
+    @tailrec
+    def splitStrToList(str: String, sep: String, ret : List[String]) : List[String] = {
+        val i = str.indexOfSlice(sep)
+        if(i == -1) {
+            (str :: ret).reverse
+        } else {
+            val (str1, str2) = str.splitAt(i)
+            val rest = str2.drop(sep.size)
+            splitStrToList(rest, sep, str1 :: ret)
+        }
+    }
+
 
     /*************** MySeq ****************/
     implicit def SeqToMySeq[T](x: Seq[T]) = new MySeq[T](x)

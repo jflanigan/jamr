@@ -75,9 +75,9 @@ class LagrangianRelaxation(featureNames: List[String], labelSet: Array[(String, 
         } while (delta != 0.0 && counter < maxIterations)
 
         if (delta != 0.0) {
-            logger(0, "WARNING: Langrangian relaxation did not converge after "+counter.toString+" iterations. Delta = "+delta.toString)
+            logger(0, "WARNING: Lagrangian relaxation did not converge after "+counter.toString+" iterations. Delta = "+delta.toString)
         } else {
-            logger(0, "Langrangian relaxation converged after "+counter.toString+" iterations. Delta = "+delta.toString)
+            logger(0, "Lagrangian relaxation converged after "+counter.toString+" iterations. Delta = "+delta.toString)
         }
 
         val feats = result.features.filter(x => !x.startsWith("LR:Id1="))

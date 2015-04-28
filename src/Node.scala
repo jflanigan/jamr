@@ -71,10 +71,10 @@ case class Node(var id: String, var name: Option[String], concept: String, var r
                                  variableRelations.map(x => prefix+x._1+" "+x._2.concept)).mkString(" ")+")"
                     case 1 =>
                 "("+n+" / "+concept+" "+(topologicalOrdering.map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, vars, nextIndent)) :::
-                                 variableRelations.map(x => prefix+x._1+" "+x._2.name)).mkString(" ")+")"
+                                 variableRelations.map(x => prefix+x._1+" "+x._2.name.get)).mkString(" ")+")"
                     case 2 =>
                 "(["+id+"] "+n+" / "+concept+" "+(topologicalOrdering.map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, vars, nextIndent)) :::
-                                 variableRelations.map(x => prefix+x._1+" ["+x._2.id+"] "+x._2.name)).mkString(" ")+")"
+                                 variableRelations.map(x => prefix+x._1+" ["+x._2.id+"] "+x._2.name.get)).mkString(" ")+")"
                 }
             } else {                        // Concept with name, but no children
                 detail match {

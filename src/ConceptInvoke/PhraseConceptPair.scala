@@ -2,18 +2,8 @@ package edu.cmu.lti.nlp.amr.ConceptInvoke
 import edu.cmu.lti.nlp.amr._
 import edu.cmu.lti.nlp.amr.BasicFeatureVector._
 
-import java.lang.Math.abs
-import java.lang.Math.log
-import java.lang.Math.exp
-import java.lang.Math.random
-import java.lang.Math.floor
-import java.lang.Math.min
-import java.lang.Math.max
-import scala.io.Source
-import scala.util.matching.Regex
-import scala.collection.mutable.Map
-import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.{mutable => m, immutable => i}
 
 case class PhraseConceptPair(words: List[String], graphFrag: String, features: FeatureVector, trainingIndices: List[Int] = List()) {
 
@@ -27,6 +17,10 @@ expert ||| (person :ARG1-of expert-41) ||| Count=4 ConceptGivenPhrase=0.3077
         return words.mkString(" ")+" ||| "+graphFrag+" ||| "+features.fmap.toList.map(x => x._1+"="+x._2).sorted.mkString(" ")+" ||| "+trainingIndices.mkString(" ")
     }
 
+    def graph : Graph = {
+        return Graph.parse(graphFrag)
+    }
+
 }
 
 object PhraseConceptPair {
@@ -35,7 +29,7 @@ object PhraseConceptPair {
         val words = fields(0).split(" ").toList
         val graphFrag = fields(1)
         val Feat = """(.+)=([^=]+)""".r
-        val features = Map() ++ fields(2).split(" ").map(x => { val Feat(name, v) = x; (name, v.toDouble) }).toMap
+        val features = m.Map() ++ fields(2).split(" ").map(x => { val Feat(name, v) = x; (name, v.toDouble) }).toMap
         val trainingIndices = if (fields.size > 3) {
                 fields(3).split(" ").toList.map(_.toInt)
             } else {
