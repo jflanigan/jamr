@@ -133,7 +133,7 @@ class Decoder(val ruleInventory: RuleInventory) {
         val dist            = "+dist"
         val leftCount       = cur.left.count(_ == ' ')
         val rightCount      = cur.right.count(_ == ' ')
-        val stopWordCount   = splitStr(cur.left + " " + cur.right," ").count(x => stopwords.contains(x))
+        val stopWordCount   = (cur.left + " " + cur.right).splitStr(" ").count(x => stopwords.contains(x))
         //{ val concept       = "+c="    + input.node.concept  // concept
         val feats = FeatureVector(Map(
             // TODO: features of where the concept is, lexical unigrams

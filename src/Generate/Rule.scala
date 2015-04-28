@@ -89,8 +89,8 @@ object Rule {
         // Input example: "follow ||| following ||| JJ ||| JJ ||| 0 ||| |OP1| |||  ||| "
 
         // String.split doesn't work the way you would think.  See https://issues.scala-lang.org/browse/SI-5069
-        // So we use our own splitStr
-        val split = splitStr(string, " ||| ")
+        // So we use our own splitStr (see the style guide)
+        val split = string.splitStr(" ||| ")
         val size = split.size
         val conceptInfo = split.slice(0, size-3).mkString(" ||| ")
         val argsStr = split(size-3)

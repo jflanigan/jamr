@@ -12,7 +12,7 @@ case class ConceptInfo(realization: PhraseConceptPair, position: Int) {
 
 object ConceptInfo {
     def apply(string: String) : ConceptInfo = {
-        val splitted = splitStr(string, " ||| ")
+        val splitted = string.splitStr(" ||| ")
         return ConceptInfo(PhraseConceptPair(splitted.init.mkString(" ||| ")), splitted.last.toInt)
     }
 }

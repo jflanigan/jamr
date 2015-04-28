@@ -36,7 +36,7 @@ package object Generate {
         return s
     }
     def unEscapeArray(str: String, esc: Char) : Array[String] = {
-        return splitStr(unEscape(str, esc), "\t")
+        return unEscape(str, esc).splitStr("\t")
     }
     def projectPos(posAnno: Annotation[String]) : Array[String] = {
         val sentence : Array[String] = posAnno.snt // tokenized sentence
@@ -48,31 +48,6 @@ package object Generate {
         return pos
     }
 
-    implicit def StringToMyString(s: String) = new MyString(s)
-
-    class MyString(private val str: String) {
-        def splitStr(sep: String) : Array[String] = {
-            // String.split doesn't work the way you would think.  Here is a better version.
-            // See https://issues.scala-lang.org/browse/SI-5069
-            splitStrToList(str, sep).toArray
-        }
-    }
-
-    def splitStr(str: String, sep: String) : Array[String] = {
-        // String.split doesn't work the way you would think.  Here is a better version.
-        // See https://issues.scala-lang.org/browse/SI-5069
-        splitStrToList(str, sep).toArray
-    }
-    def splitStrToList(str: String, sep: String) : List[String] = {
-        val i = str.indexOfSlice(sep)
-        if(i == -1) {
-            List(str)
-        } else {
-            val (str1, str2) = str.splitAt(i)
-            val rest = str2.drop(sep.size)
-            str1 :: splitStrToList(rest, sep)
-        }
-    }
     val stopwords = Set(
         ",",
         "'s",
