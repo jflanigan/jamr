@@ -71,19 +71,15 @@ object SentenceLevelGrammars {
                     val corpusRules : List[(Rule, FeatureVector)] = ruleInventory.getRules(node)
                     val passThroughRules : List[(Rule, FeatureVector)] = ruleInventory.passThroughRules(node)
                     val syntheticRules : List[(Rule, FeatureVector)] = ruleModel.syntheticRules(SyntheticRules.Input(node, graph))
-                    val rules = corpusRules ::: syntheticRules  // TODO: features on the rules
-                    for (rule <- corpusRules) {
-                        // Features: rule given concept, realization given concept, and inverses
-                        writer.append(rule._1.mkRule(withArgLabel=false)+" ||| corpus=1\n") // TODO: features here
-                    }
-                    for (rule <- passThroughRules) {
-                        // Features: which kind of pass through, were inverse Morphy rules used
-                        writer.append(rule._1.mkRule(withArgLabel=false)+" ||| passthrough=1\n")
-                    }
-                    for (rule <- syntheticRules) {
-                        // Features: realization given concept, model score
+                    for (rule <- corpusRules ::: passThroughRules ::: syntheticRules) {
+                        // Features
+                        // corpusRules: rule given concept, realization given concept, and inverses
+                        // passThroughRules: which kind of pass through, were inverse Morphy rules used
+                        // syntheticRules: realization given concept, model score
+
                         //writer.append(rule.toString+" ||| synthetic=1\n")
-                        writer.append(rule._1.mkRule(withArgLabel=false)+" ||| synthetic=1\n")
+                        //writer.append(rule._1.mkRule(withArgLabel=false)+" ||| synthetic=1\n")
+                        writer.append(rule._1.mkRule(withArgLabel=false)+" ||| "+rule._2.toCdecFormat+'\n')
                     }
                 }
             } finally {

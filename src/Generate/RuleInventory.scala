@@ -100,6 +100,7 @@ class RuleInventory(featureNames: Set[String] = Set()) {
             } {
                 val conceptCount = conceptCounts(node.concept).toDouble
                 val feats = new FeatureVector(Map(
+                    "corpus" -> 1.0,
                     "r|c" -> log(ruleCount / conceptCount)
                     // "c|r" -> log(  // need to be able to look up count of rule (for any concept) to do this
                 ))
@@ -228,14 +229,14 @@ class RuleInventory(featureNames: Set[String] = Set()) {
                     // matches list of deletable concepts
                     List((Rule(node.children.sortBy(_._1).map(x => Arg("", x._1, "")),
                                ConceptInfo(PhraseConceptPair("", node.concept, "NN", "NN"), 0), "", ""),
-                          FeatureVector(Map("deletableConceptPassThrough" -> 1.0))))
+                          FeatureVector(Map("passthrough" -> 1.0, "deletableConceptPassThrough" -> 1.0))))
                 //}
             } else /*if (getRealizations(node).size == 0)*/ {
                 // concept has no realization
                 // TODO: change to passThroughRealizations
                 List((Rule(node.children.sortBy(_._1).map(x => Arg("", x._1, "")),
                            ConceptInfo(PhraseConceptPair(node.concept.replaceAll("""-[0-9][0-9]$""",""), node.concept, "NN", "NN"), 0), "", ""),
-                      FeatureVector(Map("withChildrenPassThrough" -> 1.0))))
+                      FeatureVector(Map("passthrough" -> 1.0, "withChildrenPassThrough" -> 1.0))))
             /*} else {
                 // it has a realization, so we won't provide one (since the synthetic rule model will provide one)
                 List() */
@@ -243,14 +244,14 @@ class RuleInventory(featureNames: Set[String] = Set()) {
         } else {
             if (node.concept.matches("\".*\"")) {
                 // Pass through for string literals
-                List((Rule(List(), ConceptInfo(PhraseConceptPair(node.concept.drop(1).init, node.concept, "NNP", "NNP"), 0), "", ""), FeatureVector(Map("StringPassThrough" -> 1.0))))
+                List((Rule(List(), ConceptInfo(PhraseConceptPair(node.concept.drop(1).init, node.concept, "NNP", "NNP"), 0), "", ""), FeatureVector(Map("passthrough" -> 1.0, "stringPassThrough" -> 1.0))))
             } else if (!getRealizations(node).contains((x: (PhraseConceptPair, List[String])) => x._1.amrInstance.children.size == 1)) {
                 // concept has no realization
                 if (node.concept.matches(""".*-[0-9][0-9]""")) {
                     // TODO: add inverse rules of WordNet's Morphy: http://wordnet.princeton.edu/man/morphy.7WN.html
                     List((Rule(List(), ConceptInfo(PhraseConceptPair(node.concept.replaceAll("""-[0-9][0-9]$""",""), node.concept, "VB", "VB"), 0), "", ""), FeatureVector(Map("eventConceptNoChildrenPassThrough" -> 1.0))))
                 } else {
-                    List((Rule(List(), ConceptInfo(PhraseConceptPair(node.concept, node.concept, "NN", "NN"), 0), "", ""), FeatureVector(Map("nonEventConceptNoChildrenPassThrough" -> 1.0))))
+                    List((Rule(List(), ConceptInfo(PhraseConceptPair(node.concept, node.concept, "NN", "NN"), 0), "", ""), FeatureVector(Map("passthrough" -> 1.0, "nonEventConceptNoChildrenPassThrough" -> 1.0))))
                 }
             } else {
                 // it has a realization, so we won't provide one (since the synthetic rule model will provide one)

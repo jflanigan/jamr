@@ -35,7 +35,7 @@ class Decoder(val ruleInventory: RuleInventory) {
         if (args.size == 0) {
             val rule = Rule(List(), ConceptInfo(conceptRealization, 0), "", "")
             val feats = oracle(rule, input)
-            return DecoderResult((rule, FeatureVector(Map("syntheticRuleNoArgs" -> 1.0))), feats, weights.dot(feats))
+            return DecoderResult((rule, FeatureVector(Map("syntheticNoArgs" -> 1.0))), feats, weights.dot(feats))
         }
         logger(0, "conceptRealization: "+conceptRealization.toString)
         logger(0, "args: "+args.toString)
@@ -101,7 +101,7 @@ class Decoder(val ruleInventory: RuleInventory) {
             logger(0, "score = " + score)
             logger(0, "weights.dot(feats) = " + weights.dot(feats))
         }
-        val ruleFeats = FeatureVector(Map("syntheticRule" -> 1.0, "syntheticRuleScore" -> score))
+        val ruleFeats = FeatureVector(Map("synthetic" -> 1.0, "syntheticScore" -> score))
         return DecoderResult((rule, ruleFeats), feats, score)
     }
 
