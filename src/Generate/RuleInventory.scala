@@ -12,7 +12,7 @@ class RuleInventory(featureNames: Set[String] = Set()) {
         case _ => None
     }).filter(x => x != None).map(x => x.get)
 
-    val conceptCounts : Map[String, Int] = Map()
+    val conceptCounts : MultiMapCount[String, Unit] = new MultiMapCount()
     val phraseTable : MultiMapCount[String, PhraseConceptPair] = new MultiMapCount()       // Map from concept to PhraseConcepPairs with counts
     val lexRules : MultiMapCount[String, Rule] = new MultiMapCount()            // Map from concept to lexicalized rules with counts
     val abstractRules : MultiMapCount[String, Rule] = new MultiMapCount()       // Map from pos to abstract rules with counts
@@ -26,6 +26,7 @@ class RuleInventory(featureNames: Set[String] = Set()) {
     val conceptArgsRight : Map[(String, String, String), List[Arg]] = Map()    // (concept, pos, arg) -> array of realizations
   
     def load(filename: String) {    // TODO: move to companion object
+        conceptCounts.readFile(filename+".conceptcounts", x => x, y => Unit)
         phraseTable.readFile(filename+".phrasetable", x => x, PhraseConceptPair.apply)
         lexRules.readFile(filename+".lexrules", x => x, Rule.apply)
         abstractRules.readFile(filename+".abstractrules", x => x, Rule.apply)
@@ -35,6 +36,7 @@ class RuleInventory(featureNames: Set[String] = Set()) {
     }
 
     def save(filename: String) {
+        writeToFile(filename+".conceptcounts", conceptCounts.toString)
         writeToFile(filename+".phrasetable", phraseTable.toString)
         writeToFile(filename+".lexrules", lexRules.toString)
         writeToFile(filename+".abstractrules", abstractRules.toString)
@@ -98,7 +100,7 @@ class RuleInventory(featureNames: Set[String] = Set()) {
         for { (rule, ruleCount) <- lexRules.map.getOrElse(node.concept, Map())
               if rule.concept.realization.amrInstance.children.map(x => x._1).sorted == children
             } {
-                val conceptCount = conceptCounts(node.concept).toDouble
+                val conceptCount = conceptCounts.map.getOrElse(node.concept, Map()).map(x => x._2).sum.toDouble
                 val feats = new FeatureVector(Map(
                     "corpus" -> 1.0,
                     "r|c" -> log(ruleCount / conceptCount)
@@ -350,7 +352,8 @@ class RuleInventory(featureNames: Set[String] = Set()) {
         // Populates the conceptCounts table
         for (span <- graph.spans) {
             val concept = span.amr.concept
-            conceptCounts(span.amr.concept) = conceptCounts.getOrElse(concept, 0) + 1
+            //conceptCounts(span.amr.concept) = conceptCounts.getOrElse(concept, 0) + 1
+            conceptCounts.add(span.amr.concept -> Unit)
         }
     }
 
