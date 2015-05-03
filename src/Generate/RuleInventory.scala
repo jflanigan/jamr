@@ -8,6 +8,7 @@ import scala.collection.mutable.{Map, Set, ArrayBuffer}
 class RuleInventory(featureNames: Set[String] = Set()) {
 
     val featuresToUse : Set[String] = featureNames.map(x => x match {
+        case "source" => Some("corpus")
         case "ruleGivenConcept" => Some("r|c")
         case _ => None
     }).filter(x => x != None).map(x => x.get)
