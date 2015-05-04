@@ -5,11 +5,13 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.{mutable => m, immutable => i}  // m.Set, m.Map, i.Set, i.Map
 
 import scala.reflect.ClassTag       // see http://stackoverflow.com/questions/16921168/scala-generic-method-no-classtag-available-for-t
+import scala.annotation.tailrec
 
 object Hypergraph {
-    case class Node[N](get: N, index: Int)
-    case class Edge[N,E](dest: Node[N], src: Vector[Node[N]], get: E)
-    case class BareEdge[N,E](dest: N, src: Vector[N], get: E)
+    case class Node[N](get: N, index: Int)                              // Node type of the hypergraph
+    case class Edge[N,E](dest: Node[N], src: Vector[Node[N]], get: E)   // Edge type of the hypergraph
+    case class BareEdge[N,E](dest: N, src: Vector[N], get: E)           // Edge type that is used to create the hypergraph
+    case class SplitEdge[N,M,E](dest: Node[N], src: Vector[M], get: E)  // Edge type that is used when we are splitting states
 
     def fromEdges[N:ClassTag,E](bareEdges: Iterable[BareEdge[N,E]]) : Hypergraph[N,E] = {   // for why we need ClassTag, see http://stackoverflow.com/questions/16921168/scala-generic-method-no-classtag-available-for-t
         val bareNodes : m.Set[N] = m.Set()
@@ -26,6 +28,7 @@ object Hypergraph {
 import Hypergraph.Node
 import Hypergraph.Edge
 import Hypergraph.BareEdge
+import Hypergraph.SplitEdge
 
 class Hypergraph[N,E] private (_bareNodes: Array[N], _bareEdges: Array[BareEdge[N,E]]) {  // private constructor, see http://stackoverflow.com/questions/1730536/private-and-protected-constructor-in-scala
     private val _nodes: Array[Node[N]] = {
@@ -61,6 +64,7 @@ class Hypergraph[N,E] private (_bareNodes: Array[N], _bareEdges: Array[BareEdge[
         inEdges
     }
     private val _terminals : List[Node[N]] = _nodes.filter(n => incomingEdges(n) == List() || !incomingEdges(n).contains((e : Edge[N,E]) => { e.src != List() })).toList
+    private val goalNodes : List[Node[N]] = _node.filter(n => outgoingEdges(n) == List()).toList
 
     //private def outgoingEdges(srcIndex: Int) : List[Edge[N,E]] = _outgoingEdges(srcIndex)     // Not needed
     //private def incomingEdges(destIndex: Int) : List[Edge[N,E]] = _incomingEdges(destIndex)
@@ -74,8 +78,64 @@ class Hypergraph[N,E] private (_bareNodes: Array[N], _bareEdges: Array[BareEdge[
     def outgoingEdges(src: Node[N]) : List[Edge[N,E]] = _outgoingEdges(src.index)
     def incomingEdges(dest: Node[N]) : List[Edge[N,E]] = _incomingEdges(dest.index)
 
-    //def splitStates[M,F](split: Edge[N,E] => (Node[M], Edge[M,F]) : Hypergraph[M,F] = {
-    //}
+    def splitStates[M](goalNode: N => Boolean,
+                       split: SplitEdge[N,M,E] => BareEdge[M,E]) : Hypergraph[M,E] = {
+        val nodesToProcess : List[(Node[N], SplitEdge[N,M,E])] = List()
+        for (
+        return splitStates(_terminals.map(e => SplitEdge(e.dest, List(), e.get)), split)
+    }
+
+    def splitStates[M](goalNode: N => Boolean,
+                       split: SplitEdge[N,M,E] => BareEdge[M,E]) : Hypergraph[M,E] = {
+        val goalNodes : List[Node[N]] = _terminals.filter(n => goalNode(n.get))
+        if (goalNodes.size == 1) {
+            return Hypergraph.fromEdges(splitStates(goalNode(0), split)._2)
+        }
+        var edges : List[BareEdge[M,E]] = List()
+        for (goal <- goalNodes) {
+            edges = splitStates(goal, split) ::: edges
+        }
+        return Hypergraph.fromEdges(edges.distinct)
+    }
+
+    def splitStates[M](node: Node[N],
+                       split: SplitEdge[N,M,E] => BareEdge[M,E]) : (List[M], List[BareEdge[M,E]]) = {
+        if (nodes == List()) {
+            return List()
+        }
+        for (edge <- outgoingEdges(node)) {
+            
+        }
+    }
+
+    @tailrec
+    def splitStates[M,F](processedNodes: i.Set[Int],
+                         processedEdges: List[BareEdge[M,E]] = List(),
+                         nodesToProcess: List[(Node[N], SplitEdge[N,M,E])],
+                         split: SplitEdge[N,M,E] => BareEdge[M,E]) : List[BareEdge[M,E]] = {
+        if (nodesToProcess == List()) {
+            return processedEdges
+        }
+        var myProcessedNodes : i.Set[Int] = processedNodes
+        var myProcessedEdges : List[Node[M]] = processedEdges
+        var futureNodes : List[(Node[N], SplitEdge[N,M,E])] = List()
+        for ((node, edge) <- nodesToProcess) {
+            val newEdge : BareEdge[M,F] = split(edge)
+            myProcessedEdges = newEdge :: myProcessedEdges
+            if (!myProcessedNodes.contains(node.index)) {
+                myProcessedNodes += node.index
+                for (edge <- outgoingEdges(node)) {
+                    futureNodes = (node, SplitEdge(edge.dest, edge
+                }
+            }
+        }
+        return splitStates(myProcessedEdges, futureNodes, split)
+    }
+
+    /*def toCdecFormat(goalNode: N => Boolean, edgeToString: Edge[N,E] => String) : String = {
+        write(_nodes.size + " " + _edges.size)
+        for(
+    } */
 
 }
 
