@@ -1,8 +1,8 @@
 TODO
 ====
 
- - Change all instances of string.split to string.splitStr.  Update style guide to recomend use.
- - Add `scalacOptions += "-optimize"` to `build.sbt`.  In general, make sure we have optimizations turned on (especially the one for `for` loops), and benchmark `for` loops to make sure they are fast.
+ - Change all instances of `string.split` to `string.splitStr`.  Update style guide to recomend use.
+ - Add `scalacOptions += "-optimize"` to `build.sbt`.  In general, make sure we have optimizations turned on (especially the one for `for` loops), and benchmark `for` loops to make sure they are fast.  Could also try out [the new optimizer](http://magarciaepfl.github.io/scala/)
 
 #Known bugs
 
