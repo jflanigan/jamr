@@ -4,6 +4,7 @@ import edu.cmu.lti.nlp.amr._
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.{mutable => m, immutable => i}  // m.Set, m.Map, i.Set, i.Map
 
+/*
 object Decoder {
     def hypergraph(amr: Node, ruleInventory: RuleInventory) : Hypergraph[String, Rule]
 
@@ -16,4 +17,5 @@ object Decoder {
         // or empty list if no states can be created
         // if the rule matches, and the states match, or state mismatch is allowed, add an edge with the rule to the builder
 }
+*/
 
