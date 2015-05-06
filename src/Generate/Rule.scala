@@ -52,6 +52,12 @@ case class Rule(argRealizations: List[Arg],               // Sorted list
         return List(concept.toString, argRealizations.map(x => escape(x.serialize,',')).mkString(","), prefix, end).mkString(" ||| ")
     }
 
+    def match(input: Node, startPosition: List[Int] = List()) : Option[List[(Node, List[Int])]] = {
+        // if the rule matches the top fragment of the input, returns a list of the unmatched fragments and their positions (position specified in reverse order)
+        // otherwise None
+        // position of List() is the root
+    }
+
     // below is old code
 /*    def argStr(arg: (String, Int, String), verbose: Boolean) : String = {
         if (verbose) {
