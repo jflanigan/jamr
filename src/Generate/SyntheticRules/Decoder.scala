@@ -121,12 +121,12 @@ class Decoder(val ruleInventory: RuleInventory) {
         // cur.tag = realization tag (from argToTag) (e.g. "_ARG1_'s")
         // cur.label = argument (e.g. "ARG1", etc)
         /*********** TODO: the tag level features that don't depend on position can be cached ***************/
-        val arg             = "+A="    + cur.label
-        val prevArg         = "+A-1="  + prev.label
-        val curTag          = "+R="    + cur.tag
+        val arg             = "+A="    + cur.label      // arg label (e.g. "ARG1")
+        val prevArg         = "+A-1="  + prev.label     // arg label to left
+        val curTag          = "+R="    + cur.tag        // arg label + relization (e.g. "|ARG1|'s")
         val prevTag         = "+R-1="  + prev.tag
         val pos             = "+P="    + concept.realization.headPos
-        val side            = "+s="    + (if(position < concept.position) {"L"} else {"R"})  // left = position < concept.position 
+        val side            = "+s="    + (if(position < concept.position) {"L"} else {"R"})  // left = position < concept.position
         //val left          = position < concept.position
         val words           = "+W="    + concept.realization.words.replaceAllLiterally(" ","_")
         val distance        = abs(concept.position-position)
