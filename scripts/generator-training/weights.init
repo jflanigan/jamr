@@ -10,7 +10,6 @@ nameDelete 0.001
 nonEventConceptNoChildrenPassThrough 0.001
 numberPassThrough 0.001
 passthrough -0.014
-r|c 0.03
 stringPassThrough 0.001
 synthetic 0.03
 syntheticNoArgs 0.001
