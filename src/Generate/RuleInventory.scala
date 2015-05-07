@@ -248,10 +248,19 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
                 //if (node.concept == "date-entity") {
                 //    dateEntity(node)
                 //} else {
+                val feats = if (node.concept.matches(".+-.*[a-z]+")) {
+                    Map("passthrough" -> 1.0, "deletableConcept" -> 1.0)
+                } else if (node.concept == "and") {
+                    Map("passthrough" -> 1.0, "andDelete" -> 1.0)
+                } else if (node.concept == "name" || node.children.exists(_._1 == ":name")) {
+                    Map("passthrough" -> 1.0, "nameDelete" -> 1.0)
+                } else {
+                    Map("passthrough" -> 1.0, "otherDelete" -> 1.0)     // shouldn't get here
+                }
                     // matches list of deletable concepts
                     List((Rule(node.children.sortBy(_._1).map(x => Arg("", x._1, "")),
                                ConceptInfo(PhraseConceptPair("", node.concept, "NN", "NN"), 0), "", ""),
-                          FeatureVector(Map("passthrough" -> 1.0, "deletableConceptPassThrough" -> 1.0))))
+                          FeatureVector(feats)))
                 //}
             } else if (node.concept == "and") {
                 if (node.children.size == 2) {
@@ -259,7 +268,8 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
                                ConceptInfo(PhraseConceptPair("and", node.concept, "CC", "CC"), 1), "", ""),
                           FeatureVector(Map("passthrough" -> 1.0, "andPassthrough" -> 1.0))))
                 } else {
-                    List((Rule(node.children.sortBy(_._1).map(x => Arg("", x._1, ",")),
+                    val size = node.children.size
+                    List((Rule(node.children.sortBy(_._1).zipWithIndex.map(x => Arg("", x._1._1, if(x._2 != size - 2) {","} else {""})),
                                ConceptInfo(PhraseConceptPair("and", node.concept, "CC", "CC"), node.children.size - 1), "", ""),
                           FeatureVector(Map("passthrough" -> 1.0, "andPassthrough" -> 1.0))))
                 }
@@ -293,6 +303,8 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
                 if (node.concept.matches(""".*-[0-9][0-9]""")) {
                     // TODO: add inverse rules of WordNet's Morphy: http://wordnet.princeton.edu/man/morphy.7WN.html
                     List((Rule(List(), ConceptInfo(PhraseConceptPair(dropSense(node.concept), node.concept, "VBN", "VBN"), 0), "", ""), FeatureVector(Map("eventConceptNoChildrenPassThrough" -> 1.0))))
+                } else if(node.concept.matches("""[0-9]+""")) {
+                    List((Rule(List(), ConceptInfo(PhraseConceptPair(node.concept, node.concept, "NN", "NN"), 0), "", ""), FeatureVector(Map("passthrough" -> 1.0, "numberPassThrough" -> 1.0))))
                 } else {
                     List((Rule(List(), ConceptInfo(PhraseConceptPair(node.concept, node.concept, "NN", "NN"), 0), "", ""), FeatureVector(Map("passthrough" -> 1.0, "nonEventConceptNoChildrenPassThrough" -> 1.0))))
                 }
