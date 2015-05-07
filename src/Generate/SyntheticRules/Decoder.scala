@@ -43,8 +43,21 @@ class Decoder(val ruleInventory: RuleInventory) {
         val headPos = conceptRealization.headPos
         val leftTags : List[Array[Arg]] = children.map(label => getArgsLeft(conceptRealization, label))
         val rightTags : List[Array[Arg]] = children.map(label => getArgsRight(conceptRealization, label))
+        logger(0, "")
         logger(0, "leftTag sizes: "+children.zip(leftTags.map(x => x.size)).toString)
+        for ((arg, tags) <- children.zip(leftTags)) {
+            val concept = ruleInventory.conceptKey(conceptRealization.concept)
+            logger(0, "conceptArgsLeft(" + (concept,headPos,arg) + ") = " + ruleInventory.conceptArgsLeft.getOrElse((concept,headPos,arg), List()).toString)
+            logger(0, arg + ": " + tags.toList.toString)
+        }
+        logger(0, "")
         logger(0, "rightTag sizes: "+children.zip(rightTags.map(x => x.size)).toString)
+        for ((arg, tags) <- children.zip(rightTags)) {
+            val concept = ruleInventory.conceptKey(conceptRealization.concept)
+            logger(0, "conceptArgsRight(" + (concept,headPos,arg) + ") = " + ruleInventory.conceptArgsRight.getOrElse((concept,headPos,arg), List()).toString)
+            logger(0, arg + ": " + tags.toList.toString)
+        }
+        logger(0, "")
         val numArgs = children.size
         var bestResult : Option[DecoderResult] = None
         def permutationOk(argsLeft: List[String], argsRight: List[String]) : Boolean = {
@@ -63,7 +76,12 @@ class Decoder(val ruleInventory: RuleInventory) {
                         permutation.slice(0,i).map(x => leftTags(x)).toList :::
                         List(Array(Arg.CONCEPT)) :::
                         permutation.slice(i,numArgs).map(x => rightTags(x)).toList)  // TODO: use vector instead
+                logger(0, "Trying permutation "+tagList.map(array => array(0).label).toString)
+                for (list <- tagList) {
+                    logger(0, list.map(x => x.toString).toList.toString)
+                }
                 val result = decode(tagList, conceptInfo, input)
+                logger(0, "Score = " + result.score + " Result = "+result.rule.toString)
                 if (bestResult == None || result.score > bestResult.get.score) {
                     bestResult = Some(result)
                 }

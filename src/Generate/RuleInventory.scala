@@ -90,7 +90,7 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
             val graph = data.toOracleGraph(clearUnalignedNodes = false)
             logger(0,"****** Extracting rules ******")
             for ((_, rule) <- extractRules(graph, sentence, pos) if ruleOk(rule)) {
-                lexRules.add(conceptKey(rule.concept.realization.amrInstance.concept) -> rule)
+                lexRules.add(conceptKey(rule.concept.realization.concept) -> rule)
                 abstractRules.add(rule.abstractSignature -> Rule.abstractRule(rule))
                 abstractRuleCounts.add(rule.concept.realization.headPos -> Rule.abstractRule(rule))
             }
@@ -135,7 +135,7 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
     def argOnLeft(conceptRel: PhraseConceptPair, arg: String) : Boolean = {
         // return true if we observed it on the left or we can back off to it on the left, or we didn't observe it at all
         //return conceptArgsLeft.contains((concept.concept, concept.headPos, arg)) || argsLeft.contains((concept.headPos, arg)) || !argsRight.contains((concept.headPos, arg))
-        val concept = conceptRel.concept
+        val concept = conceptKey(conceptRel.concept)
         val pos = conceptRel.headPos
         if (conceptArgsLeft.contains((concept, pos, arg))) {            // we observed it on the left
             true
@@ -173,7 +173,7 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
     }
 
     def getArgsLeft(conceptRel: PhraseConceptPair, arg: String) : Array[Arg] = {
-        val concept = conceptRel.concept
+        val concept = conceptKey(conceptRel.concept)
         val pos = conceptRel.headPos
         //logger(0, "arg: " + arg)
         if (conceptArgsLeft.contains((concept,pos,arg))) {
@@ -185,7 +185,7 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
     }
 
     def getArgsRight(conceptRel: PhraseConceptPair, arg: String) : Array[Arg] = {
-        val concept = conceptRel.concept
+        val concept = conceptKey(conceptRel.concept)
         val pos = conceptRel.headPos
         //logger(0, "arg: " + arg)
         if (conceptArgsRight.contains((concept,pos,arg))) {
@@ -360,20 +360,20 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
     private def createConceptArgs() {
         // Populates conceptArgsLeft and conceptArgsRight
         // Must call extractRules before calling this function
-        logger(0, "******************* CREATING ARG TABLES *******************")
+        logger(2, "******************* CREATING ARG TABLES *******************")
         for ((concept, rules) <- lexRules.map) {    // lexRules indexes by root concept
             for ((rule, count) <- rules /*if ruleOk(rule, count)*/) {
-                logger(0,"rule: "+rule.toString)
+                logger(2,"rule: "+rule.toString)
                 val pos = rule.concept.realization.headPos
                 for (arg <- rule.left(rule.argRealizations)) {
-                    logger(0,"Adding left: "+(concept, pos, arg.label).toString+" -> " + arg.toString)
+                    logger(2,"Adding left: "+(concept, pos, arg.label).toString+" -> " + arg.toString)
                     conceptArgsLeft((concept, pos, arg.label)) = arg :: conceptArgsLeft.getOrElse((concept, pos, arg.label), List())
-                    logger(0,"conceptArgsLeft: "+conceptArgsLeft((concept, pos, arg.label)).toString)
+                    logger(2,"conceptArgsLeft: "+conceptArgsLeft((concept, pos, arg.label)).toString)
                 }
                 for (arg <- rule.right(rule.argRealizations)) {
-                    logger(0,"Adding right: "+(concept, pos, arg.label).toString+" -> " + arg.toString)
+                    logger(2,"Adding right: "+(concept, pos, arg.label).toString+" -> " + arg.toString)
                     conceptArgsRight((concept, pos, arg.label)) = arg :: conceptArgsRight.getOrElse((concept, pos, arg.label), List())
-                    logger(0,"conceptArgsRight: "+conceptArgsRight((concept, pos, arg.label)).toString)
+                    logger(2,"conceptArgsRight: "+conceptArgsRight((concept, pos, arg.label)).toString)
                 }
             }
         }
@@ -383,13 +383,13 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
         for ((key, values) <- conceptArgsRight) {
             conceptArgsRight(key) = values.distinct
         }
-        logger(0, "******************* ARG TABLE LEFT *******************")
+        logger(2, "******************* ARG TABLE LEFT *******************")
         for (((concept, pos, label), arg) <- conceptArgsLeft.toArray.sortBy(x => x._1)) {
-            logger(0, concept + " " + pos + " ||| " + label + " ||| " + arg.toString)
+            logger(2, concept + " " + pos + " ||| " + label + " ||| " + arg.toString)
         }
-        logger(0, "******************* ARG TABLE RIGHT *******************")
+        logger(2, "******************* ARG TABLE RIGHT *******************")
         for (((concept, pos, label), arg) <- conceptArgsRight.toArray.sortBy(x => x._1)) {
-            logger(0, concept + " " + pos + " ||| " + label + " ||| " + arg.toString)
+            logger(2, concept + " " + pos + " ||| " + label + " ||| " + arg.toString)
         }
     }
 
