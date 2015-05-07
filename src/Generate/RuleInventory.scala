@@ -114,7 +114,7 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
         for { (rule, ruleCount) <- lexRules.map.getOrElse(conceptKey(node.concept), Map())
               if rule.concept.realization.amrInstance.children.map(x => x._1).sorted == children
             } {
-                val conceptCount = conceptCounts.map.getOrElse(node.concept, Map()).map(x => x._2).sum.toDouble
+                val conceptCount = conceptCounts.map.getOrElse(conceptKey(node.concept), Map()).map(x => x._2).sum.toDouble
                 val feats = new FeatureVector(Map(
                     "corpus" -> 1.0,
                     "r|c" -> log(ruleCount / conceptCount)
@@ -181,7 +181,7 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
         } else {
             //logger(0, "Can't find " + (concept, pos, arg).toString + " in conceptArgsLeft. Returning full list for the pos.")
             //argsLeft.getOrElse((pos,arg), Array(Arg.Default(arg)))   // TODO: filter to most common args
-            Array()     // SyntheticRules.Decoder filters to args we've seen before, so this is ok
+            Array(Arg.Default(arg))
         }
     }
 
@@ -194,7 +194,7 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
         } else {
             //logger(0, "Can't find " + (concept, pos, arg).toString + " in conceptArgsRight. Returning full list for the pos.")
             //argsRight.getOrElse((pos,arg), Array(Arg.Default(arg)))  // TODO: filter to most common args
-            Array()     // SyntheticRules.Decoder filters to args we've seen before, so this is ok
+            Array(Arg.Default(arg))
         }
     }
 
@@ -392,8 +392,6 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
     private def extractConcepts(graph: Graph) {
         // Populates the conceptCounts table
         for (span <- graph.spans) {
-            val concept = span.amr.concept
-            //conceptCounts(span.amr.concept) = conceptCounts.getOrElse(concept, 0) + 1
             conceptCounts.add(conceptKey(span.amr.concept) -> Unit)
         }
     }
