@@ -56,7 +56,7 @@ object SentenceLevelGrammars {
 
         var i = 0
         for (block <- Corpus.getAMRBlocks(Source.stdin.getLines)) {
-            logger(0,"**** Processsing Block *****")
+            logger(0,"**** Processing Block *****")
             logger(0,block)
             val data = AMRTrainingData(block)
             val sentence = data.sentence
@@ -69,8 +69,15 @@ object SentenceLevelGrammars {
                 writer = new BufferedWriter(new OutputStreamWriter(gzFile, "UTF-8"))
                 for (node <- graph.nodes) {
                     val corpusRules : List[(Rule, FeatureVector)] = ruleInventory.getRules(node)
+                    logger(0, "concept = " + node.concept)
+                    logger(0, "corpusRules.size = " + corpusRules.size)
+                    //logger(0, "corpusRules = \n"+corpusRules.map(x => x._1.mkRule + " ||| " + x._2.toCdecFormat).mkString("\n"))
                     val passThroughRules : List[(Rule, FeatureVector)] = ruleInventory.passThroughRules(node)
+                    logger(0, "passThroughRules.size = " + passThroughRules.size)
+                    //logger(0, "passThroughRules = \n"+passThroughRules.map(x => x._1.mkRule + " ||| " + x._2.toCdecFormat).mkString("\n"))
                     val syntheticRules : List[(Rule, FeatureVector)] = ruleModel.syntheticRules(SyntheticRules.Input(node, graph))
+                    logger(0, "syntheticRules.size = " + syntheticRules.size)
+                    //logger(0, "syntheticRules = \n"+syntheticRules.map(x => x._1.mkRule + " ||| " + x._2.toCdecFormat).mkString("\n"))
                     for (rule <- corpusRules ::: passThroughRules ::: syntheticRules) {
                         // Features
                         // corpusRules: rule given concept, realization given concept, and inverses

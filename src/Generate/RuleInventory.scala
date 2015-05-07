@@ -48,7 +48,7 @@ class RuleInventory(featureNames: Set[String] = Set()) {
         var i = 0
         val training_data = new ArrayBuffer[(Rule, SyntheticRules.Input)]()
         for (block <- Corpus.getAMRBlocks(corpus)) {
-            logger(0,"**** Processsing Block *****")
+            logger(0,"**** Processing Block *****")
             logger(0,block)
             val data = AMRTrainingData(block)
             val sentence = data.sentence
@@ -98,6 +98,9 @@ class RuleInventory(featureNames: Set[String] = Set()) {
     def getRules(node: Node) : List[(Rule, FeatureVector)] = {
         val children : List[String] = node.children.map(x => x._1).sorted
         var rules : List[(Rule, FeatureVector)] = List()
+        if (!lexRules.map.contains(node.concept)) {
+            logger(0, "getRules can't find concept " + node.concept + " in the lexRules table")
+        }
         for { (rule, ruleCount) <- lexRules.map.getOrElse(node.concept, Map())
               if rule.concept.realization.amrInstance.children.map(x => x._1).sorted == children
             } {
@@ -108,6 +111,9 @@ class RuleInventory(featureNames: Set[String] = Set()) {
                     // "c|r" -> log(  // need to be able to look up count of rule (for any concept) to do this
                 ))
                 rules = (rule, feats.slice(feat => featuresToUse.contains(feat))) :: rules
+        }
+        if (rules.size == 0) {
+            logger(0, "getRules couldn't find a matching rule for concept " + node.concept)
         }
         return rules
     }
