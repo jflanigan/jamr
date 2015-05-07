@@ -179,8 +179,9 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
         if (conceptArgsLeft.contains((concept,pos,arg))) {
             conceptArgsLeft((concept,pos,arg)).toArray
         } else {
-            logger(0, "Can't find " + (concept, pos, arg).toString + " in conceptArgsLeft. Returning full list for the pos.")
-            argsLeft.getOrElse((pos,arg), Array(Arg.Default(arg)))   // TODO: filter to most common args
+            //logger(0, "Can't find " + (concept, pos, arg).toString + " in conceptArgsLeft. Returning full list for the pos.")
+            //argsLeft.getOrElse((pos,arg), Array(Arg.Default(arg)))   // TODO: filter to most common args
+            Array()     // SyntheticRules.Decoder filters to args we've seen before, so this is ok
         }
     }
 
@@ -191,8 +192,9 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
         if (conceptArgsRight.contains((concept,pos,arg))) {
             conceptArgsRight((concept,pos,arg)).toArray
         } else {
-            logger(0, "Can't find " + (concept, pos, arg).toString + " in conceptArgsRight. Returning full list for the pos.")
-            argsRight.getOrElse((pos,arg), Array(Arg.Default(arg)))  // TODO: filter to most common args
+            //logger(0, "Can't find " + (concept, pos, arg).toString + " in conceptArgsRight. Returning full list for the pos.")
+            //argsRight.getOrElse((pos,arg), Array(Arg.Default(arg)))  // TODO: filter to most common args
+            Array()     // SyntheticRules.Decoder filters to args we've seen before, so this is ok
         }
     }
 

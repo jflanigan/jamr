@@ -76,6 +76,7 @@ class Decoder(val ruleInventory: RuleInventory) {
     def decode(tagList: List[Array[Arg]], conceptInfo: ConceptInfo, input: Input) : DecoderResult = {
         // TODO: the code below has some slow copying, maybe change so it's faster (still will be O(n) though)
         val tags : Array[Array[Arg]] = (Array(Arg.START) :: tagList ::: List(Array(Arg.STOP))).toArray
+        assert(!tagList.map(x => x.size).contains(0), "Uh-oh, we were given an empty set for the possible tags for an arg.")
         //logger(0, "tags: " + tags.map(x => x.toList).toList)
         // Adjust the position of the concept because we added start tags
         val adjustedConcept = ConceptInfo(conceptInfo.realization, conceptInfo.position+1)
