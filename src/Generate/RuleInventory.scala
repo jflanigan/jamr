@@ -348,10 +348,12 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
         // Populates argsLeft and argsRight
         // Must call createArgTables before calling this function
         for (((pos, arg), countMap) <- argTableLeft.map) {
-            argsLeft((pos, arg)) = countMap.view.toList.sortBy(_._2).take(50).map(x => x._1).toArray
+            //argsLeft((pos, arg)) = countMap.map(x => x._1).toArray
+            argsLeft((pos, arg)) = countMap.view.toList.sortBy(x => -x._2).take(20).map(x => x._1).toArray
         }
         for (((pos, arg), countMap) <- argTableRight.map) {
-            argsRight((pos, arg)) = countMap.view.toList.sortBy(_._2).take(50).map(x => x._1).toArray
+            //argsRight((pos, arg)) = countMap.map(x => x._1).toArray
+            argsRight((pos, arg)) = countMap.view.toList.sortBy(x => -x._2).take(20).map(x => x._1).toArray
         }
     }
 
