@@ -14,6 +14,15 @@ case class Rule(argRealizations: List[Arg],               // Sorted list
     def args : List[String] = { argRealizations.map(x => x.label) }
     def left[A](list: List[A]) : List[A] = { list.take(concept.position) }  // takes the first n
     def right[A](list: List[A]) : List[A] = { list.drop(concept.position) } // drops the first n
+    def abstractSignature : String = {
+        if (concept.realization.concept.matches("""-[0-9][0-9]$""")) {
+            // event concept
+            "EVENT " + argRealizations.map(arg => arg.label).sorted.mkString(" ")
+        } else {
+            // non-event concept
+            "NONEVENT " + argRealizations.map(arg => arg.label).sorted.mkString(" ")
+        }
+    }
 
     def argsWithIndices : List[(Arg, Int)] = {
         argRealizations.zipWithIndex.sortBy(x => x._1.label).zipWithIndex.sortBy(x => x._1._2).map(x => (x._1._1, x._2))

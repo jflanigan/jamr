@@ -29,10 +29,7 @@ case class PhraseConceptPair(words: String, graphFrag: String, fullPos: String, 
     def amrInstance : Node = {
         return Graph.parse(graphFrag).root
     }
-    def concept : String = {
-        //return graphFrag.split(" ")(0).replaceAllLiterally("(","")
-        return amrInstance.concept
-    }
+    lazy val concept : String = amrInstance.concept
 }
 
 object PhraseConceptPair {

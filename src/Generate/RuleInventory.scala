@@ -22,7 +22,8 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
     val conceptCounts : MultiMapCount[String, Unit] = new MultiMapCount()
     val phraseTable : MultiMapCount[String, PhraseConceptPair] = new MultiMapCount()       // Map from concept to PhraseConcepPairs with counts
     val lexRules : MultiMapCount[String, Rule] = new MultiMapCount()            // Map from concept to lexicalized rules with counts
-    val abstractRules : MultiMapCount[String, Rule] = new MultiMapCount()       // Map from pos to abstract rules with counts
+    val abstractRules : MultiMapCount[String, Rule] = new MultiMapCount()       // Map from concept type and args to abstract rules with counts
+    val abstractRuleCounts : MultiMapCount[String, Rule] = new MultiMapCount()  // Map from pos to abstract rules with counts
     //val argTableLeft : Map[String, MultiMapCount[String, (String, String)]] = new MultiMapCount()  // Map from pos to map of args to realizations with counts
     //val argTableRight : Map[String, MultiMapCount[String, (String, String)]] = new MultiMapCount() // Map from pos to map of args to realizations with counts
     val argTableLeft : MultiMapCount[(String, String), Arg] = new MultiMapCount()  // Map from (pos, arg) to realizations with counts
@@ -37,6 +38,7 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
         phraseTable.readFile(filename+".phrasetable", x => x, PhraseConceptPair.apply)
         lexRules.readFile(filename+".lexrules", x => x, Rule.apply)
         abstractRules.readFile(filename+".abstractrules", x => x, Rule.apply)
+        abstractRuleCounts.readFile(filename+".abstractrulecounts", x => x, Rule.apply)
         createArgTables()
         createArgs()
         createConceptArgs()
@@ -47,6 +49,7 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
         writeToFile(filename+".phrasetable", phraseTable.toString)
         writeToFile(filename+".lexrules", lexRules.toString)
         writeToFile(filename+".abstractrules", abstractRules.toString)
+        writeToFile(filename+".abstractrulecounts", abstractRuleCounts.toString)
     }
 
     def trainingData(corpus: Iterator[String],
@@ -88,7 +91,8 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
             logger(0,"****** Extracting rules ******")
             for ((_, rule) <- extractRules(graph, sentence, pos) if ruleOk(rule)) {
                 lexRules.add(conceptKey(rule.concept.realization.amrInstance.concept) -> rule)
-                abstractRules.add(rule.concept.realization.headPos -> Rule.abstractRule(rule))
+                abstractRules.add(rule.abstractSignature -> Rule.abstractRule(rule))
+                abstractRuleCounts.add(rule.concept.realization.headPos -> Rule.abstractRule(rule))
             }
             logger(0,"****** Extracting phrase-concept pairs ******")
             extractPhraseConceptPairs(graph, sentence, pos)
@@ -210,7 +214,8 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
                 List(PhraseConceptPair("", node.concept, "NN", "NN"))
             } else /*if (getRealizations(node).size == 0)*/ {
                 // concept has no realization
-                List(PhraseConceptPair(node.concept.replaceAll("""-[0-9][0-9]$""",""), node.concept, "NN", "NN"))
+                val pos = if (node.concept.matches(""".*-[0-9][0-9]""")) { "VBN" } else { "NN" }
+                List(PhraseConceptPair(node.concept.replaceAll("""-[0-9][0-9]$""",""), node.concept, pos, pos))
             /*} else {
                 // it has a realization, so we won't provide one (since the synthetic rule model will provide one)
                 List() */
@@ -223,7 +228,7 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
                 // concept has no realization
                 if (node.concept.matches(""".*-[0-9][0-9]""")) {
                     // TODO: add inverse rules of WordNet's Morphy: http://wordnet.princeton.edu/man/morphy.7WN.html
-                    List(PhraseConceptPair(node.concept.replaceAll("""-[0-9][0-9]$""",""), node.concept, "VB", "VB"))
+                    List(PhraseConceptPair(node.concept.replaceAll("""-[0-9][0-9]$""",""), node.concept, "VBN", "VBN"))
                 } else {
                     List(PhraseConceptPair(node.concept, node.concept, "NN", "NN"))
                 }
@@ -250,18 +255,29 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
                 if (node.children.size == 2) {
                     List((Rule(node.children.sortBy(_._1).map(x => Arg("", x._1, "")),
                                ConceptInfo(PhraseConceptPair("and", node.concept, "CC", "CC"), 1), "", ""),
-                          FeatureVector(Map("andPassthrough" -> 1.0))))
+                          FeatureVector(Map("passthrough" -> 1.0, "andPassthrough" -> 1.0))))
                 } else {
                     List((Rule(node.children.sortBy(_._1).map(x => Arg("", x._1, ",")),
                                ConceptInfo(PhraseConceptPair("and", node.concept, "CC", "CC"), node.children.size - 1), "", ""),
-                          FeatureVector(Map("andPassthrough" -> 1.0))))
+                          FeatureVector(Map("passthrough" -> 1.0, "andPassthrough" -> 1.0))))
                 }
             } else /*if (getRealizations(node).size == 0)*/ {
                 // concept has no realization
                 // TODO: change to passThroughRealizations
-                List((Rule(node.children.sortBy(_._1).map(x => Arg("", x._1, "")),
-                           ConceptInfo(PhraseConceptPair(node.concept.replaceAll("""-[0-9][0-9]$""",""), node.concept, "NN", "NN"), 0), "", ""),
-                      FeatureVector(Map("passthrough" -> 1.0, "withChildrenPassThrough" -> 1.0))))
+                val event = node.concept.matches(""".*-[0-9][0-9]""")
+                val pos = if (event) { "VBN" } else { "NN" }
+                val abstractSignature : String = if (event) { "EVENT " } else { "NONEVENT " } + node.children.map(x => x._1).sorted.mkString(" ")
+                if (abstractRules.map.contains(abstractSignature)) {
+                    val abstractRule : Rule = abstractRules.map(abstractSignature).maxBy(_._2)._1   // use most common abstract rule
+                    List((Rule(abstractRule.argRealizations,
+                               ConceptInfo(PhraseConceptPair(dropSense(node.concept), node.concept, pos, pos), abstractRule.concept.position), "", ""),
+                        FeatureVector(Map("passthrough" -> 1.0, "abstractPassThrough" -> 1.0))))
+                } else {
+                    // TODO: backoff synthetic model here
+                    List((Rule(node.children.sortBy(_._1).map(x => Arg("", x._1, "")),
+                               ConceptInfo(PhraseConceptPair(dropSense(node.concept), node.concept, pos, pos), 0), "", ""),
+                        FeatureVector(Map("passthrough" -> 1.0, "withChildrenPassThrough" -> 1.0))))
+                }
             /*} else {
                 // it has a realization, so we won't provide one (since the synthetic rule model will provide one)
                 List() */
@@ -274,7 +290,7 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
                 // concept has no realization
                 if (node.concept.matches(""".*-[0-9][0-9]""")) {
                     // TODO: add inverse rules of WordNet's Morphy: http://wordnet.princeton.edu/man/morphy.7WN.html
-                    List((Rule(List(), ConceptInfo(PhraseConceptPair(node.concept.replaceAll("""-[0-9][0-9]$""",""), node.concept, "VB", "VB"), 0), "", ""), FeatureVector(Map("eventConceptNoChildrenPassThrough" -> 1.0))))
+                    List((Rule(List(), ConceptInfo(PhraseConceptPair(dropSense(node.concept), node.concept, "VBN", "VBN"), 0), "", ""), FeatureVector(Map("eventConceptNoChildrenPassThrough" -> 1.0))))
                 } else {
                     List((Rule(List(), ConceptInfo(PhraseConceptPair(node.concept, node.concept, "NN", "NN"), 0), "", ""), FeatureVector(Map("passthrough" -> 1.0, "nonEventConceptNoChildrenPassThrough" -> 1.0))))
                 }
@@ -304,7 +320,7 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
     private def createArgTables() {
         // Populates argTableLeft and argTableRight
         // Must call extractRules before calling this function
-        for ((pos, rules) <- abstractRules.map) {
+        for ((pos, rules) <- abstractRuleCounts.map) {
             for ((rule, count) <- rules if ruleOk(rule, count)) {
                 for (arg <- rule.left(rule.argRealizations)) {
                     argTableLeft.add((pos, arg.label) -> arg, count)
