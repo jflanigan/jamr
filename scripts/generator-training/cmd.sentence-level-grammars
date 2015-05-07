@@ -14,6 +14,7 @@ mkdir -p "${OUTPUT}"
     --snt "${INPUT}.snt" \
     --output "${OUTPUT}" \
     -v 0 \
+    ${GENERATOR_OPTIONS} \
     < "${INPUT}.aligned" \
     > "${OUTPUT}.snt" \
     2> "${OUTPUT}.err"

@@ -14,6 +14,7 @@ object ExtractRules {
         list match {
             case Nil => map
             case "--output" :: value :: l =>             parseOptions(map + ('output -> value), l)
+            case "--drop-sense-tags" :: l =>             parseOptions(map + ('dropSenseTags -> "true"), l)
             case "--training-loss" :: value :: l =>      parseOptions(map + ('trainingLoss -> value), l)
             case "--training-initial-weights"::value::l => parseOptions(map + ('trainingInitialWeights -> value), l)
             case "--training-cost-scale" :: value ::l => parseOptions(map + ('trainingCostScale -> value), l)
@@ -50,7 +51,7 @@ object ExtractRules {
         val input : Array[Input] = Input.loadInputfiles(options)
         val pos = input.map(x => x.pos)
 
-        val ruleInventory: RuleInventory = new RuleInventory()
+        val ruleInventory: RuleInventory = new RuleInventory(dropSenses = options.contains('dropSenseTags))
         ruleInventory.extractFromCorpus(io.Source.stdin.getLines, pos)
 
         ruleInventory.save(options('output))

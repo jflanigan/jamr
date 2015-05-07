@@ -25,6 +25,10 @@ export MODEL_DIR="${JAMR_HOME}/models/LDC-2013-Sep"  # ideally keep this the sam
 # The options specified below will override any options specified in the scripts
 # CONCEPT_ID_TRAINING_OPTIONS and RELATION_ID_TRAINING_OPTIONS will override PARSER_OPTIONS
 
+export GENERATOR_OPTIONS="
+    --drop-sense-tags
+"
+
 export PARSER_OPTIONS="
     --stage1-features bias,length,fromNERTagger,conceptGivenPhrase
     --stage2-decoder LR

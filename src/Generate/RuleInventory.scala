@@ -5,13 +5,19 @@ import edu.cmu.lti.nlp.amr.BasicFeatureVector._
 import scala.util.matching.Regex
 import scala.collection.mutable.{Map, Set, ArrayBuffer}
 
-class RuleInventory(featureNames: Set[String] = Set()) {
+class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = false) {
 
     val featuresToUse : Set[String] = featureNames.map(x => x match {
         case "source" => Some("corpus")
         case "ruleGivenConcept" => Some("r|c")
         case _ => None
     }).filter(x => x != None).map(x => x.get)
+
+    def dropSense(string: String) : String = {
+        return string.replaceAll("""-[0-9][0-9]$""","")
+    }
+
+    def conceptKey(c: String) = { if (dropSenses) { dropSense(c) } else { c } }
 
     val conceptCounts : MultiMapCount[String, Unit] = new MultiMapCount()
     val phraseTable : MultiMapCount[String, PhraseConceptPair] = new MultiMapCount()       // Map from concept to PhraseConcepPairs with counts
@@ -81,7 +87,7 @@ class RuleInventory(featureNames: Set[String] = Set()) {
             val graph = data.toOracleGraph(clearUnalignedNodes = false)
             logger(0,"****** Extracting rules ******")
             for ((_, rule) <- extractRules(graph, sentence, pos) if ruleOk(rule)) {
-                lexRules.add(rule.concept.realization.amrInstance.concept -> rule)
+                lexRules.add(conceptKey(rule.concept.realization.amrInstance.concept) -> rule)
                 abstractRules.add(rule.concept.realization.headPos -> Rule.abstractRule(rule))
             }
             logger(0,"****** Extracting phrase-concept pairs ******")
@@ -98,10 +104,10 @@ class RuleInventory(featureNames: Set[String] = Set()) {
     def getRules(node: Node) : List[(Rule, FeatureVector)] = {
         val children : List[String] = node.children.map(x => x._1).sorted
         var rules : List[(Rule, FeatureVector)] = List()
-        if (!lexRules.map.contains(node.concept)) {
+        if (!lexRules.map.contains(conceptKey(node.concept))) {
             logger(0, "getRules can't find concept " + node.concept + " in the lexRules table")
         }
-        for { (rule, ruleCount) <- lexRules.map.getOrElse(node.concept, Map())
+        for { (rule, ruleCount) <- lexRules.map.getOrElse(conceptKey(node.concept), Map())
               if rule.concept.realization.amrInstance.children.map(x => x._1).sorted == children
             } {
                 val conceptCount = conceptCounts.map.getOrElse(node.concept, Map()).map(x => x._2).sum.toDouble
@@ -119,7 +125,7 @@ class RuleInventory(featureNames: Set[String] = Set()) {
     }
 
     def getRealizations(node: Node) : List[(PhraseConceptPair, List[String])] = {   // phrase, arg labels of children not consumed
-        return phraseTable.map.getOrElse(node.concept, Map()).map(x => (x._1, node.children.map(y => y._1).diff(x._1.amrInstance.children.map(y => y._1)))).toList /*::: passThroughRealizations(node)*/ // TODO: should filter to realizations that could match
+        return phraseTable.map.getOrElse(conceptKey(node.concept), Map()).map(x => (x._1, node.children.map(y => y._1).diff(x._1.amrInstance.children.map(y => y._1)))).toList /*::: passThroughRealizations(node)*/ // TODO: should filter to realizations that could match
     }
 
     def argOnLeft(conceptRel: PhraseConceptPair, arg: String) : Boolean = {
@@ -360,14 +366,14 @@ class RuleInventory(featureNames: Set[String] = Set()) {
         for (span <- graph.spans) {
             val concept = span.amr.concept
             //conceptCounts(span.amr.concept) = conceptCounts.getOrElse(concept, 0) + 1
-            conceptCounts.add(span.amr.concept -> Unit)
+            conceptCounts.add(conceptKey(span.amr.concept) -> Unit)
         }
     }
 
     private def extractPhraseConceptPairs(graph: Graph, sentence: Array[String], pos: Array[String]) {
         // Populates phraseTable
         for (span <- graph.spans) {
-            phraseTable.add(span.amr.concept -> PhraseConceptPair.fromSpan(span, pos))
+            phraseTable.add(conceptKey(span.amr.concept) -> PhraseConceptPair.fromSpan(span, pos))
         }
     }
 

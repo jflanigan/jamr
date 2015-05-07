@@ -24,6 +24,7 @@ object SentenceLevelGrammars {
             case "--weights" :: value :: l =>            parseOptions(map + ('weights -> value), l)
             case "--dev" :: l =>                         parseOptions(map + ('dev -> "true"), l)
             case "--rule-inventory" :: value :: l =>     parseOptions(map + ('ruleInventory -> value), l)
+            case "--drop-sense-tags" :: l =>             parseOptions(map + ('dropSenseTags -> "true"), l)
             case "--output" :: value :: l =>             parseOptions(map + ('output -> value), l)
             case "--dependencies" :: value :: tail =>    parseOptions(map + ('dependencies -> value), tail)
             case "--ner" :: value :: tail =>             parseOptions(map + ('ner -> value), tail)
@@ -48,7 +49,7 @@ object SentenceLevelGrammars {
 
         //val input : Array[Input] = Input.loadInputfiles(options)
 
-        val ruleInventory: RuleInventory = new RuleInventory(featureNames)
+        val ruleInventory: RuleInventory = new RuleInventory(featureNames, options.contains('dropSenseTags))
         ruleInventory.load(options('ruleInventory))
 
         val ruleModel = new SyntheticRules.Decoder(ruleInventory)

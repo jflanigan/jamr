@@ -14,6 +14,7 @@ object TrainRuleModel {
         list match {
             case Nil => map
             case "--rule-inventory" :: value :: l =>     parseOptions(map + ('ruleInventory -> value), l)
+            case "--drop-sense-tags" :: l =>             parseOptions(map + ('dropSenseTags -> "true"), l)
             case "--training-loss" :: value :: l =>      parseOptions(map + ('trainingLoss -> value), l)
             case "--training-initial-weights"::value::l => parseOptions(map + ('trainingInitialWeights -> value), l)
             case "--training-cost-scale" :: value ::l => parseOptions(map + ('trainingCostScale -> value), l)
