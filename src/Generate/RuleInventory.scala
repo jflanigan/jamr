@@ -10,6 +10,7 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
     val featuresToUse : Set[String] = featureNames.map(x => x match {
         case "source" => Some("corpus")
         case "ruleGivenConcept" => Some("rGc")
+        case "nonStopwordCount" => Some("naanStopCount")
         case _ => None
     }).filter(x => x != None).map(x => x.get)
 
@@ -117,7 +118,8 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
                 val conceptCount = conceptCounts.map.getOrElse(conceptKey(node.concept), Map()).map(x => x._2).sum.toDouble
                 val feats = new FeatureVector(Map(
                     "corpus" -> 1.0,
-                    "rGc" -> log(ruleCount / conceptCount)
+                    "rGc" -> log(ruleCount / conceptCount),
+                    "naanStopCount" -> rule.nonStopwordCount
                     // "c|r" -> log(  // need to be able to look up count of rule (for any concept) to do this
                 ))
                 rules = (rule, feats.slice(feat => featuresToUse.contains(feat))) :: rules
