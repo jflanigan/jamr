@@ -45,7 +45,7 @@ object SentenceLevelGrammars {
             verbosity = options('verbosity).toInt
         }
 
-        val featureNames : Set[String] = Set() ++ options.getOrElse('features, "source,ruleGivenConcept").splitStr(",")
+        val featureNames : Set[String] = Set() ++ options.getOrElse('features, "source,ruleGivenConcept,nonStopwordCount").splitStr(",")
 
         //val input : Array[Input] = Input.loadInputfiles(options)
 

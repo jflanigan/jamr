@@ -57,6 +57,7 @@ package object Generate {
     }
 
     val stopwords = Set(
+        "",
         ",",
         "'s",
         "a",
