@@ -15,7 +15,7 @@ case class Rule(argRealizations: List[Arg],               // Sorted list
     def left[A](list: List[A]) : List[A] = { list.take(concept.position) }  // takes the first n
     def right[A](list: List[A]) : List[A] = { list.drop(concept.position) } // drops the first n
     def abstractSignature : String = {
-        if (concept.realization.concept.matches("""-[0-9][0-9]$""")) {
+        if (concept.realization.concept.matches(""".*-[0-9][0-9]""")) {
             // event concept
             "EVENT " + argRealizations.map(arg => arg.label).sorted.mkString(" ")
         } else {
