@@ -9,7 +9,7 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
 
     val featuresToUse : Set[String] = featureNames.map(x => x match {
         case "source" => Some("corpus")
-        case "ruleGivenConcept" => Some("r|c")
+        case "ruleGivenConcept" => Some("rGc")
         case _ => None
     }).filter(x => x != None).map(x => x.get)
 
@@ -117,7 +117,7 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
                 val conceptCount = conceptCounts.map.getOrElse(conceptKey(node.concept), Map()).map(x => x._2).sum.toDouble
                 val feats = new FeatureVector(Map(
                     "corpus" -> 1.0,
-                    "r|c" -> log(ruleCount / conceptCount)
+                    "rGc" -> log(ruleCount / conceptCount)
                     // "c|r" -> log(  // need to be able to look up count of rule (for any concept) to do this
                 ))
                 rules = (rule, feats.slice(feat => featuresToUse.contains(feat))) :: rules
@@ -128,8 +128,15 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
         return rules
     }
 
-    def getRealizations(node: Node) : List[(PhraseConceptPair, List[String])] = {   // phrase, arg labels of children not consumed
-        return phraseTable.map.getOrElse(conceptKey(node.concept), Map()).map(x => (x._1, node.children.map(y => y._1).diff(x._1.amrInstance.children.map(y => y._1)))).toList /*::: passThroughRealizations(node)*/ // TODO: should filter to realizations that could match
+    def getRealizations(node: Node) : List[(PhraseConceptPair, List[String], FeatureVector)] = {   // phrase, arg labels of children not consumed
+        (for ((phrase, phraseCount) <- phraseTable.map.getOrElse(conceptKey(node.concept), Map())) yield {
+            val conceptCount = conceptCounts.map.getOrElse(conceptKey(node.concept), Map()).map(x => x._2).sum.toDouble
+            val feats = new FeatureVector(Map(
+                "pGc" -> log(phraseCount / conceptCount)
+            ))
+            (phrase, node.children.map(x => x._1).diff(phrase.amrInstance.children.map(x => x._1)), feats)
+        }).toList
+        //return phraseTable.map.getOrElse(conceptKey(node.concept), Map()).map(x => (x._1, node.children.map(y => y._1).diff(x._1.amrInstance.children.map(y => y._1)))).toList /*::: passThroughRealizations(node)*/ // TODO: should filter to realizations that could match
     }
 
     def argOnLeft(conceptRel: PhraseConceptPair, arg: String) : Boolean = {
@@ -267,7 +274,7 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
                           FeatureVector(Map("passthrough" -> 1.0, "andPassthrough" -> 1.0))))
                 } else {
                     val size = node.children.size
-                    List((Rule(node.children.sortBy(_._1).zipWithIndex.map(x => Arg("", x._1._1, if(x._2 != size - 2) {","} else {""})),
+                    List((Rule(node.children.sortBy(_._1).zipWithIndex.map(x => Arg("", x._1._1, if(x._2 >= size - 2) {""} else {","})),
                                ConceptInfo(PhraseConceptPair("and", node.concept, "CC", "CC"), node.children.size - 1), "", ""),
                           FeatureVector(Map("passthrough" -> 1.0, "andPassthrough" -> 1.0))))
                 }
