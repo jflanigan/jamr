@@ -154,7 +154,8 @@ class Decoder(val ruleInventory: RuleInventory) {
         val dist            = "+dist"
         val leftCount       = cur.left.count(_ == ' ')
         val rightCount      = cur.right.count(_ == ' ')
-        val stopWordCount   = (cur.left + " " + cur.right).splitStr(" ").count(x => stopwords.contains(x))
+        val stopWordCount   = (cur.left + " " + cur.right).splitStr(" ").count(x => stopwordsSmall.contains(x))
+        val stopWordCount2   = (cur.left + " " + cur.right).splitStr(" ").count(x => stopwords.contains(x))
         //{ val concept       = "+c="    + input.node.concept  // concept
         val feats = FeatureVector(Map(
             // TODO: features of where the concept is, lexical unigrams
@@ -200,8 +201,12 @@ class Decoder(val ruleInventory: RuleInventory) {
             "count_l" -> leftCount,
             "count_r" -> rightCount,
             "SWcount" -> stopWordCount,
+            "SWcount2" -> stopWordCount2,
             "nonSWcount" -> (leftCount + rightCount - stopWordCount)
             ))
+        for (word <- (cur.left + " " + cur.right).splitStr(" ") if stopwords.contains(word)) {
+            feats.fmap("stopword="+word) = 1.0    // this does not count the word twice if it shows up twice (it shouldn't)
+        }
         //}
         //logger(1, "localFeatures returning local score = " + weights.dot(feats))
         return feats

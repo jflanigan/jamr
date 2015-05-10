@@ -29,6 +29,10 @@ case class Rule(argRealizations: List[Arg],               // Sorted list
         argRealizations.map(x => Generate.nonStopwordCount(x.left) + Generate.nonStopwordCount(x.right)).sum  // counts the non-stop words in the arg realizations
     }
 
+    def nonStopwordCount2 : Int = {
+        argRealizations.map(x => Generate.nonStopwordCount2(x.left) + Generate.nonStopwordCount2(x.right)).sum  // counts the non-stop words in the arg realizations
+    }
+
     def argsWithIndices : List[(Arg, Int)] = {
         argRealizations.zipWithIndex.sortBy(x => x._1.label).zipWithIndex.sortBy(x => x._1._2).map(x => (x._1._1, x._2))
     }

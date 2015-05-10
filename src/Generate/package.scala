@@ -48,13 +48,125 @@ package object Generate {
         return pos
     }
 
+    // stopwordCount() and nonStopwordCount() use words in the 'stopwordsSmall' set.
+    // stopwordCount2() and nonStopwordCount2() use words in the 'stopwords' set.
+    // 'stopwords' contains all the words in 'stopwordSmall', but also contains pronouns and demonstratives
     def nonStopwordCount(string: String) : Int = {
-        string.splitStr(" ").count(x => !stopwords.contains(x))
+        string.splitStr(" ").count(x => !stopwordsSmall.contains(x))
     }
 
     def stopwordCount(string: String) : Int = {
+        string.splitStr(" ").count(x => stopwordsSmall.contains(x))
+    }
+
+    def nonStopwordCount2(string: String) : Int = {
+        string.splitStr(" ").count(x => !stopwords.contains(x))
+    }
+
+    def stopwordCount2(string: String) : Int = {
         string.splitStr(" ").count(x => stopwords.contains(x))
     }
+
+    // Get these words by looking at most common unigram missed in synthetic rules
+    // despite
+    // receiving
+    // made
+    // prove
+
+    val stopwordsSmall = Set(
+        "",
+        ",",
+        "'s",
+        "a",
+        "about",
+        "above",
+        "after",
+        "again",
+        "against",
+        "all",
+        "am",
+        "an",
+        //"and",
+        "any",
+        "are",
+        "as",
+        "at",
+        "be",
+        "because",
+        "been",
+        "before",
+        "being",
+        "below",
+        "between",
+        "both",
+        "but",
+        "by",
+        "can",
+        "could",
+        "did",
+        "do",
+        "does",
+        "doing",
+        "do",
+        "down",
+        "during",
+        "each",
+        "for",
+        "from",
+        "further",
+        "had",
+        "has",
+        "have",
+        "having",
+        "how",
+        "'ll",
+        "'m",
+        "if",
+        "in",
+        "into",
+        "is",
+        "let",
+        "more",
+        "most",
+        "must",
+        "of",
+        "off",
+        "on",
+        "once",
+        "only",
+        "or",
+        "ought",
+        "out",
+        "over",
+        "same",
+        "'d",
+        "should",
+        "so",
+        "some",
+        "such",
+        "than",
+        "that",
+        "the",
+        "then",
+        "'re",
+        "through",
+        "to",
+        "too",
+        "under",
+        "until",
+        "up",
+        "very",
+        "was",
+        "were",
+        "what",
+        "when",
+        "where",
+        "which",
+        "while",
+        "whom",
+        "why",
+        "with",
+        "would")
 
     val stopwords = Set(
         "",
@@ -72,7 +184,6 @@ package object Generate {
         //"and",
         "any",
         "are",
-        "aren't",
         "as",
         "at",
         "be",
@@ -86,7 +197,6 @@ package object Generate {
         "but",
         "by",
         "can",
-        "cannot",
         "could",
         "did",
         "do",
@@ -121,7 +231,6 @@ package object Generate {
         "in",
         "into",
         "is",
-        "n't",
         "it",
         "its",
         "itself",
