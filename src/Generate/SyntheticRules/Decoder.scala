@@ -39,27 +39,27 @@ class Decoder(val ruleInventory: RuleInventory) {
             val feats = oracle(rule, input)
             return DecoderResult((rule, FeatureVector(Map("syntheticNoArgs" -> 1.0))), feats, weights.dot(feats))
         }
-        logger(0, "conceptRealization: "+conceptRealization.toString)
-        logger(0, "args: "+args.toString)
+        logger(1, "conceptRealization: "+conceptRealization.toString)
+        logger(1, "args: "+args.toString)
         val children = args.sorted
         val headPos = conceptRealization.headPos
         val leftTags : List[Array[Arg]] = children.map(label => getArgsLeft(conceptRealization, label))
         val rightTags : List[Array[Arg]] = children.map(label => getArgsRight(conceptRealization, label))
-        logger(0, "")
-        logger(0, "leftTag sizes: "+children.zip(leftTags.map(x => x.size)).toString)
+        logger(1, "")
+        logger(1, "leftTag sizes: "+children.zip(leftTags.map(x => x.size)).toString)
         for ((arg, tags) <- children.zip(leftTags)) {
             val concept = ruleInventory.conceptKey(conceptRealization.concept)
-            logger(0, "conceptArgsLeft(" + (concept,headPos,arg) + ") = " + ruleInventory.conceptArgsLeft.getOrElse((concept,headPos,arg), List()).toString)
-            logger(0, arg + ": " + tags.toList.toString)
+            logger(1, "conceptArgsLeft(" + (concept,headPos,arg) + ") = " + ruleInventory.conceptArgsLeft.getOrElse((concept,headPos,arg), List()).toString)
+            logger(1, arg + ": " + tags.toList.toString)
         }
-        logger(0, "")
-        logger(0, "rightTag sizes: "+children.zip(rightTags.map(x => x.size)).toString)
+        logger(1, "")
+        logger(1, "rightTag sizes: "+children.zip(rightTags.map(x => x.size)).toString)
         for ((arg, tags) <- children.zip(rightTags)) {
             val concept = ruleInventory.conceptKey(conceptRealization.concept)
-            logger(0, "conceptArgsRight(" + (concept,headPos,arg) + ") = " + ruleInventory.conceptArgsRight.getOrElse((concept,headPos,arg), List()).toString)
-            logger(0, arg + ": " + tags.toList.toString)
+            logger(1, "conceptArgsRight(" + (concept,headPos,arg) + ") = " + ruleInventory.conceptArgsRight.getOrElse((concept,headPos,arg), List()).toString)
+            logger(1, arg + ": " + tags.toList.toString)
         }
-        logger(0, "")
+        logger(1, "")
         val numArgs = children.size
         var bestResult : Option[DecoderResult] = None
         def permutationOk(argsLeft: List[String], argsRight: List[String]) : Boolean = {
@@ -78,12 +78,12 @@ class Decoder(val ruleInventory: RuleInventory) {
                         permutation.slice(0,i).map(x => leftTags(x)).toList :::
                         List(Array(Arg.CONCEPT)) :::
                         permutation.slice(i,numArgs).map(x => rightTags(x)).toList)  // TODO: use vector instead
-                logger(0, "Trying permutation "+tagList.map(array => array(0).label).toString)
+                logger(1, "Trying permutation "+tagList.map(array => array(0).label).toString)
                 for (list <- tagList) {
-                    logger(0, list.map(x => x.toString).toList.toString)
+                    logger(1, list.map(x => x.toString).toList.toString)
                 }
                 val result = decode(tagList, conceptInfo, input)
-                logger(0, "Score = " + result.score + " Result = "+result.rule.toString)
+                logger(1, "Score = " + result.score + " Result = "+result.rule.toString)
                 if (bestResult == None || result.score > bestResult.get.score) {
                     bestResult = Some(result)
                 }
