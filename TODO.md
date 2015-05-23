@@ -11,13 +11,15 @@ TODO
 
 #Generator
 
- - Greedy aligments for data
- - Baseline for generating tree
- - Make sentence grammars faster (parallel, filter amr frags, etc)
- - Do error analysis
- - Morph analyse gigaword (and pos tag it), and use it to generate possible concept realizations.
- - Add state (pos features?)
- - Lowercase? remove the, a?
+ - Feature that indicates if the synthetic rule is competing with corpus rules
+ - Feature that indicates if the pass-through rule is competing with synthetic or corpus rules
  - Gigaword LM
  - N-best synthetic rules
+ - Baseline for generating tree
+ - Morph analyse gigaword (and pos tag it), and use it to generate possible concept realizations.
+ - Greedy aligments for data
+ - Make sentence grammars faster (parallel, filter amr frags, etc)
+ - Do error analysis
+ - Add state (pos features?)
+ - Lowercase? remove the, a?
 
