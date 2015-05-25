@@ -26,7 +26,7 @@ class Concepts(options: m.Map[Symbol, String],
     }
 
     val conceptSources = options.getOrElse('stage1SyntheticConcepts, "NER,DateExpr").split(",").toSet
-    val implementedConceptSources = m.Set("NER","DateExpr","OntoNotes","PassThrough","WordNetPassThrough","WordNetPassThrough","verbs","nominalizations")
+    val implementedConceptSources = m.Set("NER","DateExpr","OntoNotes","NEPassThrough","PassThrough","WordNetPassThrough","WordNetPassThrough","verbs","nominalizations")
     assert(conceptSources.filterNot(x => implementedConceptSources.contains(x)).size == 0, "Unknown conceptSources: " + conceptSources.filterNot(x => implementedConceptSources.contains(x)).toList.mkString(", "))
 
     private var tokens : Array[String] = Array()    // stores sentence.drop(i) (used in the dateEntity code to make it more concise)
