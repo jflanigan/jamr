@@ -18,10 +18,16 @@ package object ConceptInvoke {
         }
         val conceptFile = options('stage1ConceptTable)
         val conceptTable = Source.fromFile(conceptFile).getLines.map(x => PhraseConceptPair(x)).toArray
+
+        if (stage1Features.contains("phrase") && !options.contains('stage1PhraseCounts)) {
+            System.err.println("Error: phrase features specified but no phrase counts specified"); sys.exit(1)
+        }
+        val phraseCounts = Source.fromFile(options('stage1PhraseCounts)).getLines.map(x => (x.split(" ").init.toList, x.split(" ").last.toInt)).toMap
+
         if (oracle) {   // TODO: what about cost augmented as oracle?
-            new Oracle(options, stage1Features, conceptTable)
+            new Oracle(options, stage1Features, conceptTable, phraseCounts)
         } else {
-            new Decoder1(options, stage1Features, conceptTable)
+            new Decoder1(options, stage1Features, conceptTable, phraseCounts)
         }
     }
 }

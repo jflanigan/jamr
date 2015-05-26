@@ -14,6 +14,11 @@ package object JointDecoder {
         }
         val conceptTable = Source.fromFile(options('stage1ConceptTable)).getLines.map(x => ConceptInvoke.PhraseConceptPair(x)).toArray
 
+        if (stage1Features.contains("phrase") && !options.contains('stage1PhraseCounts)) {
+            System.err.println("Error: phrase features specified but no phrase counts specified"); sys.exit(1)
+        }
+        val phraseCounts = Source.fromFile(options('stage1PhraseCounts)).getLines.map(x => (x.split(" ").init.toList, x.split(" ").last.toInt)).toMap
+
         if (!options.contains('stage2Labelset)) {
             System.err.println("Error: No labelset file specified"); sys.exit(1)
         }
@@ -22,7 +27,7 @@ package object JointDecoder {
         val stage2Features = GraphDecoder.getFeatures(options)
 
         val decoder: Decoder = if (oracle) {
-            new Oracle(options, stage1Features, conceptTable, stage2Features, stage2Labelset)
+            new Oracle(options, stage1Features, conceptTable, phraseCounts, stage2Features, stage2Labelset)
         } else {
             options('jointDecoder) match {
 //                case "ILP" => new ILP(stage1Features, conceptTable, stage2Features, stage2Labelset)

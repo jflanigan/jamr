@@ -2,18 +2,18 @@ package edu.cmu.lti.nlp.amr.JointDecoder
 import edu.cmu.lti.nlp.amr._
 import edu.cmu.lti.nlp.amr.FastFeatureVector._
 
-import scala.collection.mutable.Map
-import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.{mutable => m, immutable => i}
 
-class Oracle(options: Map[Symbol, String],
+class Oracle(options: m.Map[Symbol, String],
              stage1FeatureNames: List[String],
              phraseConceptPairs: Array[ConceptInvoke.PhraseConceptPair],  // this is the concept table
+             phraseCounts: i.Map[List[String], Int],
              stage2FeatureNames: List[String],
              labelSet: Array[(String, Int)]) extends Decoder {
 
     val weights = FeatureVector(labelSet.map(_._1))
-    val stage1Features = new ConceptInvoke.Features(stage1FeatureNames)
+    val stage1Features = new ConceptInvoke.Features(stage1FeatureNames, phraseCounts)
     val stage2Features = new GraphDecoder.Features(stage2FeatureNames, weights.labelset)
 
     val conceptInvoker = new ConceptInvoke.Concepts(options, phraseConceptPairs)
@@ -30,7 +30,7 @@ class Oracle(options: Map[Symbol, String],
         for (span <- graph.spans) {
             val words = span.words.split(" ").toList
             val conceptList = conceptInvoker.invoke(input, span.start, None) // TODO: make this work with leave-one-out training
-            val matching = conceptList.filter(x => x.words == words && x.graphFrag == span.amr.prettyString(detail = 0, pretty = false, vars = Set.empty[String]))
+            val matching = conceptList.filter(x => x.words == words && x.graphFrag == span.amr.prettyString(detail = 0, pretty = false, vars = m.Set.empty[String]))
             for (concept <- matching) {
                 feats += FastFeatureVector.fromBasicFeatureVector(stage1Features.localFeatures(input, concept, span.start, span.end), weights.labelset)
             }

@@ -12,7 +12,7 @@ import scala.collection.{mutable => m, immutable => i}
 
 // TODO: the input to the feature function is just Input and Span.  Change to use Span?
 
-class Features(featureNames: List[String]) {
+class Features(featureNames: List[String], phraseCounts: i.Map[List[String], Int]) {
     var weights = FeatureVector()
 
     type FeatureFunction = (Input, PhraseConceptPair, Int, Int) => FeatureVector
@@ -20,6 +20,8 @@ class Features(featureNames: List[String]) {
     val ffTable = m.Map[String, FeatureFunction](
         "bias" -> ffBias,
         "length" -> ffLength,
+        "firstMatch" -> ffFirstMatch,
+        "phrase" -> ffPhrase,
         "phraseConceptPair" -> ffPhraseConceptPair,
         "pairWith2WordContext" -> ffPairWith2WordContext
     )
@@ -30,6 +32,22 @@ class Features(featureNames: List[String]) {
 
     def ffLength(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
         return FeatureVector(m.Map("len" -> concept.words.size))
+    }
+
+    def ffFirstMatch(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
+        if (input.sentence.indexOfSlice(concept.words) == start) {
+            FeatureVector(m.Map("firstMatch" -> 1.0))
+        } else {
+            new FeatureVector()
+        }
+    }
+
+    def ffPhrase(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
+        if(phraseCounts.getOrElse(concept.words, 0) > 10) {
+            FeatureVector(m.Map("phrase="+concept.words.mkString("_") -> 1.0))
+        } else {
+            new FeatureVector()
+        }
     }
 
     def ffPhraseConceptPair(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {

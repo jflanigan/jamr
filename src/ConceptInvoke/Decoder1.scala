@@ -12,8 +12,9 @@ type PhraseConceptPair = (List[String], String, PhraseConceptFeatures)
 
 class Decoder1(options: m.Map[Symbol, String],
                featureNames: List[String],
-               phraseConceptPairs: Array[PhraseConceptPair])
-    extends Decoder(featureNames) {
+               phraseConceptPairs: Array[PhraseConceptPair],
+               phraseCounts: i.Map[List[String],Int])
+    extends Decoder(featureNames, phraseCounts) {
     // Base class has defined:
     // val features: Features
 

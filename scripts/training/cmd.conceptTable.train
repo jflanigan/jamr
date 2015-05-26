@@ -5,4 +5,5 @@ OUTPUT="$MODEL_DIR/conceptTable.train"
 
 mkdir -p $MODEL_DIR
 "${JAMR_HOME}/run" ExtractConceptTable ${CONCEPT_EXTRACT_OPTIONS} < "$INPUT".aligned > "$OUTPUT" 2> "${OUTPUT}.err"
+cat "$INPUT".snt.tok | wf | awk '{print $2,$1}' > "$MODEL_DIR/wordCounts.train"
 

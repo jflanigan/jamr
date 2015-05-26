@@ -1,0 +1,3 @@
+#!/bin/bash
+
+tr -s ' ' '\n' | sort | uniq -c | sort -nr

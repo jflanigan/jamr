@@ -8,8 +8,9 @@ import scala.collection.{mutable => m, immutable => i}
 
 class Oracle(options: m.Map[Symbol, String],
              featureNames: List[String],
-             phraseConceptPairs: Array[PhraseConceptPair])
-    extends Decoder(featureNames) {
+             phraseConceptPairs: Array[PhraseConceptPair],
+             phraseCounts: i.Map[List[String], Int])
+    extends Decoder(featureNames, phraseCounts) {
     // Base class has defined:
     // val features: Features
 

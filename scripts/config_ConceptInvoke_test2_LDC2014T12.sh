@@ -24,11 +24,12 @@ export MODEL_DIR="${JAMR_HOME}/models/ConceptInvoke_test2_LDC2014T12"  # ideally
 # CONCEPT_ID_TRAINING_OPTIONS and RELATION_ID_TRAINING_OPTIONS will override PARSER_OPTIONS
 
 #export STAGE1_FEATURES="bias,length,fromNERTagger,conceptGivenPhrase"
-export STAGE1_FEATURES="bias,corpusIndicator,length,corpusLength,fromNERTagger,conceptGivenPhrase,count,phraseGivenConcept,phraseConceptPair"
+export STAGE1_FEATURES="bias,corpusIndicator,length,corpusLength,fromNERTagger,conceptGivenPhrase,count,phraseGivenConcept,phraseConceptPair,phrase,firstMatch"
 
 export PARSER_OPTIONS="
     --stage1-synthetic-concepts NER,DateExpr,OntoNotes,NEPassThrough,PassThrough,WordNetPassThrough,verbs,nominalizations
     --stage1-predicates ${JAMR_HOME}/resources/OntoNotes-v4-predicates.txt
+    --stage1-phrase-counts ${MODEL_DIR}/wordCounts.train
     --stage1-features ${STAGE1_FEATURES}
     --stage2-decoder LR
     --stage2-features rootConcept,rootDependencyPathv1,bias,typeBias,self,fragHead,edgeCount,distance,logDistance,posPathv3,dependencyPathv4,conceptBigram
@@ -45,10 +46,10 @@ export CONCEPT_EXTRACT_OPTIONS="
 export CONCEPT_ID_TRAINING_OPTIONS="
     --stage1-training-leave-one-out
     --training-prec-recall .1
-    --training-cost-scale 10
+    --training-cost-scale 100
     --training-optimizer Adagrad
     --training-loss Infinite_Ramp
-    --training-passes 10
+    --training-passes 1
     --training-stepsize 1
     --training-save-interval 1
     -v 1
