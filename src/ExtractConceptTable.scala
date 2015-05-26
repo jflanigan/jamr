@@ -86,7 +86,7 @@ object ExtractConceptTable {
             }
             i += 1
         }
-        
+
         // Make the map from words to phraseConceptPairs (conceptTable), and initialize phraseCounts to zero
         val phraseCounts : m.Map[List[String], Int] = m.Map()
         val phraseConceptPairTable: m.Map[String, List[PhraseConceptPair]] = m.Map()  // map from first word in the phrase to list of PhraseConceptPair

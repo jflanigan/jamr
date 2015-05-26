@@ -104,7 +104,7 @@ class TrainObj(val options : m.Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.
                 cost += prec
                 if (oracleStart.contains(start)) {
                     // We are also missing the start of another span, which is a recall-type error
-                    cost += (1 - prec)
+                    //cost += (1 - prec)
                 }
             } else {
                 // Predicting a fragment that should be there
@@ -171,7 +171,7 @@ class TrainObj(val options : m.Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.
                                                    oracle = true,
                                                    clearUnalignedNodes = true), // TODO: check clearUnalignedNodes in AMRParser line 233
                                              trainingIndex = None,
-                                             scale = 10000000)
+                                             scale = -10000000)
 
             for (span <- stage1Result.graph.spans) {
                 if (oracleResult.graph.spans.count(x => x.start == span.start && x.end == span.end && x.amr.toString == span.amr.toString) > 0) {
