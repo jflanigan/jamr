@@ -1,0 +1,8 @@
+- Tune prec, recall (boost precision)
+- Feature: was the word seen before
+- Feature: length for date entities, and for named entities
+- Better cost?
+- Debug dev reporting
+- Try JAMR old weights on new data
+- Ask about ISI result
+- Retrain relation ID
