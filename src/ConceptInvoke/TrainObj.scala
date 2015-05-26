@@ -39,6 +39,7 @@ class TrainObj(val options : m.Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.
     }
 
     def costAugmented(i: Int, weights: FeatureVector, scale: Double) : (FeatureVector, Double) = {
+        //logger(1, "costAugmented weights = "+weights.toString)
         decoder.features.weights = weights
         val amrData = AMRTrainingData(training(i))
         val oracleInput : Input = Input(amrData, input(i), i, oracle = true, clearUnalignedNodes = true)
@@ -97,7 +98,7 @@ class TrainObj(val options : m.Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.
         val costFunc2 = (input: Input, concept: PhraseConceptPair, start: Int, stop: Int) => {
             val graphFrag = Graph.parse(concept.graphFrag)
             var cost : Double = 0
-            if (!oracleSpans.contains(start, stop) || oracleSpans(start, stop) != concept.graphFrag) {
+            if (!oracleSpans.contains((start, stop)) || oracleSpans(start, stop) != concept.graphFrag) {
                 // Predicting a fragment that shouldn't be there
                 // This is a precision type error
                 cost += prec
@@ -108,6 +109,8 @@ class TrainObj(val options : m.Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.
             } else {
                 // Predicting a fragment that should be there
                 // Correct prediction, so cost = 0
+                // Missing this is a recall error, so subtract it here
+                cost -= (1 - prec)
             }
             cost * scale
         }
@@ -153,7 +156,7 @@ class TrainObj(val options : m.Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.
                                                         snt(i).split(" "),
                                                         dependencies(i),
                                                         ner(i),
-                                                        None), None)
+                                                        None), trainingIndex = None)
             val amrData = AMRTrainingData(block)
             //val oracleResult = oracle.decode(Input(amrData, input(i), i, oracle = true, clearUnalignedNodes = true), None)  // TODO: check clearUnalignedNodes in AMRParser line 233
             val oracleResult = costAugmented(new Input(None,
@@ -167,8 +170,8 @@ class TrainObj(val options : m.Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.
                                                    i,
                                                    oracle = true,
                                                    clearUnalignedNodes = true), // TODO: check clearUnalignedNodes in AMRParser line 233
-                                             None,
-                                             10000000)
+                                             trainingIndex = None,
+                                             scale = 10000000)
 
             for (span <- stage1Result.graph.spans) {
                 if (oracleResult.graph.spans.count(x => x.start == span.start && x.end == span.end && x.amr.toString == span.amr.toString) > 0) {

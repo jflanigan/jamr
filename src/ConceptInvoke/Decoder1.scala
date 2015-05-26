@@ -31,7 +31,7 @@ class Decoder1(options: m.Map[Symbol, String],
         for (i <- Range(0, sentence.size)) {
             logger(2, "word = "+sentence(i))
             var conceptList = conceptInvoker.invoke(input, i, trainingIndex)
-            logger(2, "Possible invoked concepts: "+conceptList)
+            logger(1, "Possible invoked concepts: "+conceptList.map(x => x.toString).mkString("\n"))
             // WARNING: the code below assumes that anything in the conceptList will not extend beyond the end of the sentence (and it shouldn't based on the code in Concepts)
             for (concept <- conceptList) {
                 if (concept.words.size + i > sentence.size) {
@@ -43,7 +43,7 @@ class Decoder1(options: m.Map[Symbol, String],
                     val endpoint = i + concept.words.size - 1
                     logger(2, "score = "+score.toInt)
                     if ((bestState(endpoint) == None && score >= 0) || (bestState(endpoint) != None && bestState(endpoint).get._1 <= score)) { // we use <= so that earlier concepts (i.e. ones our conceptTable) have higher priority
-                        logger(2, "adding concept:"+concept)
+                        logger(1, "adding concept:"+concept)
                         bestState(endpoint) = Some((score, concept, i))
                     }
                 }
@@ -68,9 +68,9 @@ class Decoder1(options: m.Map[Symbol, String],
                     val f = features.localFeatures(input, c, i, i + concept.words.size)
                     feats += f
                     score += features.weights.dot(f) + cost(input, c, i, i + concept.words.size)
-                    logger(1, "\nphraseConceptPair: "+concept.toString)
-                    logger(1, "feats:\n"+f.toString)
-                    logger(1, "score:\n"+score.toString)
+                    logger(2, "\nphraseConceptPair: "+concept.toString)
+                    logger(2, "feats:\n"+f.toString)
+                    logger(2, "score:\n"+score.toString)
                 }
                 //feats += features.localFeatures(input, concept)
                 //score += localScore
