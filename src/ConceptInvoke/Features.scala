@@ -33,7 +33,11 @@ class Features(featureNames: List[String]) {
     }
 
     def ffPhraseConceptPair(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
-        return FeatureVector(m.Map("CP="+concept.words.mkString("_")+"=>"+concept.graphFrag.replaceAllLiterally(" ","_") -> 1.0))
+        if(concept.trainingIndices.size > 10) {
+            FeatureVector(m.Map("CP="+concept.words.mkString("_")+"=>"+concept.graphFrag.replaceAllLiterally(" ","_") -> 1.0))
+        } else {
+            new FeatureVector()
+        }
     }
 
     def ffPairWith2WordContext(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
