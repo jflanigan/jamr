@@ -54,15 +54,21 @@ class TrainObj(val options : m.Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.
     private def costFunction(oracle: Input, scale: Double, prec: Double) : (Input, PhraseConceptPair, Int, Int) => Double = {
         assert(oracle.graph != None, "CostAugmented decoder was not passed an oracle graph")
         val oracleGraph = oracle.graph.get
-        val oracleConcepts : i.Set[String] = oracleGraph.nodes.map(_.concept).toSet
+        def spanStart(node: Node) : Int = {
+            oracleGraph.spans(node.spans(0)).start
+        }
+        def spanEnd(node: Node) : Int = {
+            oracleGraph.spans(node.spans(0)).end
+        }
+        val oracleConcepts : i.Set[(Int, Int, String)] = oracleGraph.nodes.map(x => (spanStart(x), spanEnd(x), x.concept)).toSet
         val oracleSpans : i.Map[(Int,Int), String] = oracleGraph.nodes.filter(_.spans.size != 0).map(x => {
             val span = oracleGraph.spans(x.spans(0))
             ((span.start, span.end), span.amr.toString)
             }).toMap
         val oracleStart : i.Map[Int, (Int, String)] = oracleSpans.map(x => (x._1._1, (x._1._2, x._2)))
-        val oracleEdges : i.Set[(String, String, String)] = oracleGraph.edges.map(x => (x._1.concept, x._2, x._3.concept)).toSet
-        val oracleEdges1 : i.Set[(String, String)] = oracleGraph.edges.map(x => (x._1.concept, x._2)).toSet
-        val oracleEdges2 : i.Set[(String, String)] = oracleGraph.edges.map(x => (x._2, x._3.concept)).toSet
+        val oracleEdges : i.Set[(Int, Int, String, String, String)] = oracleGraph.edges.map(x => (spanStart(x._1), spanEnd(x._1), x._1.concept, x._2, x._3.concept)).toSet // x._1.spans(0) = x._3.spans(0) because in same fragment
+        val oracleEdges1 : i.Set[(Int, Int, String, String)] = oracleGraph.edges.map(x => (spanStart(x._1), spanEnd(x._1), x._1.concept, x._2)).toSet
+        val oracleEdges2 : i.Set[(Int, Int, String, String)] = oracleGraph.edges.map(x => (spanStart(x._1), spanEnd(x._1), x._2, x._3.concept)).toSet
 
         //def costFunc(input: Input, concept: PhraseConceptPair, start: Int, stop: Int) : Double = {
         val costFunc1 = (input: Input, concept: PhraseConceptPair, start: Int, stop: Int) => {
@@ -79,14 +85,14 @@ class TrainObj(val options : m.Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.
                 // Predicting a fragment that should be there
                 // Missing a fragment is (mostly) a recall type error
                 // 1 point for every correct concept
-                cost -= (1 - prec) * graphFrag.nodes.filter(x => oracleConcepts.contains(x.concept)).size
+                cost -= (1 - prec) * graphFrag.nodes.filter(x => oracleConcepts.contains(start, stop, x.concept)).size
                 // 1 point for every correct (internal) edge
                 cost -= (1 - prec) * graphFrag.edges.filter(x =>
-                        oracleEdges1.contains((x._1.concept,x._2))).size                // source concept matches
+                        oracleEdges1.contains((start, stop, x._1.concept, x._2))).size              // source concept matches
                 cost -= (1 - prec) * graphFrag.edges.filter(x =>
-                        oracleEdges2.contains((x._2,x._3.concept))).size                // dest concept matches
+                        oracleEdges2.contains((start, stop, x._2, x._3.concept))).size              // dest concept matches
                 cost += (1 - prec) * graphFrag.edges.filter(x =>
-                        oracleEdges.contains((x._1.concept,x._2,x._3.concept))).size    // adjust for overlap
+                        oracleEdges.contains((start, stop, x._1.concept,x._2,x._3.concept))).size   // adjust for overlap
 
                 // 3 points for producing something (because otherwise we could make three errors to connect the graph: two missing edges and one incorrect edge)
                 cost -= 2 * (1 - prec)  // 2 missing edges (recall error)
