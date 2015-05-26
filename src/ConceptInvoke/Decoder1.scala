@@ -31,19 +31,18 @@ class Decoder1(options: m.Map[Symbol, String],
         for (i <- Range(0, sentence.size)) {
             logger(2, "word = "+sentence(i))
             var conceptList = conceptInvoker.invoke(input, i, trainingIndex)
-            logger(1, "Possible invoked concepts: "+conceptList.map(x => x.toString).mkString("\n"))
+            //logger(1, "Possible invoked concepts: "+conceptList.map(x => x.toString).mkString("\n"))
             // WARNING: the code below assumes that anything in the conceptList will not extend beyond the end of the sentence (and it shouldn't based on the code in Concepts)
             for (concept <- conceptList) {
                 if (concept.words.size + i > sentence.size) {
-                    logger(0, "WARNING: concept fragment " + concept.toString + " extends beyond the end of the sentence - I will ignore it.")
+                    logger(0, "WARNING: concept fragment " + concept.graphFrag + " extends beyond the end of the sentence - I will ignore it.")
                 } else {
                     val score = (features.localScore(input, concept, i, i + concept.words.size)
                                 + cost(input, concept, i, i + concept.words.size))
-                    logger(1, "concept = "+concept.toString)
+                    //logger(1, "concept = "+concept.graphFrag)
                     val endpoint = i + concept.words.size - 1
-                    logger(2, "score = "+score.toInt)
+                    //logger(2, "score = "+score.toInt)
                     if ((bestState(endpoint) == None && score >= 0) || (bestState(endpoint) != None && bestState(endpoint).get._1 <= score)) { // we use <= so that earlier concepts (i.e. ones our conceptTable) have higher priority
-                        logger(1, "adding concept:"+concept)
                         bestState(endpoint) = Some((score, concept, i))
                     }
                 }
