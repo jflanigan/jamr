@@ -11,7 +11,7 @@ object ExtractConceptTable {
     val usage = """Usage: scala -classpath . edu.cmu.lti.nlp.amr.ExtractConceptTable < aligned_amr_corpus > concept_table"""
     type OptionMap = m.Map[Symbol, String]
 
-    val implementedFeatures : m.Set[String] = m.Set("corpusIndicator", "count", "conceptGivenPhrase", "phraseGivenConcept") 
+    val implementedFeatures : m.Set[String] = m.Set("corpusIndicator", "corpusLength", "count", "conceptGivenPhrase", "phraseGivenConcept") 
 
     def parseOptions(map : OptionMap, list: List[String]) : OptionMap = {
         def isSwitch(s : String) = (s(0) == '-')
@@ -112,6 +112,9 @@ object ExtractConceptTable {
             val count = phraseConceptPairs((phraseConceptPair.words, phraseConceptPair.graphFrag))._2.toDouble
             if (featureNames.contains("corpusIndicator")) {
                 phraseConceptPair.features += FeatureVector(m.Map("corpus" -> 1.0))
+            }
+            if (featureNames.contains("corpusLength")) {
+                phraseConceptPair.features += FeatureVector(m.Map("corpus_len" -> phraseConceptPair.words.size))
             }
             if (featureNames.contains("count")) {
                 phraseConceptPair.features += FeatureVector(m.Map("N" -> count))

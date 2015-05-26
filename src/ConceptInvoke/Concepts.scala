@@ -72,7 +72,7 @@ class Concepts(options: m.Map[Symbol, String],
             conceptList = ontoNotesLookup(input, i) ::: conceptList
         }
         if (conceptSources.contains("NEPassThrough")) {
-            conceptList = passThrough(input, i) ::: conceptList
+            conceptList = NEPassThrough(input, i) ::: conceptList
         }
         if (conceptSources.contains("PassThrough")) {
             conceptList = passThrough(input, i) ::: conceptList
@@ -211,7 +211,7 @@ class Concepts(options: m.Map[Symbol, String],
         //logger(1, "notTokenized.tok = "+notTokenized.tok.toList)
         return PhraseConceptPair(sentence.slice(start, end).toList,
                                  graphFrag,
-                                 FeatureVector(m.Map("ner" -> 1.0)))
+                                 FeatureVector(m.Map("ner" -> 1.0, "ner_len" -> (end - start))))
     }
 
     def dateEntities(input: Input, start: Int) : List[PhraseConceptPair] = {
@@ -296,25 +296,25 @@ class Concepts(options: m.Map[Symbol, String],
         logger(0, "mkDayMonthYear("+matching+","+day+","+month+","+year+")")
         PhraseConceptPair(tokens.take(matching.count(_ == '\t')+1).toList,
                           "(date-entity :day "+day.toInt.toString+" :month "+monthStr(month)+" :year "+year+")",
-                          FeatureVector(m.Map("datex" -> 1.0)))
+                          FeatureVector(m.Map("datex" -> 1.0, "datex_len" -> (matching.count(_ == '\t') + 1))))
     }
 
     def mkMonthYear(matching: String, month: String, year: String) : PhraseConceptPair = {
         PhraseConceptPair(tokens.take(matching.count(_ == '\t')+1).toList,
                           "(date-entity :month "+monthStr(month)+" :year "+year+")",
-                          FeatureVector(m.Map("datex" -> 1.0)))
+                          FeatureVector(m.Map("datex" -> 1.0, "datex_len" -> (matching.count(_ == '\t') + 1))))
     }
 
     def mkMonth(matching: String, month: String) : PhraseConceptPair = {
         PhraseConceptPair(tokens.take(matching.count(_ == '\t')+1).toList,
                           "(date-entity :month "+monthStr(month)+")",
-                          FeatureVector(m.Map("datex" -> 1.0)))
+                          FeatureVector(m.Map("datex" -> 1.0, "datex_len" -> (matching.count(_ == '\t') + 1))))
     }
 
     def mkYear(matching: String, year: String) : PhraseConceptPair = {
         PhraseConceptPair(tokens.take(matching.count(_ == '\t')+1).toList,
                           "(date-entity :year "+year+")",
-                          FeatureVector(m.Map("datex" -> 1.0)))
+                          FeatureVector(m.Map("datex" -> 1.0, "datex_len" -> (matching.count(_ == '\t') + 1))))
     }
 
     def monthStr(month: String) : String = {

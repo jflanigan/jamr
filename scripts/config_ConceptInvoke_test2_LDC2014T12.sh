@@ -24,7 +24,7 @@ export MODEL_DIR="${JAMR_HOME}/models/ConceptInvoke_test2_LDC2014T12"  # ideally
 # CONCEPT_ID_TRAINING_OPTIONS and RELATION_ID_TRAINING_OPTIONS will override PARSER_OPTIONS
 
 #export STAGE1_FEATURES="bias,length,fromNERTagger,conceptGivenPhrase"
-export STAGE1_FEATURES="bias,corpusIndicator,length,fromNERTagger,conceptGivenPhrase,count,phraseGivenConcept,phraseConceptPair"
+export STAGE1_FEATURES="bias,corpusIndicator,length,corpusLength,fromNERTagger,conceptGivenPhrase,count,phraseGivenConcept,phraseConceptPair"
 
 export PARSER_OPTIONS="
     --stage1-synthetic-concepts NER,DateExpr,OntoNotes,NEPassThrough,PassThrough,WordNetPassThrough,verbs,nominalizations
@@ -44,10 +44,11 @@ export CONCEPT_EXTRACT_OPTIONS="
 
 export CONCEPT_ID_TRAINING_OPTIONS="
     --stage1-training-leave-one-out
-    --training-prec-recall .5
+    --training-prec-recall .1
+    --training-cost-scale 10
     --training-optimizer Adagrad
     --training-loss Infinite_Ramp
-    --training-passes 5
+    --training-passes 10
     --training-stepsize 1
     --training-save-interval 1
     -v 1
