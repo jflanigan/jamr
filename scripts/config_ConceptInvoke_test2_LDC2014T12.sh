@@ -49,7 +49,7 @@ export CONCEPT_ID_TRAINING_OPTIONS="
     --training-cost-scale 100
     --training-optimizer Adagrad
     --training-loss Infinite_Ramp
-    --training-passes 1
+    --training-passes 3
     --training-stepsize 1
     --training-save-interval 1
     -v 1
