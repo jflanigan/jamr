@@ -53,7 +53,7 @@ class Concepts(options: m.Map[Symbol, String],
         var conceptList = if (options.contains('stage1TrainingLeaveOneOut) && trainingIndex != None) {
             conceptTable.getOrElse(sentence(i), List()).filter(
                     x => x.words == sentence.slice(i, i+x.words.size).toList && // TODO: is this case insensitive??
-                         x.trainingIndices.filter(j => j != trainingIndex.get).size > 0 // filter to concepts seen in other training examples (not just this one)
+                         x.trainingIndices.filter(j => abs(j - trainingIndex.get) > 20).size > 0 // filter to concepts seen far away
             ).toList
         } else {
             conceptTable.getOrElse(sentence(i), List()).filter(
