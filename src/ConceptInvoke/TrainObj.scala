@@ -121,7 +121,7 @@ class TrainObj(val options : m.Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.
             cost * scale
         }
 
-        return costFunc1
+        return costFunc2
     }
 
     def train {
