@@ -14,17 +14,17 @@ export WNHOME="${JAMR_HOME}/tools/WordNet-3.0"
 export SCALA="${JAMR_HOME}/tools/scala-2.11.2/bin/scala"
 export SMATCH="${JAMR_HOME}/scripts/smatch_v1_0/smatch_modified.py"
 
-export TRAIN_FILE="${JAMR_HOME}/data/amr_anno_1.0/data/split/training/training.txt"
-export DEV_FILE="${JAMR_HOME}/data/amr_anno_1.0/data/split/dev/dev.txt"
-export TEST_FILE="${JAMR_HOME}/data/amr_anno_1.0/data/split/test/test.txt"
+export TRAIN_FILE="${JAMR_HOME}/data/LDC2013E117_DEFT_Phase_1_AMR_Annotation_R3/data/deft-amr-release-r3-proxy.train"
+export DEV_FILE="${JAMR_HOME}/data/LDC2013E117_DEFT_Phase_1_AMR_Annotation_R3/data/deft-amr-release-r3-proxy.dev"
+export TEST_FILE="${JAMR_HOME}/data/LDC2013E117_DEFT_Phase_1_AMR_Annotation_R3/data/deft-amr-release-r3-proxy.test"
 
-export MODEL_DIR="${JAMR_HOME}/models/ConceptInvoke_test1_LDC2014T12"  # ideally keep this the same as the config_SOMETHING.sh
+export MODEL_DIR="${JAMR_HOME}/models/ConceptInvoke_LDC2013E117_test2"  # ideally keep this the same as the config_SOMETHING.sh
 
 # The options specified below will override any options specified in the scripts
 # CONCEPT_ID_TRAINING_OPTIONS and RELATION_ID_TRAINING_OPTIONS will override PARSER_OPTIONS
 
 #export STAGE1_FEATURES="bias,length,fromNERTagger,conceptGivenPhrase"
-export STAGE1_FEATURES="bias,corpusIndicator,length,corpusLength,conceptGivenPhrase,count,phraseGivenConcept,phraseConceptPair,phrase,firstMatch,numberIndicator,sentenceMatch,andList,pos"
+export STAGE1_FEATURES="bias,corpusIndicator,length,corpusLength,fromNERTagger,conceptGivenPhrase,count,phraseGivenConcept,phraseConceptPair,phrase,firstMatch,numberIndicator,sentenceMatch,andList,pos"
 
 export PARSER_OPTIONS="
     --stage1-synthetic-concepts NER,DateExpr,OntoNotes,PassThrough,WordNetPassThrough,verbs,nominalizations
@@ -46,14 +46,18 @@ export CONCEPT_EXTRACT_OPTIONS="
 export CONCEPT_ID_TRAINING_OPTIONS="
     --stage1-training-leave-one-out
     --training-optimizer Adagrad
+    --training-loss Perceptron
     --training-passes 10
     --training-stepsize 1
     --training-save-interval 1
     -v 1
 "
+    #--training-prec-recall .01
+    #--training-cost-scale 100
+    #--training-loss Infinite_Ramp
 
 export RELATION_ID_TRAINING_OPTIONS="
     --training-optimizer Adagrad
-    --training-passes 7
+    --training-passes 5
     --training-save-interval 1
 "
