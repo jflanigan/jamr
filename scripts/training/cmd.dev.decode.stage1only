@@ -1,12 +1,13 @@
 #!/bin/bash
 
 INPUT="${DEV_FILE}"
-OUTPUT="${MODEL_DIR}/dev.decode.allstages"
+OUTPUT="${MODEL_DIR}/dev.decode.stage1only"
 
 STAGE1_WEIGHTS="${MODEL_DIR}/stage1-weights"
 STAGE2_WEIGHTS="${MODEL_DIR}/stage2-weights.iter5"
 
 ${JAMR_HOME}/run AMRParser \
+    --stage1-only \
     --stage1-concept-table "${MODEL_DIR}/conceptTable.train" \
     --stage1-weights "${STAGE1_WEIGHTS}" \
     --stage2-weights "${STAGE2_WEIGHTS}" \
