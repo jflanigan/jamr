@@ -71,7 +71,7 @@ class Concepts(options: m.Map[Symbol, String],
         if (conceptSources.contains("OntoNotes")) {
             conceptList = ontoNotesLookup(input, i) ::: conceptList
         }
-        if (conceptList.size == 0) {
+        //if (conceptList.size == 0) {
             if (conceptSources.contains("NEPassThrough")) {
                 conceptList = NEPassThrough(input, i) ::: conceptList
             }
@@ -84,7 +84,7 @@ class Concepts(options: m.Map[Symbol, String],
             if (conceptSources.contains("verbs")) {
                 conceptList = verbs(input, i) ::: conceptList
             }
-        }
+        //}
         if (conceptSources.contains("nominalizations")) {
             conceptList = nominalizations(input, i) ::: conceptList
         }
