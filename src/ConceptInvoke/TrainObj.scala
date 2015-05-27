@@ -185,39 +185,26 @@ class TrainObj(val options : m.Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.
                                                         ner(i),
                                                         None), trainingIndex = None)
             val amrData = AMRTrainingData(block)
-            //val oracleResult = oracle.decode(Input(amrData, input(i), i, oracle = true, clearUnalignedNodes = true), None)  // TODO: check clearUnalignedNodes in AMRParser line 233
-            val oracleResult = costAugmented(new Input(None,
-                                                        tokenized(i).split(" "),
-                                                        snt(i).split(" "),
-                                                        dependencies(i),
-                                                        ner(i),
-                                                        None),
-                                             Input(amrData,
-                                                   input(i),
-                                                   i,
-                                                   oracle = true,
-                                                   clearUnalignedNodes = true), // TODO: check clearUnalignedNodes in AMRParser line 233
-                                             trainingIndex = None,
-                                             scale = -10000000)
+            val oracleGraph = (new Input(amrData, dependencies(i), oracle = true)).graph.get
 
             for (span <- stage1Result.graph.spans) {
-                if (oracleResult.graph.spans.count(x => x.start == span.start && x.end == span.end && x.amr.toString == span.amr.toString) > 0) {
+                if (oracleGraph.spans.count(x => x.start == span.start && x.end == span.end && x.amr.toString == span.amr.toString) > 0) {
                     spanF1.correct += 1
                 } else {
-                    if (oracleResult.graph.spans.count(x => x.start == span.start && x.end == span.end) > 0) {
+                    if (oracleGraph.spans.count(x => x.start == span.start && x.end == span.end) > 0) {
                         file.println("Incorrect span: "+span.words+" => "+span.amr)
                     } else {
                         file.println("Extra span: "+span.words+" => "+span.amr)
                     }
                 }
             }
-            for (span <- oracleResult.graph.spans) {
+            for (span <- oracleGraph.spans) {
                 if (stage1Result.graph.spans.count(x => x.start == span.start && x.end == span.end && x.amr.toString == span.amr.toString) == 0) {
                     file.println("Missing span: "+span.words+" => "+span.amr)
                 }
             }
             spanF1.predicted += stage1Result.graph.spans.size
-            spanF1.total += oracleResult.graph.spans.size
+            spanF1.total += oracleGraph.spans.size
             file.println("")
         }
         verbosity = verbosity_save
