@@ -71,17 +71,19 @@ class Concepts(options: m.Map[Symbol, String],
         if (conceptSources.contains("OntoNotes")) {
             conceptList = ontoNotesLookup(input, i) ::: conceptList
         }
-        if (conceptSources.contains("NEPassThrough")) {
-            conceptList = NEPassThrough(input, i) ::: conceptList
-        }
-        if (conceptSources.contains("PassThrough")) {
-            conceptList = passThrough(input, i) ::: conceptList
-        }
-        if (conceptSources.contains("WordNetPassThrough")) {
-            conceptList = wordnetPassThrough(input, i) ::: conceptList
-        }
-        if (conceptSources.contains("verbs")) {
-            conceptList = verbs(input, i) ::: conceptList
+        if (conceptList.size == 0) {
+            if (conceptSources.contains("NEPassThrough")) {
+                conceptList = NEPassThrough(input, i) ::: conceptList
+            }
+            if (conceptSources.contains("PassThrough")) {
+                conceptList = passThrough(input, i) ::: conceptList
+            }
+            if (conceptSources.contains("WordNetPassThrough")) {
+                conceptList = wordnetPassThrough(input, i) ::: conceptList
+            }
+            if (conceptSources.contains("verbs")) {
+                conceptList = verbs(input, i) ::: conceptList
+            }
         }
         if (conceptSources.contains("nominalizations")) {
             conceptList = nominalizations(input, i) ::: conceptList
@@ -117,6 +119,7 @@ class Concepts(options: m.Map[Symbol, String],
     }
 
     def NEPassThrough(input: Input, i: Int) : List[PhraseConceptPair] = {
+        // TOOD: improve this to check if the words were observed other places
         var concepts = List[PhraseConceptPair]()
         for { j <- Range(1,7)
               if i + j < input.sentence.size
@@ -293,28 +296,28 @@ class Concepts(options: m.Map[Symbol, String],
     }
 
     def mkDayMonthYear(matching: String, day: String, month: String, year: String) : PhraseConceptPair = {
-        logger(0, "mkDayMonthYear("+matching+","+day+","+month+","+year+")")
+        //logger(0, "mkDayMonthYear("+matching+","+day+","+month+","+year+")")
         PhraseConceptPair(tokens.take(matching.count(_ == '\t')+1).toList,
                           "(date-entity :day "+day.toInt.toString+" :month "+monthStr(month)+" :year "+year+")",
-                          FeatureVector(m.Map("datex" -> 1.0, "datex_len" -> (matching.count(_ == '\t') + 1))))
+                          FeatureVector(m.Map("datex1" -> 1.0, "datex_len" -> (matching.count(_ == '\t') + 1))))
     }
 
     def mkMonthYear(matching: String, month: String, year: String) : PhraseConceptPair = {
         PhraseConceptPair(tokens.take(matching.count(_ == '\t')+1).toList,
                           "(date-entity :month "+monthStr(month)+" :year "+year+")",
-                          FeatureVector(m.Map("datex" -> 1.0, "datex_len" -> (matching.count(_ == '\t') + 1))))
+                          FeatureVector(m.Map("datex2" -> 1.0, "datex_len" -> (matching.count(_ == '\t') + 1))))
     }
 
     def mkMonth(matching: String, month: String) : PhraseConceptPair = {
         PhraseConceptPair(tokens.take(matching.count(_ == '\t')+1).toList,
                           "(date-entity :month "+monthStr(month)+")",
-                          FeatureVector(m.Map("datex" -> 1.0, "datex_len" -> (matching.count(_ == '\t') + 1))))
+                          FeatureVector(m.Map("datex3" -> 1.0, "datex_len" -> (matching.count(_ == '\t') + 1))))
     }
 
     def mkYear(matching: String, year: String) : PhraseConceptPair = {
         PhraseConceptPair(tokens.take(matching.count(_ == '\t')+1).toList,
                           "(date-entity :year "+year+")",
-                          FeatureVector(m.Map("datex" -> 1.0, "datex_len" -> (matching.count(_ == '\t') + 1))))
+                          FeatureVector(m.Map("datex4" -> 1.0, "datex_len" -> (matching.count(_ == '\t') + 1))))
     }
 
     def monthStr(month: String) : String = {

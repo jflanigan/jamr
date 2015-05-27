@@ -21,6 +21,10 @@ class Features(featureNames: List[String], phraseCounts: i.Map[List[String], Int
         "bias" -> ffBias,
         "length" -> ffLength,
         "firstMatch" -> ffFirstMatch,
+        "numberIndicator" -> ffNumberIndicator,
+        "sentenceMatch" -> ffSentenceMatch,
+        "andList" -> ffAndList,
+        "pos" -> ffPOS,
         "phrase" -> ffPhrase,
         "phraseConceptPair" -> ffPhraseConceptPair,
         "pairWith2WordContext" -> ffPairWith2WordContext
@@ -40,6 +44,34 @@ class Features(featureNames: List[String], phraseCounts: i.Map[List[String], Int
         } else {
             new FeatureVector()
         }
+    }
+
+    def ffNumberIndicator(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
+        if (concept.words.size == 1 && concept.words.head.matches("[0-9]*") && concept.words.head == concept.graphFrag) {
+            FeatureVector(m.Map("numIndicator" -> 1.0))
+        } else {
+            new FeatureVector()
+        }
+    }
+
+    def ffSentenceMatch(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
+        if (input.sentence.size == concept.words.size) {
+            FeatureVector(m.Map("sentenceMatch" -> 1.0))
+        } else {
+            new FeatureVector()
+        }
+    }
+
+    def ffAndList(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
+        if (start == 1 && end == 2 && input.sentence(start) == ";" && input.sentence.mkString(" ").matches("[^ ]+(?: ; [^ ]+)*")) {
+            FeatureVector(m.Map("andList" -> 1.0))
+        } else {
+            new FeatureVector()
+        }
+    }
+
+    def ffPOS(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
+        return FeatureVector(m.Map("POS=" + input.pos.slice(start, end).mkString("_") -> 1.0))
     }
 
     def ffPhrase(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {

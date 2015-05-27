@@ -121,6 +121,27 @@ class TrainObj(val options : m.Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.
             cost * scale
         }
 
+        val costFunc3 = (input: Input, concept: PhraseConceptPair, start: Int, stop: Int) => {
+            val graphFrag = Graph.parse(concept.graphFrag)
+            var cost : Double = 0
+            // TODO: ignore the type in named entities
+            if (!oracleSpans.contains((start, stop)) || oracleSpans(start, stop) != concept.graphFrag) {
+                // Predicting a fragment that shouldn't be there
+                // This is a precision type error
+                cost += prec
+                if (oracleStart.contains(start)) {
+                    // We are also missing the start of another span, which is a recall-type error
+                    //cost += (1 - prec)
+                }
+            } else {
+                // Predicting a fragment that should be there
+                // Correct prediction, so cost = 0
+                // Missing this is a recall error, so subtract it here
+                cost -= (1 - prec)
+            }
+            cost * scale
+        }
+
         return costFunc2
     }
 
