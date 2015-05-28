@@ -6,3 +6,14 @@
 - Try JAMR old weights on new data
 - Ask about ISI result
 - Retrain relation ID
+
+Tues May 26
+- Add regularizer
+- Train relation id w/ automatic concepts
+
+Wed May 27
+- Correct normalization when checking spans (will matter for dates especially)
+- Cost func shouldn't care about entity type
+- Boost recall / play with reg
+- Cost function should be this: if you can predict the correct concept, the predict it, otherwise predicting anything is better than nothing (this cost func depends on the output set!)
+
