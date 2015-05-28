@@ -63,8 +63,12 @@ class Features(featureNames: List[String], phraseCounts: i.Map[List[String], Int
     }
 
     def ffAndList(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
-        if (start == 1 && end == 2 && input.sentence(start) == ";" && input.sentence.mkString(" ").matches("[^ ]+(?: ; [^ ]+)*")) {
-            FeatureVector(m.Map("andList" -> 1.0))
+        if (input.sentence(start) == ";" && input.sentence.mkString(" ").matches("[^ ]+(?: (?:;|and) [^ ]+)*")) {
+            if (start == 1 && end == 2) {
+                FeatureVector(m.Map("andList" -> 1.0))
+            } else {
+                FeatureVector(m.Map("andListNot" -> 1.0))
+            }
         } else {
             new FeatureVector()
         }

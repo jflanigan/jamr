@@ -65,11 +65,6 @@ class Decoder1(options: m.Map[Symbol, String],
                 logger(1, "Adding concept: "+concept.graphFrag)
                 graph.addSpan(sentence, start = backpointer, end = i+1, amrStr = concept.graphFrag)
                 logger(1, "words = "+concept.words.mkString(" "))
-                logger(1, "Possible invoked concepts: "+conceptInvoker.invoke(input, i, trainingIndex).map(x => x.toString).mkString("\n"))
-                for (c <- conceptInvoker.invoke(input, backpointer, trainingIndex).filter(x => (x.words.mkString(" ") == concept.words.mkString(" ") && x.graphFrag != concept.graphFrag) || (x.words.mkString(" ") != concept.words.mkString(" ") && x.graphFrag == concept.graphFrag))) { // add features for all matching phraseConceptPairs (this is what the Oracle decoder does, so we do the same here)
-                    val f = features.localFeatures(input, c, i, i + concept.words.size)
-                    logger(1, "\nphraseConceptPair not match: "+concept.toString)
-                }
                 for (c <- conceptInvoker.invoke(input, backpointer, trainingIndex).filter(x => x.words == concept.words && x.graphFrag == concept.graphFrag)) { // add features for all matching phraseConceptPairs (this is what the Oracle decoder does, so we do the same here)
                     val f = features.localFeatures(input, c, i, i + concept.words.size)
                     feats += f
