@@ -128,14 +128,19 @@ class TrainObj(val options : m.Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.
             val graphFrag = normalizeFrag(concept.graphFrag)
             var cost : Double = 0
             if (!oracleSpans.contains((start, stop)) || oracleSpans(start, stop) != graphFrag) {
-                if (conceptList.exists(x => normalizeFrag(x.graphFrag) == oracleSpans(start, stop))) {
-                    // Predicting a fragment that shouldn't be there
+                if (oracleSpans.contains((start, stop)) && conceptList.exists(x => normalizeFrag(x.graphFrag) == oracleSpans(start, stop))) {
+                    // There should be a fragment here, but we're predicting it wrong,
+                    // and there is a correct fragment in our list
                     // This is a precision type error
                     cost += prec
                 } else if (oracleSpans.contains((start, stop))) {
                     // There should be a fragment here, but there isn't a correct fragment in our list
                     // of possible fragments, so treat it like it's a correct answer
                     cost -= (1 - prec)
+                } else {
+                    // There should be no fragment here
+                    // This is a precision type error
+                    cost += prec
                 }
                 if (oracleStart.contains(start)) {
                     // We are also missing the start of another span, which is a recall-type error

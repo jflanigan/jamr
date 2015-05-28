@@ -17,3 +17,12 @@ Wed May 27
 - Boost recall / play with reg
 - Cost function should be this: if you can predict the correct concept, the predict it, otherwise predicting anything is better than nothing (this cost func depends on the output set!)
 
+- WordNet pass through and POS
+- log(Count) of the word (or log(Pr(produce something)))
+- Add lists for NE, and unigrams for NE, does it start with capital
+- WordNet pass through and log(count) of the word
+- Syntactic context with concept (for sense)
+- Is the concept a -NN (and w/ POS)
+- run SRL to help event concept id
+- parsed OntoNotes examples? look at possible roles and syntactic context 
+

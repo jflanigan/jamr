@@ -62,17 +62,17 @@ class Decoder1(options: m.Map[Symbol, String],
         while (i >= 0) {
             if (bestState(i) != None) {
                 val (localScore, concept, backpointer) = bestState(i).get
-                logger(1, "Adding concept: "+concept.graphFrag)
+                //logger(1, "Adding concept: "+concept.graphFrag)
                 graph.addSpan(sentence, start = backpointer, end = i+1, amrStr = concept.graphFrag)
-                logger(1, "words = "+concept.words.mkString(" "))
+                //logger(1, "words = "+concept.words.mkString(" "))
                 val conceptList = conceptInvoker.invoke(input, backpointer, trainingIndex)
                 for (c <- conceptList.filter(x => x.words == concept.words && x.graphFrag == concept.graphFrag)) { // add features for all matching phraseConceptPairs (this is what the Oracle decoder does, so we do the same here)
                     val f = features.localFeatures(input, c, backpointer, backpointer + concept.words.size)
                     feats += f
                     score += features.weights.dot(f) + cost(input, c, backpointer, backpointer + concept.words.size, conceptList)
-                    logger(1, "\nphraseConceptPair: "+concept.toString)
-                    logger(1, "feats:\n"+f.toString)
-                    logger(1, "score:\n"+score.toString)
+                    //logger(2, "\nphraseConceptPair: "+concept.toString)
+                    //logger(1, "feats:\n"+f.toString)
+                    //logger(1, "score:\n"+score.toString+"\n")
                 }
                 //feats += features.localFeatures(input, concept)
                 //score += localScore
