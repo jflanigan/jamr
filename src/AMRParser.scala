@@ -221,6 +221,20 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                 }
                 logger(0, "")
 
+                stage1Result.graph.normalizeInverseRelations
+                stage1Result.graph.addVariableToSpans
+
+                var decoderResultGraph = stage1Result.graph  // TODO: in future just do decoderResult.graph instead (when BasicFeatureVector is removed from stage1)
+
+                    // TODO: clean up this code
+
+                if (!options.contains('stage1Only)) {
+                    val decoder = stage2.get
+                    decoderResultGraph = decoder.decode(new Input(stage1Result.graph,   // TODO: what about stage1Oracle
+                                                             tok.split(" "),
+                                                             dependencies(i))).graph
+                }//endif (!options.contains('stage1Only))
+
                 if (options.contains('trainingData)) {
                     val amrdata2 = AMRTrainingData(oracleData(i))   // 2nd copy for oracle
                     logger(1, "Node.spans:")
@@ -262,20 +276,6 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                         //"\n"+oracle.features.ffDependencyPathv2(node1, node2, relation).toString.split("\n").filter(_.matches("^C1.*")).toList.toString+"\nScore = "+decoder.features.localScore(node1, node2, relation).toString+"  Relevent weights:\n"+decoder.features.weights.slice(decoder.features.localFeatures(node1, node2, relation)).toString
                     })+"\n")
                 }//endif (options.contains('amrOracleData))
-
-                stage1Result.graph.normalizeInverseRelations
-                stage1Result.graph.addVariableToSpans
-
-                var decoderResultGraph = stage1Result.graph  // TODO: in future just do decoderResult.graph instead (when BasicFeatureVector is removed from stage1)
-
-                    // TODO: clean up this code
-
-                if (!options.contains('stage1Only)) {
-                    val decoder = stage2.get
-                    decoderResultGraph = decoder.decode(new Input(stage1Result.graph,   // TODO: what about stage1Oracle
-                                                             tok.split(" "),
-                                                             dependencies(i))).graph
-                }//endif (!options.contains('stage1Only))
 
                 if (!options.contains('stage1Only)) {
                     val decoder = stage2.get

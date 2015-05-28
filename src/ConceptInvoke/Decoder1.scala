@@ -32,7 +32,7 @@ class Decoder1(options: m.Map[Symbol, String],
         for (i <- Range(0, sentence.size)) {
             logger(2, "word = "+sentence(i))
             var conceptList = conceptInvoker.invoke(input, i, trainingIndex)
-            //logger(1, "Possible invoked concepts: "+conceptList.map(x => x.toString).mkString("\n"))
+            logger(1, "Possible invoked concepts: "+conceptList.map(x => x.toString).mkString("\n"))
             // WARNING: the code below assumes that anything in the conceptList will not extend beyond the end of the sentence (and it shouldn't based on the code in Concepts)
             for (concept <- conceptList) {
                 if (concept.words.size + i > sentence.size) {
@@ -62,15 +62,21 @@ class Decoder1(options: m.Map[Symbol, String],
         while (i >= 0) {
             if (bestState(i) != None) {
                 val (localScore, concept, backpointer) = bestState(i).get
-                logger(2, "Adding concept: "+concept.graphFrag)
-                graph.addSpan(sentence, backpointer, i+1, concept.graphFrag)
-                for (c <- conceptInvoker.invoke(input, i, trainingIndex).filter(x => x.words == concept.words && x.graphFrag == concept.graphFrag)) { // add features for all matching phraseConceptPairs (this is what the Oracle decoder does, so we do the same here)
+                logger(1, "Adding concept: "+concept.graphFrag)
+                graph.addSpan(sentence, start = backpointer, end = i+1, amrStr = concept.graphFrag)
+                logger(1, "words = "+concept.words.mkString(" "))
+                logger(1, "Possible invoked concepts: "+conceptInvoker.invoke(input, i, trainingIndex).map(x => x.toString).mkString("\n"))
+                for (c <- conceptInvoker.invoke(input, backpointer, trainingIndex).filter(x => (x.words.mkString(" ") == concept.words.mkString(" ") && x.graphFrag != concept.graphFrag) || (x.words.mkString(" ") != concept.words.mkString(" ") && x.graphFrag == concept.graphFrag))) { // add features for all matching phraseConceptPairs (this is what the Oracle decoder does, so we do the same here)
+                    val f = features.localFeatures(input, c, i, i + concept.words.size)
+                    logger(1, "\nphraseConceptPair not match: "+concept.toString)
+                }
+                for (c <- conceptInvoker.invoke(input, backpointer, trainingIndex).filter(x => x.words == concept.words && x.graphFrag == concept.graphFrag)) { // add features for all matching phraseConceptPairs (this is what the Oracle decoder does, so we do the same here)
                     val f = features.localFeatures(input, c, i, i + concept.words.size)
                     feats += f
                     score += features.weights.dot(f) + cost(input, c, i, i + concept.words.size)
-                    logger(2, "\nphraseConceptPair: "+concept.toString)
-                    logger(2, "feats:\n"+f.toString)
-                    logger(2, "score:\n"+score.toString)
+                    logger(1, "\nphraseConceptPair: "+concept.toString)
+                    logger(1, "feats:\n"+f.toString)
+                    logger(1, "score:\n"+score.toString)
                 }
                 //feats += features.localFeatures(input, concept)
                 //score += localScore
