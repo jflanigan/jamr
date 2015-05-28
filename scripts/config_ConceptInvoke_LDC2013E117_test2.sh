@@ -27,7 +27,7 @@ export MODEL_DIR="${JAMR_HOME}/models/ConceptInvoke_LDC2013E117_test2"  # ideall
 export STAGE1_FEATURES="bias,corpusIndicator,length,corpusLength,fromNERTagger,conceptGivenPhrase,count,phraseGivenConcept,phraseConceptPair,phrase,firstMatch,numberIndicator,sentenceMatch,andList,pos"
 
 export PARSER_OPTIONS="
-    --stage1-synthetic-concepts NER,DateExpr,OntoNotes,PassThrough,WordNetPassThrough,verbs,nominalizations
+    --stage1-synthetic-concepts NER,DateExpr,OntoNotes,NEPassThrough,PassThrough,WordNetPassThrough,verbs,nominalizations
     --stage1-predicates ${JAMR_HOME}/resources/OntoNotes-v4-predicates.txt
     --stage1-phrase-counts ${MODEL_DIR}/wordCounts.train
     --stage1-features ${STAGE1_FEATURES}
@@ -37,6 +37,7 @@ export PARSER_OPTIONS="
     --output-format AMR,nodes,edges,root
     --ignore-parser-errors
     --print-stack-trace-on-errors
+    -v 1
 "
 
 export CONCEPT_EXTRACT_OPTIONS="

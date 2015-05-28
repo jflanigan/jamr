@@ -27,7 +27,7 @@ export MODEL_DIR="${JAMR_HOME}/models/ConceptInvoke_test2_LDC2014T12"  # ideally
 export STAGE1_FEATURES="bias,corpusIndicator,length,corpusLength,conceptGivenPhrase,count,phraseGivenConcept,phraseConceptPair,phrase,firstMatch,numberIndicator,sentenceMatch,andList,pos"
 
 export PARSER_OPTIONS="
-    --stage1-synthetic-concepts NER,DateExpr,OntoNotes,PassThrough,WordNetPassThrough,verbs,nominalizations
+    --stage1-synthetic-concepts NER,DateExpr,OntoNotes,NEPassThrough,PassThrough,WordNetPassThrough,verbs,nominalizations
     --stage1-predicates ${JAMR_HOME}/resources/OntoNotes-v4-predicates.txt
     --stage1-phrase-counts ${MODEL_DIR}/wordCounts.train
     --stage1-features ${STAGE1_FEATURES}
@@ -49,7 +49,7 @@ export CONCEPT_ID_TRAINING_OPTIONS="
     --training-cost-scale 100
     --training-optimizer Adagrad
     --training-loss Infinite_Ramp
-    --training-passes 1
+    --training-passes 10
     --training-stepsize 1
     --training-save-interval 1
     -v 1
