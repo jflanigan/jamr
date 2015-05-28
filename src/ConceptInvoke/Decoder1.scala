@@ -32,7 +32,7 @@ class Decoder1(options: m.Map[Symbol, String],
         for (i <- Range(0, sentence.size)) {
             logger(2, "word = "+sentence(i))
             var conceptList = conceptInvoker.invoke(input, i, trainingIndex)
-            logger(1, "Possible invoked concepts: "+conceptList.map(x => x.toString).mkString("\n"))
+            //logger(1, "Possible invoked concepts: "+conceptList.map(x => x.toString).mkString("\n"))
             // WARNING: the code below assumes that anything in the conceptList will not extend beyond the end of the sentence (and it shouldn't based on the code in Concepts)
             for (concept <- conceptList) {
                 if (concept.words.size + i > sentence.size) {
