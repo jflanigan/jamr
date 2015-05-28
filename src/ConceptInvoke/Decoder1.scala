@@ -22,7 +22,7 @@ class Decoder1(options: m.Map[Symbol, String],
 
     def decode(input: Input,
                trainingIndex: Option[Int],
-               cost: (Input, PhraseConceptPair, Int, Int) => Double) : DecoderResult = {
+               cost: (Input, PhraseConceptPair, Int, Int, List[PhraseConceptPair]) => Double) : DecoderResult = {
 
         logger(1, "\n--- Decoder1 ---\n")
         logger(1, "Sentence: "+input.sentence.mkString(" "))
@@ -39,7 +39,7 @@ class Decoder1(options: m.Map[Symbol, String],
                     logger(0, "WARNING: concept fragment " + concept.graphFrag + " extends beyond the end of the sentence - I will ignore it.")
                 } else {
                     val score = (features.localScore(input, concept, i, i + concept.words.size)
-                                + cost(input, concept, i, i + concept.words.size))
+                                + cost(input, concept, i, i + concept.words.size, conceptList))
                     //logger(1, "concept = "+concept.graphFrag)
                     val endpoint = i + concept.words.size - 1
                     //logger(2, "score = "+score.toInt)
@@ -65,10 +65,11 @@ class Decoder1(options: m.Map[Symbol, String],
                 logger(1, "Adding concept: "+concept.graphFrag)
                 graph.addSpan(sentence, start = backpointer, end = i+1, amrStr = concept.graphFrag)
                 logger(1, "words = "+concept.words.mkString(" "))
-                for (c <- conceptInvoker.invoke(input, backpointer, trainingIndex).filter(x => x.words == concept.words && x.graphFrag == concept.graphFrag)) { // add features for all matching phraseConceptPairs (this is what the Oracle decoder does, so we do the same here)
+                val conceptList = conceptInvoker.invoke(input, backpointer, trainingIndex)
+                for (c <- conceptList.filter(x => x.words == concept.words && x.graphFrag == concept.graphFrag)) { // add features for all matching phraseConceptPairs (this is what the Oracle decoder does, so we do the same here)
                     val f = features.localFeatures(input, c, backpointer, backpointer + concept.words.size)
                     feats += f
-                    score += features.weights.dot(f) + cost(input, c, backpointer, backpointer + concept.words.size)
+                    score += features.weights.dot(f) + cost(input, c, backpointer, backpointer + concept.words.size, conceptList)
                     logger(1, "\nphraseConceptPair: "+concept.toString)
                     logger(1, "feats:\n"+f.toString)
                     logger(1, "score:\n"+score.toString)

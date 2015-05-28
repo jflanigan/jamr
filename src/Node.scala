@@ -41,10 +41,10 @@ case class Node(var id: String, var name: Option[String], concept: String, var r
     }
 
     override def toString() : String = {
-        prettyString(0, false, Set.empty[String])
+        prettyString(0, false, Set.empty[String], sorted = true)    // need to be sorted so there is a canonical representation of graph fragments (used in concept ID eval, etc)
     }
 
-    def prettyString(detail: Int, pretty: Boolean, vars: Set[String], indent: String = "") : String = {
+    def prettyString(detail: Int, pretty: Boolean, vars: Set[String], sorted: Boolean = false, indent: String = "") : String = {
     // detail = 0: Least detail. No variables names or node ids.
     //             (date-entity :day 5 :month 1 :year 2002)
 
@@ -55,6 +55,8 @@ case class Node(var id: String, var name: Option[String], concept: String, var r
     //             ([0] d / date-entity :day [0.2] 5 :month [0.1] 1 :year [0.0] 2002)
 
     // Boolean 'pretty' indicates whether to indent into pretty format or leave on one line
+
+        def sort(list: List[(String, Node)]) = if (sorted) { list.sortBy(x => x._1+" "+x._2.concept) } else { list }
 
         var nextIndent = ""
         var prefix = "" 
@@ -67,14 +69,14 @@ case class Node(var id: String, var name: Option[String], concept: String, var r
             if ((topologicalOrdering.size +variableRelations.size) != 0) {      // Concept with name and children
                 detail match {
                     case 0 =>
-                "("+concept+" "+(topologicalOrdering.map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, vars, nextIndent)) :::
-                                 variableRelations.map(x => prefix+x._1+" "+x._2.concept)).mkString(" ")+")"
+                "("+concept+" "+(sort(topologicalOrdering).map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, vars, sorted, nextIndent)) :::
+                                 sort(variableRelations).map(x => prefix+x._1+" "+x._2.concept)).mkString(" ")+")"
                     case 1 =>
-                "("+n+" / "+concept+" "+(topologicalOrdering.map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, vars, nextIndent)) :::
-                                 variableRelations.map(x => prefix+x._1+" "+x._2.name.get)).mkString(" ")+")"
+                "("+n+" / "+concept+" "+(sort(topologicalOrdering).map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, vars, sorted, nextIndent)) :::
+                                 sort(variableRelations).map(x => prefix+x._1+" "+x._2.name.get)).mkString(" ")+")"
                     case 2 =>
-                "(["+id+"] "+n+" / "+concept+" "+(topologicalOrdering.map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, vars, nextIndent)) :::
-                                 variableRelations.map(x => prefix+x._1+" ["+x._2.id+"] "+x._2.name.get)).mkString(" ")+")"
+                "(["+id+"] "+n+" / "+concept+" "+(sort(topologicalOrdering).map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, vars, sorted, nextIndent)) :::
+                                 sort(variableRelations).map(x => prefix+x._1+" ["+x._2.id+"] "+x._2.name.get)).mkString(" ")+")"
                 }
             } else {                        // Concept with name, but no children
                 detail match {
@@ -99,14 +101,14 @@ case class Node(var id: String, var name: Option[String], concept: String, var r
             }
         } else {                            // Concept with no name but has children
             if (detail == 0) {
-                "("+concept+" "+(topologicalOrdering.map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, vars, nextIndent)) :::
-                                 variableRelations.map(x => prefix+x._1+" "+x._2.concept)).mkString(" ")+")"
+                "("+concept+" "+(sort(topologicalOrdering).map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, vars, sorted, nextIndent)) :::
+                                 sort(variableRelations).map(x => prefix+x._1+" "+x._2.concept)).mkString(" ")+")"
             } else if (detail == 1) {
-                "("+concept+" "+(topologicalOrdering.map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, vars, nextIndent)) :::
-                                 variableRelations.map(x => prefix+x._1+" "+x._2.name)).mkString(" ")+")"
+                "("+concept+" "+(sort(topologicalOrdering).map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, vars, sorted, nextIndent)) :::
+                                 sort(variableRelations).map(x => prefix+x._1+" "+x._2.name)).mkString(" ")+")"
             } else {
-                "(["+id+"] "+concept+" "+(topologicalOrdering.map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, vars, nextIndent)) :::
-                            variableRelations.map(x => prefix+x._1+" ["+x._2.id+"] "+x._2.name)).mkString(" ")+")"
+                "(["+id+"] "+concept+" "+(sort(topologicalOrdering).map(x => prefix+x._1+" "+x._2.prettyString(detail, pretty, vars, sorted, nextIndent)) :::
+                            sort(variableRelations).map(x => prefix+x._1+" ["+x._2.id+"] "+x._2.name)).mkString(" ")+")"
             }
         }
     }

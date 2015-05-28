@@ -9,6 +9,6 @@ import scala.collection.{mutable => m, immutable => i}
 abstract class Decoder(featureNames: List[String], phraseCounts: i.Map[List[String], Int]) {
     val features = new Features(featureNames, phraseCounts) // maybe this should be renamed ff?
 
-    def decode(input: Input, trainingIndex: Option[Int], cost: (Input, PhraseConceptPair, Int, Int) => Double = (i,c,s,p) => 0) : DecoderResult
+    def decode(input: Input, trainingIndex: Option[Int], cost: (Input, PhraseConceptPair, Int, Int, List[PhraseConceptPair]) => Double = (i,c,s,p,l) => 0) : DecoderResult
 }
 
