@@ -91,7 +91,7 @@ class Concepts(options: m.Map[Symbol, String],
 
         // Normalize the concept list so there are no duplicates by adding all their features
         val conceptSet : m.Map[(List[String], String), PhraseConceptPair] = m.Map()
-        for (concept <- conceptList.filter(x => sentence.size < i+x.words.size && x.words == sentence.slice(i, i+x.words.size).toList)) {      // TODO: make this case insensitive?
+        for (concept <- conceptList.filter(x => x.words == sentence.slice(i, i+x.words.size).toList)) {      // TODO: make this case insensitive?
             val key = (concept.words, concept.graphFrag)
             if (conceptSet.contains(key)) {
                 val old = conceptSet(key)
