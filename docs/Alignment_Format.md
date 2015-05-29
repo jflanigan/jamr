@@ -27,8 +27,8 @@ fragments.  The format is a space separated list of spans with their graph fragm
 
     span1_start-span1_end|span1_node1+span1_node2+... span2_start-span2_end|span2_node1+span2_node2+...
 
-Each node is specified by descriptor: `0` for the root node, `0.0` for the first child of the root node, `0.1` for the
-second child of the root node, etc.  (This numbering system skips variable re-entrancies.)
+Each node is specified by descriptor (a [Gorn address](https://en.wikipedia.org/wiki/Gorn_address)): `0` for the root node, `0.0` for the first child of the root node, `0.1` for the
+second child of the root node, etc.  (Our numbering system skips variable re-entrancies.)
 
 So for the sentence:
 
