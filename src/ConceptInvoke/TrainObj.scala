@@ -155,6 +155,14 @@ class TrainObj(val options : m.Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.
             cost * scale
         }
 
+    /******* Improvements to cost function to do *********
+    - If it has the correct named entity type, use that as the gold standard? (check if this helps)
+    - If it has no correct tag, but has the correct entity type (event, etc), then use that
+    - Else if it has the correct lemma, then use that (maybe this won't help)
+    - Make these graded, and try ramp1 loss, with regularizer
+
+    ******************************************************/
+
         return costFunc3
     }
 

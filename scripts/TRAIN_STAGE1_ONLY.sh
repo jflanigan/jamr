@@ -20,10 +20,17 @@ pushd "$JAMR_HOME/scripts/training"
 echo "Training stage 1"
 ./cmd.stage1-weights
 
+# Evaluate on dev set
+echo ""
+echo "  ----- Evaluation on Dev: Spans -----" | tee "${MODEL_DIR}/RESULTS.txt"
+./cmd.dev.decode.stage1only
+tail -n 3 "${MODEL_DIR}/dev.decode.stage1only.err" | tee -a "${MODEL_DIR}/RESULTS.txt"
+echo ""
+
 # Evaluate on test set
 echo ""
+echo "  ----- Evaluation on Test: Spans -----" | tee -a "${MODEL_DIR}/RESULTS.txt"
 ./cmd.test.decode.stage1only
-echo "  ----- Evaluation on Test: Spans -----" | tee "${MODEL_DIR}/RESULTS.txt"
 tail -n 3 "${MODEL_DIR}/test.decode.stage1only.err" | tee -a "${MODEL_DIR}/RESULTS.txt"
 echo ""
 

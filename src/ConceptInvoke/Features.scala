@@ -17,6 +17,14 @@ class Features(featureNames: List[String], phraseCounts: i.Map[List[String], Int
 
     type FeatureFunction = (Input, PhraseConceptPair, Int, Int) => FeatureVector
 
+    /******* Features to add *********
+    - Fragtype feature (is it an event, named entity, number, string constant, other fragment
+    - Fragtype and POS tag
+    - Concept bigrams, and concepts w/o sense tags
+    - Edge type to named entity
+
+    **********************************/
+
     val ffTable = m.Map[String, FeatureFunction](
         "bias" -> ffBias,
         "length" -> ffLength,

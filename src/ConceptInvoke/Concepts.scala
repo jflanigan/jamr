@@ -18,6 +18,16 @@ class Concepts(options: m.Map[Symbol, String],
 // Concepts are invoked by calling the invoke() method, which returns a list of all
 // the concepts that match a span starting at index i of the tokenized sentence.
 
+
+    /******* Concept sources to add *********
+    - Nominalizations
+    - List of -er => person ARG0-of things
+    - Entities from large list
+
+    *****************************************/
+
+
+
     val conceptTable: m.Map[String, List[PhraseConceptPair]] = m.Map()  // maps the first word in the phrase to a list of phraseConceptPairs
     for (pair <- phraseConceptPairs) {
         val word = pair.words(0)
@@ -68,25 +78,24 @@ class Concepts(options: m.Map[Symbol, String],
         if (conceptSources.contains("DateExpr")) {
             conceptList = dateEntities(input, i) ::: conceptList
         }
+        var onlyPassThrough = conceptList.size == 0
         if (conceptSources.contains("OntoNotes")) {
-            conceptList = ontoNotesLookup(input, i) ::: conceptList
+            conceptList = ontoNotesLookup(input, i, onlyPassThrough) ::: conceptList
         }
-        //if (conceptList.size == 0) {
-            if (conceptSources.contains("NEPassThrough")) {
-                conceptList = NEPassThrough(input, i) ::: conceptList
-            }
-            if (conceptSources.contains("PassThrough")) {
-                conceptList = passThrough(input, i) ::: conceptList
-            }
-            if (conceptSources.contains("WordNetPassThrough")) {
-                conceptList = wordnetPassThrough(input, i) ::: conceptList
-            }
-            if (conceptSources.contains("verbs")) {
-                conceptList = verbs(input, i) ::: conceptList
-            }
-        //}
+        if (conceptSources.contains("NEPassThrough")) {
+            conceptList = NEPassThrough(input, i, onlyPassThrough) ::: conceptList
+        }
+        if (conceptSources.contains("PassThrough")) {
+            conceptList = passThrough(input, i, onlyPassThrough) ::: conceptList
+        }
+        if (conceptSources.contains("WordNetPassThrough")) {
+            conceptList = wordnetPassThrough(input, i, onlyPassThrough) ::: conceptList
+        }
+        if (conceptSources.contains("verbs")) {
+            conceptList = verbs(input, i, onlyPassThrough) ::: conceptList
+        }
         if (conceptSources.contains("nominalizations")) {
-            conceptList = nominalizations(input, i) ::: conceptList
+            conceptList = nominalizations(input, i, onlyPassThrough) ::: conceptList
         }
 
         // Normalize the concept list so there are no duplicates by adding all their features
@@ -115,6 +124,7 @@ class Concepts(options: m.Map[Symbol, String],
             stem+"-01",         // first sense is most common
             FeatureVector(m.Map("OntoNotes" -> 1.0)),
             List()))
+        if (onlyPassThrough) { concepts.map(x => x.features.fmap("OntoNotesOnly")) }
         return concepts
     }
 
@@ -134,12 +144,12 @@ class Concepts(options: m.Map[Symbol, String],
         return concepts
     }
 
-    def passThrough(input: Input, i: Int) : List[PhraseConceptPair] = {
+    def passThrough(input: Input, i: Int, onlyPassThrough) : List[PhraseConceptPair] = {
         if(input.sentence(i).matches("[A-Za-z0-9]*")) {     // TODO: improve this regex
             List(PhraseConceptPair(
                 List(input.sentence(i)),
                 input.sentence(i),
-                FeatureVector(m.Map("PassThrough" -> 1.0)),
+                FeatureVector(m.Map("PassThrough" -> 1.0, "PassThroughOnly" -> if(onlyPassThrough) { 1 } else { 0 } )),
                 List()))
         } else { List() }
     }
