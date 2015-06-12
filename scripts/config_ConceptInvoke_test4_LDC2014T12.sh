@@ -32,7 +32,9 @@ export PARSER_OPTIONS="
     --stage1-phrase-counts ${MODEL_DIR}/wordCounts.train
     --stage1-features ${STAGE1_FEATURES}
     --stage2-decoder LR
-    --stage2-LR-iterations 50
+    --stage2-LR-iterations 100
+    --stage2-LR-stepsize 1
+    --stage2-LR-step-strategy adaptiveSqrtT
     --stage2-approx-decoder Greedy
     --stage2-features rootConcept,rootDependencyPathv1,bias,typeBias,self,fragHead,edgeCount,distance,logDistance,posPathv3,dependencyPathv4,conceptBigram
     --stage2-labelset ${JAMR_HOME}/resources/labelset-r4

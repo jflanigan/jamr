@@ -39,6 +39,7 @@ case class GraphObj(graph: Graph,
     var feats: FeatureVector = FeatureVector(features.weights.labelset)
     val edgeWeights : Array[Array[Array[(String, Double)]]] = computeWeightMatrix
 
+    def largestWeight : Double = edgeWeights.map(x => x.map(y => y.map(z => z._2).max).max).max
 
     def getSet(nodeIndex : Int) : Set[Int] = { setArray(set(nodeIndex)) }
 

@@ -14,6 +14,7 @@ import java.lang.Math.random
 import java.lang.Math.floor
 import java.lang.Math.min
 import java.lang.Math.max
+import java.lang.Math.sqrt
 import scala.io.Source
 import scala.util.matching.Regex
 import scala.collection.mutable.Map
@@ -21,7 +22,7 @@ import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 import Double.{NegativeInfinity => minusInfty}
 
-class LagrangianRelaxation(options: Map[Symbol, String], featureNames: List[String], labelSet: Array[(String, Int)], stepsize: Double, maxIterations: Int)
+class LagrangianRelaxation(options: Map[Symbol, String], featureNames: List[String], labelSet: Array[(String, Int)])
         extends Decoder {
     // Base class has defined:
     // val features: Features
@@ -34,9 +35,22 @@ class LagrangianRelaxation(options: Map[Symbol, String], featureNames: List[Stri
 
     val labelConstraint = labelSet.toMap    // TODO: could change to array for speed
 
+    val stepStrategy : String = options.getOrElse('stage2LRStepStrategy, "constant")
+    val stepSize : Double = options.getOrElse('stage2LRStepSize, "1.0").toDouble
+    val maxIterations : Int = options.getOrElse('stage2LRIterations, "500").toInt
+
     def decode(input: Input) : DecoderResult = {
         alg2.input = input      // (this also sets features.input)
         var result = DecoderResult(Graph.Null(), FeatureVector(features.weights.labelset), 0.0)
+
+        val stepsizeMultiplier = if (stepStrategy == "adaptive" || stepStrategy == "adaptiveSqrtT") {
+            val graph = input.graph.get.duplicate       // duplicate is unnecessary, just a precaution
+            val nodes : List[Node] = graph.nodes.filter(_.name != None).toList
+            val graphObj = new GraphObj(graph, nodes.toArray, alg2.features)
+            max(graphObj.largestWeight, 1.0)    // we compute the largest weight before any Lagrange multipliers are set
+        } else {
+            1.0
+        }
 
         val multipliers = FeatureVector(features.weights.labelset)
         var delta = 0.0         // so we know when we have converged
@@ -59,6 +73,15 @@ class LagrangianRelaxation(options: Map[Symbol, String], featureNames: List[Stri
                 //logger(1, "labelIndex = "+labelIndex.toString)
                 //logger(1, "value = "+value.toString)
                 val multiplier : Double = multipliers(feat, Some(labelIndex))
+
+                val stepsize : Double = stepStrategy match {
+                    case "constant"          => stepSize
+                    case "sqrtT"             => stepSize / sqrt(counter + 1)
+                    case "adaptive"          => stepSize * stepsizeMultiplier
+                    case "adaptiveSqrtT"     => stepSize * stepsizeMultiplier / sqrt(counter + 1)
+                    case _                   => { assert(false, "Unknown stage2 LR step strategy: " + stepStrategy); 1.0 } 
+                }
+
                 val newMultiplier = max(0.0, multiplier - stepsize * (labelConstraint(features.weights.labelset(labelIndex)) - value))
                 //logger(1, "newMultiplier = "+newMultiplier)
                 delta += abs(newMultiplier - multiplier)
