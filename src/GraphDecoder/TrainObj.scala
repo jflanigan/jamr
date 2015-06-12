@@ -56,7 +56,7 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
         if (options.contains('stage2TrainPredictedConcepts)) {
             // Use stage1 output instead of the gold concepts during training
             val in = input(i)
-            val stage1Result = stage1.get.decode(in, Some(i))
+            val stage1Result = stage1.get.decode(in, Some(i))   // TODO: check if stage1-training-leave-one-out
             return new Input(Some(stage1Result.graph), in.sentence, in.notTokenized, in.dependencies, in.pos, in.ner, Some(i))
         } else {
             return Input(amrdata, input(i), i, oracle = false)
