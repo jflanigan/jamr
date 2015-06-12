@@ -26,3 +26,8 @@ Wed May 27
 - run SRL to help event concept id
 - parsed OntoNotes examples? look at possible roles and syntactic context 
 
+
+Thurs June 11
+- Fix ordering of NEs
+- Train stage2 w/ output of stage1 (w/ folds? or without)
+
