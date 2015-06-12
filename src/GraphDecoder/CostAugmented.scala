@@ -22,7 +22,8 @@ class CostAugmented(val decoder: Decoder, costScale: Double, precRecTradeoff: Do
     decoder.features.addFeatureFunction("CostAugEdge")
     decoder.features.addFeatureFunction("rootCostAug")
 
-    def decode(input: Input) : DecoderResult = {                        // WARNING: input should be same as input to oracle decoder
+    def decode(input: Input, conceptGraph: Option[Graph]) : DecoderResult = {                        // WARNING: input should be same as input to oracle decoder
+        // We have a separate input conceptGraph so that we can use predicted concepts instead of gold concepts
         val oracleDecoder = new Oracle(decoder.features.featureNames,   // "CostAugEdgeId" and "rootCostAug" already in featureNames
                                        decoder.features.weights.labelset)
         val oracle = oracleDecoder.decode(input)
@@ -47,9 +48,13 @@ class CostAugmented(val decoder: Decoder, costScale: Double, precRecTradeoff: Do
         //val result = decoder.decode(Input(input.inputAnnotatedSentence, input.graph.duplicate.clearEdges))
         // Instead we do this:
         val saveGraph = input.graph.get
-        input.graph = Some(saveGraph.duplicate.clearEdges)  // WARNING: this code should follow what AMRTrainingData.toInputGraph() does
-        input.graph.get.normalizeInverseRelations           // need to call this because clearEdges resets the edges
-        input.graph.get.addVariableToSpans                  // need to call this because clearEdges resets the variables
+        if (conceptGraph != None) {     // if we were not passed a concept graph, create one from the oracle
+            input.graph = Some(saveGraph.duplicate.clearEdges)  // WARNING: this code should follow what AMRTrainingData.toInputGraph() does
+            input.graph.get.normalizeInverseRelations           // need to call this because clearEdges resets the edges
+            input.graph.get.addVariableToSpans                  // need to call this because clearEdges resets the variables
+        } else {
+            input.graph = conceptGraph  // this is used to support training with predicted concepts instead of gold concepts
+        }
         val result = decoder.decode(input)
         input.graph = Some(saveGraph)
 

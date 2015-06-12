@@ -45,6 +45,15 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
 
     val outputFormat = options.getOrElse('outputFormat,"triples").split(",").toList
 
+    def getInputGraph(i: Int) : Graph = {
+        val amrdata = AMRTrainingData(training(i))
+        if (options.contains('stage2TrainPredictedConcepts) {
+            return blah
+        } else {
+            return Input(amrdata, input(i), i, oracle = false)
+        }
+    }
+
     def decode(i: Int, weights: FeatureVector) : (FeatureVector, Double, String) = {
         val decoder = Decoder(options)
         decoder.features.weights = weights
