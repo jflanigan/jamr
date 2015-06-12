@@ -27,7 +27,11 @@ Wed May 27
 - parsed OntoNotes examples? look at possible roles and syntactic context 
 
 
-Thurs June 11
+Wed June 10
 - Fix ordering of NEs
 - Train stage2 w/ output of stage1 (w/ folds? or without)
+
+Thurs June 11
+- Add regularizer
+- Try regular ramp (compare to infinite ramp)
 
