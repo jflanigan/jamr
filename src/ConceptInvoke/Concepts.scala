@@ -78,7 +78,7 @@ class Concepts(options: m.Map[Symbol, String],
         if (conceptSources.contains("DateExpr")) {
             conceptList = dateEntities(input, i) ::: conceptList
         }
-        var onlyPassThrough = conceptList.size == 0
+        var onlyPassThrough = conceptList.size == 0 // onlyPassThrough indicates the only the pass through rules apply for this span
         if (conceptSources.contains("OntoNotes")) {
             conceptList = ontoNotesLookup(input, i, onlyPassThrough) ::: conceptList
         }
@@ -117,18 +117,18 @@ class Concepts(options: m.Map[Symbol, String],
         return conceptSet.values.toList
     }
 
-    def ontoNotesLookup(input: Input, i: Int) : List[PhraseConceptPair] = {
+    def ontoNotesLookup(input: Input, i: Int, onlyPassThrough: Boolean) : List[PhraseConceptPair] = {
         val stems = Wordnet.stemmer(input.sentence(i))
         val concepts = stems.filter(stem => ontoNotes.contains(stem)).map(stem => PhraseConceptPair(
             List(input.sentence(i)),
             stem+"-01",         // first sense is most common
             FeatureVector(m.Map("OntoNotes" -> 1.0)),
             List()))
-        if (onlyPassThrough) { concepts.map(x => x.features.fmap("OntoNotesOnly")) }
+        if (onlyPassThrough) { concepts.map(x => x.features.fmap("OntoNotesOnly") = 1.0 ) }
         return concepts
     }
 
-    def NEPassThrough(input: Input, i: Int) : List[PhraseConceptPair] = {
+    def NEPassThrough(input: Input, i: Int, onlyPassThrough: Boolean) : List[PhraseConceptPair] = {
         // TOOD: improve this to check if the words were observed other places
         var concepts = List[PhraseConceptPair]()
         for { j <- Range(1,7)
@@ -141,20 +141,22 @@ class Concepts(options: m.Map[Symbol, String],
                 FeatureVector(m.Map("NEPassThrough" -> 1.0, "NEPassThrough_len" -> j)),
                 List()) :: concepts
         }
+        if (onlyPassThrough) { concepts.map(x => x.features.fmap("NEPassThroughOnly") = 1.0 ) }
         return concepts
     }
 
-    def passThrough(input: Input, i: Int, onlyPassThrough) : List[PhraseConceptPair] = {
+    def passThrough(input: Input, i: Int, onlyPassThrough: Boolean) : List[PhraseConceptPair] = {
         if(input.sentence(i).matches("[A-Za-z0-9]*")) {     // TODO: improve this regex
             List(PhraseConceptPair(
                 List(input.sentence(i)),
                 input.sentence(i),
-                FeatureVector(m.Map("PassThrough" -> 1.0, "PassThroughOnly" -> if(onlyPassThrough) { 1 } else { 0 } )),
+                FeatureVector(m.Map("PassThrough" -> 1.0,
+                                    "PassThroughOnly" -> (if(onlyPassThrough) { 1 } else { 0 }) )),
                 List()))
         } else { List() }
     }
 
-    def wordnetPassThrough(input: Input, i: Int) : List[PhraseConceptPair] = {
+    def wordnetPassThrough(input: Input, i: Int, onlyPassThrough: Boolean) : List[PhraseConceptPair] = {
         val word = input.sentence(i)
         val stems = Wordnet.stemmer(word)
         // TODO: add stems from large annotated corpus
@@ -162,12 +164,13 @@ class Concepts(options: m.Map[Symbol, String],
             List(PhraseConceptPair(
                 List(word),
                 stems.minBy(_.size),
-                FeatureVector(m.Map("WordnetPassThrough" -> 1.0)),
+                FeatureVector(m.Map("WordnetPassThrough" -> 1.0,
+                                    "WordnetPassThroughOnly" -> (if(onlyPassThrough) { 1 } else { 0 }) )),
                 List()))
         } else { List() }
     }
 
-    def verbs(input: Input, i: Int) : List[PhraseConceptPair] = {
+    def verbs(input: Input, i: Int, onlyPassThrough: Boolean) : List[PhraseConceptPair] = {
         var concepts = List[PhraseConceptPair]()
         val pos : Array[String] = input.pos.slice(i,i+1)    // NOTE: pos.slice is defined in Annotation.slice
         if (pos.size > 0 && pos(pos.size-1).startsWith("V")) {  // it's a verb
@@ -177,13 +180,14 @@ class Concepts(options: m.Map[Symbol, String],
             concepts = List(PhraseConceptPair(
                 List(word),
                 stem+"-00",     // 00 sense for missing predicates
-                FeatureVector(m.Map("AddedVerb" -> 1.0)),
+                FeatureVector(m.Map("AddedVerb" -> 1.0,
+                                    "AddedVerbOnly" -> (if(onlyPassThrough) { 1 } else { 0 }) )),
                 List()))
         }
         return concepts
     }
 
-    def nominalizations(input: Input, i: Int) : List[PhraseConceptPair] = {
+    def nominalizations(input: Input, i: Int, onlyPassThrough: Boolean) : List[PhraseConceptPair] = {
         // (no change) budget -> budget-01
 
         // (drop -e in predicate that ends in -ate) proliferate-01 -> proliferation, state-01 -> statement
