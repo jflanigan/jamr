@@ -40,6 +40,8 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             case "--stage1-phrase-counts" :: v :: l =>   parseOptions(map + ('stage1PhraseCounts -> v), l)
             case "--stage1-predicates" :: v :: l =>      parseOptions(map + ('stage1Predicates -> v), l)
             case "--stage2-decoder" :: value :: l =>     parseOptions(map + ('stage2Decoder -> value), l)
+            case "--stage2-approx-decoder" :: value ::l => parseOptions(map + ('stage2ApproxDecoder -> value), l)
+            case "--stage2-LR-iterations" :: value::l=>  parseOptions(map + ('stage2LRIterations -> value), l)
             case "--stage2-train" :: l =>                parseOptions(map + ('stage2Train -> "true"), l)
             case "--stage2-train-with-predicted-concepts"::l => parseOptions(map + ('stage2TrainPredictedConcepts -> "true"), l)
             case "--stage2-features" :: value :: l =>    parseOptions(map + ('stage2Features -> value), l)
@@ -49,6 +51,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             case "--training-loss" :: value :: l =>      parseOptions(map + ('trainingLoss -> value), l)
             case "--training-initial-weights"::value::l => parseOptions(map + ('trainingInitialWeights -> value), l)
             case "--training-cost-scale" :: value ::l => parseOptions(map + ('trainingCostScale -> value), l)
+            case "--training-stage2-oracle-decoder" :: value ::l => parseOptions(map + ('trainingStage2OracleDecoder -> value), l)
             case "--training-prec-recall" :: value::l => parseOptions(map + ('trainingPrecRecallTradeoff -> value), l)
             case "--training-l2-strength" :: value::l => parseOptions(map + ('trainingL2RegularizerStrength -> value), l)
             case "--training-optimizer" :: value :: l => parseOptions(map + ('trainingOptimizer -> value), l)
@@ -299,7 +302,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                     if (outputFormat.contains("root")) {
                         println(decoderResultGraph.printRoot)
                     }
-                    if (outputFormat.contains("edges") && decoderResultGraph.root.relations.size > 0) {
+                    if (outputFormat.contains("edges") && decoderResultGraph.root.children.size > 0) {
                         println(decoderResultGraph.printEdges.map(x => "# ::edge\t" + x).mkString("\n"))
                     }
                     if (outputFormat.contains("AMR")) {

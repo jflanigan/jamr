@@ -21,12 +21,16 @@ import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 import Double.{NegativeInfinity => minusInfty}
 
-class LagrangianRelaxation(featureNames: List[String], labelSet: Array[(String, Int)], stepsize: Double, maxIterations: Int)
+class LagrangianRelaxation(options: Map[Symbol, String], featureNames: List[String], labelSet: Array[(String, Int)], stepsize: Double, maxIterations: Int)
         extends Decoder {
     // Base class has defined:
     // val features: Features
     val alg2 = new Alg2("LRLabelWithId" :: featureNames, labelSet)
-    val features = alg2.features    // Set alg2 features same our features (so weights get updated during training)
+    options('stage2Decoder) = options.getOrElse('stage2ApproxDecoder, "Alg2")
+    val approxDecoder = Decoder(options)
+    options('stage2Decoder) = "LR"
+    var features = alg2.features    // Set alg2 features same our features (so weights get updated during training, features are updated during cost augmented and LR)
+    approxDecoder.features = alg2.features
 
     val labelConstraint = labelSet.toMap    // TODO: could change to array for speed
 
@@ -75,9 +79,13 @@ class LagrangianRelaxation(featureNames: List[String], labelSet: Array[(String, 
         } while (delta != 0.0 && counter < maxIterations)
 
         if (delta != 0.0) {
-            logger(0, "WARNING: Langrangian relaxation did not converge after "+counter.toString+" iterations. Delta = "+delta.toString)
+            logger(0, "WARNING: Lagrangian relaxation did not converge after "+counter.toString+" iterations. Delta = "+delta.toString)
+            if (options.contains('stage2ApproxDecoder)) {
+                logger(0, "Running approximate decoder " + options('stage2ApproxDecoder))
+                result = approxDecoder.decode(input)
+            }
         } else {
-            logger(0, "Langrangian relaxation converged after "+counter.toString+" iterations. Delta = "+delta.toString)
+            logger(0, "Lagrangian relaxation converged after "+counter.toString+" iterations. Delta = "+delta.toString)
         }
 
         val feats = result.features.filter(x => !x.startsWith("LR:Id1="))

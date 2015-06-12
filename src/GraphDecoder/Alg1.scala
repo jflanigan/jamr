@@ -24,7 +24,7 @@ import Double.{NegativeInfinity => minusInfty}
 class Alg1(featureNames: List[String], labelSet: Array[(String, Int)], connectedConstraint: String = "none") extends Decoder {
     // Base class has defined:
     // val features: Features
-    val features = new Features(featureNames, labelSet.map(_._1))
+    var features = new Features(featureNames, labelSet.map(_._1))
 
     def decode(input: Input) : DecoderResult = {
         // Assumes that Node.relations has been setup correctly for the graph fragments

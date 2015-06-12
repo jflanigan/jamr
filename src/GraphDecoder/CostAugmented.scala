@@ -18,7 +18,7 @@ import scala.collection.mutable.ArrayBuffer
 
 class CostAugmented(val decoder: Decoder, costScale: Double, precRecTradeoff: Double) extends Decoder {
     // precRecTradeoff: 1 = only prec errors, 0 = only recall errors
-    val features = decoder.features
+    var features = decoder.features
     decoder.features.addFeatureFunction("CostAugEdge")
     decoder.features.addFeatureFunction("rootCostAug")
 

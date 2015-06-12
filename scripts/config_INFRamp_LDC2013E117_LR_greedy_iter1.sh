@@ -20,7 +20,7 @@ export TRAIN_FILE="${JAMR_HOME}/data/LDC2013E117_DEFT_Phase_1_AMR_Annotation_R3/
 export DEV_FILE="${JAMR_HOME}/data/LDC2013E117_DEFT_Phase_1_AMR_Annotation_R3/data/deft-amr-release-r3-proxy.dev"
 export TEST_FILE="${JAMR_HOME}/data/LDC2013E117_DEFT_Phase_1_AMR_Annotation_R3/data/deft-amr-release-r3-proxy.test"
 
-export MODEL_DIR="${JAMR_HOME}/models/ACL2014_LDC2013E117"  # ideally keep this the same as the config_SOMETHING.sh
+export MODEL_DIR="${JAMR_HOME}/models/INFRamp_LDC2013E117_LR_greedy_iter1"  # ideally keep this the same as the config_SOMETHING.sh
 
 # The options specified below will override any options specified in the scripts
 # CONCEPT_ID_TRAINING_OPTIONS and RELATION_ID_TRAINING_OPTIONS will override PARSER_OPTIONS
@@ -30,6 +30,8 @@ export STAGE1_FEATURES="bias,length,fromNERTagger,conceptGivenPhrase"
 export PARSER_OPTIONS="
     --stage1-features ${STAGE1_FEATURES}
     --stage2-decoder LR
+    --stage2-LR-iterations 50
+    --stage2-approx-decoder Greedy
     --stage2-features rootConcept,rootDependencyPathv1,bias,typeBias,self,fragHead,edgeCount,distance,logDistance,posPathv3,dependencyPathv4,conceptBigram
     --stage2-labelset ${JAMR_HOME}/resources/labelset-r3
     --output-format AMR,nodes,edges,root
@@ -48,7 +50,8 @@ export CONCEPT_ID_TRAINING_OPTIONS="
 "
 
 export RELATION_ID_TRAINING_OPTIONS="
+    --training-loss Infinite_Ramp
     --training-optimizer Adagrad
-    --training-passes 10
+    --training-passes 1
     --training-save-interval 1
 "

@@ -2,24 +2,15 @@ package edu.cmu.lti.nlp.amr.GraphDecoder
 import edu.cmu.lti.nlp.amr._
 import edu.cmu.lti.nlp.amr.FastFeatureVector._
 
-import java.lang.Math.abs
-import java.lang.Math.log
-import java.lang.Math.exp
-import java.lang.Math.random
-import java.lang.Math.floor
-import java.lang.Math.min
-import java.lang.Math.max
-import scala.io.Source
-import scala.util.matching.Regex
-import scala.collection.mutable.Map
-import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.{mutable => m, immutable => i}  // m.Set, m.Map, i.Set, i.Map
 import scala.collection.mutable.PriorityQueue
 
-class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected: Boolean = true) extends Decoder {
+class Greedy(featureNames: List[String], labelSet: Array[(String, Int)]) extends Decoder {
     // Base class has defined:
     // val features: Features
     var features = new Features(featureNames, labelSet.map(_._1))
+    val labelConstraint = labelSet.toMap    // TODO: could change to array for speed
 
     private var inputSave: Input = _
     def input : Input = inputSave
@@ -94,14 +85,14 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
         // 'set' contains the index of the set that each node is assigned to
         // At the start each node is in its own set
         val set : Array[Int] = nodes.zipWithIndex.map(_._2)
-        val setArray : Array[Set[Int]] = nodes.zipWithIndex.map(x => Set(x._2))
-        def getSet(nodeIndex : Int) : Set[Int] = { setArray(set(nodeIndex)) }
+        val setArray : Array[m.Set[Int]] = nodes.zipWithIndex.map(x => m.Set(x._2))
+        def getSet(nodeIndex : Int) : m.Set[Int] = { setArray(set(nodeIndex)) }
 
         var score = 0.0
         var feats = new FeatureVector(features.weights.labelset)
         def addEdge(node1: Node, index1: Int, node2: Node, index2: Int, label: String, weight: Double, addRelation: Boolean = true) {
             if (!node1.relations.exists(x => ((x._1 == label) && (x._2.id == node2.id))) || !addRelation) { // Prevent adding an edge twice
-                //logger(1, "Adding edge ("+node1.concept+", "+label +", "+node2.concept + ") with weight "+weight.toString)
+                logger(1, "Adding edge ("+node1.concept+", "+label +", "+node2.concept + ") with weight "+weight.toString)
                 if (addRelation) {
                     node1.relations = (label, node2) :: node1.relations
                 }
@@ -113,10 +104,12 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
             //logger(2, "setArray = " + setArray.toList)
             if (set(index1) != set(index2)) {   // If different sets, then merge them
                 //logger(2, "Merging sets")
-                getSet(index1) ++= getSet(index2)
-                val set2 = getSet(index2)
+                val lower = min(index1, index2) // Merge into lower set, because we check set 0 to see if we're done
+                val upper = max(index1, index2)
+                getSet(lower) ++= getSet(upper)
+                val set2 = getSet(upper)
                 for (index <- set2) {
-                    set(index) = set(index1)
+                    set(index) = set(lower)
                 }
                 set2.clear()
             }
@@ -125,7 +118,7 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
             //logger(2, "setArray = " + setArray.toList)
         }
 
-        //logger(1, "Adding edges already there")
+        logger(1, "Adding edges already there")
         val nodeIds : Array[String] = nodes.map(_.id)
         for { (node1, index1) <- nodes.zipWithIndex
               (label, node2) <- node1.relations } {
@@ -145,7 +138,7 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
         //logger(2, "nodes = " + nodes.map(x => x.concept).toList)
         //logger(2, "setArray = " + setArray.toList)
 
-        //logger(1, "Adding positive edges")
+        //logger(1, "Creating neighbors array")
         val neighbors : Array[Array[(String, Double)]] = {
             for ((nodes2, index1) <- edgeWeights.zipWithIndex) yield {
                 //logger(2, "index1 = "+index1.toString)
@@ -160,79 +153,38 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
                     // but now with FastFeatureVector it is:
                     val (label, weight) = labelWeights.view.zipWithIndex.map(x => (x._1._1, x._1._2 + { val (f,v,_) = features.ffLRLabelWithId(node1, node2)(0); features.weights(f, Some(x._2)) * v.conjoined } )).maxBy(_._2)
                     //logger(2, "labelWeights = "+labelWeights.view.zipWithIndex.map(x => (x._1._1, x._1._2 + { val (f,v,_) = features.ffLRLabelWithId(node1, node2)(0); features.weights(f, Some(x._2)) * v.conjoined } )).toList)
-                    if (weight > 0) {   // Add if positive
-                        addEdge(node1, index1, node2, index2, label, weight)
-                    }
                     (label, weight)
                 }
             }
         }
 
-/* ******** This code used to support nonDistinctLabels ************
-        val neighbors : Array[Array[(String, Double)]] = {
-            for ((node1, index1) <- nodes.zipWithIndex) yield {
-                for ((node2, index2) <- nodes.zipWithIndex) yield {
-                    if (index1 == index2) {
-                        (":self", 0.0) // we won't add this to the queue anyway, so it's ok
-                    } else {
-                    val (label, weight) = distinctLabels.map(x => (x._1, features.localScore(node1, node2, x._1))).maxBy(_._2)
-                    //logger(2,"distinctLabels = "+distinctLabels.map(x => (x._1, features.localScore(node1, node2, x._1))).sortBy(-_._2).toList.take(5)+"...")
-                    //logger(2,"label = "+label)
-                    //logger(2,"weight = "+weight)
-                    val ndLabels = nonDistinctLabels.map(x => (x._1, features.localScore(node1, node2, x._1))).filter(x => x._2 > 0 && x._1 != label)
-                    //logger(2,"ndLabels = "+nonDistinctLabels.map(x => (x._1, features.localScore(node1, node2, x._1))))
-                    //logger(2,"ndLabels = "+ndLabels.toList)
-                    ndLabels.filter(_._2 > 0).map(x => addEdge(node1, index1, node2, index2, x._1, x._2))
-                    if (weight > 0) {   // Add all positive weights
-                        addEdge(node1, index1, node2, index2, label, weight)
-                    }
-                    if (ndLabels.size > 0) {
-                        val (label2, weight2) = ndLabels.maxBy(_._2)
-                        if (weight > weight2) {
-                            logger(1, "1neighbors("+node1.concept+","+node2.concept+")="+label)
-                            (label, weight)
-                        } else {
-                            logger(1, "2neighbors("+node1.concept+","+node2.concept+")="+label2)
-                            (label2, weight2)
-                        }
-                    } else {
-                        logger(1, "neighbors("+node1.concept+","+node2.concept+")="+label)
-                        logger(1, "neighbors("+index1.toString+","+index2.toString+")="+label+" "+weight.toString)
-                        (label, weight)
-                    }
-                    }
-                }
-            }
-        } ************************************************** */
-
         // Uncomment to print neighbors matrix
-        /* logger(1, "Neighbors matrix")
+        logger(1, "Neighbors matrix")
         for { (node1, index1) <- nodes.zipWithIndex
               ((label, weight), index2) <- neighbors(index1).zipWithIndex } {
             logger(1,"neighbors("+index1.toString+","+index2.toString+")="+label+" "+weight.toString)
-        } */
+        }
 
-        // Add negative weights to the queue
-        //logger(1, "Adding negative edges")
+        // Add all weights to the queue
         val queue = new PriorityQueue[(Double, Int, Int, String)]()(Ordering.by(x => x._1))
-        if (connected && set.size != 0 && getSet(0).size != nodes.size) {
+        if (set.size != 0 && getSet(0).size != nodes.size) {
             for { (node1, index1) <- nodes.zipWithIndex
                   ((label, weight), index2) <- neighbors(index1).zipWithIndex
-                  if index1 != index2 && weight <= 0 && set(index1) != set(index2) } {
+                  if set(index1) != set(index2) } {
                 queue.enqueue((weight, index1, index2, label))
             }
         }
 
-        // Kruskal's algorithm
-        if (connected) {    // if we need to produce a connected graph
-            //logger(1, "queue = " + queue.toString)
-            //logger(1, "set = " + set.toList)
-            //logger(1, "nodes = " + nodes.map(x => x.concept).toList)
-            //logger(1, "setArray = " + setArray.toList)
-            while (set.size != 0 && getSet(0).size != nodes.size) {
-                //logger(2, queue.toString)
-                val (weight, index1, index2, label) = queue.dequeue
-                if (set(index1) != set(index2)) {
+        // Greedy algorithm
+        logger(1, "queue = " + queue.toString)
+        logger(1, "set = " + set.toList)
+        logger(1, "nodes = " + nodes.map(x => x.concept).toList)
+        logger(1, "setArray = " + setArray.toList)
+        while (set.size != 0 && getSet(0).size != nodes.size) {
+            //logger(2, queue.toString)
+            val (weight, index1, index2, label) = queue.dequeue
+            if (set(index1) != set(index2) || weight > 0) {     // if positive, add it even if creates a re-entrancy
+                if (nodes(index1).relations.count(x => x._1 == label) < labelConstraint(label)) {
                     addEdge(nodes(index1), index1, nodes(index2), index2, label, weight)
                     //logger(2, "set = " + set.toList)
                     //logger(2, "getSet(0)" + getSet(0))
@@ -241,8 +193,8 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
         }
 
         //logger(1, "nodes = "+nodes.toList)
-        //logger(1, "Alg2 returning graph: ")
-        //logger(1, graph.printTriples(detail = 1)+"\n")
+        logger(1, "Greedy decoder returning graph: ")
+        logger(1, graph.printTriples(detail = 1)+"\n")
         if(nodes.size > 0) {
             if (features.rootFeatureFunctions.size != 0 && nodes.filter(node => !node.concept.startsWith("\"") && !node.concept.matches("[0-9].*")).size != 0) {
                 graph.root = nodes.filter(node => !node.concept.startsWith("\"") && !node.concept.matches("[0-9].*")).map(x => (x, features.rootScore(x))).maxBy(_._2)._1
@@ -254,14 +206,12 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
             score += features.rootScore(graph.root)
 
             nodes.map(node => { node.relations = node.relations.reverse })
-            if (connected) {
-                graph.makeTopologicalOrdering()
-            }
+            graph.makeTopologicalOrdering()
         } else {
             graph = Graph.AMREmpty()
         }
 
-        logger(1, "Alg2 returning score = " + score.toString)
+        logger(1, "Greedy decoder returning score = " + score.toString)
         return DecoderResult(graph, feats, score)
     }
 }
