@@ -27,7 +27,6 @@ class Concepts(options: m.Map[Symbol, String],
     *****************************************/
 
 
-
     val conceptTable: m.Map[String, List[PhraseConceptPair]] = m.Map()  // maps the first word in the phrase to a list of phraseConceptPairs
     for (pair <- phraseConceptPairs) {
         val word = pair.words(0)

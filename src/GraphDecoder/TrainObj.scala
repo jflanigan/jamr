@@ -37,6 +37,12 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
     val training: Array[String] = Corpus.getAMRBlocks(Source.stdin.getLines()).toArray
     def trainingSize = training.size
 
+    val stage1 = if (options.contains('stage2TrainPredictedConcepts)) {
+        Some(ConceptInvoke.Decoder(options, oracle = false))
+    } else {
+        None
+    }
+
     var optimizer = options.getOrElse('trainingOptimizer, "Adagrad") match {     // TODO: this should go back into Train/TrainObj
         case "SSGD" => new SSGD()
         case "Adagrad" => new Adagrad()
@@ -45,10 +51,13 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
 
     val outputFormat = options.getOrElse('outputFormat,"triples").split(",").toList
 
-    def getInputGraph(i: Int) : Input = {
+    def getInput(i: Int) : Input = {
         val amrdata = AMRTrainingData(training(i))
         if (options.contains('stage2TrainPredictedConcepts)) {
-            return Input(amrdata, input(i), i, oracle = false)
+            // Use stage1 output instead of the gold concepts during training
+            val in = input(i)
+            val stage1Result = stage1.get.decode(in, Some(i))
+            return new Input(Some(stage1Result.graph), in.sentence, in.notTokenized, in.dependencies, in.pos, in.ner, Some(i))
         } else {
             return Input(amrdata, input(i), i, oracle = false)
         }
@@ -57,11 +66,11 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
     def decode(i: Int, weights: FeatureVector) : (FeatureVector, Double, String) = {
         val decoder = Decoder(options)
         decoder.features.weights = weights
-        val amrdata1 = AMRTrainingData(training(i))
-        logger(0, "Sentence:\n"+amrdata1.sentence.mkString(" ")+"\n")
-        val result = decoder.decode(Input(amrdata1, input(i), i, oracle = false))
+        val amrdata = AMRTrainingData(training(i))
+        logger(0, "Sentence:\n"+amrdata.sentence.mkString(" ")+"\n")
+        val result = decoder.decode(getInput(i))
         logger(0, "Spans:")
-        for ((span, i) <- amrdata1.graph.spans.zipWithIndex) {
+        for ((span, i) <- result.graph.spans.zipWithIndex) {
             logger(0, "Span "+(i+1).toString+":  "+span.words+" => "+span.amr)
         }
         logger(0, "AMR:")
@@ -127,7 +136,8 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
 
         val amrdata1 = AMRTrainingData(training(i))
         logger(0, "Sentence:\n"+amrdata1.sentence.mkString(" ")+"\n")
-        val result = costAug.decode(Input(amrdata1, input(i), i, oracle = true))
+        val result = costAug.decode(Input(amrdata1, input(i), i, oracle = true),
+                                    if (options.contains('stage2TrainPredictedConcepts)) { getInput(i).graph } else { None } )
         logger(0, "Spans:")
         for ((span, i) <- amrdata1.graph.spans.zipWithIndex) {
             logger(0, "Span "+(i+1).toString+":  "+span.words+" => "+span.amr)

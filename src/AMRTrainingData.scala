@@ -11,7 +11,7 @@ import scala.collection.mutable.ArrayBuffer
 case class AMRTrainingData(sentence: Array[String], graph: Graph, spans: ArrayBuffer[String], annotators: ArrayBuffer[String], annotation_dates: ArrayBuffer[String], amrStr: String, extras: String) {
     def toInputGraph(): Graph = { // Input to stage 2
         // WARNING: this function modifies the graph
-        val annotationIndex = annotators.size - 1
+        val annotationIndex = annotators.size - 1   // use the last alignments listed (if there are multiple listed)
         logger(1,"Sentence = " + sentence.toList)
         logger(1,"span = " + spans(annotationIndex))
         graph.loadSpans(spans(annotationIndex), sentence)
@@ -24,7 +24,7 @@ case class AMRTrainingData(sentence: Array[String], graph: Graph, spans: ArrayBu
     }
     def toOracleGraph(clearUnalignedNodes : Boolean): Graph = { // Stage2 oracle
         // WARNING: this function modifies the graph
-        val annotationIndex = annotators.size - 1
+        val annotationIndex = annotators.size - 1   // use the last alignments listed (if there are multiple listed)
         graph.loadSpans(spans(annotationIndex), sentence)
         if (clearUnalignedNodes) {
             graph.clearUnalignedNodes
