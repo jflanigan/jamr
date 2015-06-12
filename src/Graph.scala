@@ -533,7 +533,7 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
 
     def assignOpN() {
         def numberOps(relations: List[(String, Node)]) : List[(String, Node)] = {
-            val ops = relations.filter(x => x._1 == ":op")
+            val ops = relations.filter(x => x._1 == ":op").reverse  // hack to get the right order  TODO: should do this properly
             val opNs = ops.sortBy(x => spans(x._2.spans(0)).start).zipWithIndex.map(x => (x._1._1 + (x._2+1).toString, x._1._2))
             val notOps = relations.filter(x => x._1 != ":op")
             return opNs ::: notOps
