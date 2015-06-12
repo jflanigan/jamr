@@ -22,7 +22,11 @@ class CostAugmented(val decoder: Decoder, costScale: Double, precRecTradeoff: Do
     decoder.features.addFeatureFunction("CostAugEdge")
     decoder.features.addFeatureFunction("rootCostAug")
 
-    def decode(input: Input, conceptGraph: Option[Graph]) : DecoderResult = {                        // WARNING: input should be same as input to oracle decoder
+    def decode(input: Input) : DecoderResult = {
+        return decode(input, None)
+    }
+
+    def decode(input: Input, conceptGraph: Option[Graph]) : DecoderResult = {        // WARNING: input should be same as input to oracle decoder
         // We have a separate input conceptGraph so that we can use predicted concepts instead of gold concepts
         val oracleDecoder = new Oracle(decoder.features.featureNames,   // "CostAugEdgeId" and "rootCostAug" already in featureNames
                                        decoder.features.weights.labelset)
