@@ -96,7 +96,7 @@ abstract class TrainObj[FeatureVector <: AbstractFeatureVector](options: Map[Sym
                 (grad, score - o._2)
             } else if (loss == "Infinite_Ramp" || loss == "Latent_Hinge") {    // I called this Latent_Hinge earlier
                 val (grad, score) = costAugmented(i, weights, scale)
-                val o = costAugmented(i, weights, -10000000.0)
+                val o = costAugmented(i, weights, -100000000000.0)
                 grad -= o._1
                 (grad, score - o._2)
             } else {
