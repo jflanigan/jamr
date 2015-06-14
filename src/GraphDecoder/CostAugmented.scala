@@ -52,7 +52,7 @@ class CostAugmented(val decoder: Decoder, costScale: Double, precRecTradeoff: Do
         //val result = decoder.decode(Input(input.inputAnnotatedSentence, input.graph.duplicate.clearEdges))
         // Instead we do this:
         val saveGraph = input.graph.get
-        if (conceptGraph != None) {     // if we were not passed a concept graph, create one from the oracle
+        if (conceptGraph == None) {     // if we were not passed a concept graph, create one from the oracle
             input.graph = Some(saveGraph.duplicate.clearEdges)  // WARNING: this code should follow what AMRTrainingData.toInputGraph() does
             input.graph.get.normalizeInverseRelations           // need to call this because clearEdges resets the edges
             input.graph.get.addVariableToSpans                  // need to call this because clearEdges resets the variables
