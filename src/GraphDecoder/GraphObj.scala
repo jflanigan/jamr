@@ -40,7 +40,14 @@ case class GraphObj(graph: Graph,
     val edgeWeights : Array[Array[Array[(String, Double)]]] = computeWeightMatrix
 
     def largestWeight : Double = {
-        val largest = edgeWeights.map(x => x.map(y => y.map(z => abs(z._2)).filter(z => z < 1000000000).max).max).max  // filter to less than 100000000 because we don't want to include infinite ramp weights
+        val largest = try {
+            edgeWeights.map(x => x.map(y => y.map(z => abs(z._2)).filter(z => z < 1000000000).max).max).max  // filter to less than 100000000 because we don't want to include infinite ramp weights
+        } catch {
+            case e: java.lang.UnsupportedOperationException => {
+                logger(0, "No largest weight.")
+                1.0  // if we are passed a graph with no edges or if no edges pass our filter
+            }
+        }
         logger(0, "Largest weight = " + largest)
         return largest
     }
