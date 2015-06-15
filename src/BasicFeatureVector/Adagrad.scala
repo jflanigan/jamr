@@ -23,13 +23,14 @@ class Adagrad extends Optimizer[FeatureVector] {
     def learnParameters(gradient: (Option[Int], Int, FeatureVector) => (FeatureVector, Double),
                         weights: FeatureVector,
                         trainingSize: Int,
-                        noreg: List[String],    // TODO: implement
+                        noreg: List[String],    // TODO: change to set
                         trainingObserver: (Int, FeatureVector) => Boolean,
                         options: Map[Symbol, String]) : FeatureVector = {
         val passes = options('trainingPasses).toInt
         val stepsize = options('trainingStepsize).toDouble
         val l2reg = options('trainingL2RegularizerStrength).toDouble
         val avg = options.contains('trainingAvgWeights)
+        val noReg = noreg.toSet
 
         var avg_weights = FeatureVector()
         var sumSq = FeatureVector()         // G_{i,i}
@@ -49,7 +50,7 @@ class Adagrad extends Optimizer[FeatureVector] {
                 if (l2reg != 0.0) {
                     objective += weights.dot(weights) / (2.0 * trainingSize)   // TODO: don't count the unregularized features in the regularizer
                     for { (feat, v) <- weights.fmap
-                          if v != 0.0
+                          if v != 0.0 && !noReg.contains(feat)
                           value = v * l2reg } {
                         //sumSq.fmap(feat) = sumSq.fmap.getOrElse(feat, 0.0) + value * value
                         weights.fmap(feat) = weights.fmap.getOrElse(feat, 0.0) - stepsize * value / (sqrt(sumSq.fmap(feat)) * trainingSize)

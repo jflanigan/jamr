@@ -129,7 +129,7 @@ abstract class TrainObj[FeatureVector <: AbstractFeatureVector](options: Map[Sym
             (i,w) => gradient(i,w),
             initialWeights,
             trainingSize,
-            List("Bias"),   // don't regularize the bias terms
+            List("Bias","bias"),   // don't regularize the bias terms
             trainingObserver,
             options)
 
