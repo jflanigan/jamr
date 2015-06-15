@@ -47,12 +47,12 @@ class Adagrad extends Optimizer[FeatureVector] {
                 }
                 objective += score
                 if (l2reg != 0.0) {
-                    objective += weights.dot(weights) / 2.0   // TODO: don't count the unregularized features in the regularizer
+                    objective += weights.dot(weights) / (2.0 * trainingSize)   // TODO: don't count the unregularized features in the regularizer
                     for { (feat, v) <- weights.fmap
                           if v != 0.0
                           value = v * l2reg } {
-                        sumSq.fmap(feat) = sumSq.fmap.getOrElse(feat, 0.0) + value * value
-                        weights.fmap(feat) = weights.fmap.getOrElse(feat, 0.0) - stepsize * value / sqrt(sumSq.fmap(feat))
+                        //sumSq.fmap(feat) = sumSq.fmap.getOrElse(feat, 0.0) + value * value
+                        weights.fmap(feat) = weights.fmap.getOrElse(feat, 0.0) - stepsize * value / (sqrt(sumSq.fmap(feat)) * trainingSize)
                     }
                 }
             }
