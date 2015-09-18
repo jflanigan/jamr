@@ -11,3 +11,4 @@
 # IntelliJ cruft
 .idea
 *.iml
+.history
