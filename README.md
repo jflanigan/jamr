@@ -76,7 +76,7 @@ is listed in the following table:
 
 | Dataset | Date released | Size (# sents) | Script to run   | File to move to `data/` |
 | --- | ---- | ---- | ---- | --- |
-| LDC2015E86 (SemEval 2016 Task 8 data)   | August 31, 2015     | 19,572     | `scripts/train__LDC2015E86.sh` | `LDC2015E86_DEFT_Phase_2_AMR_Annotation_R1.tgz` |
+| LDC2015E86 (SemEval 2016 Task 8 data)   | August 31, 2015     | 19,572     | `scripts/train_LDC2015E86.sh` | `LDC2015E86_DEFT_Phase_2_AMR_Annotation_R1.tgz` |
 | [LDC2014T12](https://catalog.ldc.upenn.edu/LDC2014T12) | June 16, 2014 | 13,051 | `scripts/train_LDC2014T12.sh`    | `amr_anno_1.0_LDC2014T12.tgz` |
 | LDC2014E41 | May 30, 2014 | 18,779 | `scripts/train_LDC2014E41.sh`    | `LDC2014E41_DEFT_Phase_1_AMR_Annotation_R4.tgz`  |
 | LDC2013E117 (Proxy only) | October 14, 2013 | 8,219 | `scripts/train_LDC2013E117.sh` | `LDC2013E117.tgz` |
