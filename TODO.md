@@ -16,10 +16,11 @@ TODO
  - Gigaword LM
  - N-best synthetic rules
  - Baseline for generating tree
- - Morph analyse gigaword (and pos tag it), and use it to generate possible concept realizations.
+ - Morph analyse gigaword (and pos tag it), and use it to generate possible concept realizations with pos tags.
  - Greedy aligments for data
  - Make sentence grammars faster (parallel, filter amr frags, etc)
  - Do error analysis
  - Add state (pos features?)
  - Lowercase? remove the, a?
  - Try on LDC2014T12
+ - Better worst case guess pass through rules (ones without a realization at all). Use synthetic model without POS, or abstract rules without POS.  Never back off to lexicographically sorted children.  Ties into using a morph analysed gigaword.
