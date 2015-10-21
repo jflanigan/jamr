@@ -22,3 +22,4 @@ TODO
  - Do error analysis
  - Add state (pos features?)
  - Lowercase? remove the, a?
+ - Try on LDC2014T12
