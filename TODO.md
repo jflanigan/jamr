@@ -22,4 +22,3 @@ TODO
  - Do error analysis
  - Add state (pos features?)
  - Lowercase? remove the, a?
- - Oct 21, 2015 (back to the future day): Add phrase-concept pairs for all alignments, even if finding the tree fails
