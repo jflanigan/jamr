@@ -78,7 +78,7 @@ is listed in the following table:
 | LDC2013E117 (Proxy only) | October 14, 2013 | 8,219 | `scripts/train_LDC2013E117.sh` | `LDC2013E117.tgz` |
 | [AMR Bank v1.4](http://amr.isi.edu/download.html) | November 14, 2014 | 1,562 | `scripts/train_Little_Prince.sh` | (automatically downloaded)   |
 
-For LDC2013E117 or LDC2014E41, you will need a license for LDC DEFT project data. The trained model will go into a subdirectory of `models/` and the evaulation results will be printed and saved to
+For LDC2013E117 or LDC2014E41, you will need a license for LDC DEFT project data. The trained model will go into a subdirectory of `models/` and the evaluation results will be printed and saved to
 `models/directory/RESULTS.txt`.  The performance of the parser on the various datasets is in [docs/Parser
 Performance](docs/Parser_Performance.md).
 
