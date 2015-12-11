@@ -286,10 +286,18 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
                 // concept has no realization
                 // TODO: change to passThroughRealizations
                 val event = node.concept.matches(""".*-[0-9][0-9]""")
+                logger(0, "Adding abstract pass through rule for "+node.concept)
+                logger(0, "node.children.size = " + node.children.size)
+                logger(0, "node.children = " + node.children.map(x => x._1))
                 val pos = if (event) { "VBN" } else { "NN" }
-                val abstractSignature : String = if (event) { "EVENT " } else { "NONEVENT " } + node.children.map(x => x._1).sorted.mkString(" ")
+                val abstractSignature : String = (if (event) { "EVENT " } else { "NONEVENT " }) + node.children.map(x => x._1).sorted.mkString(" ")
+                logger(0, "abstractSignature = "+abstractSignature)
                 if (abstractRules.map.contains(abstractSignature)) {
                     val abstractRule : Rule = abstractRules.map(abstractSignature).maxBy(_._2)._1   // use most common abstract rule
+                    val rule = Rule(abstractRule.argRealizations,
+                               ConceptInfo(PhraseConceptPair(dropSense(node.concept), node.concept, pos, pos), abstractRule.concept.position), "", "")
+                    logger(0, "rule = " + rule.toString)
+                    logger(0, "ruleCFG = " + rule.mkRule(withArgLabel=false))
                     List((Rule(abstractRule.argRealizations,
                                ConceptInfo(PhraseConceptPair(dropSense(node.concept), node.concept, pos, pos), abstractRule.concept.position), "", ""),
                         FeatureVector(Map("passthrough" -> 1.0, "abstractPassThrough" -> 1.0))))
