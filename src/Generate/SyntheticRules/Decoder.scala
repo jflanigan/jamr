@@ -23,7 +23,7 @@ class Decoder(val ruleInventory: RuleInventory) {
         var bestRule : Option[Array[Arg]] = None
         var bestScore : Option[Double] = None
         for ((phrase, children, phraseFeatures) <- getRealizations(input.node)) {
-            if (children.exists(x => !x.startsWith(":op")) || children.size == 0) {   // Pure op rules we ignore (handled with rule-based system)
+            if ((children.exists(x => !x.startsWith(":op")) || children.size == 0) && children.size < 6) {   // Pure op rules we ignore (handled with rule-based system)
                 val DecoderResult((rule, feats), _, _) = decode(phrase, children, input)
                 feats += phraseFeatures
                 feats += FeatureVector(Map("naanStopCount" -> rule.nonStopwordCount))
