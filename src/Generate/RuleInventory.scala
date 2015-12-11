@@ -191,7 +191,7 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
             conceptArgsLeft((concept,pos,arg)).toArray
         } else {
             //logger(0, "Can't find " + (concept, pos, arg).toString + " in conceptArgsLeft. Returning full list for the pos.")
-            argsLeft.getOrElse((pos,arg), Array(Arg.Default(arg)))   // TODO: filter to most common args
+            argsLeft.getOrElse((pos,arg), Array(Arg.Default(arg)))   // createArgs filters to most common 20 args
         }
     }
 
@@ -203,7 +203,7 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
             conceptArgsRight((concept,pos,arg)).toArray
         } else {
             //logger(0, "Can't find " + (concept, pos, arg).toString + " in conceptArgsRight. Returning full list for the pos.")
-            argsRight.getOrElse((pos,arg), Array(Arg.Default(arg)))  // TODO: filter to most common args
+            argsRight.getOrElse((pos,arg), Array(Arg.Default(arg)))  // createArgs filters to most common 20 args
         }
     }
 

@@ -71,6 +71,8 @@ object SentenceLevelGrammars {
                 for (node <- graph.nodes) {
                     val corpusRules : List[(Rule, FeatureVector)] = ruleInventory.getRules(node)
                     logger(0, "concept = " + node.concept)
+                    logger(0, "num children = " + node.children.size)
+                    logger(0, "children = " + node.children.map(x => x._1).mkString(" "))
                     logger(0, "corpusRules.size = " + corpusRules.size)
                     //logger(0, "corpusRules = \n"+corpusRules.map(x => x._1.mkRule + " ||| " + x._2.toCdecFormat).mkString("\n"))
                     val passThroughRules : List[(Rule, FeatureVector)] = ruleInventory.passThroughRules(node)
