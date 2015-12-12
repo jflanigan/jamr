@@ -133,7 +133,8 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
     }
 
     def getRealizations(node: Node) : List[(PhraseConceptPair, List[String], FeatureVector)] = {   // phrase, arg labels of children not consumed
-        (for ((phrase, phraseCount) <- phraseTable.map.getOrElse(conceptKey(node.concept), Map())) yield {
+        (for { (phrase, phraseCount) <- phraseTable.map.getOrElse(conceptKey(node.concept), Map()) if phrase.matches(node)
+                } yield {
             val conceptCount = conceptCounts.map.getOrElse(conceptKey(node.concept), Map()).map(x => x._2).sum.toDouble
             val feats = new FeatureVector(Map(
                 "pGc" -> log(phraseCount / conceptCount)

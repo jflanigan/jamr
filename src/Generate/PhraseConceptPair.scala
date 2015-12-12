@@ -30,6 +30,9 @@ case class PhraseConceptPair(words: String, graphFrag: String, fullPos: String, 
         return Graph.parse(graphFrag).root
     }
     lazy val concept : String = amrInstance.concept
+    def matches(amr: Node) : Boolean = {    // returns if the concept fragment could match the amr (but the amr may have extra children)
+        return PhraseConceptPair.matches(amrInstance, amr)
+    }
 }
 
 object PhraseConceptPair {
@@ -47,6 +50,54 @@ object PhraseConceptPair {
         val regex = """(.*) \|\|\| (.*) \|\|\| ([^\|]*) \|\|\| ([^|]*)""".r
         val regex(graphFrag, words, fullPos, headPos) = string
         return PhraseConceptPair(words, graphFrag, fullPos, headPos)
+    }
+
+    def matches(rule: Node, amr: Node) : Boolean = {    // doesn't care if there are extra children in amr
+        if (rule.concept != amr.concept) {  // concepts don't match
+            return false
+        }
+        var ruleChildren : List[(String, Node)] = rule.children
+        var amrChildren : Array[((String, Node), Boolean)] = amr.children.map(x => (x, false)).toArray
+        var matching = true
+        for ((ruleRelation, ruleChild) <- ruleChildren) {
+            var foundMatch = false
+            for { (((amrRelation, amrChild), used), i) <- amrChildren.zipWithIndex
+                  if (ruleRelation == amrRelation && !foundMatch && !used)
+                    } {
+                if (matchesExactly(ruleChild, amrChild)) {
+                    amrChildren(i) = ((amrRelation, amrChild), true)    // mark this child as matched (used)
+                    foundMatch = true    // break loop and indicate we have found a match
+                }
+            }
+            if (!foundMatch) {
+                matching = false    // there's a child that doesn't match
+            }
+        }
+        return matching
+    }
+
+    def matchesExactly(rule: Node, amr: Node) : Boolean = {     // doesn't allow extra children in amr
+        if (rule.concept != amr.concept) {  // concepts don't match
+            return false
+        }
+        var ruleChildren : List[(String, Node)] = rule.children
+        var amrChildren : Array[((String, Node), Boolean)] = amr.children.map(x => (x, false)).toArray
+        var matching = true
+        for ((ruleRelation, ruleChild) <- ruleChildren) {
+            var foundMatch = false
+            for { (((amrRelation, amrChild), used), i) <- amrChildren.zipWithIndex
+                  if (ruleRelation == amrRelation && !foundMatch && !used)
+                    } {
+                if (matches(ruleChild, amrChild)) {
+                    amrChildren(i) = ((amrRelation, amrChild), true)    // mark this child as matched (used)
+                    foundMatch = true    // break loop and indicate we have found a match
+                }
+            }
+            if (!foundMatch) {
+                matching = false    // there's a child that doesn't match
+            }
+        }
+        return matching && (amrChildren :\ true)((x, result) => x._2 && result)
     }
 }
 
