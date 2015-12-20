@@ -88,7 +88,7 @@ object PhraseConceptPair {
             for { (((amrRelation, amrChild), used), i) <- amrChildren.zipWithIndex
                   if (ruleRelation == amrRelation && !foundMatch && !used)
                     } {
-                if (matches(ruleChild, amrChild)) {
+                if (matchesExactly(ruleChild, amrChild)) {
                     amrChildren(i) = ((amrRelation, amrChild), true)    // mark this child as matched (used)
                     foundMatch = true    // break loop and indicate we have found a match
                 }
