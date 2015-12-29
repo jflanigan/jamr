@@ -1,0 +1,56 @@
+will
+that
+at
+of
+by
+for
+in
+is
+'s
+has
+been
+from
+by
+on
+as
+with
+was
+to
+would
+if
+be
+had
+could
+may
+out
+which
+has been
+there
+when
+did
+were
+was
+is
+are
+does
+against
+
+
+can be deleted:
+they
+
+gray areas:
+likely
+such
+down
+can
+made
+prove
+despite
+
+
+
+(remove duplicates, as in 'in emtac in the' -> in)
+'will be earmarked for'
+back    back-01 ||| backing ||| VBG ||| VBG ||| 1 ||| |:ARG1|are receiving,from the|:ARG0| |||  |||     1
+

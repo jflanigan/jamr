@@ -1,0 +1,15 @@
+abstractPassThrough
+andPassthrough
+corpus
+deletableConcept
+eventConceptNoChildrenPassThrough
+nameDelete
+nonEventConceptNoChildrenPassThrough
+numberPassThrough
+passthrough
+r|c
+stringPassThrough
+synthetic
+syntheticNoArgs
+syntheticScore
+withChildrenPassThrough
