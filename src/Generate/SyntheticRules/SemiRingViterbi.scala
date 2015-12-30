@@ -8,7 +8,7 @@ import scala.reflect.ClassTag
 
 /******************************** Viterbi Decoder *******************************/
 
-object KBestViterbi {
+object SemiRingViterbi {
     private case class State(prev: Int, cur: Int, i: Int)
 
     def decode[T:ClassTag](tags: Array[Array[T]],
@@ -47,7 +47,9 @@ object KBestViterbi {
         //   length: the length of the input (INCLUDING start and stop padding)
         //   localScore: State(prevState, curState, position) => transition weight (log prob)
         //   tags: position => number of tags
-        // returns (tag_sequence, score) where tag_sequence.size = length
+        //   SemiRingIdentity: identity of the semiring
+        //   SemiRingElem: constructs a semiring element from a tag (Int) and a score (Double)
+        // returns the Viterbi semiring element
         assert(length > 2, "Length must be greater than 2")
         assert(tags(0) == 1, "There must be a single start tag")
         assert(tags(length-1) == 1, "There must be a single stop tag")
