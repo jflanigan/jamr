@@ -45,7 +45,7 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
         decoder.weights = weights
         val (rule, input) = training(i)
         logger(0, "-- Prediction --")
-        val result = decoder.decode(rule.concept.realization, rule.args, input)
+        val result = decoder.decode(rule.concept.realization, rule.args, input, 1).head
         logger(0, "Result:            "+result.rule)
         (result.features, result.score, "")
     }

@@ -24,6 +24,7 @@ object SentenceLevelGrammars {
             case "--weights" :: value :: l =>            parseOptions(map + ('weights -> value), l)
             case "--dev" :: l =>                         parseOptions(map + ('dev -> "true"), l)
             case "--rule-inventory" :: value :: l =>     parseOptions(map + ('ruleInventory -> value), l)
+            case "--kbest" :: value :: l =>              parseOptions(map + ('kbest -> value), l)
             case "--drop-sense-tags" :: l =>             parseOptions(map + ('dropSenseTags -> "true"), l)
             case "--output" :: value :: l =>             parseOptions(map + ('output -> value), l)
             case "--dependencies" :: value :: tail =>    parseOptions(map + ('dependencies -> value), tail)
@@ -55,6 +56,8 @@ object SentenceLevelGrammars {
         val ruleModel = new SyntheticRules.Decoder(ruleInventory)
         ruleModel.weights.read(Source.fromFile(options('weights)).getLines)
 
+        val kbest = options.getOrElse('kbest,"1").toInt
+
         var i = 0
         for (block <- Corpus.getAMRBlocks(Source.stdin.getLines)) {
             logger(0,"**** Processing Block *****")
@@ -78,7 +81,7 @@ object SentenceLevelGrammars {
                     val passThroughRules : List[(Rule, FeatureVector)] = ruleInventory.passThroughRules(node)
                     logger(0, "passThroughRules.size = " + passThroughRules.size)
                     //logger(0, "passThroughRules = \n"+passThroughRules.map(x => x._1.mkRule + " ||| " + x._2.toCdecFormat).mkString("\n"))
-                    val syntheticRules : List[(Rule, FeatureVector)] = ruleModel.syntheticRules(SyntheticRules.Input(node, graph))
+                    val syntheticRules : List[(Rule, FeatureVector)] = ruleModel.syntheticRules(SyntheticRules.Input(node, graph), kbest)
                     logger(0, "syntheticRules.size = " + syntheticRules.size)
                     //logger(0, "syntheticRules = \n"+syntheticRules.map(x => x._1.mkRule + " ||| " + x._2.toCdecFormat).mkString("\n"))
                     for (rule <- corpusRules ::: passThroughRules ::: syntheticRules) {

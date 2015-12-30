@@ -23,9 +23,9 @@ object SemiRingViterbi {
         return (resultTags, result.score)
     }
 
-    def decodeKBest[T:ClassTag](tags: Array[Array[T]],
-                                localScore: (T,T,Int) => Double,
-                                k: Int) : List[(List[T], Double)] = {
+    def kbest[T:ClassTag](tags: Array[Array[T]],
+                          localScore: (T,T,Int) => Double,
+                          k: Int) : List[(List[T], Double)] = {
         // for why ClassTag is needed, see http://stackoverflow.com/questions/16921168/scala-generic-method-no-classtag-available-for-t
         def score(state: State) : Double = {
             val i = state.i

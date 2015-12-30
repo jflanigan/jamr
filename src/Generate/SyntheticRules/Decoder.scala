@@ -17,27 +17,28 @@ class Decoder(val ruleInventory: RuleInventory) {
     val argOnLeft = ruleInventory.argOnLeft _
     val argOnRight = ruleInventory.argOnRight _
 
-    def syntheticRules(input: Input) : List[(Rule, FeatureVector)] = {
+    def syntheticRules(input: Input, k: Int) : List[(Rule, FeatureVector)] = {
         // Returns a rule for every concept realization
         var rules : List[(Rule, FeatureVector)] = List()
         var bestRule : Option[Array[Arg]] = None
         var bestScore : Option[Double] = None
         for ((phrase, children, phraseFeatures) <- getRealizations(input.node)) {
             if ((children.exists(x => !x.startsWith(":op")) || children.size == 0) && children.size < 6) {   // Pure op rules we ignore (handled with rule-based system)
-                val DecoderResult((rule, feats), _, _) = decode(phrase, children, input)
-                feats += phraseFeatures
-                feats += FeatureVector(Map("naanStopCount" -> rule.nonStopwordCount))
-                rules = (rule, feats) :: rules
+                for { DecoderResult((rule, feats), _, _) <- decode(phrase, children, input, k) } {
+                    feats += phraseFeatures
+                    feats += FeatureVector(Map("naanStopCount" -> rule.nonStopwordCount))
+                    rules = (rule, feats) :: rules
+                }
             }
         }
         return rules
     }
 
-    def decode(conceptRealization: PhraseConceptPair, args: List[String], input: Input) : DecoderResult = {
+    def decode(conceptRealization: PhraseConceptPair, args: List[String], input: Input, k: Int) : List[DecoderResult] = {
         if (args.size == 0) {
             val rule = Rule(List(), ConceptInfo(conceptRealization, 0), "", "")
             val feats = oracle(rule, input)
-            return DecoderResult((rule, FeatureVector(Map("syntheticNoArgs" -> 1.0))), feats, weights.dot(feats))
+            return List(DecoderResult((rule, FeatureVector(Map("syntheticNoArgs" -> 1.0))), feats, weights.dot(feats)))
         }
         logger(1, "conceptRealization: "+conceptRealization.toString)
         logger(1, "args: "+args.toString)
@@ -61,7 +62,7 @@ class Decoder(val ruleInventory: RuleInventory) {
         }
         logger(1, "")
         val numArgs = children.size
-        var bestResult : Option[DecoderResult] = None
+        var kbest : List[DecoderResult] = List()
         def permutationOk(argsLeft: List[String], argsRight: List[String]) : Boolean = {
             // permutation is ok if we've seen the args on that side in the rule inventory
             !argsLeft.contains((arg: String) => !argOnLeft(conceptRealization, arg)) && !argsRight.contains((arg: String) => !argOnRight(conceptRealization, arg))
@@ -82,18 +83,33 @@ class Decoder(val ruleInventory: RuleInventory) {
                 for (list <- tagList) {
                     logger(1, list.map(x => x.toString).toList.toString)
                 }
-                val result = decode(tagList, conceptInfo, input)
-                logger(1, "Score = " + result.score + " Result = "+result.rule.toString)
-                if (bestResult == None || result.score > bestResult.get.score) {
-                    bestResult = Some(result)
+                val results = decode(tagList, conceptInfo, input, k)
+                var list1 = kbest
+                var list2 = results
+                var j = 0
+                kbest = List()
+                while (j < k) {
+                    if (list1.head.score > list2.head.score) {
+                        kbest = list1.head :: kbest
+                        list1 = list1.tail
+                    } else {
+                        kbest = list2.head :: kbest
+                        list2 = list2.tail
+                    }
+                    j += 1
                 }
+                kbest = kbest.reverse
+                //logger(1, "Score = " + result.score + " Result = "+result.rule.toString)
+                //if (bestResult == None || result.score > bestResult.get.score) {
+                //    bestResult = Some(result)
+                //}
             }
         }
         //logger(0, "Result: "+bestResult.get.rule)
-        return bestResult.get
+        return kbest
     }
 
-    def decode(tagList: List[Array[Arg]], conceptInfo: ConceptInfo, input: Input) : DecoderResult = {
+    def decode(tagList: List[Array[Arg]], conceptInfo: ConceptInfo, input: Input, k: Int) : List[DecoderResult] = {
         // TODO: the code below has some slow copying, maybe change so it's faster (still will be O(n) though)
         val tags : Array[Array[Arg]] = (Array(Arg.START) :: tagList ::: List(Array(Arg.STOP))).toArray
         assert(!tagList.map(x => x.size).contains(0), "Uh-oh, we were given an empty set for the possible tags for an arg.")
@@ -111,19 +127,22 @@ class Decoder(val ruleInventory: RuleInventory) {
             weights.dot(localFeatures(prev, cur, i, adjustedConcept, input))
         }
 
-        val (resultTags, score) = Viterbi.decode(tags, localScore _)
-        logger(1, "resultTags: " + resultTags)
-        val rule = Rule(resultTags.slice(1,adjustedConcept.position) ::: resultTags.slice(adjustedConcept.position+1,tags.size-1), conceptInfo, "", "")
-        val feats = oracle(rule, input)
-        //logger(1, "Decoder returning score: " + weights.dot(feats))
-        logger(1, "Viterbi score: "+ score)
-        if (java.lang.Math.abs(score - weights.dot(feats)) > .001) {
-            logger(0, "***** Internal inconsistancy in synthetic rule model *****")
-            logger(0, "score = " + score)
-            logger(0, "weights.dot(feats) = " + weights.dot(feats))
+        val kbest : List[DecoderResult] =
+            for { (resultTags, score) <- SemiRingViterbi.kbest(tags, localScore _, k) } yield {
+                logger(1, "resultTags: " + resultTags)
+                val rule = Rule(resultTags.slice(1,adjustedConcept.position) ::: resultTags.slice(adjustedConcept.position+1,tags.size-1), conceptInfo, "", "")
+                val feats = oracle(rule, input)
+                //logger(1, "Decoder returning score: " + weights.dot(feats))
+                logger(1, "Viterbi score: "+ score)
+                if (java.lang.Math.abs(score - weights.dot(feats)) > .001) {
+                    logger(0, "***** Internal inconsistancy in synthetic rule model *****")
+                    logger(0, "score = " + score)
+                    logger(0, "weights.dot(feats) = " + weights.dot(feats))
+                }
+                val ruleFeats = FeatureVector(Map("synthetic" -> 1.0, "syntheticScore" -> score))
+                DecoderResult((rule, ruleFeats), feats, score)
         }
-        val ruleFeats = FeatureVector(Map("synthetic" -> 1.0, "syntheticScore" -> score))
-        return DecoderResult((rule, ruleFeats), feats, score)
+        return kbest
     }
 
     def oracle(rule: Rule, input: Input) : FeatureVector = {
