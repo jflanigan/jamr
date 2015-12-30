@@ -18,7 +18,7 @@ object SemiRingViterbi {
             val i = state.i
             localScore(tags(i-1)(state.prev), tags(i)(state.cur), i)
         }
-        val result : Tropical[Int] = decode[Tropical[Int]](tags.size, score _, (i: Int) => tags(i).size, Tropical.Identity[Int], Tropical[Int] _)
+        val result : Tropical[Int] = decode[Tropical[Int]](tags.size, score _, (i: Int) => tags(i).size, Tropical.Identity[Int], Tropical.make[Int] _)
         val resultTags : List[T] = result.path.zipWithIndex.map(x => tags(x._2)(x._1))
         return (resultTags, result.score)
     }
@@ -33,8 +33,14 @@ object SemiRingViterbi {
         }
         val kBest : List[(List[T], Double)] =
             for { result <- decode[KBest[Int]](tags.size, score _, (i: Int) => tags(i).size, KBest.Identity[Int](k), KBest[Int](k) _).kbest
-                  resultTags : List[T] = result.path.zipWithIndex.map(x => tags(x._2)(x._1))
-                } yield (resultTags, result.score)
+                } yield {
+                    val resultTags : List[T] = result.path.zipWithIndex.map(x => tags(x._2)(x._1))
+                    logger(0, "resultTags.size = " + resultTags.size.toString)
+                    logger(0, "tags.size = " + tags.size.toString)
+                    logger(0, "resultTags = " + resultTags.toList)
+                    logger(0, "tag sizes = " + tags.map(x => x.size).toList)
+                    (resultTags, result.score)
+            }
         return kBest
     }
 
@@ -50,6 +56,7 @@ object SemiRingViterbi {
         //   SemiRingIdentity: identity of the semiring
         //   SemiRingElem: constructs a semiring element from a tag (Int) and a score (Double)
         // returns the Viterbi semiring element
+        logger(0, "length = " + length.toString)
         assert(length > 2, "Length must be greater than 2")
         assert(tags(0) == 1, "There must be a single start tag")
         assert(tags(length-1) == 1, "There must be a single stop tag")
@@ -64,7 +71,10 @@ object SemiRingViterbi {
         }
 
         // Initialize (t = 0)
-        viterbi(0) = Array(SemiRingElem(0, 0.0))
+        viterbi(0) = new Array(1)
+        viterbi(0)(0) = SemiRingIdentity
+        logger(0, "viterbi(0) = "+viterbi(0).toList)
+        //viterbi(0) = Array(SemiRingIdentity)
 
         // Recursive
         for (t <- Range(1, T-1)) {
@@ -72,11 +82,12 @@ object SemiRingViterbi {
             for (s <- Range(0, tags(t))) {
                 viterbi(t)(s) = max_prev(t, s)
             }
+            logger(0, "viterbi("+t+") = "+viterbi(t).toList)
         }
         // Termination
-        viterbi(T-1) = Array(max_prev(T-1, 0))
-    
-        return viterbi(T-1)(0)
+        logger(0, "viterbi("+(T-1).toString+") = "+max_prev(T-1, 0))
+
+        return max_prev(T-1, 0)
     }
 
 }

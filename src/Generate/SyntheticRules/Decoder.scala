@@ -89,10 +89,10 @@ class Decoder(val ruleInventory: RuleInventory) {
                 var j = 0
                 kbest = List()
                 while (j < k) {
-                    if (list1.head.score > list2.head.score) {
+                    if (!list1.isEmpty && !list2.isEmpty && list1.head.score > list2.head.score) {
                         kbest = list1.head :: kbest
                         list1 = list1.tail
-                    } else {
+                    } else if (!list2.isEmpty) {
                         kbest = list2.head :: kbest
                         list2 = list2.tail
                     }
