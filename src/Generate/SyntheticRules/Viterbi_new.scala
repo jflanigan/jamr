@@ -8,7 +8,7 @@ import scala.reflect.ClassTag
 
 /******************************** Viterbi Decoder *******************************/
 
-object Viterbi {
+object KBestViterbi {
     private case class State(prev: Int, cur: Int, i: Int)
 
     def decode[T:ClassTag](tags: Array[Array[T]],
@@ -18,7 +18,7 @@ object Viterbi {
             val i = state.i
             localScore(tags(i-1)(state.prev), tags(i)(state.cur), i)
         }
-        val result : Tropical[Int] = decode[Tropical[Int]](tags.size, score, i => tags(i).size)
+        val result : Tropical[Int] = decode[Tropical[Int]](tags.size, score _, (i: Int) => tags(i).size, Tropical.Identity[Int], Tropical[Int] _)
         val resultTags : List[T] = result.path.zipWithIndex.map(x => tags(x._2)(x._1))
         return (resultTags, result.score)
     }
@@ -31,14 +31,18 @@ object Viterbi {
             val i = state.i
             localScore(tags(i-1)(state.prev), tags(i)(state.cur), i)
         }
-        val resultKBest : List[(List[T], Double)] =
-            for { result <- decode[KBest[Int]](tags.size, score, i => tags(i).size).kbest
+        val kBest : List[(List[T], Double)] =
+            for { result <- decode[KBest[Int]](tags.size, score _, (i: Int) => tags(i).size, KBest.Identity[Int](k), KBest[Int](k) _).kbest
                   resultTags : List[T] = result.path.zipWithIndex.map(x => tags(x._2)(x._1))
                 } yield (resultTags, result.score)
-        return resultKBest
+        return kBest
     }
 
-    private def decode[SemiRingElem](length: Int, localScore: State => Double, tags: Int => Int) : SemiRingElem = {
+    private def decode[SemiRingElem <: SemiRing[SemiRingElem] : ClassTag](length: Int,
+                                     localScore: State => Double,
+                                     tags: Int => Int,
+                                     SemiRingIdentity: SemiRingElem,
+                                     SemiRingElem: (Int, Double) => SemiRingElem) : SemiRingElem = {
         // Viterbi algorithm modified from Fig 5.17 in Speech & Language Processing (p. 147)
         //   length: the length of the input (INCLUDING start and stop padding)
         //   localScore: State(prevState, curState, position) => transition weight (log prob)
@@ -49,16 +53,16 @@ object Viterbi {
         assert(tags(length-1) == 1, "There must be a single stop tag")
 
         val T = length
-        val viterbi = new Array[Array[KBest[Int]]](T)
+        val viterbi = new Array[Array[SemiRingElem]](T)
 
-        def max_prev(t: Int, sCur: Int) : SemiRingElem[Int] = {
+        def max_prev(t: Int, sCur: Int) : SemiRingElem = {
             // Find the most likely previous state (highest model score)
-            val scores = Range(0,tags(t-1)).map(sPrev => viterbi(t-1)(sPrev).times(SemiRingElem(sCur, localScore(State(sPrev,sCur,t)))))
-            return scores :\ (SemiRingElem.Identity)((a,b) => a.plus(b))
+            val scores : List[SemiRingElem] = Range(0,tags(t-1)).map(sPrev => viterbi(t-1)(sPrev).times(SemiRingElem(sCur, localScore(State(sPrev,sCur,t))))).toList
+            return (scores :\ SemiRingIdentity)((a: SemiRingElem, b: SemiRingElem) => a.plus(b))
         }
 
         // Initialize (t = 0)
-        viterbi(0) = new Array(SemiRingElem(0, 0.0))
+        viterbi(0) = Array(SemiRingElem(0, 0.0))
 
         // Recursive
         for (t <- Range(1, T-1)) {
@@ -68,8 +72,7 @@ object Viterbi {
             }
         }
         // Termination
-        viterbi(T-1) = new Array[Double](1)
-        viterbi(T-1)(0) = max_prev(T-1, 0)
+        viterbi(T-1) = Array(max_prev(T-1, 0))
     
         return viterbi(T-1)(0)
     }
