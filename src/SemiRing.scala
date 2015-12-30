@@ -19,7 +19,10 @@ case class Tropical[S](val path: List[S], val score: Double) extends SemiRing[Tr
 }
 
 object Tropical {
-    def Identity[S] : Tropical[S] = {
+    def Zero[S] : Tropical[S] = {   // additive identity
+        new Tropical[S](List(), Double.NegativeInfinity)
+    }
+    def One[S] : Tropical[S] = {    // multiplicative identity
         new Tropical[S](List(), 0.0)
     }
     def apply[S](s: S, score: Double) : Tropical[S] = {
@@ -33,6 +36,9 @@ case class KBest[S](val kbest: List[Tropical[S]], // assumes kbest is always sor
 
     def times(a: KBest[S]) : KBest[S] = {
         assert(k == a.k, "Warning: kbest sizes differ.")
+        //logger(0, "KBest.times")
+        //logger(0, "this = "+this)
+        //logger(0, "a = "+a)
         val queue = new PriorityQueue[Tropical[S]]()(Ordering.by(x => x.score))
         for { x <- kbest
               y <- a.kbest
@@ -49,8 +55,11 @@ case class KBest[S](val kbest: List[Tropical[S]], // assumes kbest is always sor
 }
 
 object KBest {
-    def Identity[S](k: Int) : KBest[S] = {
-        new KBest[S](List(Tropical.Identity[S]), k)
+    def Zero[S](k: Int) : KBest[S] = {  // additive identity
+        new KBest[S](List(), k)
+    }
+    def One[S](k: Int) : KBest[S] = {   // multiplicative identity
+        new KBest[S](List(Tropical.One[S]), k)
     }
     def apply[S](k: Int)(s: S, score: Double) : KBest[S] = {
         new KBest[S](List(new Tropical(List(s), score)), k)

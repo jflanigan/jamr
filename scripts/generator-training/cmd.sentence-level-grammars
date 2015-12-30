@@ -14,7 +14,7 @@ mkdir -p "${OUTPUT}"
     --tok "${INPUT}.snt.tok" \
     --snt "${INPUT}.snt" \
     --output "${OUTPUT}" \
-    -v 1 \
+    -v 0 \
     ${GENERATOR_OPTIONS} \
     < "${INPUT}.aligned" \
     > "${OUTPUT}.snt" \
