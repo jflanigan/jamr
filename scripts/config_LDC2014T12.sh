@@ -26,6 +26,7 @@ export MODEL_DIR="${JAMR_HOME}/models/amr_anno_1.0"  # ideally keep this the sam
 # CONCEPT_ID_TRAINING_OPTIONS and RELATION_ID_TRAINING_OPTIONS will override PARSER_OPTIONS
 
 export GENERATOR_OPTIONS="
+    --lowercase
     --drop-sense-tags
 "
 

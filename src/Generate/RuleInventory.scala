@@ -55,14 +55,15 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
     }
 
     def trainingData(corpus: Iterator[String],
-                     posAnno: Array[Annotation[String]]) : Array[(Rule, SyntheticRules.Input)] = {
+                     posAnno: Array[Annotation[String]],
+                     lowercase: Boolean) : Array[(Rule, SyntheticRules.Input)] = {
         var i = 0
         val training_data = new ArrayBuffer[(Rule, SyntheticRules.Input)]()
         for (block <- Corpus.getAMRBlocks(corpus)) {
             logger(0,"**** Processing Block *****")
             logger(0,block)
             val data = AMRTrainingData(block)
-            val sentence = data.sentence
+            val sentence = data.sentence.map(x => if (lowercase) { x.toLowerCase } else { x })
             //val pos : Array[String] = dependencies(i).split("\n").map(x => x.split("\t")(4))
             val pos =  projectPos(posAnno(i))
             val graph = data.toOracleGraph(clearUnalignedNodes = false)
@@ -72,7 +73,9 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
         return training_data.toArray
     }
 
-    def extractFromCorpus(corpus: Iterator[String], posAnno: Array[Annotation[String]]) { // TODO: move this constructor to companion object (and rename to fromCorpus)
+    def extractFromCorpus(corpus: Iterator[String],
+                          posAnno: Array[Annotation[String]],
+                          lowercase: Boolean) { // TODO: move this constructor to companion object (and rename to fromCorpus)
         //val corpus = Source.fromFile(corpusFilename).getLines
         logger(0, "****** Extracting rules from the corpus *******")
 
@@ -85,7 +88,7 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
             logger(0,"**** Processsing Block *****")
             logger(0,block)
             val data = AMRTrainingData(block)
-            val sentence = data.sentence
+            val sentence = data.sentence.map(x => if (lowercase) { x.toLowerCase } else { x })
             //val pos : Array[String] = dependencies(i).split("\n").map(x => x.split("\t")(4))
             val pos =  projectPos(posAnno(i))
             //logger(0, "pos = " + pos.mkString(" "))

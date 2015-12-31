@@ -21,11 +21,11 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
     if (options.contains('ruleInventory)) {
         ruleInventory.load(options('ruleInventory))
     } else if (options.contains('trainingData)) {
-        ruleInventory.extractFromCorpus(fromFile(options('trainingData)).getLines, pos)
+        ruleInventory.extractFromCorpus(fromFile(options('trainingData)).getLines, pos, options.contains('lowercase))
     } else {
         System.err.println("Error: please specify --training-data"); sys.exit(1)
     }
-    val training: Array[(Rule, Input)] = ruleInventory.trainingData(fromFile(options('trainingData)).getLines, pos).filter(x => goodExample(x._1))
+    val training: Array[(Rule, Input)] = ruleInventory.trainingData(fromFile(options('trainingData)).getLines, pos, options.contains('lowercase)).filter(x => goodExample(x._1))
     def trainingSize = training.size
 
     val decoder = new Decoder(ruleInventory)
