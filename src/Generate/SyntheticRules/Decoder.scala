@@ -26,7 +26,7 @@ class Decoder(val ruleInventory: RuleInventory) {
             if ((children.exists(x => !x.startsWith(":op")) || children.size == 0) && children.size < 6) {   // Pure op rules we ignore (handled with rule-based system)
                 for { DecoderResult((rule, feats), _, _) <- decode(phrase, children, input, k) } {
                     feats += phraseFeatures
-                    feats += FeatureVector(Map("naanStopCount" -> rule.nonStopwordCount))
+                    feats += FeatureVector(Map("nonStopCount" -> rule.nonStopwordCount))
                     rules = (rule, feats) :: rules
                 }
             }

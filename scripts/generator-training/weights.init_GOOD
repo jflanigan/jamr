@@ -6,7 +6,7 @@ andPassthrough 0.0102135
 corpus 0.0206935
 deletableConcept -0.0230215
 eventConceptNoChildrenPassThrough -0.242307
-naanStopCount -0.001
+nonStopCount -0.001
 nameDelete -0.0101411
 nonEventConceptNoChildrenPassThrough 0.00854788
 numberPassThrough -0.0351947
