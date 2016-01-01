@@ -34,7 +34,7 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
     val argsRight : Map[(String, String), Array[Arg]] = Map()           // make sure there are no gaps
     val conceptArgsLeft : Map[(String, String, String), List[Arg]] = Map()     // (concept, pos, arg) -> array of realizations
     val conceptArgsRight : Map[(String, String, String), List[Arg]] = Map()    // (concept, pos, arg) -> array of realizations
-  
+
     def load(filename: String) {    // TODO: move to companion object
         conceptCounts.readFile(filename+".conceptcounts", x => x, y => Unit)
         phraseTable.readFile(filename+".phrasetable", x => x, PhraseConceptPair.apply)
@@ -62,8 +62,8 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
         for (block <- Corpus.getAMRBlocks(corpus)) {
             logger(0,"**** Processing Block *****")
             logger(0,block)
-            val data = AMRTrainingData(block)
-            val sentence = data.sentence.map(x => if (lowercase) { x.toLowerCase } else { x })
+            val data = AMRTrainingData(block, lowercase)
+            val sentence = data.sentence
             //val pos : Array[String] = dependencies(i).split("\n").map(x => x.split("\t")(4))
             val pos =  projectPos(posAnno(i))
             val graph = data.toOracleGraph(clearUnalignedNodes = false)
@@ -87,8 +87,8 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
         for (block <- Corpus.getAMRBlocks(corpus)) {
             logger(0,"**** Processsing Block *****")
             logger(0,block)
-            val data = AMRTrainingData(block)
-            val sentence = data.sentence.map(x => if (lowercase) { x.toLowerCase } else { x })
+            val data = AMRTrainingData(block, lowercase)
+            val sentence = data.sentence
             //val pos : Array[String] = dependencies(i).split("\n").map(x => x.split("\t")(4))
             val pos =  projectPos(posAnno(i))
             //logger(0, "pos = " + pos.mkString(" "))

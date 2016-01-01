@@ -54,7 +54,7 @@ object AMRTrainingData {
         return map
     }
 
-    def apply(input: String) : AMRTrainingData = {
+    def apply(input: String, lowercase: Boolean = false) : AMRTrainingData = {
         val lines = input.split("\n")
         val amrstr = lines.filterNot(_.matches("^#.*")).mkString(" ")
         val tokenized = lines.filter(_.matches("^# ::tok .*"))
@@ -63,7 +63,7 @@ object AMRTrainingData {
         assert(spanlines.size > 0, "Missing alignments\nInput:\n"+input)
 
         val graph = Graph.parse(amrstr)
-        val sentence = getUlfString(tokenized(0))("::tok").split(" ")
+        val sentence = getUlfString(tokenized(0))("::tok").split(" ").map(x => if (lowercase) { x.toLowerCase } else { x })
         val extras = lines.filter(_.matches("^#.*")).filterNot(_.matches("^# ::alignments .*")).mkString("\n")
 //        logger(2,graph.toString)
 //        logger(2,sentence.toList.toString)
