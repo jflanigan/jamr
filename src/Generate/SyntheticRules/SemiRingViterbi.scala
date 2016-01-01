@@ -11,19 +11,19 @@ import scala.reflect.ClassTag
 object SemiRingViterbi {
     private case class State(prev: Int, cur: Int, i: Int)
 
-    def decode[T:ClassTag](tags: Array[Array[T]],
+    def decode_1st_order[T:ClassTag](tags: Array[Array[T]],
                            localScore: (T,T,Int) => Double) : (List[T], Double) = {
         // for why ClassTag is needed, see http://stackoverflow.com/questions/16921168/scala-generic-method-no-classtag-available-for-t
         def score(state: State) : Double = {
             val i = state.i
             localScore(tags(i-1)(state.prev), tags(i)(state.cur), i)
         }
-        val result : Tropical[Int] = decode[Tropical[Int]](tags.size, score _, (i: Int) => tags(i).size, Tropical.make[Int] _)
+        val result : Tropical[Int] = decode_1st_order[Tropical[Int]](tags.size, score _, (i: Int) => tags(i).size, Tropical.make[Int] _)
         val resultTags : List[T] = result.path.zipWithIndex.map(x => tags(x._2)(x._1))
         return (resultTags, result.score)
     }
 
-    def kbest[T:ClassTag](tags: Array[Array[T]],
+    def kbest_1st_order[T:ClassTag](tags: Array[Array[T]],
                           localScore: (T,T,Int) => Double,
                           k: Int) : List[(List[T], Double)] = {
         // for why ClassTag is needed, see http://stackoverflow.com/questions/16921168/scala-generic-method-no-classtag-available-for-t
@@ -32,7 +32,7 @@ object SemiRingViterbi {
             localScore(tags(i-1)(state.prev), tags(i)(state.cur), i)
         }
         val kBest : List[(List[T], Double)] =
-            for { result <- decode[KBest[Int]](tags.size, score _, (i: Int) => tags(i).size, KBest[Int](k) _).kbest
+            for { result <- decode_1st_order[KBest[Int]](tags.size, score _, (i: Int) => tags(i).size, KBest[Int](k) _).kbest
                 } yield {
                     //logger(0, "tags.size = " + tags.size.toString)
                     //logger(0, "tag sizes = " + tags.map(x => x.size).toList)
@@ -45,7 +45,7 @@ object SemiRingViterbi {
         return kBest
     }
 
-    private def decode[SemiRingElem <: SemiRing[SemiRingElem] : ClassTag](length: Int,
+    private def decode_1st_order[SemiRingElem <: SemiRing[SemiRingElem] : ClassTag](length: Int,
                                      localScore: State => Double,
                                      tags: Int => Int,
                                      SemiRingElem: (Int, Double) => SemiRingElem) : SemiRingElem = {
@@ -53,7 +53,6 @@ object SemiRingViterbi {
         //   length: the length of the input (INCLUDING start and stop padding)
         //   localScore: State(prevState, curState, position) => transition weight (log prob)
         //   tags: position => number of tags
-        //   SemiRingIdentity: identity of the semiring
         //   SemiRingElem: constructs a semiring element from a tag (Int) and a score (Double)
         // returns the Viterbi semiring element
         //logger(0, "length = " + length.toString)
@@ -116,13 +115,12 @@ object SemiRingViterbi {
                                      localScore: State => Double,
                                      tags: Int => Int,
                                      SemiRingElem: (Int, Double) => SemiRingElem) : SemiRingElem = {
-        // Viterbi algorithm modified from Fig 5.17 in Speech & Language Processing (p. 147)
+        // 0th order Viterbi algorithm
         //   length: the length of the input (INCLUDING start and stop padding)
         //   localScore: State(prevState, curState, position) => transition weight (log prob)
         //   tags: position => number of tags
-        //   SemiRingIdentity: identity of the semiring
         //   SemiRingElem: constructs a semiring element from a tag (Int) and a score (Double)
-        // returns the Viterbi semiring element
+        // returns the Viterbi semiring element assuming localScore is 0th order
         //logger(0, "length = " + length.toString)
         assert(length > 2, "Length must be greater than 2")
         assert(tags(0) == 1, "There must be a single start tag")
@@ -132,7 +130,7 @@ object SemiRingViterbi {
         val viterbi = new Array[SemiRingElem](T)
 
         def max_cur(t: Int) : SemiRingElem = {
-            // Find the most likely previous state (highest model score)
+            // Find the most likely current state (highest model score)
             val sPrev : Int = 0 // doesn't matter, since localScore is 0th order
             val scores : List[SemiRingElem] = Range(0,tags(t)).map(sCur => SemiRingElem(sCur, localScore(State(sPrev,sCur,t))).times(viterbi(t-1))).toList
             return (scores.tail :\ scores.head)((a: SemiRingElem, b: SemiRingElem) => a.plus(b))

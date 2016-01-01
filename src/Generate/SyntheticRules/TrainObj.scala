@@ -38,7 +38,7 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
 
     def goodExample(rule: Rule) : Boolean = {
         // Returns true if it's a rule we should use as a training example (used to filter the rules)
-        return rule.args.exists(x => !x.startsWith(":op")) && rule.args.distinct.size > 1
+        return rule.args.exists(x => !x.startsWith(":op")) && rule.args.distinct.size > 1 && rule.args.size < 6
     }
 
     def decode(i: Int, weights: FeatureVector) : (FeatureVector, Double, String) = {
