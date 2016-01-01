@@ -128,7 +128,7 @@ class Decoder(val ruleInventory: RuleInventory) {
         }
 
         val kbest : List[DecoderResult] =
-            for { (resultTags, score) <- SemiRingViterbi.kbest(tags, localScore _, k) } yield {
+            for { (resultTags, score) <- SemiRingViterbi.kbest_0th_order(tags, localScore _, k) } yield {
                 logger(1, "resultTags: " + resultTags)
                 val rule = Rule(resultTags.slice(1,adjustedConcept.position) ::: resultTags.slice(adjustedConcept.position+1,tags.size-1), conceptInfo, "", "")
                 val feats = oracle(rule, input)
