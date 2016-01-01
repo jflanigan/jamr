@@ -48,6 +48,7 @@ object TrainRuleModel {
         if (options.contains('verbosity)) {
             verbosity = options('verbosity).toInt
         }
+        lowercase = options.contains('lowercase)
 
         //val input : Array[Input] = Input.loadInputfiles(options)
         //val pos = input.map(x => x.pos)

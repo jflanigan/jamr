@@ -48,12 +48,13 @@ object ExtractRules {
         if (options.contains('verbosity)) {
             verbosity = options('verbosity).toInt
         }
+        lowercase = options.contains('lowercase)
 
         val input : Array[Input] = Input.loadInputfiles(options)
         val pos = input.map(x => x.pos)
 
         val ruleInventory: RuleInventory = new RuleInventory(dropSenses = options.contains('dropSenseTags))
-        ruleInventory.extractFromCorpus(io.Source.stdin.getLines, pos, options.contains('lowercase))
+        ruleInventory.extractFromCorpus(io.Source.stdin.getLines, pos)
 
         ruleInventory.save(options('output))
     }

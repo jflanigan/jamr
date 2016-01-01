@@ -75,15 +75,15 @@ object SentenceLevelGrammars {
                 writer = new BufferedWriter(new OutputStreamWriter(gzFile, "UTF-8"))
                 for (node <- graph.nodes) {
                     val corpusRules : List[(Rule, FeatureVector)] = ruleInventory.getRules(node)
+                    val passThroughRules : List[(Rule, FeatureVector)] = ruleInventory.passThroughRules(node)
+                    val syntheticRules : List[(Rule, FeatureVector)] = ruleModel.syntheticRules(SyntheticRules.Input(node, graph), kbest)
                     logger(0, "concept = " + node.concept)
                     logger(0, "num children = " + node.children.size)
                     logger(0, "children = " + node.children.map(x => x._1).mkString(" "))
                     logger(0, "corpusRules.size = " + corpusRules.size)
                     //logger(0, "corpusRules = \n"+corpusRules.map(x => x._1.mkRule + " ||| " + x._2.toCdecFormat).mkString("\n"))
-                    val passThroughRules : List[(Rule, FeatureVector)] = ruleInventory.passThroughRules(node)
                     logger(0, "passThroughRules.size = " + passThroughRules.size)
                     //logger(0, "passThroughRules = \n"+passThroughRules.map(x => x._1.mkRule + " ||| " + x._2.toCdecFormat).mkString("\n"))
-                    val syntheticRules : List[(Rule, FeatureVector)] = ruleModel.syntheticRules(SyntheticRules.Input(node, graph), kbest)
                     logger(0, "syntheticRules.size = " + syntheticRules.size)
                     //logger(0, "syntheticRules = \n"+syntheticRules.map(x => x._1.mkRule + " ||| " + x._2.toCdecFormat).mkString("\n"))
                     for (rule <- corpusRules ::: passThroughRules ::: syntheticRules) {
@@ -94,6 +94,7 @@ object SentenceLevelGrammars {
 
                         //writer.append(rule.toString+" ||| synthetic=1\n")
                         //writer.append(rule._1.mkRule(withArgLabel=false)+" ||| synthetic=1\n")
+                        rule._2 += FeatureVector(Map("ruleCount" -> 1.0))
                         writer.append(rule._1.mkRule(withArgLabel=false)+" ||| "+rule._2.toCdecFormat+'\n')
                     }
                 }

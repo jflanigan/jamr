@@ -5,7 +5,7 @@ import edu.cmu.lti.nlp.amr.BasicFeatureVector._
 import scala.util.matching.Regex
 import scala.collection.mutable.{Map, Set, ArrayBuffer}
 
-class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = false) {
+class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean) {
 
     val featuresToUse : Set[String] = featureNames.map(x => x match {
         case "source" => Some("corpus")
@@ -55,8 +55,7 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
     }
 
     def trainingData(corpus: Iterator[String],
-                     posAnno: Array[Annotation[String]],
-                     lowercase: Boolean) : Array[(Rule, SyntheticRules.Input)] = {
+                     posAnno: Array[Annotation[String]]) : Array[(Rule, SyntheticRules.Input)] = {
         var i = 0
         val training_data = new ArrayBuffer[(Rule, SyntheticRules.Input)]()
         for (block <- Corpus.getAMRBlocks(corpus)) {
@@ -74,8 +73,7 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
     }
 
     def extractFromCorpus(corpus: Iterator[String],
-                          posAnno: Array[Annotation[String]],
-                          lowercase: Boolean) { // TODO: move this constructor to companion object (and rename to fromCorpus)
+                          posAnno: Array[Annotation[String]]) { // TODO: move this constructor to companion object (and rename to fromCorpus)
         //val corpus = Source.fromFile(corpusFilename).getLines
         logger(0, "****** Extracting rules from the corpus *******")
 
@@ -123,9 +121,9 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean = fal
                 val feats = new FeatureVector(Map(
                     "corpus" -> 1.0,
                     "rGc" -> log(ruleCount / conceptCount),
+                    // "cGr" -> log(  // need to be able to look up count of rule (for any concept) to do this
                     "nonStopCount" -> rule.nonStopwordCount,
                     "nonStopCount2" -> rule.nonStopwordCount2
-                    // "c|r" -> log(  // need to be able to look up count of rule (for any concept) to do this
                 ))
                 rules = (rule, feats.slice(feat => featuresToUse.contains(feat))) :: rules
         }
