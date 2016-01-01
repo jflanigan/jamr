@@ -54,7 +54,7 @@ export RELATION_ID_TRAINING_OPTIONS="
 
 export GENERATOR_TRAINING_OPTIONS="
     --training-optimizer Adagrad
-    --training-passes 10
+    --training-passes 3
     --training-save-interval 1
 "
 
