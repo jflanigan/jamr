@@ -63,6 +63,7 @@ object AMRTrainingData {
         assert(spanlines.size > 0, "Missing alignments\nInput:\n"+input)
 
         val graph = Graph.parse(amrstr)
+        logger(0, "AMRTrainingData lowercase = "+lowercase.toString)
         val sentence = getUlfString(tokenized(0))("::tok").split(" ").map(x => if (lowercase) { x.toLowerCase } else { x })
         val extras = lines.filter(_.matches("^#.*")).filterNot(_.matches("^# ::alignments .*")).mkString("\n")
 //        logger(2,graph.toString)

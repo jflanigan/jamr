@@ -58,13 +58,13 @@ object SentenceLevelGrammars {
         ruleModel.weights.read(Source.fromFile(options('weights)).getLines)
 
         val kbest = options.getOrElse('kbest,"1").toInt
-        val lowercase = options.contains('lowercase)
+        lowercase = options.contains('lowercase)
 
         var i = 0
         for (block <- Corpus.getAMRBlocks(Source.stdin.getLines)) {
             logger(0,"**** Processing Block *****")
             logger(0,block)
-            val data = AMRTrainingData(block)
+            val data = AMRTrainingData(block, lowercase)
             val sentence = data.sentence.map(x => if (lowercase) { x.toLowerCase } else { x })
             //val pos =  projectPos(input(i).pos)
             val graph = data.toOracleGraph(clearUnalignedNodes = false)  // TODO: don't require aligned sentence (which data requires)

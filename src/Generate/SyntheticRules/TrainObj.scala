@@ -61,7 +61,7 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
 
     def costAugmented(i: Int, weights: FeatureVector, scale: Double) : (FeatureVector, Double) = {
 /*        decoder.features.weights = weights
-        val amrData = AMRTrainingData(training(i))
+        val amrData = AMRTrainingData(training(i), lowercase)
         val oracleInput : Input = Input(amrData, input(i), i, oracle = true, clearUnalignedNodes = true)
         if (!options.contains('precRecallTradeoff)) { System.err.println("Error: must specify --training-prec-recall for this training loss function."); sys.exit(1) }
         val result = decoder.decode(input(i), costFunction(oracleInput, scale, options('precRecallTradeoff).toDouble))
@@ -108,7 +108,7 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
                                                         dependencies(i),
                                                         ner(i),
                                                         None))
-            val amrData = AMRTrainingData(block)
+            val amrData = AMRTrainingData(block, lowercase)
             val oracleResult = oracle.decode(Input(amrData, input(i), i, oracle = true, clearUnalignedNodes = true))  // TODO: check clearUnalignedNodes in AMRParser line 233
 
             for (span <- stage1Result.graph.spans) {
