@@ -7,13 +7,13 @@ import scala.collection.mutable.{Map, Set, ArrayBuffer}
 
 class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean) {
 
-    val featuresToUse : Set[String] = featureNames.map(x => x match {
+    /*val featuresToUse : Set[String] = featureNames.map(x => x match {
         case "source" => Some("corpus")
         case "ruleGivenConcept" => Some("rGc")
         case "nonStopwordCount" => Some("nonStopCount")
         case "nonStopwordCountPronouns" => Some("nonStopCount2")
         case _ => None
-    }).filter(x => x != None).map(x => x.get)
+    }).filter(x => x != None).map(x => x.get)*/
 
     def dropSense(string: String) : String = {
         return string.replaceAll("""-[0-9][0-9]$""","")
@@ -127,7 +127,7 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean) {
                     "badStopword" -> rule.badStopwordCount,
                     "negationWord" -> rule.negationWordCount
                 ))
-                rules = (rule, feats.slice(feat => featuresToUse.contains(feat))) :: rules
+                rules = (rule, feats/*.slice(feat => featuresToUse.contains(feat))*/) :: rules
         }
         if (rules.size == 0) {
             logger(0, "getRules couldn't find a matching rule for concept " + node.concept)
@@ -328,7 +328,7 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean) {
         } else {
             if (node.concept.matches("\".*\"")) {
                 // Pass through for string literals
-                List((Rule(List(), ConceptInfo(PhraseConceptPair(node.concept.drop(1).init, node.concept, "NNP", "NNP"), 0), "", ""), FeatureVector(Map("passthrough" -> 1.0, "stringPassThrough" -> 1.0))))
+                List((Rule(List(), ConceptInfo(PhraseConceptPair(if (lowercase) { node.concept.drop(1).init.toLowerCase } else { node.concept.drop(1).init }, node.concept, "NNP", "NNP"), 0), "", ""), FeatureVector(Map("passthrough" -> 1.0, "stringPassThrough" -> 1.0))))
             } else if (!getRealizations(node).contains((x: (PhraseConceptPair, List[String])) => x._1.amrInstance.children.size == 1)) {
                 // concept has no realization
                 if (node.concept.matches(""".*-[0-9][0-9]""")) {

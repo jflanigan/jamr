@@ -8,7 +8,7 @@ rm -rf "${OUTPUT}"
 "${JAMR_HOME}/tools/cdec/training/dpmert/dpmert.pl" \
     --config "${JAMR_HOME}/scripts/generator-training/cdec.ini" \
     --weights "${JAMR_HOME}/scripts/generator-training/weights.init" \
-    --random-directions 100 \
+    --random-directions 20 \
     --devset "${MODEL_DIR}/dev-grammars.snt" \
     --output-dir "${OUTPUT}" \
     --jobs 40 \
