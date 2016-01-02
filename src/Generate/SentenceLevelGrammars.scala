@@ -98,6 +98,16 @@ object SentenceLevelGrammars {
                         writer.append(rule._1.mkRule(withArgLabel=false)+" ||| "+rule._2.toCdecFormat+'\n')
                     }
                 }
+                writer.append("(X (X person) (ARG0_OF (X (X have-org-role-91) (ARG1 [X])))) ||| [1] ||| ruleCount=1.0 haveOrgRole=1.0\n") // Russia, Microsoft
+                writer.append("(X (X person) (ARG0_OF (X (X have-org-role-91) (ARG2 [X])))) ||| [1] ||| ruleCount=1.0 haveOrgRole=1.0\n") // officer, president
+                writer.append("(X (X person) (ARG0_OF (X (X have-org-role-91) (ARG1 [X]) (ARG2 [X])))) ||| [1] [2] ||| ruleCount=1.0 haveOrgRole=1.0\n")  // russian president, Microsoft CEO
+                writer.append("(X (X person) (ARG0_OF (X (X have-org-role-91) (ARG1 [X]) (ARG2 [X])))) ||| [2] of [1] ||| ruleCount=1.0 haveOrgRole=1.0\n")   // president of Russia, CEO of Microsoft
+                writer.append("(X (X person) (ARG0_OF (X (X have-org-role-91) (ARG1 [X]))) (NAME [X]))) ||| [2] of [1] ||| ruleCount=1.0 haveOrgRole=1.0\n") // Bill Gates of Microsoft
+                writer.append("(X (X person) (ARG0_OF (X (X have-org-role-91) (ARG1 [X]))) (NAME [X]))) ||| [2] from [1] ||| ruleCount=1.0 haveOrgRole=1.0\n") // Bill Gates from Microsoft
+                writer.append("(X (X person) (ARG0_OF (X (X have-org-role-91) (ARG2 [X]))) (NAME [X]))) ||| [1] [2] ||| ruleCount=1.0 haveOrgRole=1.0\n")  // CEO Bill Gates, president Obama
+                writer.append("(X (X person) (ARG0_OF (X (X have-org-role-91) (ARG1 [X]) (ARG2 [X])) (NAME [X]))) ||| [1] [2] [3] ||| ruleCount=1.0 haveOrgRole=1.0\n")   // Microsoft CEO Bill Gates, U.S. president Barack Obama
+                writer.append("(X (X person) (ARG0_OF (X (X have-org-role-91) (ARG1 [X]) (ARG2 [X])) (NAME [X]))) ||| [2] of [1] [3] ||| ruleCount=1.0 haveOrgRole=1.0\n")    // CEO of Microsoft Bill Gates
+                //writer.append("(X (X person) (ARG0_OF (X (X have-org-role-91) (ARG1 [X]) (ARG2 [X])) (NAME [X]))) ||| [3] ( [2] of [1] ) ||| ruleCount=1.0 haveOrgRole=1.0\n")    // Bill Gates (CEO of Microsoft)
             } finally {
                 if (writer != null) {
                     writer.close

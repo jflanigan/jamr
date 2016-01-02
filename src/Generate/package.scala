@@ -68,6 +68,15 @@ package object Generate {
         string.splitStr(" ").count(x => stopwords.contains(x))
     }
 
+    def badStopwordCount(string: String) : Int = {
+        string.splitStr(" ").count(x => badStopwords.contains(x))
+    }
+
+    def negationWordCount(string: String) : Int = {
+        val negationWords = Set("no", "not", "n't")
+        string.splitStr(" ").count(x => negationWords.contains(x))
+    }
+
     // Get these words by looking at most common unigram missed in synthetic rules
     // despite
     // receiving
@@ -169,7 +178,7 @@ package object Generate {
         //"would"
         )
     
-    val stopwordsBad = Set( // these stop words can change the meaning
+    val badStopwords = Set( // these stop words can change the meaning
         "about",
         "above",
         "after",

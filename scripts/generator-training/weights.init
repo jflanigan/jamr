@@ -19,4 +19,6 @@ synthetic 0.03
 syntheticNoArgs 0.001
 syntheticScore 0.002
 withChildrenPassThrough -0.01
-ruleCount -0.03
+ruleCount -0.001
+badStopword -0.03
+negationWord -0.03

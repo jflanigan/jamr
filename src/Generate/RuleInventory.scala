@@ -123,7 +123,9 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean) {
                     "rGc" -> log(ruleCount / conceptCount),
                     // "cGr" -> log(  // need to be able to look up count of rule (for any concept) to do this
                     "nonStopCount" -> rule.nonStopwordCount,
-                    "nonStopCount2" -> rule.nonStopwordCount2
+                    "nonStopCount2" -> rule.nonStopwordCount2,
+                    "badStopword" -> rule.badStopwordCount,
+                    "negationWord" -> rule.negationWordCount
                 ))
                 rules = (rule, feats.slice(feat => featuresToUse.contains(feat))) :: rules
         }

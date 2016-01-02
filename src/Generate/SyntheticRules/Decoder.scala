@@ -27,6 +27,8 @@ class Decoder(val ruleInventory: RuleInventory) {
                 for { DecoderResult((rule, feats), _, _) <- decode(phrase, children, input, k) } {
                     feats += phraseFeatures
                     feats += FeatureVector(Map("nonStopCount" -> rule.nonStopwordCount))
+                    feats += FeatureVector(Map("badStopword" -> rule.badStopwordCount))
+                    feats += FeatureVector(Map("negationWord" -> rule.negationWordCount))
                     rules = (rule, feats) :: rules
                 }
             }
