@@ -255,7 +255,17 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean) {
     def passThroughRules(node: Node) : List[(Rule, FeatureVector)] = {   // TODO: change to passThroughRealizations (and add features for syntheticRules)
         // TODO: filter the features to those in featureNames
         if(node.children.size > 0) {
-            if (Set("name", "date-entity").contains(node.concept) || node.concept.matches(".+-.*[a-z]+") || node.children.exists(_._1 == ":name") || (node.concept == "and" && node.children.size == 1)) {
+            /*if (PhraseConceptPair.matches("(person :ARG0-of (have-org-role-91))", node)) {
+                if (PhraseConceptPair.matches("(person :ARG0-of (have-org-role-91 :ARG1 <X> :ARG2 <X>) :name <X>)", node)) {
+                    List(Rule("(person :ARG0-of have-org-role-91) |||  ||| NN ||| NN ||| "
+                } else if (PhraseConceptPair.matches("(person :ARG0-of (have-org-role-91 :ARG1 <X> :ARG2 <X>))", node)) {
+                    
+                } else if (PhraseConceptPair.matches("(person :ARG0-of (have-org-role-91 :ARG2 <X>))", node)) {
+
+                } else if (PhraseConceptPair.matches("(person :ARG0-of (have-org-role-91 :ARG1 <X>))", node)) {
+                    
+                }
+            } else*/ if (Set("name", "date-entity").contains(node.concept) || node.concept.matches(".+-.*[a-z]+") || node.children.exists(_._1 == ":name") || (node.concept == "and" && node.children.size == 1)) {
                 //if (node.concept == "date-entity") {
                 //    dateEntity(node)
                 //} else {
@@ -480,61 +490,4 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean) {
     }
 
 }
-/*
-object RuleInventory/*(options: Map[Symbol, String])*/ {
 
-    val usage = """Usage: scala -classpath . edu.cmu.lti.nlp.amr.Generate.ExtractSentenceRules --dependencies deps_file --corpus amr_file --decode data """
-    type OptionMap = Map[Symbol, Any]
-
-    def parseOptions(map : OptionMap, list: List[String]) : OptionMap = {
-        def isSwitch(s : String) = (s(0) == '-')
-        list match {
-            case Nil => map
-            case "-h" :: value :: tail =>                parseOptions(map ++ Map('help -> value.toInt), tail)
-            case "-v" :: value :: tail =>                parseOptions(map ++ Map('verbosity -> value.toInt), tail)
-            case "--corpus" :: value :: tail =>          parseOptions(map ++ Map('corpus -> value.toInt), tail)
-            case "--decode" :: value :: tail =>          parseOptions(map ++ Map('decode -> value.toInt), tail)
-            case "--dependencies" :: value :: tail =>    parseOptions(map + ('dependencies -> value), tail)
-            case option :: tail => println("Error: Unknown option "+option) 
-                               sys.exit(1) 
-      }
-    }
-
-    def main(args: Array[String]) {
-        val options = parseOptions(Map(),args.toList)
-        if (options.contains('help)) { println(usage); sys.exit(1) }
-
-        if (options.contains('verbosity)) {
-            verbosity = options('verbosity).asInstanceOf[Int]
-        }
-
-        if (!options.contains('corpus)) { println("Must specify corpus file."); sys.exit(1) }
-        if (!options.contains('decode)) { println("Must specify decode file."); sys.exit(1) }
-        if (!options.contains('dependencies)) { println("Must specify dependencies file."); sys.exit(1) }
-
-        val dependencies: Array[String] = (for {
-                block <- Corpus.splitOnNewline(Source.fromFile(options('dependencies)).getLines())
-            } yield block.replaceAllLiterally("-LRB-","(").replaceAllLiterally("-RRB-",")").replaceAllLiterally("""\/""","/")).toArray
-
-        var i = 0
-        for { block <- Corpus.splitOnNewline(Source.fromFile(options('corpus).getLines))
-              if (block matches "(.|\n)*\n\\((.|\n)*") } {
-            logger(0,"**** Processsing Block *****")
-            logger(0,block)
-            val data = AMRTrainingData(block)
-            val pos : Array[String] = dependencies(i).split("\n").map(x => x.split("\t")(4))
-            val graph = data.toOracleGraph(clearUnalignedNodes = false)
-            val sentence = data.sentence    // Tokenized sentence
-            val spans : Map[String, (Option[Int], Option[Int])] = Map()     // stores the projected spans for each node
-            val spanArray : Array[Boolean] = sentence.map(x => false)       // stores the endpoints of the spans
-            computeSpans(graph, graph.root, spans, spanArray)
-            //logger(0,"spanArray = "+spanArray.zip(sentence).toList.toString)
-            logger(0,"****** Extracted rules ******")
-            extractRules(graph, graph.root, sentence, pos, spans, spanArray, rules)
-            logger(0,"")
-            i += 1
-        }
-    }
-
-}
-*/

@@ -52,8 +52,14 @@ object PhraseConceptPair {
         return PhraseConceptPair(words, graphFrag, fullPos, headPos)
     }
 
-    def matches(rule: Node, amr: Node) : Boolean = {    // doesn't care if there are extra children in amr
-        if (rule.concept != amr.concept) {  // concepts don't match
+    def matches(rule: String, amr: Node) : Boolean = {
+        return matches(Graph.parse(rule).root, amr)
+    }
+
+    def matches(rule: Node, amr: Node) : Boolean = {
+        // doesn't care if there are extra children in amr
+        // we allow concepts in the rule to be "<X>", which are variables that match anything
+        if (rule.concept != amr.concept && rule.concept != "<X>") {  // concepts don't match
             return false
         }
         var ruleChildren : List[(String, Node)] = rule.children
@@ -64,7 +70,7 @@ object PhraseConceptPair {
             for { (((amrRelation, amrChild), used), i) <- amrChildren.zipWithIndex
                   if (ruleRelation == amrRelation && !foundMatch && !used)
                     } {
-                if (matchesExactly(ruleChild, amrChild)) {
+                if (matches(ruleChild, amrChild)) {
                     amrChildren(i) = ((amrRelation, amrChild), true)    // mark this child as matched (used)
                     foundMatch = true    // break loop and indicate we have found a match
                 }
@@ -76,8 +82,10 @@ object PhraseConceptPair {
         return matching
     }
 
-    def matchesExactly(rule: Node, amr: Node) : Boolean = {     // doesn't allow extra children in amr
-        if (rule.concept != amr.concept) {  // concepts don't match
+    def matchesExactly(rule: Node, amr: Node) : Boolean = {
+        // doesn't allow extra children in amr
+        // we allow concepts in the rule to be "<X>", which are variables that match anything
+        if (rule.concept != amr.concept && rule.concept != "<X>") {  // concepts don't match
             return false
         }
         var ruleChildren : List[(String, Node)] = rule.children
