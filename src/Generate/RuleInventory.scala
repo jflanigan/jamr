@@ -285,7 +285,7 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean) {
         }
     }
 
-    def passThroughRules(node: Node) : List[(Rule, FeatureVector)] = {   // TODO: change to passThroughRealizations (and add features for syntheticRules)
+    def passThroughRules(node: Node, graph: Graph, kbest: Int, ruleModel: SyntheticRules.Decoder) : List[(Rule, FeatureVector)] = {   // TODO: change to passThroughRealizations (and add features for syntheticRules)
         // TODO: filter the features to those in featureNames
         if(node.children.size > 0) {
             /*if (PhraseConceptPair.matches("(person :ARG0-of (have-org-role-91))", node)) {
@@ -298,7 +298,23 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean) {
                 } else if (PhraseConceptPair.matches("(person :ARG0-of (have-org-role-91 :ARG1 <X>))", node)) {
                     
                 }
-            } else*/ if (Set("name", "date-entity").contains(node.concept) || node.concept.matches(".+-.*[a-z]+") || node.children.exists(_._1 == ":name") || (node.concept == "and" && node.children.size == 1)) {
+            } else*/
+            if (node.concept == "and") {
+                if (node.children.size == 2) {
+                    List((Rule(node.children.sortBy(_._1).map(x => Arg("", x._1, "")),
+                               ConceptInfo(PhraseConceptPair("and", node.concept, "CC", "CC"), 1), "", ""),
+                          FeatureVector(Map("passthrough" -> 1.0, "andPassthrough" -> 1.0))))
+                } else {
+                    val size = node.children.size
+                    List((Rule(node.children.sortBy(_._1).zipWithIndex.map(x => Arg("", x._1._1, if(x._2 >= size - 2) {""} else {","})),
+                               ConceptInfo(PhraseConceptPair("and", node.concept, "CC", "CC"), node.children.size - 1), "", ""),
+                          FeatureVector(Map("passthrough" -> 1.0, "andPassthrough" -> 1.0))))
+                }
+            } else if (node.concept == "multi-sentence") {
+                List((Rule(node.children.sortBy(_._1).map(x => Arg("", x._1, "")),
+                           ConceptInfo(PhraseConceptPair("", node.concept, "CC", "CC"), 0), "", "."),
+                      FeatureVector(Map("passthrough" -> 1.0, "multiSentPassthrough" -> 1.0))))
+            } else if (Set("name", "date-entity").contains(node.concept) || node.concept.matches(".+-.*[a-z]+") || node.children.exists(_._1 == ":name") || (node.concept == "and" && node.children.size == 1)) {
                 //if (node.concept == "date-entity") {
                 //    dateEntity(node)
                 //} else {
@@ -316,17 +332,6 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean) {
                                ConceptInfo(PhraseConceptPair("", node.concept, "NN", "NN"), 0), "", ""),
                           FeatureVector(feats)))
                 //}
-            } else if (node.concept == "and") {
-                if (node.children.size == 2) {
-                    List((Rule(node.children.sortBy(_._1).map(x => Arg("", x._1, "")),
-                               ConceptInfo(PhraseConceptPair("and", node.concept, "CC", "CC"), 1), "", ""),
-                          FeatureVector(Map("passthrough" -> 1.0, "andPassthrough" -> 1.0))))
-                } else {
-                    val size = node.children.size
-                    List((Rule(node.children.sortBy(_._1).zipWithIndex.map(x => Arg("", x._1._1, if(x._2 >= size - 2) {""} else {","})),
-                               ConceptInfo(PhraseConceptPair("and", node.concept, "CC", "CC"), node.children.size - 1), "", ""),
-                          FeatureVector(Map("passthrough" -> 1.0, "andPassthrough" -> 1.0))))
-                }
             } else /*if (getRealizations(node).size == 0)*/ {
                 // concept has no realization
                 // TODO: change to passThroughRealizations
@@ -346,12 +351,13 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean) {
                     List((Rule(abstractRule.argRealizations,
                                ConceptInfo(PhraseConceptPair(dropSense(node.concept), node.concept, pos, pos), abstractRule.concept.position), "", ""),
                         FeatureVector(Map("passthrough" -> 1.0, "abstractPassThrough" -> 1.0))))
-                } else {
-                    // TODO: backoff synthetic model here
-                    List((Rule(node.children.sortBy(_._1).map(x => Arg("", x._1, "")),
-                               ConceptInfo(PhraseConceptPair(dropSense(node.concept), node.concept, pos, pos), 0), "", ""),
-                        FeatureVector(Map("passthrough" -> 1.0, "withChildrenPassThrough" -> 1.0))))
                 }
+                // TODO: backoff synthetic model here
+                val realization = PhraseConceptPair(dropSense(node.concept), node.concept, pos, pos)
+                ruleModel.syntheticRules(SyntheticRules.Input(node, graph), kbest,
+                    List((PhraseConceptPair(dropSense(node.concept), node.concept, pos, pos),           // realization
+                          node.children.map(x => x._1),                                                 // args
+                          FeatureVector(Map("passthrough" -> 1.0, "withChildrenPassThrough" -> 1.0))))) // feats
             /*} else {
                 // it has a realization, so we won't provide one (since the synthetic rule model will provide one)
                 List() */

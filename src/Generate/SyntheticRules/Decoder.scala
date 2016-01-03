@@ -18,6 +18,10 @@ class Decoder(val ruleInventory: RuleInventory) {
     val argOnRight = ruleInventory.argOnRight _
 
     def syntheticRules(input: Input, k: Int) : List[(Rule, FeatureVector)] = {
+        return syntheticRules(input, k, getRealizations(input.node))
+    }
+
+    def syntheticRules(input: Input, k: Int, realizations: List[(PhraseConceptPair, List[String], FeatureVector)]) : List[(Rule, FeatureVector)] = {
         // Returns a rule for every concept realization
         var rules : List[(Rule, FeatureVector)] = List()
         var bestRule : Option[Array[Arg]] = None

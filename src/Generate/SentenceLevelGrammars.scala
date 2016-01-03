@@ -75,7 +75,7 @@ object SentenceLevelGrammars {
                 writer = new BufferedWriter(new OutputStreamWriter(gzFile, "UTF-8"))
                 for (node <- graph.nodes) {
                     val corpusRules : List[(Rule, FeatureVector)] = ruleInventory.getRules(node)
-                    val passThroughRules : List[(Rule, FeatureVector)] = ruleInventory.passThroughRules(node)
+                    val passThroughRules : List[(Rule, FeatureVector)] = ruleInventory.passThroughRules(node, graph, kbest, ruleModel)
                     val syntheticRules : List[(Rule, FeatureVector)] = ruleModel.syntheticRules(SyntheticRules.Input(node, graph), kbest)
                     logger(0, "concept = " + node.concept)
                     logger(0, "num children = " + node.children.size)
