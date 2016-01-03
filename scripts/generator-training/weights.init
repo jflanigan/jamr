@@ -22,3 +22,7 @@ withChildrenPassThrough -0.01
 ruleCount -0.001
 badStopword -0.03
 negationWord -0.03
+corpusFuzzy 0.002
+fuzzySynthetic -0.00001
+pGcFuzzy 0.03
+rGcFuzzy 0.03

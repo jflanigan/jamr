@@ -23,6 +23,9 @@ case class Rule(argRealizations: List[Arg],               // Sorted list
             "NONEVENT " + argRealizations.map(arg => arg.label).sorted.mkString(" ")
         }
     }
+    def changeConceptTo(node: Node) : Rule = {
+        Rule(argRealizations, ConceptInfo(concept.realization.changeConceptTo(node), concept.position), prefix, end)
+    }
 
     def nonStopwordCount : Int = {
         //nonStopwordCount(concept.realization.words) + argRealizations.map(x => nonStopwordCount(x.left) + nonStopwordCount(x.right)).sum

@@ -22,6 +22,7 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean) {
     def conceptKey(c: String) = { if (dropSenses) { dropSense(c) } else { c } }
 
     val conceptCounts : MultiMapCount[String, Unit] = new MultiMapCount()
+    val conceptCountsNoSense : MultiMapCount[String, Unit] = new MultiMapCount()
     val phraseTable : MultiMapCount[String, PhraseConceptPair] = new MultiMapCount()       // Map from concept to PhraseConcepPairs with counts
     val lexRules : MultiMapCount[String, Rule] = new MultiMapCount()            // Map from concept to lexicalized rules with counts
     val abstractRules : MultiMapCount[String, Rule] = new MultiMapCount()       // Map from concept type and args to abstract rules with counts
@@ -37,6 +38,7 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean) {
 
     def load(filename: String) {    // TODO: move to companion object
         conceptCounts.readFile(filename+".conceptcounts", x => x, y => Unit)
+        conceptCountsNoSense.readFile(filename+".conceptcounts2", x => x, y => Unit)
         phraseTable.readFile(filename+".phrasetable", x => x, PhraseConceptPair.apply)
         lexRules.readFile(filename+".lexrules", x => x, Rule.apply)
         abstractRules.readFile(filename+".abstractrules", x => x, Rule.apply)
@@ -48,6 +50,7 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean) {
 
     def save(filename: String) {
         writeToFile(filename+".conceptcounts", conceptCounts.toString)
+        writeToFile(filename+".conceptcounts2", conceptCountsNoSense.toString)
         writeToFile(filename+".phrasetable", phraseTable.toString)
         writeToFile(filename+".lexrules", lexRules.toString)
         writeToFile(filename+".abstractrules", abstractRules.toString)
@@ -117,10 +120,12 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean) {
         for { (rule, ruleCount) <- lexRules.map.getOrElse(conceptKey(node.concept), Map())
               if rule.concept.realization.amrInstance.children.map(x => x._1).sorted == children
             } {
-                val conceptCount = conceptCounts.map.getOrElse(conceptKey(node.concept), Map()).map(x => x._2).sum.toDouble
+                val conceptCount = conceptCounts.map.getOrElse(node.concept, Map()).map(x => x._2).sum.toDouble
+                val conceptCount2 = conceptCountsNoSense.map.getOrElse(conceptKey(node.concept), Map()).map(x => x._2).sum.toDouble
                 val feats = new FeatureVector(Map(
                     "corpus" -> 1.0,
                     "rGc" -> log(ruleCount / conceptCount),
+                    "rGcFuzzy" -> log(ruleCount / conceptCount2),
                     // "cGr" -> log(  // need to be able to look up count of rule (for any concept) to do this
                     "nonStopCount" -> rule.nonStopwordCount,
                     "nonStopCount2" -> rule.nonStopwordCount2,
@@ -129,6 +134,22 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean) {
                 ))
                 rules = (rule, feats/*.slice(feat => featuresToUse.contains(feat))*/) :: rules
         }
+        for { (rule, ruleCount) <- lexRules.map.getOrElse(conceptKey(node.concept), Map())
+              if rule.concept.realization.amrInstance.children.map(x => x._1).sorted == children
+              if !rule.concept.realization.matches(node, ignoreSense=false) && rule.concept.realization.matches(node, ignoreSense=true) // matches ignoring sense
+            } {
+                val conceptCount2 = conceptCountsNoSense.map.getOrElse(conceptKey(node.concept), Map()).map(x => x._2).sum.toDouble
+                val feats = new FeatureVector(Map(
+                    "corpusFuzzy" -> 1.0,
+                    "rGcFuzzy" -> log(ruleCount / conceptCount2),
+                    // "cGr" -> log(  // need to be able to look up count of rule (for any concept) to do this
+                    "nonStopCount" -> rule.nonStopwordCount,
+                    "nonStopCount2" -> rule.nonStopwordCount2,
+                    "badStopword" -> rule.badStopwordCount,
+                    "negationWord" -> rule.negationWordCount
+                ))
+                rules = (rule.changeConceptTo(node), feats/*.slice(feat => featuresToUse.contains(feat))*/) :: rules
+        }
         if (rules.size == 0) {
             logger(0, "getRules couldn't find a matching rule for concept " + node.concept)
         }
@@ -136,14 +157,24 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean) {
     }
 
     def getRealizations(node: Node) : List[(PhraseConceptPair, List[String], FeatureVector)] = {   // phrase, arg labels of children not consumed
-        (for { (phrase, phraseCount) <- phraseTable.map.getOrElse(conceptKey(node.concept), Map()) if phrase.matches(node)
+        val exactMatch = (for { (phrase, phraseCount) <- phraseTable.map.getOrElse(conceptKey(node.concept), Map()) if phrase.matches(node, ignoreSense=false)
                 } yield {
-            val conceptCount = conceptCounts.map.getOrElse(conceptKey(node.concept), Map()).map(x => x._2).sum.toDouble
+            val conceptCount = conceptCounts.map.getOrElse(node.concept, Map()).map(x => x._2).sum.toDouble
             val feats = new FeatureVector(Map(
                 "pGc" -> log(phraseCount / conceptCount)
             ))
             (phrase, node.children.map(x => x._1).diff(phrase.amrInstance.children.map(x => x._1)), feats)
         }).toList
+        val fuzzyMatch = (for { (phrase, phraseCount) <- phraseTable.map.getOrElse(conceptKey(node.concept), Map()) if phrase.matches(node, ignoreSense=true) && !phrase.matches(node, ignoreSense=false)
+                } yield {
+            val conceptCount = conceptCountsNoSense.map.getOrElse(conceptKey(node.concept), Map()).map(x => x._2).sum.toDouble
+            val feats = new FeatureVector(Map(
+                "pGcFuzzy" -> log(phraseCount / conceptCount),
+                "fuzzySynthetic" -> 1.0
+            ))
+            (phrase.changeConceptTo(node), node.children.map(x => x._1).diff(phrase.amrInstance.children.map(x => x._1)), feats)
+        }).toList
+        return exactMatch ::: fuzzyMatch
         //return phraseTable.map.getOrElse(conceptKey(node.concept), Map()).map(x => (x._1, node.children.map(y => y._1).diff(x._1.amrInstance.children.map(y => y._1)))).toList /*::: passThroughRealizations(node)*/ // TODO: should filter to realizations that could match
     }
 
@@ -437,7 +468,8 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean) {
     private def extractConcepts(graph: Graph) {
         // Populates the conceptCounts table
         for (span <- graph.spans) {
-            conceptCounts.add(conceptKey(span.amr.concept) -> Unit)
+            conceptCounts.add(span.amr.concept -> Unit)
+            conceptCountsNoSense.add(conceptKey(span.amr.concept) -> Unit)
         }
     }
 

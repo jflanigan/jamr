@@ -10,6 +10,9 @@ package object Generate {
     def Label(label: String) : String = {
         return label.drop(1).toUpperCase.replaceAll("-","_")
     }
+    def dropSense(string: String) : String = {
+        return string.replaceAll("""-[0-9][0-9]$""","")
+    }
     //def labelStr(label: String) = Label(label)
     //class Label(str: String)
     //object Label {

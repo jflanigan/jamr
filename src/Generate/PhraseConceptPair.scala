@@ -30,8 +30,15 @@ case class PhraseConceptPair(words: String, graphFrag: String, fullPos: String, 
         return Graph.parse(graphFrag).root
     }
     lazy val concept : String = amrInstance.concept
-    def matches(amr: Node) : Boolean = {    // returns if the concept fragment could match the amr (but the amr may have extra children)
-        return PhraseConceptPair.matches(amrInstance, amr)
+    def matches(amr: Node, ignoreSense: Boolean) : Boolean = {    // returns if the concept fragment could match the amr (but the amr may have extra children)
+        return PhraseConceptPair.matches(amrInstance, amr, ignoreSense)
+    }
+    def changeConceptTo(node: Node) : PhraseConceptPair = {
+        if (!graphFrag.startsWith("(")) {   // only change the concept when it's a singe concept with no children
+            PhraseConceptPair(words, node.concept, fullPos, headPos)
+        } else {
+            this
+        }
     }
 }
 
@@ -53,14 +60,16 @@ object PhraseConceptPair {
         return PhraseConceptPair(words, graphFrag, fullPos, headPos)
     }
 
-    def matches(rule: String, amr: Node) : Boolean = {
-        return matches(Graph.parse(rule).root, amr)
+    def matches(rule: String, amr: Node, ignoreSense: Boolean) : Boolean = {
+        return matches(Graph.parse(rule).root, amr, ignoreSense)
     }
 
-    def matches(rule: Node, amr: Node) : Boolean = {
+    def matches(rule: Node, amr: Node, ignoreSense: Boolean) : Boolean = {
         // doesn't care if there are extra children in amr
         // we allow concepts in the rule to be "<X>", which are variables that match anything
-        if (rule.concept != amr.concept && rule.concept != "<X>") {  // concepts don't match
+        if (!ignoreSense && rule.concept != amr.concept && rule.concept != "<X>") {  // concepts don't match
+            return false
+        } else if (ignoreSense && dropSense(rule.concept) != dropSense(amr.concept)) {
             return false
         }
         var ruleChildren : List[(String, Node)] = rule.children
@@ -71,7 +80,7 @@ object PhraseConceptPair {
             for { (((amrRelation, amrChild), used), i) <- amrChildren.zipWithIndex
                   if (ruleRelation == amrRelation && !foundMatch && !used)
                     } {
-                if (matches(ruleChild, amrChild)) {
+                if (matches(ruleChild, amrChild, ignoreSense)) {
                     amrChildren(i) = ((amrRelation, amrChild), true)    // mark this child as matched (used)
                     foundMatch = true    // break loop and indicate we have found a match
                 }
