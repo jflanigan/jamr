@@ -26,3 +26,4 @@ corpusFuzzy 0.002
 fuzzySynthetic -0.00001
 pGcFuzzy 0.03
 rGcFuzzy 0.03
+opPassThrough 0.0001

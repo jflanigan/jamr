@@ -124,7 +124,6 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean) {
                 val conceptCount2 = conceptCountsNoSense.map.getOrElse(conceptKey(node.concept), Map()).map(x => x._2).sum.toDouble
                 val feats = new FeatureVector(Map(
                     "corpus" -> 1.0,
-                    "rGc" -> log(ruleCount / conceptCount),
                     "rGcFuzzy" -> log(ruleCount / conceptCount2),
                     // "cGr" -> log(  // need to be able to look up count of rule (for any concept) to do this
                     "nonStopCount" -> rule.nonStopwordCount,
@@ -132,6 +131,9 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean) {
                     "badStopword" -> rule.badStopwordCount,
                     "negationWord" -> rule.negationWordCount
                 ))
+                if (conceptCount != 0) {
+                    feats += new FeatureVector(Map("rGc" -> log(ruleCount / conceptCount)))
+                }
                 rules = (rule, feats/*.slice(feat => featuresToUse.contains(feat))*/) :: rules
         }
         for { (rule, ruleCount) <- lexRules.map.getOrElse(conceptKey(node.concept), Map())
@@ -174,7 +176,7 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean) {
             ))
             (phrase.changeConceptTo(node), node.children.map(x => x._1).diff(phrase.amrInstance.children.map(x => x._1)), feats)
         }).toList
-        return exactMatch ::: fuzzyMatch
+        return if (exactMatch.size != 0) { exactMatch } else { fuzzyMatch }
         //return phraseTable.map.getOrElse(conceptKey(node.concept), Map()).map(x => (x._1, node.children.map(y => y._1).diff(x._1.amrInstance.children.map(y => y._1)))).toList /*::: passThroughRealizations(node)*/ // TODO: should filter to realizations that could match
     }
 
@@ -342,22 +344,26 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean) {
                 val pos = if (event) { "VBN" } else { "NN" }
                 val abstractSignature : String = (if (event) { "EVENT " } else { "NONEVENT " }) + node.children.map(x => x._1).sorted.mkString(" ")
                 logger(0, "abstractSignature = "+abstractSignature)
+                var rules : List[(Rule, FeatureVector)] = List()
                 if (abstractRules.map.contains(abstractSignature)) {
                     val abstractRule : Rule = abstractRules.map(abstractSignature).maxBy(_._2)._1   // use most common abstract rule
                     val rule = Rule(abstractRule.argRealizations,
                                ConceptInfo(PhraseConceptPair(dropSense(node.concept), node.concept, pos, pos), abstractRule.concept.position), "", "")
                     logger(0, "rule = " + rule.toString)
                     logger(0, "ruleCFG = " + rule.mkRule(withArgLabel=false))
-                    List((Rule(abstractRule.argRealizations,
-                               ConceptInfo(PhraseConceptPair(dropSense(node.concept), node.concept, pos, pos), abstractRule.concept.position), "", ""),
-                        FeatureVector(Map("passthrough" -> 1.0, "abstractPassThrough" -> 1.0))))
+                    rules = List((Rule(abstractRule.argRealizations,
+                                       ConceptInfo(PhraseConceptPair(dropSense(node.concept), node.concept, pos, pos), abstractRule.concept.position), "", ""),
+                                  FeatureVector(Map("passthrough" -> 1.0, "abstractPassThrough" -> 1.0)))) ::: rules
                 }
-                // TODO: backoff synthetic model here
-                val realization = PhraseConceptPair(dropSense(node.concept), node.concept, pos, pos)
-                ruleModel.syntheticRules(SyntheticRules.Input(node, graph), kbest,
-                    List((PhraseConceptPair(dropSense(node.concept), node.concept, pos, pos),           // realization
-                          node.children.map(x => x._1),                                                 // args
-                          FeatureVector(Map("passthrough" -> 1.0, "withChildrenPassThrough" -> 1.0))))) // feats
+                // Backoff synthetic model
+                if ((getRealizations(node).size == 0 && rules.size == 0 /*we're the last resort*/) || node.children.size < 5 /*the rule is fast*/) {    // filter to this because otherwise it's too slow
+                    val realization = PhraseConceptPair(dropSense(node.concept), node.concept, pos, pos)
+                    rules = ruleModel.syntheticRules(SyntheticRules.Input(node, graph), kbest,
+                        List((PhraseConceptPair(dropSense(node.concept), node.concept, pos, pos),           // realization
+                              node.children.map(x => x._1),                                                 // args
+                              FeatureVector(Map("passthrough" -> 1.0, "withChildrenPassThrough" -> 1.0))))) ::: rules // feats
+                }
+                rules
             /*} else {
                 // it has a realization, so we won't provide one (since the synthetic rule model will provide one)
                 List() */

@@ -34,9 +34,15 @@ case class PhraseConceptPair(words: String, graphFrag: String, fullPos: String, 
         return PhraseConceptPair.matches(amrInstance, amr, ignoreSense)
     }
     def changeConceptTo(node: Node) : PhraseConceptPair = {
+        logger(0,"changeConceptTo "+node.concept)
+        logger(0,"this = "+this)
         if (!graphFrag.startsWith("(")) {   // only change the concept when it's a singe concept with no children
+            logger(0,"attempting to change")
+            logger(0,"returning: "+PhraseConceptPair(words, node.concept, fullPos, headPos))
             PhraseConceptPair(words, node.concept, fullPos, headPos)
         } else {
+            logger(0,"not attempting to change")
+            logger(0,"returning: "+this)
             this
         }
     }
