@@ -91,6 +91,20 @@ object Input {
         return inputs.toArray
     }
 
+    def loadDeps(options: Map[Symbol, String]) : Array[Input] = {  // used in generator rule extraction
+        logger(1,"Loading external input...")
+        val dependencies = (for {
+                block <- Corpus.splitOnNewline(fromFile(options('dependencies)).getLines())
+            } yield block.replaceAllLiterally("-LRB-","(").replaceAllLiterally("-RRB-",")").replaceAllLiterally("""\/""","/")).toArray
+        logger(1, "done")
+
+        // see http://stackoverflow.com/questions/9632094/zip-multiple-sequences for this trick
+        val inputs = (0 until dependencies.size) map { i => new Input(None, Array(), Array(), dependencies(i), "", None ) }
+        return inputs.toArray
+    }
+
+
+
     def apply(amrdata: AMRTrainingData, input: Input, trainingIndex: Int, oracle: Boolean, clearUnalignedNodes: Boolean = true) : Input = { // used in stage1 and stage2 training
         new Input(
             Some(if (oracle) {

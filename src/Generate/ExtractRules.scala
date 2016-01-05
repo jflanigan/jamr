@@ -50,7 +50,7 @@ object ExtractRules {
         }
         lowercase = options.contains('lowercase)
 
-        val input : Array[Input] = Input.loadInputfiles(options)
+        val input : Array[Input] = Input.loadDeps(options)
         val pos = input.map(x => x.pos)
 
         val ruleInventory: RuleInventory = new RuleInventory(dropSenses = options.contains('dropSenseTags))
