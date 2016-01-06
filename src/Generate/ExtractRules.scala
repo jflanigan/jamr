@@ -1,6 +1,7 @@
 package edu.cmu.lti.nlp.amr.Generate
 import edu.cmu.lti.nlp.amr._
 
+import scala.io.Source.fromFile
 import scala.util.matching.Regex
 import scala.collection.mutable.{Map, Set, ArrayBuffer}
 
@@ -50,7 +51,7 @@ object ExtractRules {
         }
         lowercase = options.contains('lowercase)
 
-        val input : Array[Input] = Input.loadDeps(options)
+        val input : Array[Input] = Input.loadInputfiles(options)
         val pos = input.map(x => x.pos)
 
         val ruleInventory: RuleInventory = new RuleInventory(dropSenses = options.contains('dropSenseTags))
