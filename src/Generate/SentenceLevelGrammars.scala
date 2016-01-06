@@ -26,6 +26,7 @@ object SentenceLevelGrammars {
             case "--rule-inventory" :: value :: l =>     parseOptions(map + ('ruleInventory -> value), l)
             case "--kbest" :: value :: l =>              parseOptions(map + ('kbest -> value), l)
             case "--drop-sense-tags" :: l =>             parseOptions(map + ('dropSenseTags -> "true"), l)
+            case "--predict-tree" :: l =>                parseOptions(map + ('predictTree -> "true"), l)
             case "--lowercase" :: l =>                   parseOptions(map + ('lowercase -> "true"), l)
             case "--output" :: value :: l =>             parseOptions(map + ('output -> value), l)
             case "--dependencies" :: value :: tail =>    parseOptions(map + ('dependencies -> value), tail)
@@ -68,6 +69,11 @@ object SentenceLevelGrammars {
             val sentence = data.sentence.map(x => if (lowercase) { x.toLowerCase } else { x })
             //val pos =  projectPos(input(i).pos)
             val graph = data.toOracleGraph(clearUnalignedNodes = false)  // TODO: don't require aligned sentence (which data requires)
+            if (options.contains('predictTree)) {
+                logger(0, "-- Predicted tree --")
+                graph.mkSpanningTree
+                logger(0, graph.prettyString(detail=1, pretty=true))
+            }
             // see http://stackoverflow.com/questions/10887828/string-to-gzipoutputstream
             var writer : BufferedWriter = null
             try {

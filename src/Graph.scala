@@ -336,7 +336,7 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         }
     }
 
-    def mkSpanningTree() {
+    def mkSpanningTree {
         // Deterministcally finds a spanning tree of an AMR graph, similar to the one annotators use.
         // Re-populates topological ordering with the spanning tree
         // Assumes node.relations have been set, the graph is connected, and getNodeById has been setup

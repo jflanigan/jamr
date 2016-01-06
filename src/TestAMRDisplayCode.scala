@@ -41,7 +41,8 @@ object TestAMRDisplayCode {
             val graph = Graph.parse(amrstr)
             logger(1,graph.prettyString(detail = 2, pretty = true))
             graph.normalizeInverseRelations
-            graph.makeTopologicalOrdering
+            //graph.makeTopologicalOrdering
+            graph.mkSpanningTree
             println(graph.prettyString(detail = 1, pretty = true))
             println()
         }
