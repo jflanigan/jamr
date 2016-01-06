@@ -7,6 +7,8 @@ import scala.collection.mutable.Queue
 import scala.collection.immutable
 import scala.util.parsing.combinator._
 
+import scala.collection.mutable.PriorityQueue
+
 case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[String, Node], getNodeByName: Map[String, Node]) {
 
     def duplicate : Graph = {
@@ -331,6 +333,52 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
                 }
             }
             visit(parent, relation, node)
+        }
+    }
+
+    def mkSpanningTree() {
+        // Deterministcally finds a spanning tree of an AMR graph, similar to the one annotators use.
+        // Re-populates topological ordering with the spanning tree
+        // Assumes node.relations have been set, the graph is connected, and getNodeById has been setup
+        normalizeInverseRelations
+        for (node <- nodes) {
+            node.topologicalOrdering = List()
+            node.variableRelations = List()
+        }
+
+        val incomingEdges : Map[String, List[(String, String)]] = inverseRelations  // these edges have -of added
+        val visited : Set[String] = Set()
+        val queue = new PriorityQueue[(Double, String, String, String)]()(Ordering.by(x => -x._1)) // smallest first
+        queue.enqueue((0, "ROOT", "ROOT", root.id))
+        var stable = 0.0    // so we remove nodes in the order we put them into the queue
+        while (!queue.isEmpty) {
+            val (depth, parentId, relation, id) : (Double, String, String, String) = queue.dequeue
+            val node = getNodeById(id)
+            if (!visited.contains(id)) {
+                // it hasn't been visited yet, so expand the node
+                visited += id
+                if (depth != 0) {
+                    val parent = getNodeById(parentId)
+                    parent.topologicalOrdering = parent.topologicalOrdering ::: List((relation, node))
+                }
+                for ((relation, child) <- node.relations.sortBy(x => x._1)) {
+                    assert(!relation.endsWith("-of"), "There's a problem. We called normalizeInverse relations, but a relation still ends with -of.")
+                    queue.enqueue((depth + 1 + stable, id, relation, child.id))
+                    stable += .00001    // so we remove nodes in the order we put them in 
+                                        // (so do the lexical items in order)
+                }
+                for ((relation, childId) <- incomingEdges(node.id).sortBy(x => x._1)) {
+                    assert(relation.endsWith("-of"), "There's a problem. All inverse relations should end in -of.")
+                    queue.enqueue((depth + 1 + 1000 + stable, id, relation, childId))  // so we follow inverse relations last
+                    stable += .00001
+                }
+            } else {
+                // it's been visited. If it's a forward relation, then it's a re-entrancy
+                if (!relation.endsWith("-of") && depth != 0) {
+                    val parent = getNodeById(parentId)
+                    parent.variableRelations = parent.variableRelations ::: List((relation, node))
+                }
+            }
         }
     }
 
