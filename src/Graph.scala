@@ -348,34 +348,38 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
 
         val incomingEdges : Map[String, List[(String, String)]] = inverseRelations  // these edges have -of added
         val visited : Set[String] = Set()
-        val queue = new PriorityQueue[(Double, String, String, String)]()(Ordering.by(x => -x._1)) // smallest first
-        queue.enqueue((0, "ROOT", "ROOT", root.id))
+        val queue = new PriorityQueue[(Double, Int, String, String, String)]()(Ordering.by(x => -x._1)) // smallest first
+        queue.enqueue((0.0, 0, "ROOT", "ROOT", root.id))
         var stable = 0.0    // so we remove nodes in the order we put them into the queue
         while (!queue.isEmpty) {
-            val (depth, parentId, relation, id) : (Double, String, String, String) = queue.dequeue
+            val (weight, depth, parentId, relation, id) : (Double, Int, String, String, String) = queue.dequeue
             val node = getNodeById(id)
             if (!visited.contains(id)) {
+                logger(2, "Visiting node: "+id+" "+node.concept)
                 // it hasn't been visited yet, so expand the node
                 visited += id
                 if (depth != 0) {
                     val parent = getNodeById(parentId)
+                    logger(2, "Adding edge: "+parent.concept+" "+relation+" "+node.concept)
                     parent.topologicalOrdering = parent.topologicalOrdering ::: List((relation, node))
                 }
-                for ((relation, child) <- node.relations.sortBy(x => x._1)) {
+                for ((relation, child) <- node.relations.sortBy(x => x._1).filter(x => x._2.id != parentId)) {
                     assert(!relation.endsWith("-of"), "There's a problem. We called normalizeInverse relations, but a relation still ends with -of.")
-                    queue.enqueue((depth + 1 + stable, id, relation, child.id))
+                    queue.enqueue((depth + stable, depth + 1, id, relation, child.id))
                     stable += .00001    // so we remove nodes in the order we put them in 
                                         // (so do the lexical items in order)
                 }
-                for ((relation, childId) <- incomingEdges(node.id).sortBy(x => x._1)) {
+                for ((relation, childId) <- incomingEdges.getOrElse(node.id, List()).sortBy(x => x._1)) {
                     assert(relation.endsWith("-of"), "There's a problem. All inverse relations should end in -of.")
-                    queue.enqueue((depth + 1 + 1000 + stable, id, relation, childId))  // so we follow inverse relations last
+                    queue.enqueue((depth + 1000 + stable, depth + 1, id, relation, childId))  // so we follow inverse relations last
                     stable += .00001
                 }
             } else {
                 // it's been visited. If it's a forward relation, then it's a re-entrancy
+                logger(2, "Re-visiting node: "+id+" "+getNodeById(id).concept)
                 if (!relation.endsWith("-of") && depth != 0) {
                     val parent = getNodeById(parentId)
+                    logger(2, "Adding re-entrancy: "+parent.concept+" "+relation+" "+node.concept)
                     parent.variableRelations = parent.variableRelations ::: List((relation, node))
                 }
             }

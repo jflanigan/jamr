@@ -26,7 +26,7 @@ class Decoder(val ruleInventory: RuleInventory) {
         var rules : List[(Rule, FeatureVector)] = List()
         var bestRule : Option[Array[Arg]] = None
         var bestScore : Option[Double] = None
-        for ((phrase, children, phraseFeatures) <- getRealizations(input.node)) {
+        for ((phrase, children, phraseFeatures) <- realizations) {
             if ((children.exists(x => !x.startsWith(":op")) || children.size == 0) && children.size < 6) {   // Pure op rules we ignore (handled with rule-based system)
                 for { DecoderResult((rule, feats), _, _) <- decode(phrase, children, input, k) } {
                     feats += phraseFeatures
@@ -34,6 +34,22 @@ class Decoder(val ruleInventory: RuleInventory) {
                     feats += FeatureVector(Map("badStopword" -> rule.badStopwordCount))
                     feats += FeatureVector(Map("negationWord" -> rule.negationWordCount))
                     rules = (rule, feats) :: rules
+                }
+            } else {    // pass through for rules with only ops
+                val concept = phrase.amrInstance.concept
+                if (!Set("name", "date-entity", "and", "multi-sentence").contains(concept) && !concept.matches(".+-.*[a-z]+")) {    // check that we aren't already creating a pass through rule
+                    val feats = if ((children.exists(x => !x.startsWith(":op")) || children.size == 0)) {
+                        FeatureVector(Map("passthrough" -> 1.0, "opPassThrough" -> 1.0))
+                    } else {
+                        FeatureVector(Map("passthrough" -> 1.0, "tooManyArgsThrough" -> 1.0))    // children.size > 6
+                    }
+                    feats += phraseFeatures
+                    rules = List((Rule(children.sorted.map(x => Arg("", x, "")),
+                                       ConceptInfo(phrase, 0), "", ""),
+                                  feats),
+                                 (Rule(children.sorted.map(x => Arg("", x, "")),
+                                       ConceptInfo(phrase, children.size), "", ""),
+                                  feats)) ::: rules
                 }
             }
         }

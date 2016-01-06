@@ -24,6 +24,10 @@ object SentenceLevelGrammars {
             case "--weights" :: value :: l =>            parseOptions(map + ('weights -> value), l)
             case "--dev" :: l =>                         parseOptions(map + ('dev -> "true"), l)
             case "--rule-inventory" :: value :: l =>     parseOptions(map + ('ruleInventory -> value), l)
+            case "--no-basic-rules" :: value :: l =>     parseOptions(map + ('noBasicRules -> value), l)
+            case "--no-synthetic-rules" :: value :: l => parseOptions(map + ('noSyntheticRules -> value), l)
+            case "--no-abstract-rules" :: value :: l =>  parseOptions(map + ('noAbstractRules -> value), l)
+            case "--no-handwritten-rules"::value :: l => parseOptions(map + ('noHandWrittenRules -> value), l)
             case "--kbest" :: value :: l =>              parseOptions(map + ('kbest -> value), l)
             case "--drop-sense-tags" :: l =>             parseOptions(map + ('dropSenseTags -> "true"), l)
             case "--predict-tree" :: l =>                parseOptions(map + ('predictTree -> "true"), l)
@@ -52,7 +56,7 @@ object SentenceLevelGrammars {
 
         //val input : Array[Input] = Input.loadInputfiles(options)
 
-        val ruleInventory: RuleInventory = new RuleInventory(featureNames, options.contains('dropSenseTags))
+        val ruleInventory: RuleInventory = new RuleInventory(options.contains('dropSenseTags), options)
         ruleInventory.load(options('ruleInventory))
 
         val ruleModel = new SyntheticRules.Decoder(ruleInventory)
@@ -80,9 +84,13 @@ object SentenceLevelGrammars {
                 val gzFile = new GZIPOutputStream(new FileOutputStream(new File(options('output) + s"/grammar${i}.gz")))
                 writer = new BufferedWriter(new OutputStreamWriter(gzFile, "UTF-8"))
                 for (node <- graph.nodes) {
-                    val corpusRules : List[(Rule, FeatureVector)] = ruleInventory.getRules(node)
+                    val corpusRules : List[(Rule, FeatureVector)] = if (!options.contains('noBasicRules)) {
+                        ruleInventory.getRules(node)
+                    } else { List() }
                     val passThroughRules : List[(Rule, FeatureVector)] = ruleInventory.passThroughRules(node, graph, kbest, ruleModel)
-                    val syntheticRules : List[(Rule, FeatureVector)] = ruleModel.syntheticRules(SyntheticRules.Input(node, graph), kbest)
+                    val syntheticRules : List[(Rule, FeatureVector)] = if (!options.contains('noSyntheticRules)) {
+                        ruleModel.syntheticRules(SyntheticRules.Input(node, graph), kbest)
+                    } else { List() }
                     logger(0, "concept = " + node.concept)
                     logger(0, "num children = " + node.children.size)
                     logger(0, "children = " + node.children.map(x => x._1).mkString(" "))
@@ -104,16 +112,18 @@ object SentenceLevelGrammars {
                         writer.append(rule._1.mkRule(withArgLabel=false)+" ||| "+rule._2.toCdecFormat+'\n')
                     }
                 }
-                writer.append("(X (X person) (ARG0_OF (X (X have-org-role-91) (ARG1 [X])))) ||| [1] ||| ruleCount=1.0 haveOrgRole=1.0\n") // Russia, Microsoft
-                writer.append("(X (X person) (ARG0_OF (X (X have-org-role-91) (ARG2 [X])))) ||| [1] ||| ruleCount=1.0 haveOrgRole=1.0\n") // officer, president
-                writer.append("(X (X person) (ARG0_OF (X (X have-org-role-91) (ARG1 [X]) (ARG2 [X])))) ||| [1] [2] ||| ruleCount=1.0 haveOrgRole=1.0\n")  // russian president, Microsoft CEO
-                writer.append("(X (X person) (ARG0_OF (X (X have-org-role-91) (ARG1 [X]) (ARG2 [X])))) ||| [2] of [1] ||| ruleCount=1.0 haveOrgRole=1.0\n")   // president of Russia, CEO of Microsoft
-                writer.append("(X (X person) (ARG0_OF (X (X have-org-role-91) (ARG1 [X]))) (NAME [X])) ||| [2] of [1] ||| ruleCount=1.0 haveOrgRole=1.0\n") // Bill Gates of Microsoft
-                writer.append("(X (X person) (ARG0_OF (X (X have-org-role-91) (ARG1 [X]))) (NAME [X])) ||| [2] from [1] ||| ruleCount=1.0 haveOrgRole=1.0\n") // Bill Gates from Microsoft
-                writer.append("(X (X person) (ARG0_OF (X (X have-org-role-91) (ARG2 [X]))) (NAME [X])) ||| [1] [2] ||| ruleCount=1.0 haveOrgRole=1.0\n")  // CEO Bill Gates, president Obama
-                writer.append("(X (X person) (ARG0_OF (X (X have-org-role-91) (ARG1 [X]) (ARG2 [X])) (NAME [X]))) ||| [1] [2] [3] ||| ruleCount=1.0 haveOrgRole=1.0\n")   // Microsoft CEO Bill Gates, U.S. president Barack Obama
-                writer.append("(X (X person) (ARG0_OF (X (X have-org-role-91) (ARG1 [X]) (ARG2 [X])) (NAME [X]))) ||| [2] of [1] [3] ||| ruleCount=1.0 haveOrgRole=1.0\n")    // CEO of Microsoft Bill Gates
-                //writer.append("(X (X person) (ARG0_OF (X (X have-org-role-91) (ARG1 [X]) (ARG2 [X])) (NAME [X]))) ||| [3] ( [2] of [1] ) ||| ruleCount=1.0 haveOrgRole=1.0\n")    // Bill Gates (CEO of Microsoft)
+                if (!options.contains('noHandWrittenRules)) {
+                    writer.append("(X (X person) (ARG0_OF (X (X have-org-role-91) (ARG1 [X])))) ||| [1] ||| ruleCount=1.0 haveOrgRole=1.0\n") // Russia, Microsoft
+                    writer.append("(X (X person) (ARG0_OF (X (X have-org-role-91) (ARG2 [X])))) ||| [1] ||| ruleCount=1.0 haveOrgRole=1.0\n") // officer, president
+                    writer.append("(X (X person) (ARG0_OF (X (X have-org-role-91) (ARG1 [X]) (ARG2 [X])))) ||| [1] [2] ||| ruleCount=1.0 haveOrgRole=1.0\n")  // russian president, Microsoft CEO
+                    writer.append("(X (X person) (ARG0_OF (X (X have-org-role-91) (ARG1 [X]) (ARG2 [X])))) ||| [2] of [1] ||| ruleCount=1.0 haveOrgRole=1.0\n")   // president of Russia, CEO of Microsoft
+                    writer.append("(X (X person) (ARG0_OF (X (X have-org-role-91) (ARG1 [X]))) (NAME [X])) ||| [2] of [1] ||| ruleCount=1.0 haveOrgRole=1.0\n") // Bill Gates of Microsoft
+                    writer.append("(X (X person) (ARG0_OF (X (X have-org-role-91) (ARG1 [X]))) (NAME [X])) ||| [2] from [1] ||| ruleCount=1.0 haveOrgRole=1.0\n") // Bill Gates from Microsoft
+                    writer.append("(X (X person) (ARG0_OF (X (X have-org-role-91) (ARG2 [X]))) (NAME [X])) ||| [1] [2] ||| ruleCount=1.0 haveOrgRole=1.0\n")  // CEO Bill Gates, president Obama
+                    writer.append("(X (X person) (ARG0_OF (X (X have-org-role-91) (ARG1 [X]) (ARG2 [X])) (NAME [X]))) ||| [1] [2] [3] ||| ruleCount=1.0 haveOrgRole=1.0\n")   // Microsoft CEO Bill Gates, U.S. president Barack Obama
+                    writer.append("(X (X person) (ARG0_OF (X (X have-org-role-91) (ARG1 [X]) (ARG2 [X])) (NAME [X]))) ||| [2] of [1] [3] ||| ruleCount=1.0 haveOrgRole=1.0\n")    // CEO of Microsoft Bill Gates
+                    //writer.append("(X (X person) (ARG0_OF (X (X have-org-role-91) (ARG1 [X]) (ARG2 [X])) (NAME [X]))) ||| [3] ( [2] of [1] ) ||| ruleCount=1.0 haveOrgRole=1.0\n")    // Bill Gates (CEO of Microsoft)
+                }
             } finally {
                 if (writer != null) {
                     writer.close

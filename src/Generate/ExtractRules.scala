@@ -54,7 +54,7 @@ object ExtractRules {
         val input : Array[Input] = Input.loadInputfiles(options)
         val pos = input.map(x => x.pos)
 
-        val ruleInventory: RuleInventory = new RuleInventory(dropSenses = options.contains('dropSenseTags))
+        val ruleInventory: RuleInventory = new RuleInventory(dropSenses = options.contains('dropSenseTags), options)
         ruleInventory.extractFromCorpus(io.Source.stdin.getLines, pos)
 
         ruleInventory.save(options('output))

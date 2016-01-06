@@ -5,7 +5,7 @@ import edu.cmu.lti.nlp.amr.BasicFeatureVector._
 import scala.util.matching.Regex
 import scala.collection.mutable.{Map, Set, ArrayBuffer}
 
-class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean) {
+class RuleInventory(dropSenses: Boolean, options: Map[Symbol, String]) {
 
     /*val featuresToUse : Set[String] = featureNames.map(x => x match {
         case "source" => Some("corpus")
@@ -301,7 +301,7 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean) {
                     
                 }
             } else*/
-            if (node.concept == "and") {
+            if (node.concept == "and" && !options.contains('noHandWrittenRules)) {
                 if (node.children.size == 2) {
                     List((Rule(node.children.sortBy(_._1).map(x => Arg("", x._1, "")),
                                ConceptInfo(PhraseConceptPair("and", node.concept, "CC", "CC"), 1), "", ""),
@@ -312,11 +312,11 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean) {
                                ConceptInfo(PhraseConceptPair("and", node.concept, "CC", "CC"), node.children.size - 1), "", ""),
                           FeatureVector(Map("passthrough" -> 1.0, "andPassthrough" -> 1.0))))
                 }
-            } else if (node.concept == "multi-sentence") {
-                List((Rule(node.children.sortBy(_._1).map(x => Arg("", x._1, "")),
+            } else if (node.concept == "multi-sentence" && !options.contains('noHandWrittenRules)) {
+                List((Rule(node.children.sortBy(_._1).map(x => Arg("", x._1, ",")),
                            ConceptInfo(PhraseConceptPair("", node.concept, "CC", "CC"), 0), "", "."),
                       FeatureVector(Map("passthrough" -> 1.0, "multiSentPassthrough" -> 1.0))))
-            } else if (Set("name", "date-entity").contains(node.concept) || node.concept.matches(".+-.*[a-z]+") || node.children.exists(_._1 == ":name") || (node.concept == "and" && node.children.size == 1)) {
+            } else if (Set("name", "date-entity").contains(node.concept) || node.concept.matches(".+-.*[a-z]+") || node.children.exists(_._1 == ":name") || (node.concept == "and" && node.children.size == 1) && !options.contains('noHandWrittenRules)) {
                 //if (node.concept == "date-entity") {
                 //    dateEntity(node)
                 //} else {
@@ -345,23 +345,38 @@ class RuleInventory(featureNames: Set[String] = Set(), dropSenses: Boolean) {
                 val abstractSignature : String = (if (event) { "EVENT " } else { "NONEVENT " }) + node.children.map(x => x._1).sorted.mkString(" ")
                 logger(0, "abstractSignature = "+abstractSignature)
                 var rules : List[(Rule, FeatureVector)] = List()
-                if (abstractRules.map.contains(abstractSignature)) {
-                    val abstractRule : Rule = abstractRules.map(abstractSignature).maxBy(_._2)._1   // use most common abstract rule
-                    val rule = Rule(abstractRule.argRealizations,
-                               ConceptInfo(PhraseConceptPair(dropSense(node.concept), node.concept, pos, pos), abstractRule.concept.position), "", "")
-                    logger(0, "rule = " + rule.toString)
-                    logger(0, "ruleCFG = " + rule.mkRule(withArgLabel=false))
-                    rules = List((Rule(abstractRule.argRealizations,
-                                       ConceptInfo(PhraseConceptPair(dropSense(node.concept), node.concept, pos, pos), abstractRule.concept.position), "", ""),
-                                  FeatureVector(Map("passthrough" -> 1.0, "abstractPassThrough" -> 1.0)))) ::: rules
+
+                if (!options.contains('noAbstractRules)) {
+                    if (abstractRules.map.contains(abstractSignature)) {
+                        val abstractRule : Rule = abstractRules.map(abstractSignature).maxBy(_._2)._1   // use most common abstract rule
+                        val rule = Rule(abstractRule.argRealizations,
+                                   ConceptInfo(PhraseConceptPair(dropSense(node.concept), node.concept, pos, pos), abstractRule.concept.position), "", "")
+                        logger(0, "rule = " + rule.toString)
+                        logger(0, "ruleCFG = " + rule.mkRule(withArgLabel=false))
+                        rules = List((Rule(abstractRule.argRealizations,
+                                           ConceptInfo(PhraseConceptPair(dropSense(node.concept), node.concept, pos, pos), abstractRule.concept.position), "", ""),
+                                      FeatureVector(Map("passthrough" -> 1.0, "abstractPassThrough" -> 1.0)))) ::: rules
+                    }
                 }
-                // Backoff synthetic model
-                if ((getRealizations(node).size == 0 && rules.size == 0 /*we're the last resort*/) || node.children.size < 5 /*the rule is fast*/) {    // filter to this because otherwise it's too slow
-                    val realization = PhraseConceptPair(dropSense(node.concept), node.concept, pos, pos)
-                    rules = ruleModel.syntheticRules(SyntheticRules.Input(node, graph), kbest,
-                        List((PhraseConceptPair(dropSense(node.concept), node.concept, pos, pos),           // realization
-                              node.children.map(x => x._1),                                                 // args
-                              FeatureVector(Map("passthrough" -> 1.0, "withChildrenPassThrough" -> 1.0))))) ::: rules // feats
+                if (!options.contains('noSyntheticRules)) {
+                    // Backoff synthetic model
+                    if ((getRealizations(node).size == 0 && rules.size == 0 /*we're the last resort*/) || node.children.size < 5 /*the rule is fast*/) {    // filter to this because otherwise it's too slow
+                        val realization = PhraseConceptPair(dropSense(node.concept), node.concept, pos, pos)
+                        rules = ruleModel.syntheticRules(SyntheticRules.Input(node, graph), kbest,
+                            List((PhraseConceptPair(dropSense(node.concept), node.concept, pos, pos),           // realization
+                                  node.children.map(x => x._1),                                                 // args
+                                  FeatureVector(Map("passthrough" -> 1.0, "syntheticWithChildrenPassThrough" -> 1.0))))) ::: rules // feats
+                    }
+                }
+                if (rules.size == 0) {
+                    rules = (Rule(node.children.sortBy(x => x._1).map(x => Arg("", x._1, "")),
+                                  ConceptInfo(PhraseConceptPair(dropSense(node.concept), node.concept, pos, pos), 0),
+                                  "", ""),
+                                  FeatureVector(Map("passthrough" -> 1.0, "withChildrenPassThroughLeft" -> 1.0))) :: rules
+                    rules = (Rule(node.children.sortBy(x => x._1).map(x => Arg("", x._1, "")),
+                                  ConceptInfo(PhraseConceptPair(dropSense(node.concept), node.concept, pos, pos), node.children.size),
+                                  "", ""),
+                                  FeatureVector(Map("passthrough" -> 1.0, "withChildrenPassThroughRight" -> 1.0))) :: rules
                 }
                 rules
             /*} else {

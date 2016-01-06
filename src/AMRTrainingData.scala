@@ -58,7 +58,7 @@ object AMRTrainingData {
         val lines = input.split("\n")
         val amrstr = lines.filterNot(_.matches("^#.*")).mkString(" ")
         val tokenized = lines.filter(_.matches("^# ::tok .*"))
-        assert(tokenized.size == 1, "Incorrect number of tokenized ::tok.\nInput:\n"+input)
+        //assert(tokenized.size == 1, "Incorrect number of tokenized ::tok.\nInput:\n"+input)
         val spanlines = lines.filter(_.matches("^# ::alignments .*"))
         assert(spanlines.size > 0, "Missing alignments\nInput:\n"+input)
 

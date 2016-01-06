@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+INPUT="${MODEL_DIR}/test-grammars.snt"
+OUTPUT="${MODEL_DIR}/test_decode"
+
+"${JAMR_HOME}/tools/cdec/decoder/cdec" \
+    -c "${JAMR_HOME}/dpmert/cdec.ini" \
+    -w "${MODEL_DIR}/dpmert/weights.final" \
+    -i "${INPUT}" \
+    > "${OUTPUT}.txt" \
+    2> "${OUTPUT}.err"
+
