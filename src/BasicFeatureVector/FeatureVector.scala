@@ -1,24 +1,10 @@
 package edu.cmu.lti.nlp.amr.BasicFeatureVector
+import edu.cmu.lti.nlp.amr._
 import edu.cmu.lti.nlp.amr.Train.AbstractFeatureVector
 
-import java.io.File
-import java.io.FileOutputStream
-import java.io.PrintStream
-import java.io.BufferedOutputStream
-import java.io.OutputStreamWriter
-import java.lang.Math.abs
-import java.lang.Math.log
-import java.lang.Math.exp
-import java.lang.Math.random
-import java.lang.Math.floor
-import java.lang.Math.min
-import java.lang.Math.max
-import scala.io.Source
-import scala.util.matching.Regex
-import scala.collection.mutable.Map
-import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
-import scala.util.parsing.combinator._
+import scala.collection.{mutable => m, immutable => i}  // m.Set, m.Map, i.Set, i.Map
+
 
 /**************************** Feature Vectors *******************************/
 
@@ -28,7 +14,7 @@ case class MulAssoc(x: Double) { def * (v: FeatureVector) = mul(x, v) }
 // in package.scala:
 // implicit def doubleToMulAssoc(x: Double) = new MulAssoc(x)
 
-case class FeatureVector(fmap : Map[String, Double] = Map[String, Double]()) extends AbstractFeatureVector(Array()) {
+case class FeatureVector(fmap : m.Map[String, Double] = m.Map[String, Double]()) extends AbstractFeatureVector(Array()) {
 //    def copy(v: FeatureVector) = { FeatureVector(v.fmap.clone()) }
     def dot(v: FeatureVector) : Double = {
         if (fmap.size <= v.fmap.size) {
@@ -74,7 +60,7 @@ case class FeatureVector(fmap : Map[String, Double] = Map[String, Double]()) ext
         }
         return f
     }
-    def read(iterator: Iterator[String]) = {    // TODO: make this another constructor
+    def read(iterator: Iterator[String]) {    // TODO: make this another constructor
         val regex = """(.*)[ \t]([^ \t]*)""".r
         //val iterator = Source.fromFile(filename).getLines()
         fmap.clear()
@@ -88,6 +74,15 @@ case class FeatureVector(fmap : Map[String, Double] = Map[String, Double]()) ext
             }
         }
         return string.toString
+    }
+    def toCdecFormat() : String = { 
+        // converts the feature vector to a one-line string format compatible with cdec's format
+        return fmap.toList.map(x => { assert(!x._1.contains(' '), "Cannot convert to cdec format (there should be no spaces in the feature names)");  x._1+"="+x._2 }).sorted.mkString(" ")
+    }
+    def fromCdecFormat(string: String) {
+        val regex = """(.*)=([^=]*)""".r
+        fmap.clear()
+        fmap ++= string.splitStr(" ").map((s : String) => { val regex(f,v) = s; (f,v.toDouble) })
     }
     def unsorted() : String = {
         val string = new StringBuilder
