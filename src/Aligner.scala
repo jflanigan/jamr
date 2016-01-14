@@ -73,7 +73,7 @@ object Aligner {
                     logger(1, "Span "+(i+1).toString+":  "+span.words+" => "+span.amr)
                     logger(3, "* "+span.format)
                 }
-                println("# ::alignments "+spans.map(_.format).mkString(" ")+" ::annotator Aligner v.02 ::date "+sdf.format(new Date))
+                println("# ::alignments "+spans.map(_.format).mkString(" ")+" ::annotator Aligner v.03 ::date "+sdf.format(new Date))
                 println(amr.printNodes.map(x => "# ::node\t" + x).mkString("\n"))
                 println(amr.printRoot)
                 if (amr.root.relations.size > 0) {

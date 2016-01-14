@@ -177,6 +177,7 @@ object AlignSpans3 {
         }
         val haveRoleArg2 = new UnalignedConcept(sentence, graph, wordToSpan) { concept="have-org-role-91|have-rel-role-91"; label=":ARG2" } // have-org-role-91 or have-rel-role-91 aligned with to ARG2 child
         val haveOrgRoleArg1 = new UnalignedConcept(sentence, graph, wordToSpan) { concept="have-org-role-91"; label=":ARG1" } // have-org-role-91 aligned with to ARG1 child
+        val wiki = new UnalignedChild(sentence, graph, wordToSpan) { concept=".*"; label=":wiki" }
 
         addAllSpans(namedEntity, graph, wordToSpan, addCoRefs=false)
         addAllSpans(fuzzyNamedEntity, graph, wordToSpan, addCoRefs=false)
@@ -199,6 +200,7 @@ object AlignSpans3 {
         try { updateSpans(est, graph) } catch { case e : Throwable => Unit }
         try { updateSpans(haveRoleArg2, graph) } catch { case e : Throwable => Unit }
         try { updateSpans(haveOrgRoleArg1, graph) } catch { case e : Throwable => Unit }
+        try { updateSpans(wiki, graph) } catch { case e : Throwable => Unit }
         //try { updateSpans(er, graph) } catch { case e : Throwable => Unit }
         //dateEntities(sentence, graph)
         //namedEntities(sentence, graph)
