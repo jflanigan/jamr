@@ -1,0 +1,22 @@
+#!/bin/bash
+
+INPUT="${DEV_FILE}"
+OUTPUT="${MODEL_DIR}/dev.decode.stage2only"
+
+STAGE1_WEIGHTS="${MODEL_DIR}/stage1-weights"
+STAGE2_WEIGHTS="${MODEL_DIR}/stage2-weights.iter5" # CHANGEME. pick iteration by performance on dev
+
+${JAMR_HOME}/run AMRParser \
+    --stage1-concept-table "${MODEL_DIR}/conceptTable.train" \
+    --stage1-weights "${STAGE1_WEIGHTS}" \
+    --stage1-oracle \
+    --stage2-weights "${STAGE2_WEIGHTS}" \
+    --dependencies "${INPUT}.snt.deps" \
+    --ner "${INPUT}.snt.IllinoisNER" \
+    --tok "${INPUT}.snt.tok" \
+    --training-data "${INPUT}.aligned.no_opN" \
+    -v 0 \
+    ${PARSER_OPTIONS} \
+    < "${INPUT}.snt" \
+    > "${OUTPUT}" \
+    2> "${OUTPUT}.err"
