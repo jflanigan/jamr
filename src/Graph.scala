@@ -311,31 +311,6 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
     }
 */
 
-    def breadthFirst(visit: (Node, String, Node) => Unit, revisit: (Node, String, Node) => Unit) {
-        // Assumes a topological ordering has been made.
-        // Breadth first search from the root.
-        // When it visits a node, it calls either 'visit(parent, relation, node)' on the
-        // first visit or 'revisit(parent, relation, node)' if the visit is a re-entrancy.
-        // For a DAG, it will never visit the root, since it has no parent.
-        // Crucially, it calls 'visit' after it has enqueued it's children and
-        // called 'revisit' on them (needed for breadthFirstTopologicalOrdering).
-        val queue = Queue[(Node, String, Node)]()
-        queue ++= (root.children.map(x => (root, x._1, x._2)) ++ root.variableRelations.map(x => (root, x._1, x._2))).sortBy(_._2)
-        val visited = Set[Node](root)
-        while (queue.size > 0) {
-            val (parent, relation, node) = queue.dequeue
-            visited += node
-            for ((rel, child) <- (node.topologicalOrdering ++ node.variableRelations).sortBy(_._1)) {
-                if (visited.contains(child)) {
-                    revisit(node, rel, child)
-                } else {
-                    queue.enqueue((node, rel, child))
-                }
-            }
-            visit(parent, relation, node)
-        }
-    }
-
     def mkSpanningTree() {
         // Deterministcally finds a spanning tree of an AMR graph, similar to the one annotators use.
         // Re-populates topological ordering with the spanning tree
