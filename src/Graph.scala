@@ -491,6 +491,10 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
     }
 
     def makeTopologicalOrdering() {
+        mkSpanningTree()
+    }
+
+    def makeTopologicalOrderingOldWay() {   // Old way, didn't work as well TODO: remove this, since not needed
         // This function is called after the graph decoder has added edges to the graph and
         // the root has been chosen. (The edges were added to each node's relations list and
         // root has been correctly set).
