@@ -342,7 +342,7 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
                     stable += .00001    // so we remove nodes in the order we put them in 
                                         // (so do the lexical items in order)
                 }
-                for ((relation, childId) <- incomingEdges(node.id).sortBy(x => x._1)) {
+                for ((relation, childId) <- incomingEdges.getOrElse(node.id, List()).sortBy(x => x._1)) {
                     assert(relation.endsWith("-of"), "There's a problem. All inverse relations should end in -of.")
                     queue.enqueue((depth + 1 + 1000 + stable, id, relation, childId))  // so we follow inverse relations last
                     stable += .00001
@@ -574,13 +574,13 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         }
     }
 
-    def prettyString(detail: Int, pretty: Boolean) : String = {
+    def prettyString(detail: Int, pretty: Boolean, indent: String = "") : String = {
         val vars = Set.empty[String]        // set of variable names to be sure to keep in output 
         if (root.name != None) {
             vars += root.name.get
         }
         doRecursive(node => vars ++= node.variableRelations.map(_._2.name.get)) // if it's in variableRelations, it should have a variable name
-        return root.prettyString(detail, pretty, vars)
+        return indent + root.prettyString(detail, pretty, vars, indent=indent)
     }
 
     def assignOpN() {

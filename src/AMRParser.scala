@@ -262,14 +262,17 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                                 spanF1.correct += 1
                             } else {
                                 if (oracleResult.graph.spans.count(x => x.start == span.start && x.end == span.end) > 0) {
+                                    println("# Incorrect span: "+span.words+" => "+span.amr)
                                     logger(0, "Incorrect span: "+span.words+" => "+span.amr)
                                 } else {
+                                    println("# Extra span: "+span.words+" => "+span.amr)
                                     logger(0, "Extra span: "+span.words+" => "+span.amr)
                                 }
                             }
                         }
                         for (span <- oracleResult.graph.spans) {
                             if (stage1Result.graph.spans.count(x => x.start == span.start && x.end == span.end && x.amr.toString == span.amr.toString) == 0) {
+                                println("# Missing span: "+span.words+" => "+span.amr)
                                 logger(0, "Missing span: "+span.words+" => "+span.amr)
                             }
                         }
@@ -285,7 +288,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
 
                 if (!options.contains('stage1Only)) {
                     val decoder = stage2.get
-                    logger(0, decoder.features.input)
+                    logger(1, decoder.features.input)
                     logger(0, "AMR:\n"+decoderResultGraph.printTriples(detail = 1, extra = (node1, node2, relation) => {
                         "" //TODO: put back in "\t"+decoder.features.ffDependencyPathv2(node1, node2, relation).toString.split("\n").filter(_.matches("^C1.*")).toList.toString+"\t"+decoder.features.localScore(node1, node2, relation).toString
                         //"\n"+decoder.features.ffDependencyPathv2(node1, node2, relation).toString.split("\n").filter(_.matches("^C1.*")).toList.toString+"\nScore = "+decoder.features.localScore(node1, node2, relation).toString+"  Relevent weights:\n"+decoder.features.weights.slice(decoder.features.localFeatures(node1, node2, relation)).toString
@@ -308,6 +311,10 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                         println(decoderResultGraph.printEdges.map(x => "# ::edge\t" + x).mkString("\n"))
                     }
                     if (outputFormat.contains("AMR")) {
+                        if (options.contains('trainingData)) {
+                            val amrdata2 = AMRTrainingData(oracleData(i))
+                            println(amrdata2.graph.prettyString(detail=1, pretty=true, indent="#"))
+                        }
                         println(decoderResultGraph.prettyString(detail=1, pretty=true))
                     }
                     if (outputFormat.contains("triples")) {
