@@ -36,6 +36,7 @@ class StanfordProcessor {
   private val processor = {
     val props = new Properties()
     props.setProperty("annotators", "tokenize,ssplit,parse")
+    props.setProperty("parse.model", "edu/stanford/nlp/models/lexparser/englishRNN.ser.gz")
     new StanfordCoreNLP(props)
   }
 
