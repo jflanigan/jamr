@@ -136,7 +136,11 @@ class Concepts(options: m.Map[Symbol, String],
               if words.filterNot(x => x.matches("[A-Za-z0-9.-]*")).size == 0 } {    // TODO: improve this regex
             concepts = PhraseConceptPair(
                 words,
-                "(thing :name (name "+words.map(x => ":op "+x).mkString(" ")+"))",
+                if (options.contains('stage1Wiki)) {
+                    "(thing :wiki - :name (name "+words.map(x => ":op "+x).mkString(" ")+"))"
+                } else {
+                    "(thing :name (name "+words.map(x => ":op "+x).mkString(" ")+"))"
+                },
                 FeatureVector(m.Map("NEPassThrough" -> 1.0, "NEPassThrough_len" -> j)),
                 List()) :: concepts
         }
@@ -218,7 +222,11 @@ class Concepts(options: m.Map[Symbol, String],
         }
         val (start, end) = ner.getSpan((entity.start, entity.end))         // start and end in ner.snt, which is the tokenized text
         val (notTokStart, notTokEnd) = notTokenized.getSpan((start, end))  // start and end in notTokenized.snt, which is the original untokenized text
-        val graphFrag = "(" + entityType + " :name (name " + notTokenized.snt.slice(notTokStart, notTokEnd).map(x => ":op \"" + x.replaceAllLiterally("\"","") + "\"").mkString(" ") + "))" // there should be no " in named entities (TODO: does the AMR style guide say if you can escape them?)
+        val graphFrag = if (options.contains('stage1Wiki)) {
+            "(" + entityType + ":wiki - :name (name " + notTokenized.snt.slice(notTokStart, notTokEnd).map(x => ":op \"" + x.replaceAllLiterally("\"","") + "\"").mkString(" ") + "))" // there should be no " in named entities (TODO: does the AMR style guide say if you can escape them?)
+        } else {
+            "(" + entityType + " :name (name " + notTokenized.snt.slice(notTokStart, notTokEnd).map(x => ":op \"" + x.replaceAllLiterally("\"","") + "\"").mkString(" ") + "))" // there should be no " in named entities (TODO: does the AMR style guide say if you can escape them?)
+        }
         logger(0, "NER Entity: "+graphFrag)
         //logger(1, "(start, end) = "+(start,end))
         //logger(1, "ner.snt = "+ner.snt.toList)
