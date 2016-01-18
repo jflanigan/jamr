@@ -35,6 +35,7 @@ class Features(featureNames: List[String], phraseCounts: i.Map[List[String], Int
         "pos" -> ffPOS,
         "phrase" -> ffPhrase,
         "phraseConceptPair" -> ffPhraseConceptPair,
+        "phraseConceptPairPOS" -> ffPhraseConceptPairPOS,
         "pairWith2WordContext" -> ffPairWith2WordContext
     )
 
@@ -97,6 +98,14 @@ class Features(featureNames: List[String], phraseCounts: i.Map[List[String], Int
     def ffPhraseConceptPair(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
         if(concept.trainingIndices.size > 10) {
             FeatureVector(m.Map("CP="+concept.words.mkString("_")+"=>"+concept.graphFrag.replaceAllLiterally(" ","_") -> 1.0))
+        } else {
+            new FeatureVector()
+        }
+    }
+
+    def ffPhraseConceptPairPOS(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
+        if(concept.trainingIndices.size > 3) {
+            FeatureVector(m.Map("CP="+concept.words.mkString("_")+"POS="+input.pos.slice(start, end).mkString("_")+"=>"+concept.graphFrag.replaceAllLiterally(" ","_") -> 1.0))
         } else {
             new FeatureVector()
         }
