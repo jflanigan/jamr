@@ -61,7 +61,8 @@ class Features(private var myFeatureNames: List[String], labelSet: Array[String]
         //"dependencyPathv1" -> ffDependencyPathv1 _,
         "dependencyPathv2" -> ffDependencyPathv2 _,
         "dependencyPathv3" -> ffDependencyPathv3 _,
-        "dependencyPathv4" -> ffDependencyPathv4 _
+        "dependencyPathv4" -> ffDependencyPathv4 _,
+        "dependencyPathv5" -> ffDependencyPathv5 _
     )
 
     val rootFFTable = Map[String, FeatureFunction](
@@ -392,6 +393,29 @@ class Features(private var myFeatureNames: List[String], labelSet: Array[String]
         }
     }
 
+    def ffDependencyPathv5 {
+        val (word1Index, word2Index, path) = (
+            for { w1 <- dependencySpan(node1)
+                  w2 <- dependencySpan(node2)
+                } yield { (w1, w2, dependencyPath(w1, w2)) }).minBy(x => x._3._1.size + x._3._2.size)
+
+        // TODO: could also do all paths instead of just the shortest
+        val dp = "DPv5="
+        val pos = fullPos
+        pos.annotation = fullPos.annotation.map(x => x.replaceAll("VB.*","VB").replaceAll("NN.*","NN"))
+        val (word1, word2) = (dependencies.tok(word1Index), dependencies.tok(word2Index))
+        if (path._1.size + path._2.size <= 6) {  // TODO: max path longer
+            val pathStr = dependencyPathStringv2(path, pos).mkString("_")
+            addFeature(dp+pathStr, 1.0, 1.0)
+            addFeature("C1="+node1.concept+"+"+dp+pathStr, 1.0, 1.0)
+            addFeature("C2="+node2.concept+"+"+dp+pathStr, 1.0, 1.0)
+            addFeature("W1="+word1+"+"+dp+pathStr, 1.0, 1.0)
+            addFeature("W2="+word2+"+"+dp+pathStr, 1.0, 1.0)
+        } else {
+            addFeature(dp+"NONE", 1.0, 1.0)
+        }
+    }
+
     def depPathStrv3(node1: Node, node2: Node, maxpath: Int = 4) : String = {   // same code as above, just only computes pathStr
         val (word1Index, word2Index, path) = (for { w1 <- dependencySpan(node1)
                                                     w2 <- dependencySpan(node2)
@@ -430,6 +454,30 @@ class Features(private var myFeatureNames: List[String], labelSet: Array[String]
         for (List(word1, word2) <- path._2.sliding(2)) {
             //logger(2, "Looking for dependent="+word2.toString+" head="+word1.toString)
             pathList = pos.annotations(word1) + "_" + dependencies.annotations.find(x => (x.head == word1 && x.dependent == word2)).get.relation + "<_" + pos.annotations(word2) :: pathList
+        }
+        return pathList.reverse
+    }
+
+    def dependencyPathStringv2(path: (List[Int], List[Int]), pos: Annotation[String]) : List[String] = {
+        // Assumes that the POS tags use the same tokenization as the dependencies
+        // Includes prepositions in the path
+        //logger(2, "path="+path.toString)
+        var pathList : List[String] = List()
+        def posAnnotation(word: Int) : String = {
+            if (pos.annotations(word) == "IN") {
+                val (start, stop) = dependencies.getSpan(word, word+1)
+                sentence.slice(start, stop).mkString("_").toLowerCase
+            } else {
+                pos.annotations(word)
+            }
+        }
+        for (List(word1, word2) <- path._1.sliding(2)) {
+            //logger(2, "Looking for dependent="+word1.toString+" head="+word2.toString)
+            pathList = posAnnotation(word1) + "_" + dependencies.annotations.find(x => (x.dependent == word1 && x.head == word2)).get.relation + ">_" + posAnnotation(word2) :: pathList
+        }
+        for (List(word1, word2) <- path._2.sliding(2)) {
+            //logger(2, "Looking for dependent="+word2.toString+" head="+word1.toString)
+            pathList = posAnnotation(word1) + "_" + dependencies.annotations.find(x => (x.head == word1 && x.dependent == word2)).get.relation + "<_" + posAnnotation(word2) :: pathList
         }
         return pathList.reverse
     }

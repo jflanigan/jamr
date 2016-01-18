@@ -33,6 +33,7 @@ class Features(featureNames: List[String], phraseCounts: i.Map[List[String], Int
         "sentenceMatch" -> ffSentenceMatch,
         "andList" -> ffAndList,
         "pos" -> ffPOS,
+        "posEvent" -> ffPOSEvent,
         "phrase" -> ffPhrase,
         "phraseConceptPair" -> ffPhraseConceptPair,
         "phraseConceptPairPOS" -> ffPhraseConceptPairPOS,
@@ -86,6 +87,10 @@ class Features(featureNames: List[String], phraseCounts: i.Map[List[String], Int
     def ffPOS(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
         return FeatureVector(m.Map("POS=" + input.pos.slice(start, end).mkString("_") -> 1.0))
     }
+    
+    def ffPOSEvent(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
+        return FeatureVector(m.Map("POS=" + input.pos.slice(start, end).mkString("_")+"+EVENT="+(if(concept.graphFrag.matches(".*-[0-9][0-9]")) { "T" } else { "F" })  -> 1.0))
+    }
 
     def ffPhrase(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
         if(phraseCounts.getOrElse(concept.words, 0) > 10) {
@@ -105,7 +110,7 @@ class Features(featureNames: List[String], phraseCounts: i.Map[List[String], Int
 
     def ffPhraseConceptPairPOS(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
         if(concept.trainingIndices.size > 3) {
-            FeatureVector(m.Map("CP="+concept.words.mkString("_")+"POS="+input.pos.slice(start, end).mkString("_")+"=>"+concept.graphFrag.replaceAllLiterally(" ","_") -> 1.0))
+            FeatureVector(m.Map("CP="+concept.words.mkString("_")+"+POS="+input.pos.slice(start, end).mkString("_")+"=>"+concept.graphFrag.replaceAllLiterally(" ","_") -> 1.0))
         } else {
             new FeatureVector()
         }

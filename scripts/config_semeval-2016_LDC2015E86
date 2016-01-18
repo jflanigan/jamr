@@ -24,7 +24,7 @@ export MODEL_DIR="${JAMR_HOME}/models/semeval-2016_LDC2015E86"  # ideally keep t
 # CONCEPT_ID_TRAINING_OPTIONS and RELATION_ID_TRAINING_OPTIONS will override PARSER_OPTIONS
 
 #export STAGE1_FEATURES="bias,length,fromNERTagger,conceptGivenPhrase"
-export STAGE1_FEATURES="bias,corpusIndicator,length,corpusLength,conceptGivenPhrase,count,phraseGivenConcept,phraseConceptPair,phrase,firstMatch,numberIndicator,sentenceMatch,andList,pos"
+export STAGE1_FEATURES="bias,corpusIndicator,length,corpusLength,conceptGivenPhrase,count,phraseGivenConcept,phraseConceptPair,phrase,firstMatch,numberIndicator,sentenceMatch,andList,pos,posEvent,phraseConceptPairPOS"
 
 export PARSER_OPTIONS="
     --stage1-synthetic-concepts NER,DateExpr,OntoNotes,NEPassThrough,PassThrough,WordNetPassThrough,verbs,nominalizations
@@ -32,7 +32,7 @@ export PARSER_OPTIONS="
     --stage1-phrase-counts ${MODEL_DIR}/wordCounts.train
     --stage1-features ${STAGE1_FEATURES}
     --stage2-decoder LR
-    --stage2-features rootConcept,rootDependencyPathv1,bias,typeBias,self,fragHead,edgeCount,distance,logDistance,posPathv3,dependencyPathv4,conceptBigram
+    --stage2-features rootConcept,rootDependencyPathv1,bias,typeBias,self,fragHead,edgeCount,distance,logDistance,posPathv3,dependencyPathv4,conceptBigram,dependencyPathv5
     --stage2-labelset ${JAMR_HOME}/resources/labelset-r4
     --output-format AMR
     --ignore-parser-errors
