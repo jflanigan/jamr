@@ -57,11 +57,12 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
                 } else {
                     edgeWeights(i)(j) = Array.fill(labelSet.size)(("", 0.0))
                     val feats = features.localFeatures(nodes(i), nodes(j))
+                    //logger(0, "localFeatures("+nodes(i).concept+")("+nodes(j).concept+") = "+feats.toString)
                     features.weights.iterateOverLabels2(feats,
                         x => { //logger(3, "These should be equal: " + x.value.toString + " " + features.localScore(nodes(i), nodes(j), features.weights.labelset(x.labelIndex).toString));
                         //edgeWeights(i)(j)(x.labelIndex) = (features.weights.labelset(x.labelIndex), features.localScore(nodes(i), nodes(j), features.weights.labelset(x.labelIndex))) })
                         edgeWeights(i)(j)(x.labelIndex) = (features.weights.labelset(x.labelIndex), x.value) })
-                        //logger(2, "edgeWeights("+i.toString+")("+j.toString+") = "+edgeWeights(i)(j).toList)
+                        //logger(0, "edgeWeights("+nodes(i).concept+")("+nodes(j).concept+") = "+edgeWeights(i)(j).toList.sortBy(-_._2))
                 }
             }
         }
@@ -88,6 +89,8 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
         val distinctLabels = labelSet
         //logger(1, "labelSet = "+labelSet.toList.toString)
         //logger(1, "-- Alg2 Weights --\n"+features.weights.toString)
+        //logger(0, "CA weights:\n" + features.weights.filter(x => x.startsWith("CA:C1")).toString)
+        //logger(0, "CA:U weights:\n" + features.weights.filter(x => x.startsWith("CA:U_C1")).toString)
 
         // Each node is numbered by its index in 'nodes'
         // Each set is numbered by its index in 'setArray'
@@ -101,7 +104,7 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
         var feats = new FeatureVector(features.weights.labelset)
         def addEdge(node1: Node, index1: Int, node2: Node, index2: Int, label: String, weight: Double, addRelation: Boolean = true) {
             if (!node1.relations.exists(x => ((x._1 == label) && (x._2.id == node2.id))) || !addRelation) { // Prevent adding an edge twice
-                //logger(1, "Adding edge ("+node1.concept+", "+label +", "+node2.concept + ") with weight "+weight.toString)
+                //logger(0, "Adding edge ("+node1.concept+", "+label +", "+node2.concept + ") with weight "+weight.toString)
                 if (addRelation) {
                     node1.relations = (label, node2) :: node1.relations
                 }
@@ -206,11 +209,11 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
         } ************************************************** */
 
         // Uncomment to print neighbors matrix
-        /* logger(1, "Neighbors matrix")
+        /*logger(0, "Neighbors matrix")
         for { (node1, index1) <- nodes.zipWithIndex
               ((label, weight), index2) <- neighbors(index1).zipWithIndex } {
-            logger(1,"neighbors("+index1.toString+","+index2.toString+")="+label+" "+weight.toString)
-        } */
+            logger(0,"neighbors("+nodes(index1).concept+","+nodes(index2).concept+")="+label+" "+weight.toString)
+        }*/
 
         // Add negative weights to the queue
         //logger(1, "Adding negative edges")

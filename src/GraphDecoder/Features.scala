@@ -95,8 +95,10 @@ class Features(private var myFeatureNames: List[String], labelSet: Array[String]
     }
 
     def ffCostAugEdge {       // Used for cost augmented decoding
-        addFeature("CA:U_C1="+node1.concept+"+C2="+node2.concept, 1.0, 0.0)   // WARNING: don't change this without also changing the features in CostAugmented decoder as well
-        addFeature("CA:C1="+node1.concept+"+C2="+node2.concept, 0.0, 1.0)    // WARNING: don't change this without also changing the features in CostAugmented decoder as well
+        if (node1.spans(0) != node2.spans(0)) {
+            addFeature("CA:U_C1="+node1.concept+"+C2="+node2.concept, 1.0, 0.0) // WARNING: don't change this without also changing the features in CostAugmented decoder as well
+            addFeature("CA:C1="+node1.concept+"+C2="+node2.concept, 0.0, 1.0)   // WARNING: don't change this without also changing the features in CostAugmented decoder as well
+        }
     }
 
     def ffDDEdgeId {          // Used for Dual Decomposition

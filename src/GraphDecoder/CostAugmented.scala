@@ -38,13 +38,14 @@ class CostAugmented(val decoder: Decoder, costScale: Double, precRecTradeoff: Do
             } {
                 edgeFeatures = ("CA:U_C1="+node1.concept+"+C2="+node2.concept, ValuesList(1.0, List())) :: edgeFeatures
         }
-        addCost += edgeFeatures     // Add features not conjoined with label (aka unconjoined)
+        //logger(0, "CostAug edge features:\n" + oracle.features.filter(x => x.startsWith("CA:C1")).toString)
+        addCost += edgeFeatures.distinct     // Add features not conjoined with label (aka unconjoined)
 
         // add costScale to edge weights that don't match oracle (penalize precision type errors) (Actually add to all weights, then subtract)
         // (penalize predicting edge that isn't in oracle)
         features.weights += (1.0 * precRecTradeoff * costScale) * addCost
         features.weights -= (1.0 * precRecTradeoff * costScale) * oracle.features.filter(x => x.startsWith("CA:C1"))
-        // subtract costScale from ones that match (penalize recall type errors) (Actually subtract twice the amount to cancel adding to all)
+        // subtract costScale from ones that match (penalize recall type errors)
         // (penalize not predicting edge that is in oracle)
         features.weights -= (1.0 * (1.0 - precRecTradeoff) * costScale) * oracle.features.filter(x => x.startsWith("CA:C1"))
 
@@ -61,13 +62,15 @@ class CostAugmented(val decoder: Decoder, costScale: Double, precRecTradeoff: Do
         }
         val result = decoder.decode(input)
         input.graph = Some(saveGraph)
+        //logger(0, "CostAug input graph:\n"+input.graph.get.printTriples())
+        //logger(0, "CostAug output graph:\n"+result.graph.printTriples())
 
         val score = features.weights.dot(result.features)
 
         // undo the changes
         features.weights -= (1.0 * precRecTradeoff * costScale) * addCost
-        features.weights += (1.0 * precRecTradeoff * costScale) * oracle.features.filter(x => x.startsWith("CA:"))
-        features.weights += (1.0 * (1.0 - precRecTradeoff) * costScale) * oracle.features.filter(x => x.startsWith("CA:"))
+        features.weights += (1.0 * precRecTradeoff * costScale) * oracle.features.filter(x => x.startsWith("CA:C1"))
+        features.weights += (1.0 * (1.0 - precRecTradeoff) * costScale) * oracle.features.filter(x => x.startsWith("CA:C1"))
 
         val feats = result.features.filter(x => !x.startsWith("CA:"))
         return DecoderResult(result.graph, feats, score)
