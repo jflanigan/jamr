@@ -67,5 +67,10 @@ package object GraphDecoder {
     def Oracle(options: OptionMap) : GraphDecoder.Decoder = {
         return new Oracle(getFeatures(options), getLabelset(options).map(x => x._1))
     }
+
+    def CostDiminished(options: OptionMap) : GraphDecoder.Decoder = {
+        val decoder = Decoder(options)
+        return new CostAugmented(decoder, -100000000000.0, 0.5)
+    }
 }
 

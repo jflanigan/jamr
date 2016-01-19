@@ -30,6 +30,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             case Nil => map
             case "--stage1-only" :: l =>                 parseOptions(map + ('stage1Only -> "true"), l)
             case "--stage1-oracle" :: l =>               parseOptions(map + ('stage1Oracle -> "true"), l)
+            case "--stage1-cost-diminished" :: l =>      parseOptions(map + ('stage1CostDiminished -> "true"), l)
             case "--stage1-train" :: l =>                parseOptions(map + ('stage1Train -> "true"), l)
             case "--stage1-training-leave-one-out"::l => parseOptions(map + ('stage1TrainingLeaveOneOut -> "true"), l)
             case "--stage1-eval" :: l =>                 parseOptions(map + ('stage1Eval -> "true"), l)
@@ -39,10 +40,10 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             case "--stage1-concept-table" :: v :: l =>   parseOptions(map + ('stage1ConceptTable -> v), l)
             case "--stage1-phrase-counts" :: v :: l =>   parseOptions(map + ('stage1PhraseCounts -> v), l)
             case "--stage1-predicates" :: v :: l =>      parseOptions(map + ('stage1Predicates -> v), l)
-
             case "--stage1-wiki" :: l =>                 parseOptions(map + ('stage1Wiki -> "true"), l)
             case "--stage2-decoder" :: value :: l =>     parseOptions(map + ('stage2Decoder -> value), l)
             case "--stage2-approx-decoder" ::value::l => parseOptions(map + ('stage2ApproxDecoder -> value), l)
+            case "--stage2-cost-diminished" :: l =>      parseOptions(map + ('stage2CostDiminished -> "true"), l)
             case "--stage2-LR-iterations" ::value::l =>  parseOptions(map + ('stage2LRIterations -> value), l)
             case "--stage2-LR-stepsize" :: value :: l => parseOptions(map + ('stage2LRStepSize -> value), l)
             case "--stage2-LR-step-strategy"::value::l=> parseOptions(map + ('stage2LRStepStrategy -> value), l)
@@ -117,15 +118,17 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
         }
 
         val stage2 : Option[GraphDecoder.Decoder] = {
-            if((options.contains('stage1Only) || options.contains('stage1Train)) && !options.contains('stage2Train)) {
+            if ((options.contains('stage1Only) || options.contains('stage1Train)) && !options.contains('stage2Train)) {
                 None
+            } else if (options.contains('stage2CostDiminished)) {
+                Some(GraphDecoder.CostDiminished(options))
             } else {
                 Some(GraphDecoder.Decoder(options))
             }
         }
 
         val stage2Oracle : Option[GraphDecoder.Decoder] = {
-            if(options.contains('trainingData) || options.contains('stage2Train)) {
+            if (options.contains('trainingData) || options.contains('stage2Train)) {
                 Some(GraphDecoder.Oracle(options))
             } else {
                 None
@@ -238,9 +241,15 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
 
                 if (!options.contains('stage1Only)) {
                     val decoder = stage2.get
-                    decoderResultGraph = decoder.decode(new Input(stage1Result.graph,   // TODO: what about stage1Oracle
-                                                             tok.split(" "),
-                                                             dependencies(i))).graph
+                    if (options.contains('stage2CostDiminished)) {
+                        decoderResultGraph = decoder.decode(new Input(AMRTrainingData(oracleData(i)), // pass in oracle graph to CostDiminished decoder
+                                                                      dependencies(i),
+                                                                      oracle = true)).graph
+                    } else {
+                        decoderResultGraph = decoder.decode(new Input(stage1Result.graph,
+                                                                      tok.split(" "),
+                                                                      dependencies(i))).graph
+                    }
                 }//endif (!options.contains('stage1Only))
 
                 if (options.contains('trainingData)) {
