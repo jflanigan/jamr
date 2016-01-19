@@ -37,7 +37,7 @@ ivyLoggingLevel in run := UpdateLogging.Quiet
 traceLevel in run := 0
 
 javaOptions in run ++= Seq(
-  "-Xmx4g",
+  "-Xmx8g",
   "-XX:MaxPermSize=256m",
   "-ea",
   "-Dfile.encoding=UTF-8",
