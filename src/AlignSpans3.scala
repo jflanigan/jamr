@@ -607,7 +607,9 @@ object AlignSpans3 {
             case "me" => List("i")
             case "might" => List("possible")
             case "my" => List("i")
+            case "n't" => List("-")
             case "no" => List("-")
+            case "non" => List("-")
             case "not" => List("-")
             case "of" => List("include","have-manner")
             case "ok" => List("okay")
@@ -631,13 +633,13 @@ object AlignSpans3 {
             //case "yet" => List("have-concession")  // should come later in pipeline 
             case _ => List()
         }
-        if (word.toLowercase.matches("""(in|un|ir).*""")) {
+        if (word.toLowerCase.matches("""(in|un|ir).*""")) {
             exceptions = word.drop(2) :: exceptions  // should include "-"
         }
-        if (word.toLowercase.matches(""".*er""")) {
+        if (word.toLowerCase.matches(""".*er""")) {
             exceptions = word.dropRight(2) :: exceptions  // should include "-"
         }
-        if (word.toLowercase.matches(""".*ers""")) {
+        if (word.toLowerCase.matches(""".*ers""")) {
             exceptions = word.dropRight(3) :: exceptions  // should include "-"
         }
         //if (word.matches("""^[0-9]*$""")) {
