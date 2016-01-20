@@ -107,7 +107,7 @@ object AlignSpans3 {
         val minusPolarity = new SpanAligner(sentence, graph) {
             concept = "-"
             tabSentence = "\t"+sentence.mkString("\t").toLowerCase+"\t"
-            var word = List("no", "not", "non", "n't")     // TODO: Add anti, anti- Anti
+            var word = List("no", "not", "non")     // TODO: Add anti, anti- Anti
             nodes = node => { if (sentence.exists(x=> word.contains(x))) {
                     List(("", node))
                 } else {
@@ -152,7 +152,7 @@ object AlignSpans3 {
         val argOf = new UnalignedConcept(sentence, graph, wordToSpan) { concept="person|thing"; label=":.*-of" } // ARG?-of, instrument-of 
         val personOf = new UnalignedConcept(sentence, graph, wordToSpan) { concept="person"; label=":.*"; num=1 } // Koreans = (person :poss ..)
         val governmentOrg = new UnalignedChild(sentence, graph, wordToSpan) { concept="government-organization"; label=":ARG.*-of" }
-        val polarityChild = new UnalignedChild(sentence, graph, wordToSpan) { concept=".*"; label=":polarity"; words="un.*|in.*|il.*|.*less|.*n't|.*nt" }  // il.* for illegal // TODO:add anti(-)
+        val polarityChild = new UnalignedChild(sentence, graph, wordToSpan) { concept=".*"; label=":polarity"; words="un.*|in.*|il.*" }  // il.* for illegal // TODO:add anti(-)
         val est = new UnalignedChild(sentence, graph, wordToSpan) { concept=".*"; label=":degree"; words=".*est" }
         val er = new UnalignedChild(sentence, graph, wordToSpan) { concept=".*"; label=":degree"; words=".*er" }
         val US = new ConceptAndChildren(sentence, graph) {
@@ -569,64 +569,36 @@ object AlignSpans3 {
             case _ => List()
         }
         var exceptions = word.toLowerCase match {
-            case "/" => List("slash")
             case ";" => List("and")
-            case ":" => List("mean")
-            case "!" => List("expressive")
-            case ".." => List("expressive")
-            case "..." => List("expressive")
-            case "...." => List("expressive")
-            case "?" => List("interrogative")
-            case "%" => List("percentage-entity")
             case "able" => List("possible")
             case "also" => List("include")
             case "anti" => List("oppose","counter")
-            case "anyway" => List("have-concession")
-            case "as" => List("same")
             case "because" => List("cause")
             //case "biggest" => List("most")  //anything est
-            case "but" => List("contrast","have-concession")
+            case "but" => List("contrast")
             case "can" => List("possible")
-            case "cant" => List("possible")
-            case "can't" => List("possible")
-            case "choice" => List("choose")
             case "could" => List("possible")
             case "death" => List("die")
             case "French" => List("france","France")
             case "french" => List("france","France")
-            case "have" => List("obligate") // as in "have to submit the assignment"  maybe later in pipeline?
-            case "her" => List("she")
-            case "his" => List("he")
             case "if" => List("cause")
             case "illegal" => List("law")
-            case "life" => List("live")
             case "may" => List("possible")
             case "no" => List("-")
             case "not" => List("-")
-            case "of" => List("include","have-manner")
-            case "people" => List("person")
-            case "should" => List("recommend")
-            case "so" => List("infer","cause")  // maybe cause should come later in pipeline
+            case "of" => List("include")
             case "speech" => List("speak")
+            case "should" => List("recommend")
             case "statement" => List("state")
-            case "them" => List("they")
-            case "these" => List("this")
-            case "those" => List("that") // also "person", see DF-225-195986-849_2659.9
-            case "though" => List("think")
-            case "thoughs" => List("think")
-            case "uni" => List("university")
-            case "well" => List("good")
-            case "what" => List("amr-unknown")  // also "thing" sometimes
-            //case "yet" => List("have-concession")  // should come later in pipeline 
             case _ => List()
         }
-        if (word.toLowercase.matches("""(in|un|ir).*""")) {
+        if (word.matches("""(in|un).*""")) {
             exceptions = word.drop(2) :: exceptions  // should include "-"
         }
-        if (word.toLowercase.matches(""".*er""")) {
+        if (word.matches(""".*er""")) {
             exceptions = word.dropRight(2) :: exceptions  // should include "-"
         }
-        if (word.toLowercase.matches(""".*ers""")) {
+        if (word.matches(""".*ers""")) {
             exceptions = word.dropRight(3) :: exceptions  // should include "-"
         }
         //if (word.matches("""^[0-9]*$""")) {
