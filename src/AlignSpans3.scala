@@ -107,7 +107,7 @@ object AlignSpans3 {
         val minusPolarity = new SpanAligner(sentence, graph) {
             concept = "-"
             tabSentence = "\t"+sentence.mkString("\t").toLowerCase+"\t"
-            var word = List("no", "not", "non", "n't")     // TODO: Add anti, anti- Anti
+            var word = List("no", "not", "non")     // TODO: Add anti, anti- Anti
             nodes = node => { if (sentence.exists(x=> word.contains(x))) {
                     List(("", node))
                 } else {
@@ -579,6 +579,7 @@ object AlignSpans3 {
             case "?" => List("interrogative")
             case "%" => List("percentage-entity")
             case "able" => List("possible")
+            case "according" => List("say")
             case "also" => List("include")
             case "anti" => List("oppose","counter")
             case "anyway" => List("have-concession")
@@ -597,14 +598,23 @@ object AlignSpans3 {
             case "have" => List("obligate") // as in "have to submit the assignment"  maybe later in pipeline?
             case "her" => List("she")
             case "his" => List("he")
+            case "how" => List("amr-unknown")
             case "if" => List("cause")
             case "illegal" => List("law")
+            case "like" => List("resemble")
             case "life" => List("live")
             case "may" => List("possible")
+            case "me" => List("i")
+            case "might" => List("possible")
+            case "my" => List("i")
             case "no" => List("-")
             case "not" => List("-")
             case "of" => List("include","have-manner")
+            case "ok" => List("okay")
+            case "o.k." => List("okay")
+            case "our" => List("we")
             case "people" => List("person")
+            case "similar" => List("resemble")
             case "should" => List("recommend")
             case "so" => List("infer","cause")  // maybe cause should come later in pipeline
             case "speech" => List("speak")
@@ -617,6 +627,7 @@ object AlignSpans3 {
             case "uni" => List("university")
             case "well" => List("good")
             case "what" => List("amr-unknown")  // also "thing" sometimes
+            case "who" => List("amr-unknown")  // also "thing" sometimes
             //case "yet" => List("have-concession")  // should come later in pipeline 
             case _ => List()
         }
