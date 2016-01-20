@@ -1,3 +1,3 @@
 #!/bin/bash
 
-exec java -Dsbt.log.noformat=true -Xmx32g -XX:MaxPermSize=1g -jar $(dirname $0)/sbt-launch.jar "$@"
+exec java -Dsbt.log.noformat=true -Xmx8g -XX:MaxPermSize=256m -jar $(dirname $0)/sbt-launch.jar "$@"

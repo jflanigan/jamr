@@ -26,7 +26,7 @@ wget to be installed):
 
 You should agree to the terms and conditions of the software dependencies before running this script.  If you download
 them yourself, you will need to change the relevant environment variables in `scripts/config.sh`.  You may need to edit
-the Java memory options in the script `sbt` and `build.sbt` if you get out of memory errors.
+the Java memory options in the scripts `run`, `sbt`, and `build.sbt` if you get out of memory errors.
 
 Source the config script - you will need to do this before running any of the scripts below:
 

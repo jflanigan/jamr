@@ -37,8 +37,8 @@ ivyLoggingLevel in run := UpdateLogging.Quiet
 traceLevel in run := 0
 
 javaOptions in run ++= Seq(
-  "-Xmx32g",
-  "-XX:MaxPermSize=1g",
+  "-Xmx8g",
+  "-XX:MaxPermSize=256m",
   "-ea",
   "-Dfile.encoding=UTF-8",
   "-XX:ParallelGCThreads=2"
