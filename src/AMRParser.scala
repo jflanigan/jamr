@@ -30,7 +30,6 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             case Nil => map
             case "--stage1-only" :: l =>                 parseOptions(map + ('stage1Only -> "true"), l)
             case "--stage1-oracle" :: l =>               parseOptions(map + ('stage1Oracle -> "true"), l)
-            case "--stage1-cost-diminished" :: l =>      parseOptions(map + ('stage1CostDiminished -> "true"), l)
             case "--stage1-train" :: l =>                parseOptions(map + ('stage1Train -> "true"), l)
             case "--stage1-training-leave-one-out"::l => parseOptions(map + ('stage1TrainingLeaveOneOut -> "true"), l)
             case "--stage1-eval" :: l =>                 parseOptions(map + ('stage1Eval -> "true"), l)
@@ -240,12 +239,21 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                     // TODO: clean up this code
 
                 if (!options.contains('stage1Only)) {
-                    val decoder = stage2.get
                     if (options.contains('stage2CostDiminished)) {
-                        decoderResultGraph = decoder.decode(new Input(AMRTrainingData(oracleData(i)), // pass in oracle graph to CostDiminished decoder
-                                                                      dependencies(i),
-                                                                      oracle = true)).graph
+                        if (options.contains('stage1Oracle)) {
+                            val decoder = stage2.get
+                            decoderResultGraph = decoder.decode(new Input(AMRTrainingData(oracleData(i)), // pass in oracle graph to CostDiminished decoder
+                                                                          dependencies(i),
+                                                                          oracle = true)).graph
+                        } else {
+                            val decoder = stage2.get.asInstanceOf[GraphDecoder.CostAugmented]
+                            decoderResultGraph = decoder.decode(new Input(AMRTrainingData(oracleData(i)), // pass in oracle graph to CostDiminished decoder
+                                                                          dependencies(i),
+                                                                          oracle = true),
+                                                                Some(stage1Result.graph)).graph
+                        }
                     } else {
+                        val decoder = stage2.get
                         decoderResultGraph = decoder.decode(new Input(stage1Result.graph,
                                                                       tok.split(" "),
                                                                       dependencies(i))).graph
