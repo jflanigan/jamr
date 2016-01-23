@@ -698,7 +698,7 @@ def print_errors(mapping, amr1, amr2, prefix1, prefix2):
                 inst1_match[i] = True
                 inst2_match[mapping[i]] = True
             else:
-                print "Incorrect aligned concept: ", instance1[i][2], instance2[mapping[i]][2].lower()
+                print "Incorrect aligned concept: ", instance1[i][2], "->", instance2[mapping[i]][2].lower()
 
     for i in range(0, len(attribute1)):
         for j in range(0, len(attribute2)):
@@ -734,19 +734,19 @@ def print_errors(mapping, amr1, amr2, prefix1, prefix2):
     for i in range(0, len(attribute1)):
         if not attr1_match[i]:
             print "Incorrect attribute: ", attribute1[i][0], attribute1[i][2]
-    for i in range(0, len(attribute1)):
+    for i in range(0, len(attribute2)):
         if not attr2_match[i]:
             print "Missing attribute: ", attribute2[i][0], attribute2[i][2]
     for i in range(0, len(relation1)):
         if not rel1_match[i]:
             node1 = int(relation1[i][1][len(prefix1):])
             node2 = int(relation1[i][2][len(prefix1):])
-            print "Incorrect relation: ", instance1[node1][2], relation1[i][0], instance1[node2][2]
+            print "Incorrect relation: ", instance1[node1][2], ":"+relation1[i][0], instance1[node2][2]
     for i in range(0, len(relation2)):
         if not rel2_match[i]:
             node1 = int(relation2[i][1][len(prefix2):])
             node2 = int(relation2[i][2][len(prefix2):])
-            print "Missing relation: ", instance2[node1][2], relation2[i][0], instance2[node2][2]
+            print "Missing relation: ", instance2[node1][2], ":"+relation2[i][0], instance2[node2][2]
 
 
 def compute_f(match_num, test_num, gold_num):
@@ -866,8 +866,7 @@ def main(arguments):
             if pr_flag:
                 print "Precision: %.2f" % precision
                 print "Recall: %.2f" % recall
-#            print "Smatch score: %.2f" % best_f_score
-            print "%.4f" % best_f_score
+            print "F1: %.3f" % best_f_score
         total_match_num += best_match_num
         total_test_num += test_triple_num
         total_gold_num += gold_triple_num
@@ -882,9 +881,9 @@ def main(arguments):
     if single_score:
         (precision, recall, best_f_score) = compute_f(total_match_num, total_test_num, total_gold_num)
         if pr_flag:
-            print "Precision: %.2f" % precision
-            print "Recall: %.2f" % recall
-        print "Document F-score: %.2f" % best_f_score
+            print "Precision: %.3f" % precision
+            print "Recall: %.3f" % recall
+        print "Document F-score: %.3f" % best_f_score
     args.f[0].close()
     args.f[1].close()
 
