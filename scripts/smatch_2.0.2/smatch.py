@@ -172,6 +172,7 @@ def get_best_match(instance1, attribute1, relation1,
         if match_num > best_match_num:
             best_mapping = cur_mapping[:]
             best_match_num = match_num
+    remove_zero_alignments(best_mapping, weight_dict)
     return best_mapping, best_match_num
 
 
@@ -208,7 +209,7 @@ def compute_pool(instance1, attribute1, relation1,
         # each candidate mapping is a set of node indices
         candidate_mapping.append(set())
         for j in range(0, len(instance2)):
-            # if both triples are instance triples and have the same value
+            # if both triples are instance triples and have the same valueprint(G.edges(data=True))
             if instance1[i][0].lower() == instance2[j][0].lower() \
                     and instance1[i][2].lower() == instance2[j][2].lower():
                 # get node index by stripping the prefix
@@ -372,7 +373,7 @@ def random_init_mapping(candidate_mapping):
             result.append(-1)
     return result
 
- 
+
 def compute_match(mapping, weight_dict):
     """
     Given a node mapping, compute match number based on weight_dict.
@@ -655,6 +656,98 @@ def print_alignment(mapping, instance1, instance2):
                           + instance2[m][1] + "(" + instance2[m][2] + ")")
     return " ".join(result)
 
+def remove_zero_alignments(mapping, weight_dict):
+    for i, m in enumerate(mapping):
+        match_num = 0
+        if m == -1:
+            # no node maps to this node
+            continue
+        # node i in AMR 1 maps to node m in AMR 2
+        current_node_pair = (i, m)
+        if current_node_pair not in weight_dict:
+            continue
+        for key in weight_dict[current_node_pair]:
+            if key == -1:
+                # matching triple resulting from instance/attribute triples
+                match_num += weight_dict[current_node_pair][key]
+            # only consider node index larger than i to avoid duplicates
+            # as we store both weight_dict[node_pair1][node_pair2] and
+            #     weight_dict[node_pair2][node_pair1] for a relation
+            elif key[0] < i:
+                continue
+            elif mapping[key[0]] == key[1]:
+                match_num += weight_dict[current_node_pair][key]
+        if match_num == 0:
+            mapping[i] = -1
+
+
+def print_errors(mapping, amr1, amr2, prefix1, prefix2):
+    (instance1, attribute1, relation1) = amr1
+    (instance2, attribute2, relation2) = amr2
+
+    inst1_match = [False for x in instance1]
+    attr1_match = [False for x in attribute1]
+    rel1_match = [False for x in relation1]
+    inst2_match = [False for x in instance2]
+    attr2_match = [False for x in attribute2]
+    rel2_match = [False for x in relation2]
+    
+    for i in range(0, len(instance1)):
+        if mapping[i] != -1:
+            if instance1[i][2].lower() == instance2[mapping[i]][2].lower():    # exists a mapping, and the names match
+                inst1_match[i] = True
+                inst2_match[mapping[i]] = True
+            else:
+                print "Incorrect aligned concept: ", instance1[i][2], instance2[mapping[i]][2].lower()
+
+    for i in range(0, len(attribute1)):
+        for j in range(0, len(attribute2)):
+            # if both attribute relation triple have the same relation name and value
+            if attribute1[i][0].lower() == attribute2[j][0].lower() \
+                    and attribute1[i][2].lower() == attribute2[j][2].lower():
+                node1_index = int(attribute1[i][1][len(prefix1):])
+                node2_index = int(attribute2[j][1][len(prefix2):])
+                # if the mapping is correct
+                if mapping[node1_index] == node2_index:
+                    attr1_match[i] = True
+                    attr2_match[j] = True
+
+    for i in range(0, len(relation1)):
+        for j in range(0, len(relation2)):
+            # if both relations share the same name
+            if relation1[i][0].lower() == relation2[j][0].lower():
+                node1_index_amr1 = int(relation1[i][1][len(prefix1):])
+                node1_index_amr2 = int(relation2[j][1][len(prefix2):])
+                node2_index_amr1 = int(relation1[i][2][len(prefix1):])
+                node2_index_amr2 = int(relation2[j][2][len(prefix2):])
+                # if the mappings are correct
+                if mapping[node1_index_amr1] == node1_index_amr2 and mapping[node2_index_amr1] == node2_index_amr2:
+                    rel1_match[i] = True
+                    rel2_match[j] = True
+
+    for i in range(0, len(instance1)):
+        if not inst1_match[i]:
+            print "Incorrect concept: ", instance1[i][2]
+    for i in range(0, len(instance2)):
+        if not inst2_match[i]:
+            print "Missing concept: ", instance2[i][2]
+    for i in range(0, len(attribute1)):
+        if not attr1_match[i]:
+            print "Incorrect attribute: ", attribute1[i][0], attribute1[i][2]
+    for i in range(0, len(attribute1)):
+        if not attr2_match[i]:
+            print "Missing attribute: ", attribute2[i][0], attribute2[i][2]
+    for i in range(0, len(relation1)):
+        if not rel1_match[i]:
+            node1 = int(relation1[i][1][len(prefix1):])
+            node2 = int(relation1[i][2][len(prefix1):])
+            print "Incorrect relation: ", instance1[node1][2], relation1[i][0], instance1[node2][2]
+    for i in range(0, len(relation2)):
+        if not rel2_match[i]:
+            node1 = int(relation2[i][1][len(prefix2):])
+            node2 = int(relation2[i][2][len(prefix2):])
+            print "Missing relation: ", instance2[node1][2], relation2[i][0], instance2[node2][2]
+
 
 def compute_f(match_num, test_num, gold_num):
     """
@@ -763,6 +856,7 @@ def main(arguments):
             print >> DEBUG_LOG, "Best node mapping alignment:", print_alignment(best_mapping, instance1, instance2)
         test_triple_num = len(instance1) + len(attributes1) + len(relation1)
         gold_triple_num = len(instance2) + len(attributes2) + len(relation2)
+        print_errors(best_mapping, (instance1, attributes1, relation1), (instance2, attributes2, relation2), prefix1, prefix2)
         if not single_score:
             # if each AMR pair should have a score, compute and output it here
             (precision, recall, best_f_score) = compute_f(best_match_num,
