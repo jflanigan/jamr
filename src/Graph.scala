@@ -58,6 +58,14 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         }
     }
 
+    def logUnalignedNodes() {
+        for (node <- nodes) {
+            if (node.spans.size == 0) {
+                logger(0, "Unaligned node: "+node.concept)
+            }
+        }
+    }
+
     def clearEdges() : Graph = {
         // Initializes the graph from the spans (effectively clearing the edges)
         // Sets relations, but leaves topologicalOrdering and variableRelations blank

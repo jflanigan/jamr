@@ -25,6 +25,10 @@ object Aligner {
                       parseOptions(map ++ Map('help -> value.toInt), tail)
             case "-1" :: tail =>
                       parseOptions(map ++ Map('aligner1 -> true), tail)
+            case "--print-nodes-and-edges" :: tail =>
+                      parseOptions(map ++ Map('printNodesAndEdges -> true), tail)
+            case "--log-unaligned" :: tail =>
+                      parseOptions(map ++ Map('logUnalignedConcepts -> true), tail)
             case "-v" :: value :: tail =>
                       parseOptions(map ++ Map('verbosity -> value.toInt), tail)
              //case string :: opt2 :: tail if isSwitch(opt2) => 
@@ -66,8 +70,6 @@ object Aligner {
                     } else {
                         AlignSpans.alignSpans(tokenized, amr, wordAlignments)
                     }
-                AlignSpans.logUnalignedConcepts(amr.root)
-
                 val spans = amr.spans
                 for ((span, i) <- spans.zipWithIndex) {
                     logger(1, "Span "+(i+1).toString+":  "+span.words+" => "+span.amr)
@@ -78,10 +80,15 @@ object Aligner {
                 } else {
                     println("# ::alignments "+spans.map(_.format).mkString(" ")+" ::annotator Aligner v.01 ::date "+sdf.format(new Date))
                 }
-                println(amr.printNodes.map(x => "# ::node\t" + x).mkString("\n"))
-                println(amr.printRoot)
-                if (amr.root.relations.size > 0) {
-                    println(amr.printEdges.map(x => "# ::edge\t" + x).mkString("\n"))
+                if (options.contains('logUnalignedConcepts)) {
+                    amr.logUnalignedNodes()
+                }
+                if (options.contains('printNodesAndEdges)) {
+                    println(amr.printNodes.map(x => "# ::node\t" + x).mkString("\n"))
+                    println(amr.printRoot)
+                    if (amr.root.relations.size > 0) {
+                        println(amr.printEdges.map(x => "# ::edge\t" + x).mkString("\n"))
+                    }
                 }
                 println(amrstr+"\n")
             } else {

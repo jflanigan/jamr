@@ -26,7 +26,7 @@ case class Node(var id: String, var name: Option[String], concept: String, var r
             spans += span
         } else {
             if (spans.size > 0) {
-                logger(0,"WARNING ADDING ANOTHER SPAN TO NODE "+id)
+                logger(0,"WARNING ADDING ANOTHER SPAN TO NODE "+concept)
                 logger(0,spans.toString+" + "+span.toString)
             }
             spans.+=:(span) // prepend
