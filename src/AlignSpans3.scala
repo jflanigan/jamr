@@ -218,12 +218,12 @@ object AlignSpans3 {
         try { updateSpans(argOf, graph) } catch { case e : Throwable => Unit }
         try { updateSpans(personOf, graph) } catch { case e : Throwable => Unit }
         try { updateSpans(governmentOrg, graph) } catch { case e : Throwable => Unit }
+        addAllSpans(minusPolarity, graph, wordToSpan, addCoRefs=false)
         try { updateSpans(polarityChild, graph) } catch { case e : Throwable => Unit }
         try { updateSpans(est, graph) } catch { case e : Throwable => Unit }
         try { updateSpans(haveRoleArg2, graph) } catch { case e : Throwable => Unit }       //  TODO: maybe remove (since done twice)
         try { updateSpans(haveOrgRoleArg1, graph) } catch { case e : Throwable => Unit }
         try { updateSpans(wiki, graph) } catch { case e : Throwable => Unit }
-        addAllSpans(minusPolarity, graph, wordToSpan, addCoRefs=false)
         //try { updateSpans(er, graph) } catch { case e : Throwable => Unit }
         //dateEntities(sentence, graph)
         //namedEntities(sentence, graph)
