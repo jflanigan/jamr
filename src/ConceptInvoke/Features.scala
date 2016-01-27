@@ -30,6 +30,7 @@ class Features(featureNames: List[String], phraseCounts: i.Map[List[String], Int
         "length" -> ffLength,
         "firstMatch" -> ffFirstMatch,
         "numberIndicator" -> ffNumberIndicator,
+        "badConcept" -> ffBadConcept,
         "sentenceMatch" -> ffSentenceMatch,
         "andList" -> ffAndList,
         "pos" -> ffPOS,
@@ -59,6 +60,14 @@ class Features(featureNames: List[String], phraseCounts: i.Map[List[String], Int
     def ffNumberIndicator(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
         if (concept.words.size == 1 && concept.words.head.matches("[0-9]*") && concept.words.head == concept.graphFrag) {
             FeatureVector(m.Map("numIndicator" -> 1.0))
+        } else {
+            new FeatureVector()
+        }
+    }
+
+    def ffBadConcept(input: Input, concept: PhraseConceptPair, start: Int, end: Int) : FeatureVector = {
+        if (concept.graphFrag.matches("[A-Za-z]*") && concept.graphFrag.size <= 2) {
+            FeatureVector(m.Map("badConcept" -> 1.0))
         } else {
             new FeatureVector()
         }
