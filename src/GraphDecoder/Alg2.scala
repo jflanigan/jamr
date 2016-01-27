@@ -248,7 +248,7 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
         //logger(1, graph.printTriples(detail = 1)+"\n")
         if(nodes.size > 0) {
             if (features.rootFeatureFunctions.size != 0 && nodes.filter(node => !node.concept.startsWith("\"") && !node.concept.matches("[0-9].*")).size != 0) {
-                graph.root = nodes.filter(node => !node.concept.startsWith("\"") && !node.concept.matches("[0-9].*")).map(x => (x, features.rootScore(x))).maxBy(_._2)._1
+                graph.root = nodes.filter(node => !node.isConstant).map(x => (x, features.rootScore(x))).maxBy(_._2)._1
             } else {
                 //logger(1, "Setting root to "+nodes(0).id)
                 graph.root = nodes(0)
@@ -257,9 +257,9 @@ class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected
             score += features.rootScore(graph.root)
 
             nodes.map(node => { node.relations = node.relations.reverse })
-            if (connected) {
-                graph.makeTopologicalOrdering()
-            }
+            //if (connected) {
+            //    graph.makeTopologicalOrdering()
+            //}
         } else {
             graph = Graph.AMREmpty()
         }

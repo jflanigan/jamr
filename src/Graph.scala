@@ -117,6 +117,25 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
         return this
     }
 
+    def printDisconnected() : String = {
+        var result : List[String] = List()
+        for (node <- nodes if node.name != None) {
+            result = "("+node.name.get+" / "+node.concept :: result
+            for ((relation, child) <- node.children) {
+                if (child.name != None) {
+                    result = "  "+relation+" "+child.name.get :: result
+                } else {
+                    result = "  "+relation+" "+child.concept :: result
+                }
+            }
+            for ((relation, child) <- node.variableRelations) {
+                result = "  "+relation+" "+child.name.get :: result
+            }
+            result = result.head+")" :: result.tail
+        }
+        return result.reverse.mkString("\n")
+    }
+
     def printRoot : String = {
         return "# ::root\t" + root.id + "\t" + root.concept
     }

@@ -317,9 +317,12 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                     println("# ::tok "+tok)
                     val sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
                     decoderResultGraph.assignOpN()
-                    decoderResultGraph.sortRelations()
-                    decoderResultGraph.makeIds()
-                    println("# ::alignments "+decoderResultGraph.spans.map(_.format).mkString(" ")+" ::annotator "+VERSION+" ::date "+sdf.format(new Date))
+                    if (!options.contains('stage2NotConnected)) {
+                        decoderResultGraph.makeTopologicalOrdering()
+                        decoderResultGraph.sortRelations()
+                        decoderResultGraph.makeIds()
+                        println("# ::alignments "+decoderResultGraph.spans.map(_.format).mkString(" ")+" ::annotator "+VERSION+" ::date "+sdf.format(new Date))
+                    }
                     if (outputFormat.contains("nodes")) {
                         println(decoderResultGraph.printNodes.map(x => "# ::node\t" + x).mkString("\n"))
                     }
@@ -338,6 +341,9 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                     }
                     if (outputFormat.contains("triples")) {
                         println(decoderResultGraph.printTriples(detail = 1))
+                    }
+                    if (outputFormat.contains("disconnectedAMR")) {
+                        println(decoderResultGraph.printDisconnected())
                     }
                     println()
                 }

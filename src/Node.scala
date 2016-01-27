@@ -16,6 +16,10 @@ case class Node(var id: String, var name: Option[String], concept: String, var r
         // Returns true if this node has an non-coref span alignment
         return (spans.map(x => !graph.spans(x).coRef) :\ false)(_ || _)
     }
+    
+    def isConstant : Boolean = {
+        return concept.startsWith("\"") || concept.matches("[0-9].*") || concept.matches("-")
+    }
 
     def span : Option[Int] = {  // returns the primary span, if exists (span(0) is always the primary)
         return if (spans.size > 0) { Some(spans(0)) } else { None }
@@ -83,7 +87,7 @@ case class Node(var id: String, var name: Option[String], concept: String, var r
                     case 0 =>
                         concept
                     case 1 => {
-                        if (concept.startsWith("\"") || concept.matches("[0-9].*") && !vars.contains(name.get)) {       // WARNING: If you change this filter for concepts that get variable names, be sure also change the code that selects the root in Alg1 and Alg2 (change the filter)
+                        if (isConstant && !vars.contains(name.get)) {       // WARNING: If you change this filter for concepts that get variable names, be sure also change the code that selects the root in Alg1, Alg2, and Greedy decoders (or any decoder that uses isConstant) (change the filter)
                             concept
                         } else {
                             "("+n+" / "+concept+")"

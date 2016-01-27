@@ -99,7 +99,7 @@ class Alg1(featureNames: List[String], labelSet: Array[(String, Int)], connected
             graphObj.set = graphObj.set.map(x => 0) // update the graphObj so it knows the graph is connected
             graphObj.setArray(0) ++= Range(0, graphObj.set.size)
         } else {
-            val candidates = nodes.filter(node => !node.concept.startsWith("\"") && !node.concept.matches("[0-9].*"))
+            val candidates = nodes.filter(node => !node.isConstant)
             if (features.rootFeatureFunctions.size > 0 && candidates.size > 0) {
                 graph.root = candidates.map(x => (x, features.rootScore(x))).maxBy(_._2)._1
             } else {
@@ -110,10 +110,10 @@ class Alg1(featureNames: List[String], labelSet: Array[(String, Int)], connected
         }
 
         nodes.map(node => { node.relations = node.relations.reverse })
-        logger(1, "Alg1 makeTopologicalOrdering")
-        if (connectedConstraint != "none") {
-            graph.makeTopologicalOrdering()   // won't work if not connected
-        }
+        //logger(1, "Alg1 makeTopologicalOrdering")
+        //if (connectedConstraint != "none") {
+        //    graph.makeTopologicalOrdering()   // won't work if not connected
+        //}
         } else {
             graph = Graph.AMREmpty()
         }
