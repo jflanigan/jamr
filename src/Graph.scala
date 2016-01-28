@@ -627,11 +627,11 @@ case class Graph(var root: Node, spans: ArrayBuffer[Span], getNodeById: Map[Stri
             val notOps = relations.filter(x => x._1 != ":op")
             return opNs ::: notOps
         }
-        doRecursive(node => {
+        for (node <- nodes) {
             node.relations = numberOps(node.relations)
             node.topologicalOrdering = numberOps(node.topologicalOrdering)
             node.variableRelations = numberOpsVar(node.variableRelations)
-        })
+        }
     }
 }
 
