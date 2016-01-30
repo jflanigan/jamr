@@ -57,7 +57,7 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
             // Use stage1 output instead of the gold concepts during training
             val in = input(i)
             val stage1Result = stage1.get.decode(in, Some(i))   // TODO: check if stage1-training-leave-one-out
-            return new Input(Some(stage1Result.graph), in.sentence, in.notTokenized, in.dependencies, in.pos, in.ner, Some(i))
+            return new Input(Some(stage1Result.graph), in.sentence, in.notTokenized, in.dependencies, in.pos, in.ner, i)
         } else {
             return Input(amrdata, input(i), i, oracle = false)
         }
@@ -189,7 +189,7 @@ class TrainObj(val options : Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.Tr
                     }
                 options('stage2Decoder) = stage2Alg_Save
                 stage2.features.weights = weights
-                val decoderResult = stage2.decode(new Input(inputGraph, tokenized(i).split(" "), dependencies(i)))
+                val decoderResult = stage2.decode(new Input(inputGraph, tokenized(i).split(" "), dependencies(i), i))
                 file.println(decoderResult.graph.prettyString(detail=1, pretty=true) + '\n')
             } catch {
                 case e : Throwable => if (options.contains('ignoreParserErrors)) {

@@ -21,7 +21,7 @@ class Decoder1(options: m.Map[Symbol, String],
     val conceptInvoker = new Concepts(options, phraseConceptPairs)
 
     def decode(input: Input,
-               trainingIndex: Option[Int],
+               trainingIndex: Option[Int],      // if we are training, index into the training data so we can do leave-one-out decoding
                cost: (Input, PhraseConceptPair, Int, Int, List[PhraseConceptPair]) => Double) : DecoderResult = {
 
         logger(1, "\n--- Decoder1 ---\n")

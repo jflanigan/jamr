@@ -204,9 +204,9 @@ class TrainObj(val options : m.Map[Symbol, String]) extends edu.cmu.lti.nlp.amr.
                                                         snt(i).split(" "),
                                                         dependencies(i),
                                                         ner(i),
-                                                        None), trainingIndex = None)
+                                                        i), trainingIndex = None)
             val amrData = AMRTrainingData(block)
-            val oracleGraph = (new Input(amrData, dependencies(i), oracle = true)).graph.get
+            val oracleGraph = (new Input(amrData, dependencies(i), oracle = true, index = i)).graph.get
 
             for (span <- stage1Result.graph.spans) {
                 if (oracleGraph.spans.count(x => x.start == span.start && x.end == span.end && x.amr.toString == span.amr.toString) > 0) {

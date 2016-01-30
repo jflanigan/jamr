@@ -10,13 +10,15 @@ case class Input(var graph: Option[Graph],  // var so we can update for the inpu
                  dependencies: Annotation[Dependency],
                  pos: Annotation[String],
                  ner: Annotation[Entity],
-                 trainingIndex: Option[Int]) {
+                 index: Int) {
+
+    def trainingIndex : Option[Int] = Some(index)
 
     // TODO: clean up these constructors
 
     // TODO: switch everything to this constructor (the others are unnessary)
     // This constructor is used for stage1 training, stage2 training, and decoding (called from loadInputfiles and Input.Input from below, and AMRParser)
-    def this(graph: Option[Graph], sent: Array[String], notTok: Array[String], conllDeps: String, conllNER: String, trainingIndex: Option[Int]) = this(
+    def this(graph: Option[Graph], sent: Array[String], notTok: Array[String], conllDeps: String, conllNER: String, index: Int) = this(
         graph,
         sent,
         Annotation(notTok, sent, notTok),
@@ -29,11 +31,11 @@ case class Input(var graph: Option[Graph],  // var so we can update for the inpu
         Annotation(sent,
                    conllNER.split("\n").map(x => x.split("\t")(0)),     // Field 0 is token
                    Entity.entitiesFromConll(conllNER)),
-        None
+        index
     )
 
     // This constructor is used for stage1 and stage2 training (in evalDev), and decoding
-    def this(graph: Graph, sentence: Array[String], conllx: String) = this(
+    def this(graph: Graph, sentence: Array[String], conllx: String, index: Int) = this(
         Some(graph),
         sentence,
         Annotation(sentence, sentence, Array()),
@@ -44,10 +46,10 @@ case class Input(var graph: Option[Graph],  // var so we can update for the inpu
                    conllx.split("\n").map(x => x.split("\t")(1)),       // Field 2 is token
                    conllx.split("\n").map(x => x.split("\t")(4))),      // Field 5 is POS
         Annotation(sentence, sentence, Array()),
-        None)
+        index)
 
     // This constructor is used during decoding (if --training-data is specified for oracle)
-    def this(amrdata: AMRTrainingData, conllx: String, oracle: Boolean, clearUnalignedNodes: Boolean = true) = this(
+    def this(amrdata: AMRTrainingData, conllx: String, oracle: Boolean, index: Int, clearUnalignedNodes: Boolean = true) = this(
         Some(if (oracle) {
             amrdata.toOracleGraph(clearUnalignedNodes)
         } else {
@@ -63,7 +65,7 @@ case class Input(var graph: Option[Graph],  // var so we can update for the inpu
                    conllx.split("\n").map(x => x.split("\t")(4))),      // Field 5 is POS
                       //x.split("\t")(4).replaceAll("VB.*","VB").replaceAll("NN.*|PRP|FW","NN").replaceAll("JJ.*","JJ").replaceAll("RB.*","RB"))))
         Annotation(amrdata.sentence, amrdata.sentence, Array()),
-        None)
+        index)
 }
 
 object Input {
@@ -87,18 +89,18 @@ object Input {
         logger(1, "done")
 
         // see http://stackoverflow.com/questions/9632094/zip-multiple-sequences for this trick
-        val inputs = (0 until tokenized.size) map { i => new Input(None, tokenized(i).split(" "), notTokenized(i).split(" "), dependencies(i), ner(i), if (training) { Some(i) } else { None } ) }
+        val inputs = (0 until tokenized.size) map { i => new Input(None, tokenized(i).split(" "), notTokenized(i).split(" "), dependencies(i), ner(i), i) }
         return inputs.toArray
     }
 
-    def apply(amrdata: AMRTrainingData, input: Input, trainingIndex: Int, oracle: Boolean, clearUnalignedNodes: Boolean = true) : Input = { // used in stage1 and stage2 training
+    def apply(amrdata: AMRTrainingData, input: Input, index: Int, oracle: Boolean, clearUnalignedNodes: Boolean = true) : Input = { // used in stage1 and stage2 training
         new Input(
             Some(if (oracle) {
                 amrdata.toOracleGraph(clearUnalignedNodes)
             } else {
                 amrdata.toInputGraph
             }),
-            input.sentence, input.notTokenized, input.dependencies, input.pos, input.ner, Some(trainingIndex))
+            input.sentence, input.notTokenized, input.dependencies, input.pos, input.ner, index)
     }
 
 }

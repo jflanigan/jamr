@@ -220,7 +220,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                                                            line.split(" "),
                                                            dependencies(i),
                                                            ner,
-                                                           None), None)  // Last None is no training index
+                                                           i), None)  // Last None is no training index
                 logger(1, "Concepts:")
                 for ((id, node) <- stage1Result.graph.getNodeById) {
                     logger(1, "id = "+id+" concept = "+node.concept)
@@ -244,19 +244,21 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                             val decoder = stage2.get
                             decoderResultGraph = decoder.decode(new Input(AMRTrainingData(oracleData(i)), // pass in oracle graph to CostDiminished decoder
                                                                           dependencies(i),
-                                                                          oracle = true)).graph
+                                                                          oracle = true,
+                                                                          index = i)).graph
                         } else {
                             val decoder = stage2.get.asInstanceOf[GraphDecoder.CostAugmented]
                             decoderResultGraph = decoder.decode(new Input(AMRTrainingData(oracleData(i)), // pass in oracle graph to CostDiminished decoder
                                                                           dependencies(i),
-                                                                          oracle = true),
+                                                                          oracle = true,
+                                                                          index = i),
                                                                 Some(stage1Result.graph)).graph
                         }
                     } else {
                         val decoder = stage2.get
                         decoderResultGraph = decoder.decode(new Input(stage1Result.graph,
                                                                       tok.split(" "),
-                                                                      dependencies(i))).graph
+                                                                      dependencies(i), i)).graph
                     }
                 }//endif (!options.contains('stage1Only))
 
@@ -268,7 +270,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
                     }
 
                     val oracle = stage2Oracle.get
-                    val oracleResult = oracle.decode(new Input(amrdata2, dependencies(i), oracle = true))
+                    val oracleResult = oracle.decode(new Input(amrdata2, dependencies(i), oracle = true, index = i))
                     for ((span, i) <- amrdata2.graph.spans.sortBy(x => x.words.toLowerCase).zipWithIndex) {
                         logger(0, "Oracle Span "+span.start.toString+"-"+span.end.toString+":  "+span.words+" => "+span.amr)
                     }
