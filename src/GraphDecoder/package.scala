@@ -42,10 +42,10 @@ package object GraphDecoder {
         }
 
         val decoder: Decoder = options('stage2Decoder) match {
-            case "Alg1" => new Alg1(features, labelset)
-            case "Alg1a" => new Alg1(features, labelset, connectedConstraint = "and")
-            case "Alg2" => new Alg2(features, labelset, connected)
-            case "Greedy" => new Greedy(features, labelset)
+            case "Alg1" => new Alg1(options, features, labelset)
+            case "Alg1a" => new Alg1(options, features, labelset, connectedConstraint = "and")
+            case "Alg2" => new Alg2(options, features, labelset, connected)
+            case "Greedy" => new Greedy(options, features, labelset)
             //case "DD" => new DualDecomposition(features, labelset, 1)
             case "LR" => new LagrangianRelaxation(options, features, labelset)
             case x => { System.err.println("Error: unknown stage2 decoder " + x); sys.exit(1) }
@@ -65,12 +65,12 @@ package object GraphDecoder {
     }
 
     def Oracle(options: OptionMap) : GraphDecoder.Decoder = {
-        return new Oracle(getFeatures(options), getLabelset(options).map(x => x._1))
+        return new Oracle(options, getFeatures(options), getLabelset(options).map(x => x._1))
     }
 
     def CostDiminished(options: OptionMap) : GraphDecoder.Decoder = {
         val decoder = Decoder(options)
-        return new CostAugmented(decoder, -100000000000.0, 0.5)
+        return new CostAugmented(decoder, -100000000000.0, 0.5, options)
     }
 }
 

@@ -6,10 +6,10 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.{mutable => m, immutable => i}  // m.Set, m.Map, i.Set, i.Map
 import scala.collection.mutable.PriorityQueue
 
-class Greedy(featureNames: List[String], labelSet: Array[(String, Int)]) extends Decoder {
+class Greedy(options: m.Map[Symbol, String], featureNames: List[String], labelSet: Array[(String, Int)]) extends Decoder {
     // Base class has defined:
     // val features: Features
-    var features = new Features(featureNames, labelSet.map(_._1))
+    var features = new Features(options, featureNames, labelSet.map(_._1))
     val labelConstraint = labelSet.toMap    // TODO: could change to array for speed
 
     private var inputSave: Input = _

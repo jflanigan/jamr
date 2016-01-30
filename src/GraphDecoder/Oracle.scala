@@ -6,8 +6,8 @@ import scala.collection.mutable.Map
 import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 
-class Oracle(featureNames: List[String], labelSet: Array[String]) extends Decoder {
-    var features = new Features(featureNames, labelSet)
+class Oracle(options: Map[Symbol, String], featureNames: List[String], labelSet: Array[String]) extends Decoder {
+    var features = new Features(options, featureNames, labelSet)
 
     def decode(input: Input) : DecoderResult = {
         features.input = input

@@ -26,7 +26,7 @@ class LagrangianRelaxation(options: Map[Symbol, String], featureNames: List[Stri
         extends Decoder {
     // Base class has defined:
     // val features: Features
-    val alg2 = new Alg2("LRLabelWithId" :: featureNames, labelSet)
+    val alg2 = new Alg2(options, "LRLabelWithId" :: featureNames, labelSet)
     options('stage2Decoder) = options.getOrElse('stage2ApproxDecoder, "Alg2")
     val approxDecoder = Decoder(options)
     options('stage2Decoder) = "LR"

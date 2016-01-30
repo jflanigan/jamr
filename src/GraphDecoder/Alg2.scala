@@ -16,10 +16,10 @@ import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.PriorityQueue
 
-class Alg2(featureNames: List[String], labelSet: Array[(String, Int)], connected: Boolean = true) extends Decoder {
+class Alg2(options: Map[Symbol, String], featureNames: List[String], labelSet: Array[(String, Int)], connected: Boolean = true) extends Decoder {
     // Base class has defined:
     // val features: Features
-    var features = new Features(featureNames, labelSet.map(_._1))
+    var features = new Features(options, featureNames, labelSet.map(_._1))
 
     private var inputSave: Input = _
     def input : Input = inputSave

@@ -13,10 +13,11 @@ import scala.io.Source
 import scala.util.matching.Regex
 //import scala.collection.mutable.Map
 import scala.collection.concurrent.{TrieMap => Map}
+import scala.collection.mutable
 import scala.collection.mutable.Set
 import scala.collection.mutable.ArrayBuffer
 
-class CostAugmented(val decoder: Decoder, costScale: Double, precRecTradeoff: Double) extends Decoder {
+class CostAugmented(val decoder: Decoder, costScale: Double, precRecTradeoff: Double, options: mutable.Map[Symbol, String]) extends Decoder {
     // precRecTradeoff: 1 = only prec errors, 0 = only recall errors
     var features = decoder.features
     decoder.features.addFeatureFunction("CostAugEdge")
@@ -28,7 +29,8 @@ class CostAugmented(val decoder: Decoder, costScale: Double, precRecTradeoff: Do
 
     def decode(input: Input, conceptGraph: Option[Graph]) : DecoderResult = {        // WARNING: input should be same as input to oracle decoder
         // We have a separate input conceptGraph so that we can use predicted concepts instead of gold concepts
-        val oracleDecoder = new Oracle(decoder.features.featureNames,   // "CostAugEdgeId" and "rootCostAug" already in featureNames
+        val oracleDecoder = new Oracle(options,
+                                       decoder.features.featureNames,   // "CostAugEdgeId" and "rootCostAug" already in featureNames
                                        decoder.features.weights.labelset)
         val oracle = oracleDecoder.decode(input)
         val addCost = new FeatureVector(oracle.features.labelset)
