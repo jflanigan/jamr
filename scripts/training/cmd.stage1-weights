@@ -10,6 +10,7 @@ OUTPUT="${MODEL_DIR}/stage1-weights"
     --training-dev "${DEV_FILE}" \
     --dependencies "${INPUT}.snt.deps" \
     --ner "${INPUT}.snt.IllinoisNER" \
+    --srl "${INPUT}.snt.srl" \
     --tok "${INPUT}.snt.tok" \
     --snt "${INPUT}.snt" \
     ${PARSER_OPTIONS} \

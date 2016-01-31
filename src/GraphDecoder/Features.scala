@@ -2,11 +2,26 @@ package edu.cmu.lti.nlp.amr.GraphDecoder
 import edu.cmu.lti.nlp.amr._  
 import edu.cmu.lti.nlp.amr.FastFeatureVector._
 
+import scala.io.Source.fromFile
+
 import scala.util.matching.Regex
 import scala.collection.mutable.{Map, Set, ArrayBuffer}
 import scala.collection.immutable
 
 /**************************** Feature Functions *****************************/
+
+object Features {       // This object is a hack, should change so all inputs are sent in an XML container
+    private var firstTime : Boolean = true
+    private var srlArray : Array[String] = _
+    def setUpInput(options: Map[Symbol,String], featureNames: List[String]) {
+        if (firstTime) {
+            firstTime = false
+            if (featureNames.contains("srl")) {
+                srlArray = Corpus.splitOnNewline(fromFile(options('srl)).getLines).toArray
+            }
+        }
+    }
+}
 
 class Features(options: Map[Symbol,String], private var myFeatureNames: List[String], labelSet: Array[String]) {
     var weights = FeatureVector(labelSet: Array[String])    // TODO: maybe weights should be passed in to the constructor
@@ -15,19 +30,25 @@ class Features(options: Map[Symbol,String], private var myFeatureNames: List[Str
     private var sentence: Array[String] = _
     private var dependencies: Annotation[Dependency] = _
     private var fullPos: Annotation[String] = _
-    //private var pos: Annotation[String] = _
     private var node1 : Node = _
     private var node2 : Node = _
+    private var srl: SRL = _
     private var feats : List[(String, Value, immutable.Map[Int, Double])] = _
+
+    def node1Start = graph.spans(node1.spans(0)).start
+    def node1End = graph.spans(node1.spans(0)).end
+    def node2Start = graph.spans(node2.spans(0)).start
+    def node2End = graph.spans(node2.spans(0)).end
 
     def input: Input = inputSave
     def input_= (i: Input) {
+        Features.setUpInput(options, featureNames)
         inputSave = i
         graph = i.graph.get
         sentence = i.sentence
         dependencies = i.dependencies
-        //pos = i.pos
         fullPos = i.pos
+        srl = SRL.fromString(Features.srlArray(i.index), dependencies)
         precompute
     }
 
@@ -62,7 +83,8 @@ class Features(options: Map[Symbol,String], private var myFeatureNames: List[Str
         "dependencyPathv2" -> ffDependencyPathv2 _,
         "dependencyPathv3" -> ffDependencyPathv3 _,
         "dependencyPathv4" -> ffDependencyPathv4 _,
-        "dependencyPathv5" -> ffDependencyPathv5 _
+        "dependencyPathv5" -> ffDependencyPathv5 _,
+        "srl" -> ffSRL _
     )
 
     val rootFFTable = Map[String, FeatureFunction](
@@ -230,6 +252,15 @@ class Features(options: Map[Symbol,String], private var myFeatureNames: List[Str
     def ffConceptUnigramWithLabel {
         addFeature("C1="+node1.concept, 0.0, 1.0)
         addFeature("C2="+node2.concept, 0.0, 1.0)
+    }
+
+    def ffSRL {
+        for ((predType, argLabel) <- srl.relations((node1Start, node1End), (node2Start, node2End))) {
+            addFeature("SRL", 1.0, 1.0)
+            addFeature("SRL"+predType, 1.0, 1.0)
+            addFeature("SRL="+argLabel, 1.0, 1.0)
+            addFeature("SRL"+predType+"="+argLabel, 1.0, 1.0)
+        }
     }
 
     def ffPosPathUnigramBigramv1 {

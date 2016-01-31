@@ -76,6 +76,7 @@ scala -classpath . edu.cmu.lti.nlp.amr.AMRParser --stage2-decode -w weights -l l
             case "--print-stack-trace-on-errors" :: l => parseOptions(map + ('printStackTraceOnErrors -> "true"), l)
             case "--dependencies" :: value :: tail =>    parseOptions(map + ('dependencies -> value), tail)
             case "--ner" :: value :: tail =>             parseOptions(map + ('ner -> value), tail)
+            case "--srl" :: value :: tail =>             parseOptions(map + ('srl -> value), tail)
             case "--snt" :: value :: tail =>             parseOptions(map ++ m.Map('notTokenized -> value), tail)
             case "--tok" :: value :: tail =>             parseOptions(map ++ m.Map('tokenized -> value), tail)
             case "-v" :: value :: tail =>                parseOptions(map ++ m.Map('verbosity -> value), tail)

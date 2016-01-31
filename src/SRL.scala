@@ -43,7 +43,7 @@ object SRL {
         val preds : List[SRLPred] = lines.tail.map(x => SRLPredFromString(x)).toList
         return SRL(preds, Annotation[Nothing](snt, tok, new Array(0)), deps)
     }
-    private val extractor = """(.*)([0-9]+)-([0-9]+)""".r
+    private val extractor = """(.*):([0-9]+)-([0-9]+)""".r
     private def SRLPredFromString(string: String) : SRLPred = {
         val fields = string.splitStr(" ")
         val extractor(predType, predStart, predEnd) = fields(0)     // First field is predType and pred span

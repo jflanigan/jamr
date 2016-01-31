@@ -10,6 +10,7 @@ ${JAMR_HOME}/run AMRParser \
     --tok "${INPUT}.snt.tok" \
     --snt "${INPUT}.snt" \
     --ner "${INPUT}.snt.IllinoisNER" \
+    --srl "${INPUT}.snt.srl" \
     --training-dev "${DEV_FILE}" \
     --training-output "${OUTPUT}" \
     --smatch-eval "${SMATCH}" \
