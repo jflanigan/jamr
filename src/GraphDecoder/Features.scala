@@ -48,7 +48,9 @@ class Features(options: Map[Symbol,String], private var myFeatureNames: List[Str
         sentence = i.sentence
         dependencies = i.dependencies
         fullPos = i.pos
-        srl = SRL.fromString(Features.srlArray(i.index), dependencies)
+        if  (featureNames.contains("srl")) {
+            srl = SRL.fromString(Features.srlArray(i.index), dependencies)
+        }
         precompute
     }
 
