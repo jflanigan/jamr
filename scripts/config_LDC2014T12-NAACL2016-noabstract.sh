@@ -28,8 +28,8 @@ export MODEL_DIR="${JAMR_HOME}/models/amr_anno_1.0-NAACL2016-noabstract"  # idea
 export GENERATOR_OPTIONS="
     --lowercase
     --drop-sense-tags
-    --predict-tree
     --no-abstract-rules
+    --predict-tree
 "
 
 export PARSER_OPTIONS="

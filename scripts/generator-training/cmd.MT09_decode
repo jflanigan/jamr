@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-INPUT="${MODEL_DIR}/test-grammars.snt"
-OUTPUT="${MODEL_DIR}/test_decode"
+INPUT="${MODEL_DIR}/MT09-grammars.snt"
+OUTPUT="${MODEL_DIR}/MT09_decode"
 
 "${JAMR_HOME}/tools/cdec/decoder/cdec" \
     -c "${MODEL_DIR}/dpmert/cdec.ini" \

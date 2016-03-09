@@ -9,6 +9,7 @@ mkdir -p "${OUTPUT}"
     --weights "${MODEL_DIR}/rule-model" \
     --rule-inventory "${MODEL_DIR}/extract-rules" \
     --kbest 100 \
+    --no-reference \
     --dependencies "${INPUT}.snt.deps" \
     --ner "${INPUT}.snt.IllinoisNER" \
     --tok "${INPUT}.snt.tok" \
