@@ -24,10 +24,11 @@ object SentenceLevelGrammars {
             case "--weights" :: value :: l =>            parseOptions(map + ('weights -> value), l)
             case "--dev" :: l =>                         parseOptions(map + ('dev -> "true"), l)
             case "--rule-inventory" :: value :: l =>     parseOptions(map + ('ruleInventory -> value), l)
-            case "--no-basic-rules" :: value :: l =>     parseOptions(map + ('noBasicRules -> value), l)
-            case "--no-synthetic-rules" :: value :: l => parseOptions(map + ('noSyntheticRules -> value), l)
-            case "--no-abstract-rules" :: value :: l =>  parseOptions(map + ('noAbstractRules -> value), l)
-            case "--no-handwritten-rules"::value :: l => parseOptions(map + ('noHandWrittenRules -> value), l)
+            case "--no-basic-rules" :: l =>              parseOptions(map + ('noBasicRules -> "true"), l)
+            case "--no-synthetic-rules" :: l =>          parseOptions(map + ('noSyntheticRules -> "true"), l)
+            case "--no-abstract-rules" :: l =>           parseOptions(map + ('noAbstractRules -> "true"), l)
+            case "--no-handwritten-rules" :: l =>        parseOptions(map + ('noHandWrittenRules -> "true"), l)
+            case "--no-reference" :: l =>                parseOptions(map + ('noReference -> "true"), l)
             case "--kbest" :: value :: l =>              parseOptions(map + ('kbest -> value), l)
             case "--drop-sense-tags" :: l =>             parseOptions(map + ('dropSenseTags -> "true"), l)
             case "--predict-tree" :: l =>                parseOptions(map + ('predictTree -> "true"), l)
@@ -130,7 +131,11 @@ object SentenceLevelGrammars {
                 }
             }
             //System.out.println("<seg grammar=\"" + options('output) + "/grammar" + i.toString + ".gz\"> " + Rule.graphToCFG(graph.root) + " </seg>")
-            System.out.println("<seg id=\"" + i.toString + "\" grammar=\"" + options('output) + "/grammar" + i.toString + ".gz\"> " + Rule.graphToCFG(graph.root) + " ||| " + data.sentence.mkString(" ") + " </seg>")
+            if (!options.contains('noReference)) {
+                System.out.println("<seg id=\"" + i.toString + "\" grammar=\"" + options('output) + "/grammar" + i.toString + ".gz\"> " + Rule.graphToCFG(graph.root) + " ||| " + data.sentence.mkString(" ") + " </seg>")
+            } else {
+                System.out.println("<seg id=\"" + i.toString + "\" grammar=\"" + options('output) + "/grammar" + i.toString + ".gz\"> " + Rule.graphToCFG(graph.root) + " </seg>")
+            }
             i += 1
         }
     }
