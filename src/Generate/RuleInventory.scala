@@ -43,7 +43,7 @@ class RuleInventory(dropSenses: Boolean, options: Map[Symbol, String]) {
         val Regex = """([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+)""".r
         lemmaTable.clear()
         lemmaProbs.clear()
-        for (line <- Source.fromFile(options('lemmaFile))) {
+        for (line <- Source.fromFile(options('lemmaFile)).getLines()) {
             val Regex(lemma, word, pos, count, wordGivenLemma, lemmaGivenWord) = line
             lemmaTable(lemma) = (word, pos, wordGivenLemma.toDouble, lemmaGivenWord.toDouble) :: lemmaTable.getOrElse(lemma, List())
             lemmaProbs((lemma, word, pos)) = (wordGivenLemma.toDouble, lemmaGivenWord.toDouble)
