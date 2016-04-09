@@ -138,23 +138,21 @@ class RuleInventory(dropSenses: Boolean, options: Map[Symbol, String]) {
         return list
     }
 
-    def addLemmaFeatures(ruleList: List[(Rule, FeatureVector)]) = {
-        for ((rule, feats) <- ruleList) {
-            //lemmaProbs : Map[(String, String, String), (Double, Double)] = 
-            if (!rule.concept.realization.graphFrag.contains(' ') && !rule.concept.realization.words.contains(' ')) {
-                val lemma = rule.concept.realization.graphFrag
-                val word = rule.concept.realization.words
-                val pos = rule.concept.realization.headPos
-                if (lemmaProbs.contains((lemma, word, pos))) {
-                    val (wGl, lGw) = lemmaProbs((lemma, word, pos))
-                    feats += new FeatureVector(Map("wGL" -> wGl, "lGw" -> lGw, "gigawordLemma" -> 1.0))
-                }
-                else {
-                    feats += new FeatureVector(Map("notGigaword" -> 1.0))
-                }
-            } else {
-                feats += new FeatureVector(Map("fragment" -> 1.0))
+    def addLemmaFeatures(p: PhraseConceptPair, feats: FeatureVector) {
+        //lemmaProbs : Map[(String, String, String), (Double, Double)]
+        if (!p.graphFrag.contains(' ') && !p.words.contains(' ')) {
+            val lemma = p.graphFrag
+            val word = p.words
+            val pos = p.headPos
+            if (lemmaProbs.contains((lemma, word, pos))) {
+                val (wGl, lGw) = lemmaProbs((lemma, word, pos))
+                feats += new FeatureVector(Map("wGL" -> wGl, "lGw" -> lGw, "gigawordLemma" -> 1.0))
             }
+            else {
+                feats += new FeatureVector(Map("notGigaword" -> 1.0))
+            }
+        } else {
+            feats += new FeatureVector(Map("fragment" -> 1.0))
         }
     }
 
@@ -202,7 +200,7 @@ class RuleInventory(dropSenses: Boolean, options: Map[Symbol, String]) {
         if (rules.size == 0) {
             logger(0, "getRules couldn't find a matching rule for concept " + node.concept)
         }
-        addLemmaFeatures(rules)
+        rules.map(x => addLemmaFeatures(x._1.concept.realization, x._2))
         return rules
     }
 
@@ -224,6 +222,8 @@ class RuleInventory(dropSenses: Boolean, options: Map[Symbol, String]) {
             ))
             (phrase.changeConceptTo(node), node.children.map(x => x._1).diff(phrase.amrInstance.children.map(x => x._1)), feats)
         }).toList
+        exactMatch.map(x => addLemmaFeatures(x._1, x._3))
+        fuzzyMatch.map(x => addLemmaFeatures(x._1, x._3))
         return if (exactMatch.size != 0) { exactMatch } else { fuzzyMatch }
         //return phraseTable.map.getOrElse(conceptKey(node.concept), Map()).map(x => (x._1, node.children.map(y => y._1).diff(x._1.amrInstance.children.map(y => y._1)))).toList /*::: passThroughRealizations(node)*/ // TODO: should filter to realizations that could match
     }

@@ -30,3 +30,9 @@ pGcFuzzy 0.03
 rGcFuzzy 0.03
 opPassThrough -0.0001
 tooManyArgsPassThrough -0.0001
+wGl .0001
+lGw .0001
+gigawordLemma .00001
+lemmaPassThrough -.000001
+notGigaword -.000001
+fragment 0.0000001
