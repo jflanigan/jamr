@@ -37,5 +37,20 @@ object Wordnet {
         catch { case e : Throwable => List() }
     }
 
+    private val adjectives = """JJ.*""".r
+    private val adverbs = """RB.*""".r
+    private val nouns = """NN.*""".r
+    private val verbs = """VB.*""".r
+
+    def stemmer(word: String, pos: String) : List[String] = {
+        pos match {
+            case adjectives() => stemmer(word, POS.ADJECTIVE).distinct
+            case adverbs() => stemmer(word, POS.ADVERB).distinct
+            case nouns() => stemmer(word, POS.NOUN).distinct
+            case verbs() => stemmer(word, POS.VERB).distinct
+            case _ => List(word)
+        }
+    }
+
 }
 
