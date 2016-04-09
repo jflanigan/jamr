@@ -128,7 +128,7 @@ class RuleInventory(dropSenses: Boolean, options: Map[Symbol, String]) {
     def unlemmatize(concept: String) : List[(String, String, FeatureVector)] = {
         val lemma = dropSense(concept)
         var list = for { (word, pos, wGl, lGw) <- lemmaTable.getOrElse(lemma, List()) } yield {
-            (word, pos, new FeatureVector(Map(/*"wGl" -> wGl, "lGw" -> lGw, "gigawordLemma" -> 1.0*/)))
+            (word, pos, new FeatureVector(Map("wGl" -> wGl, "lGw" -> lGw, "gigawordLemma" -> 1.0)))
         }
         if (list.size == 0) {
             val event = concept.matches(""".*-[0-9][0-9]""")
@@ -382,68 +382,77 @@ class RuleInventory(dropSenses: Boolean, options: Map[Symbol, String]) {
                                ConceptInfo(PhraseConceptPair("", node.concept, "NN", "NN"), 0), "", ""),
                           FeatureVector(feats)))
                 //}
-            } else /*if (getRealizations(node).size == 0)*/ {
-                // concept has no realization
+            } else {
                 // TODO: change to passThroughRealizations
                 val event = node.concept.matches(""".*-[0-9][0-9]""")
                 logger(0, "Adding abstract pass through rule for "+node.concept)
                 logger(0, "node.children.size = " + node.children.size)
                 logger(0, "node.children = " + node.children.map(x => x._1))
-                val pos = if (event) { "VBN" } else { "NN" }
-                val abstractSignature : String = (if (event) { "EVENT " } else { "NONEVENT " }) + node.children.map(x => x._1).sorted.mkString(" ")
-                logger(0, "abstractSignature = "+abstractSignature)
                 var rules : List[(Rule, FeatureVector)] = List()
 
                 if (!options.contains('noAbstractRules)) {
-                    if (abstractRules.map.contains(abstractSignature)) {
-                        val abstractRule : Rule = abstractRules.map(abstractSignature).maxBy(_._2)._1   // use most common abstract rule
-                        val rule = Rule(abstractRule.argRealizations,
-                                   ConceptInfo(PhraseConceptPair(dropSense(node.concept), node.concept, pos, pos), abstractRule.concept.position), "", "")
-                        logger(0, "rule = " + rule.toString)
-                        logger(0, "ruleCFG = " + rule.mkRule(withArgLabel=false))
-                        rules = List((Rule(abstractRule.argRealizations,
-                                           ConceptInfo(PhraseConceptPair(dropSense(node.concept), node.concept, pos, pos), abstractRule.concept.position), "", ""),
-                                      FeatureVector(Map("passthrough" -> 1.0, "abstractPassThrough" -> 1.0)))) ::: rules
+                    for ((word, pos, feats) <- unlemmatize(node.concept)) { // Note: feats is mutable and gets updated, so don't put all these for loops for noAbstractRules and other rules together without being careful!
+                        val abstractSignature : String = (if (event) { "EVENT " } else { "NONEVENT " }) + node.children.map(x => x._1).sorted.mkString(" ")
+                        logger(0, "abstractSignature = "+abstractSignature)
+                        if (abstractRules.map.contains(abstractSignature)) {
+                            val abstractRule : Rule = abstractRules.map(abstractSignature).maxBy(_._2)._1   // use most common abstract rule
+                            val rule = Rule(abstractRule.argRealizations, ConceptInfo(PhraseConceptPair(word, node.concept, pos, pos), abstractRule.concept.position), "", "")
+                            logger(0, "rule = " + rule.toString)
+                            logger(0, "ruleCFG = " + rule.mkRule(withArgLabel=false))
+                            feats += FeatureVector(Map("passthrough" -> 1.0, "abstractPassThrough" -> 1.0))
+                            rules = List((rule, feats)) ::: rules
+                        }
                     }
                 }
                 if (!options.contains('noSyntheticRules)) {
                     // Backoff synthetic model
                     if ((getRealizations(node).size == 0 && rules.size == 0 /*we're the last resort*/) || node.children.size < 5 /*the rule is fast*/) {    // filter to this because otherwise it's too slow
-                        val realization = PhraseConceptPair(dropSense(node.concept), node.concept, pos, pos)
-                        rules = ruleModel.syntheticRules(SyntheticRules.Input(node, graph), kbest,
-                            List((PhraseConceptPair(dropSense(node.concept), node.concept, pos, pos),           // realization
-                                  node.children.map(x => x._1),                                                 // args
-                                  FeatureVector(Map("passthrough" -> 1.0, "syntheticWithChildrenPassThrough" -> 1.0))))) ::: rules // feats
+                        for ((word, pos, feats) <- unlemmatize(node.concept)) {
+                            val realization = PhraseConceptPair(word, node.concept, pos, pos)
+                            feats += FeatureVector(Map("passthrough" -> 1.0, "syntheticWithChildrenPassThrough" -> 1.0))
+                            rules = ruleModel.syntheticRules(SyntheticRules.Input(node, graph), kbest,
+                                List((realization,                  // realization
+                                      node.children.map(x => x._1), // args
+                                      feats))) ::: rules            // feats
+                        }
                     }
                 }
                 if (rules.size == 0) {
-                    rules = (Rule(node.children.sortBy(x => x._1).map(x => Arg("", x._1, "")),
-                                  ConceptInfo(PhraseConceptPair(dropSense(node.concept), node.concept, pos, pos), 0),
-                                  "", ""),
-                                  FeatureVector(Map("passthrough" -> 1.0, "withChildrenPassThroughLeft" -> 1.0))) :: rules
-                    rules = (Rule(node.children.sortBy(x => x._1).map(x => Arg("", x._1, "")),
-                                  ConceptInfo(PhraseConceptPair(dropSense(node.concept), node.concept, pos, pos), node.children.size),
-                                  "", ""),
-                                  FeatureVector(Map("passthrough" -> 1.0, "withChildrenPassThroughRight" -> 1.0))) :: rules
+                    for ((word, pos, feats) <- unlemmatize(node.concept)) {
+                        val featsLeft = FeatureVector(Map("passthrough" -> 1.0, "withChildrenPassThroughLeft" -> 1.0))
+                        featsLeft += feats
+                        rules = (Rule(node.children.sortBy(x => x._1).map(x => Arg("", x._1, "")),
+                                      ConceptInfo(PhraseConceptPair(word, node.concept, pos, pos), 0),
+                                      "", ""),
+                                      featsLeft) :: rules
+
+                        val featsRight = FeatureVector(Map("passthrough" -> 1.0, "withChildrenPassThroughRight" -> 1.0))
+                        featsRight += feats
+                        rules = (Rule(node.children.sortBy(x => x._1).map(x => Arg("", x._1, "")),
+                                      ConceptInfo(PhraseConceptPair(word, node.concept, pos, pos), node.children.size),
+                                      "", ""),
+                                      featsRight) :: rules
+                    }
                 }
                 rules
-            /*} else {
-                // it has a realization, so we won't provide one (since the synthetic rule model will provide one)
-                List() */
             }
         } else {
             if (node.concept.matches("\".*\"")) {
                 // Pass through for string literals
                 List((Rule(List(), ConceptInfo(PhraseConceptPair(if (lowercase) { node.concept.drop(1).init.toLowerCase } else { node.concept.drop(1).init }, node.concept, "NNP", "NNP"), 0), "", ""), FeatureVector(Map("passthrough" -> 1.0, "stringPassThrough" -> 1.0))))
-            } else if (!getRealizations(node).contains((x: (PhraseConceptPair, List[String])) => x._1.amrInstance.children.size == 1)) {
+            } else if (!getRealizations(node).contains((x: (PhraseConceptPair, List[String])) => x._1.amrInstance.children.size == 1)) {    // TODO: this size == 1 looks like a bug. should it be size == 0?  I think it's not a bug, see commit on March 17, 2015 "Fix bug in pass through rules" 209c8ae57d9f64f0a5a4adc79885ce60ad1ce6d8
                 // concept has no realization
-                if (node.concept.matches(""".*-[0-9][0-9]""")) {
-                    // TODO: add inverse rules of WordNet's Morphy: http://wordnet.princeton.edu/man/morphy.7WN.html
-                    List((Rule(List(), ConceptInfo(PhraseConceptPair(dropSense(node.concept), node.concept, "VBN", "VBN"), 0), "", ""), FeatureVector(Map("eventConceptNoChildrenPassThrough" -> 1.0))))
-                } else if(node.concept.matches("""[0-9]+""")) {
+                if(node.concept.matches("""[0-9]+""")) {                // numbers
                     List((Rule(List(), ConceptInfo(PhraseConceptPair(node.concept, node.concept, "NN", "NN"), 0), "", ""), FeatureVector(Map("passthrough" -> 1.0, "numberPassThrough" -> 1.0))))
-                } else {
-                    List((Rule(List(), ConceptInfo(PhraseConceptPair(node.concept, node.concept, "NN", "NN"), 0), "", ""), FeatureVector(Map("passthrough" -> 1.0, "nonEventConceptNoChildrenPassThrough" -> 1.0))))
+                } else {                                                // events and everything else
+                    for { (word, pos, feats) <- unlemmatize(node.concept) } yield {
+                        if (node.concept.matches(""".*-[0-9][0-9]""")) {
+                            feats += FeatureVector(Map("passthrough" -> 1.0, "eventConceptNoChildrenPassThrough" -> 1.0))
+                        } else {
+                            feats += FeatureVector(Map("passthrough" -> 1.0, "nonEventConceptNoChildrenPassThrough" -> 1.0))
+                        }
+                        (Rule(List(), ConceptInfo(PhraseConceptPair(word, node.concept, pos, pos), 0), "", ""), feats)
+                    }
                 }
             } else {
                 // it has a realization, so we won't provide one (since the synthetic rule model will provide one)
