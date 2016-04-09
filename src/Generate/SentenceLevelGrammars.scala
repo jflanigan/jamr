@@ -23,6 +23,7 @@ object SentenceLevelGrammars {
             case "--features" :: value :: l =>           parseOptions(map + ('features -> value), l)
             case "--weights" :: value :: l =>            parseOptions(map + ('weights -> value), l)
             case "--dev" :: l =>                         parseOptions(map + ('dev -> "true"), l)
+            case "--lemma-file" :: value :: l =>         parseOptions(map + ('lemmaFile -> value), l)
             case "--rule-inventory" :: value :: l =>     parseOptions(map + ('ruleInventory -> value), l)
             case "--no-basic-rules" :: l =>              parseOptions(map + ('noBasicRules -> "true"), l)
             case "--no-synthetic-rules" :: l =>          parseOptions(map + ('noSyntheticRules -> "true"), l)

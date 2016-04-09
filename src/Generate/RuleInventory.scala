@@ -36,6 +36,20 @@ class RuleInventory(dropSenses: Boolean, options: Map[Symbol, String]) {
     val conceptArgsLeft : Map[(String, String, String), List[Arg]] = Map()     // (concept, pos, arg) -> array of realizations
     val conceptArgsRight : Map[(String, String, String), List[Arg]] = Map()    // (concept, pos, arg) -> array of realizations
 
+    val lemmaTable : Map[String, List[(String, String, Double, Double)]] = Map()  // Map from lemma to list of (word, pos, count, word&POSGivenLemm, lemmaGivenWord&POS)
+    val lemmaProbs : Map[(String, String, String), (Double, Double)] = Map()
+
+    if (options.contains('lemmaFile)) {
+        val Regex = """([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+) ([^ ]+)""".r
+        lemmaTable.clear()
+        lemmaProbs.clear()
+        for (line <- Source.fromFile(options('lemmaFile))) {
+            val Regex(lemma, word, pos, count, wordGivenLemma, lemmaGivenWord) = line
+            lemmaTable(lemma) = (word, pos, wordGivenLemma.toDouble, lemmaGivenWord.toDouble) :: lemmaTable.getOrElse(lemma, List())
+            lemmaProbs((lemma, word, pos)) = (wordGivenLemma.toDouble, lemmaGivenWord.toDouble)
+        }
+    }
+
     def load(filename: String) {    // TODO: move to companion object
         conceptCounts.readFile(filename+".conceptcounts", x => x, y => Unit)
         conceptCountsNoSense.readFile(filename+".conceptcounts2", x => x, y => Unit)
@@ -111,6 +125,39 @@ class RuleInventory(dropSenses: Boolean, options: Map[Symbol, String]) {
         createConceptArgs()
     }
 
+    def unlemmatize(concept: String) : List[(String, String, FeatureVector)] = {
+        val lemma = dropSense(concept)
+        var list = for { (word, pos, wGl, lGw) <- lemmaTable.getOrElse(lemma, List()) } yield {
+            (word, pos, new FeatureVector(Map(/*"wGl" -> wGl, "lGw" -> lGw, "gigawordLemma" -> 1.0*/)))
+        }
+        if (list.size == 0) {
+            val event = concept.matches(""".*-[0-9][0-9]""")
+            val pos = if (event) { "VBN" } else { "NN" }
+            list = List((lemma, pos, new FeatureVector(Map("lemmaPassThrough" -> 1.0))))
+        }
+        return list
+    }
+
+    def addLemmaFeatures(ruleList: List[(Rule, FeatureVector)]) = {
+        for ((rule, feats) <- ruleList) {
+            //lemmaProbs : Map[(String, String, String), (Double, Double)] = 
+            if (!rule.concept.realization.graphFrag.contains(' ') && !rule.concept.realization.words.contains(' ')) {
+                val lemma = rule.concept.realization.graphFrag
+                val word = rule.concept.realization.words
+                val pos = rule.concept.realization.headPos
+                if (lemmaProbs.contains((lemma, word, pos))) {
+                    val (wGl, lGw) = lemmaProbs((lemma, word, pos))
+                    feats += new FeatureVector(Map("wGL" -> wGl, "lGw" -> lGw, "gigawordLemma" -> 1.0))
+                }
+                else {
+                    feats += new FeatureVector(Map("notGigaword" -> 1.0))
+                }
+            } else {
+                feats += new FeatureVector(Map("fragment" -> 1.0))
+            }
+        }
+    }
+
     def getRules(node: Node) : List[(Rule, FeatureVector)] = {
         val children : List[String] = node.children.map(x => x._1).sorted
         var rules : List[(Rule, FeatureVector)] = List()
@@ -155,6 +202,7 @@ class RuleInventory(dropSenses: Boolean, options: Map[Symbol, String]) {
         if (rules.size == 0) {
             logger(0, "getRules couldn't find a matching rule for concept " + node.concept)
         }
+        addLemmaFeatures(rules)
         return rules
     }
 
@@ -255,7 +303,7 @@ class RuleInventory(dropSenses: Boolean, options: Map[Symbol, String]) {
         }
     } */
 
-    def passThroughRealization(node: Node) : List[PhraseConceptPair] = {   // TODO: add features for syntheticRules
+    /*def passThroughRealization(node: Node) : List[PhraseConceptPair] = {   // TODO: add features for syntheticRules
         if (node.children.size > 0) {
             if (Set("name", "date-entity").contains(node.concept) || node.concept.matches(".+-.*[a-z]+") || node.children.exists(_._1 == ":name")) {
                 // matches list of deleteble concepts
@@ -285,7 +333,7 @@ class RuleInventory(dropSenses: Boolean, options: Map[Symbol, String]) {
                 List()
             }
         }
-    }
+    }*/
 
     def passThroughRules(node: Node, graph: Graph, kbest: Int, ruleModel: SyntheticRules.Decoder) : List[(Rule, FeatureVector)] = {   // TODO: change to passThroughRealizations (and add features for syntheticRules)
         // TODO: filter the features to those in featureNames
