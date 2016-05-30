@@ -1,7 +1,7 @@
-JAMR - AMR Parser
+JAMR - AMR Parser and Generator
 =================
 
-JAMR is a semantic parser and aligner for the [Abstract Meaning Representation](http://amr.isi.edu/). 
+JAMR is a semantic parser, generator and aligner for the [Abstract Meaning Representation](http://amr.isi.edu/). 
 
 We have released [hand-alignments](docs/Hand_Alignments.md) for 200 sentences of the AMR corpus.
 
@@ -32,9 +32,33 @@ Source the config script - you will need to do this before running any of the sc
 Run `./compile` to build an uberjar, which will be output to
 `target/scala-{scala_version}/jamr-assembly-{jamr_version}.jar` (the setup script does this for you).
 
+#Running the Generator
+
+Configure and build cdec in `$JAMR_HOME/tools/cdec` (see [www.cdec-decoder.org](http://www.cdec-decoder.org)).
+
+Download and compile KenLM into `$JAMR_HOME/tools`.  Then build a language model from a tokenized, lowercased version of gigaword:
+
+    tools/cdec/corpus/tokenize-anything.sh < data/gigaword.txt | tools/cdec/corpus/lowercase.pl > data/gigaword.txt.tok.lc
+    tools/kenlm/bin/lmplz -o 5 < data/gigaword.txt.tok.lc > data/gigaword.tok.lc.arpa 2> data/gigaword.tok.lc.arpa.log
+    tools/kenlm/bin/build_binary -S 100G trie data/gigaword.tok.lc.arpa data/gigaword.tok.lc.klm 2> data/gigaword.tok.lc.klm.log
+    
+(For the above commands to work, you need to put gigaword in `$JAMR_HOME/data/gigaword.txt`, and run the commands from
+`$JAMR_HOME`).
+
+Download and extract the generator model weights
+[generator-models.tgz](http://cs.cmu.edu/~jmflanig/generator-models.tgz) into the directory
+`$JAMR_HOME/generator-models`.  To generate from an AMR file do:
+
+    . scripts/config_LDC2014T12-NAACL2016-generator.sh
+    scripts/GENERATE.sh input_file
+
+The output will be in `input_file.out`.  The `scripts/GENERATE.sh` command must be run from `$JAMR_HOME` because the
+path to the language model specified in `JAMR_HOME/scripts/generator-training/cdec.ini` is relative.  Alternatively, you
+can edit the `cdec.ini` file to make the path absolute and then `GENERATE.sh` can be run from any directory.
+
 #Running the Parser
 
-Download and extract model weights [models.tgz](http://cs.cmu.edu/~jmflanig/models.tgz) into the directory
+Download and extract the parser model weights [models.tgz](http://cs.cmu.edu/~jmflanig/models.tgz) into the directory
 `$JAMR_HOME/models`.  To parse a file (cased, untokenized, with one sentence per line) with the model trained on
 LDC2014E41 data do:
 

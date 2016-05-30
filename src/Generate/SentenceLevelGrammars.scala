@@ -35,10 +35,6 @@ object SentenceLevelGrammars {
             case "--predict-tree" :: l =>                parseOptions(map + ('predictTree -> "true"), l)
             case "--lowercase" :: l =>                   parseOptions(map + ('lowercase -> "true"), l)
             case "--output" :: value :: l =>             parseOptions(map + ('output -> value), l)
-            case "--dependencies" :: value :: tail =>    parseOptions(map + ('dependencies -> value), tail)
-            case "--ner" :: value :: tail =>             parseOptions(map + ('ner -> value), tail)
-            case "--snt" :: value :: tail =>             parseOptions(map ++ Map('notTokenized -> value), tail)
-            case "--tok" :: value :: tail =>             parseOptions(map ++ Map('tokenized -> value), tail)
             case "-v" :: value :: tail =>                parseOptions(map ++ Map('verbosity -> value), tail)
 
             case option :: tail => println("Error: Unknown option "+option) 
@@ -56,8 +52,6 @@ object SentenceLevelGrammars {
 
         val featureNames : Set[String] = Set() ++ options.getOrElse('features, "source,ruleGivenConcept,nonStopwordCount,nonStopwordCountPronouns").splitStr(",")
 
-        //val input : Array[Input] = Input.loadInputfiles(options)
-
         val ruleInventory: RuleInventory = new RuleInventory(options.contains('dropSenseTags), options)
         ruleInventory.load(options('ruleInventory))
 
@@ -71,8 +65,12 @@ object SentenceLevelGrammars {
         for (block <- Corpus.getAMRBlocks(Source.stdin.getLines)) {
             logger(0,"**** Processing Block *****")
             logger(0,block)
-            val data = AMRTrainingData(block, lowercase)
-            val sentence = data.sentence.map(x => if (lowercase) { x.toLowerCase } else { x })
+            val data = if (!options.contains('noReference)) {
+                    AMRTrainingData(block, lowercase)
+                } else {
+                    AMRTrainingData.fromAMR(block, lowercase)
+                }
+
             //val pos =  projectPos(input(i).pos)
             val graph = data.toOracleGraph(clearUnalignedNodes = false)  // TODO: don't require aligned sentence (which data requires)
             if (options.contains('predictTree)) {

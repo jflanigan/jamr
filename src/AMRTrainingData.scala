@@ -24,8 +24,10 @@ case class AMRTrainingData(sentence: Array[String], graph: Graph, spans: ArrayBu
     }
     def toOracleGraph(clearUnalignedNodes : Boolean): Graph = { // Stage2 oracle
         // WARNING: this function modifies the graph
-        val annotationIndex = annotators.size - 1
-        graph.loadSpans(spans(annotationIndex), sentence)
+        if (annotators.size > 0) {
+            val annotationIndex = annotators.size - 1
+            graph.loadSpans(spans(annotationIndex), sentence)
+        }
         if (clearUnalignedNodes) {
             graph.clearUnalignedNodes
         }
@@ -79,6 +81,16 @@ object AMRTrainingData {
             annotation_dates += ulfstr.getOrElse("::date", "")
         }
         return AMRTrainingData(sentence, graph, spans, annotators, annotation_dates, lines.filterNot(_.matches("^#.*")).mkString("\n"), extras)
+    }
+
+    def fromAMR(input: String, lowercase: Boolean = false) : AMRTrainingData = {    // Used to load input for generator
+        // Input format 
+        val lines = input.split("\n")
+        val amrstr = lines.filterNot(_.matches("^#.*")).mkString(" ")
+        val extras = lines.filter(_.matches("^#.*")).filterNot(_.matches("^# ::alignments .*")).mkString("\n")
+
+        val graph = Graph.parse(amrstr)
+        return AMRTrainingData(Array(), graph, new ArrayBuffer(), new ArrayBuffer(), new ArrayBuffer(), amrstr, extras)
     }
 
     class AMRTrainingDataTest /* extends Suite*/ {

@@ -11,6 +11,6 @@ rm -rf "${OUTPUT}"
     --random-directions 100 \
     --devset "${MODEL_DIR}/dev-grammars.snt" \
     --output-dir "${OUTPUT}" \
-    --jobs 10 \
+    --jobs 40 \
     &> "${OUTPUT}.err"
 
