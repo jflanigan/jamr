@@ -1,7 +1,9 @@
-JAMR - AMR Parser
+JAMR - AMR Parser and Generator
 =================
 
-JAMR is a semantic parser and aligner for the [Abstract Meaning Representation](http://amr.isi.edu/). 
+JAMR is a semantic parser, generator, and aligner for the [Abstract Meaning Representation](http://amr.isi.edu/).
+
+For the generator, see the branch [Generator](http://github.com/jflanigan/jamr/tree/Generator).
 
 We have released [hand-alignments](docs/Hand_Alignments.md) for 200 sentences of the AMR corpus.
 
