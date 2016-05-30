@@ -9,9 +9,10 @@ For the performance of the parser, see [docs/Parser_Performance](docs/Parser_Per
 
 #Building
 
-First checkout the github repository (or download the latest release):
+First clone the github repository and check out the `Generator` branch:
 
     git clone https://github.com/jflanigan/jamr.git
+    git checkout Generator
 
 JAMR depends on [Scala](http://www.scala-lang.org), [Illinois NER
 system](http://cogcomp.cs.illinois.edu/page/download_view/NETagger) v2.7, tokenization scripts in
