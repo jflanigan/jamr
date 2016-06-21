@@ -24,7 +24,7 @@ export MODEL_DIR="${JAMR_HOME}/models/semeval-2016_LDC2015E86"  # ideally keep t
 # CONCEPT_ID_TRAINING_OPTIONS and RELATION_ID_TRAINING_OPTIONS will override PARSER_OPTIONS
 
 #export STAGE1_FEATURES="bias,length,fromNERTagger,conceptGivenPhrase"
-export STAGE1_FEATURES="bias,corpusIndicator,length,corpusLength,conceptGivenPhrase,count,phraseGivenConcept,phraseConceptPair,phrase,firstMatch,numberIndicator,sentenceMatch,andList,pos,posEvent,phraseConceptPairPOS"
+export STAGE1_FEATURES="bias,corpusIndicator,length,corpusLength,conceptGivenPhrase,count,phraseGivenConcept,phraseConceptPair,phrase,firstMatch,numberIndicator,sentenceMatch,andList,pos,posEvent,phraseConceptPairPOS,badConcept"
 
 export PARSER_OPTIONS="
     --stage1-synthetic-concepts NER,DateExpr,OntoNotes,NEPassThrough,PassThrough,WordNetPassThrough,verbs,nominalizations
@@ -61,6 +61,6 @@ export CONCEPT_ID_TRAINING_OPTIONS="
 
 export RELATION_ID_TRAINING_OPTIONS="
     --training-optimizer Adagrad
-    --training-passes 6
+    --training-passes 10
     --training-save-interval 1
 "
