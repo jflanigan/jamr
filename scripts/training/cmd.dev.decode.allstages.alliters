@@ -1,11 +1,12 @@
 #!/bin/bash
 
-INPUT="${TEST_FILE}"
-OUTPUT="${MODEL_DIR}/test.decode.allstages"
 
+for i in 1 2 3 4 5 6 7 8 9 10; do
+
+INPUT="${DEV_FILE}"
+OUTPUT="${MODEL_DIR}/dev.decode.allstages.iter$i"
 STAGE1_WEIGHTS="${MODEL_DIR}/stage1-weights"
-STAGE2_WEIGHTS="${MODEL_DIR}/stage2-weights.iter5"
-#STAGE2_WEIGHTS="${MODEL_DIR}/stage2-weights.iter4"
+STAGE2_WEIGHTS="${MODEL_DIR}/stage2-weights.iter$i"
 
 ${JAMR_HOME}/run AMRParser \
     --stage1-concept-table "${MODEL_DIR}/conceptTable.train" \
@@ -21,4 +22,8 @@ ${JAMR_HOME}/run AMRParser \
     ${PARSER_OPTIONS} \
     < "${INPUT}.snt" \
     > "${OUTPUT}" \
-    2> "${OUTPUT}.err"
+    2> "${OUTPUT}.err" &
+
+done
+
+wait

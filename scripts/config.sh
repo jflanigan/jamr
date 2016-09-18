@@ -1,1 +1,1 @@
-config_ACL2014_LDC2014E41.sh
+config_semeval-2016_LDC2015E86

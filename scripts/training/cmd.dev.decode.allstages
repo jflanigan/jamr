@@ -5,6 +5,7 @@ OUTPUT="${MODEL_DIR}/dev.decode.allstages"
 
 STAGE1_WEIGHTS="${MODEL_DIR}/stage1-weights"
 STAGE2_WEIGHTS="${MODEL_DIR}/stage2-weights.iter5"
+#STAGE2_WEIGHTS="${MODEL_DIR}/stage2-weights.iter4"
 
 ${JAMR_HOME}/run AMRParser \
     --stage1-concept-table "${MODEL_DIR}/conceptTable.train" \
