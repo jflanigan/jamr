@@ -37,7 +37,9 @@ Run `./compile` to build an uberjar, which will be output to
 
 Configure and build cdec in `$JAMR_HOME/tools/cdec` (see [www.cdec-decoder.org](http://www.cdec-decoder.org)).
 
-Download and compile KenLM into `$JAMR_HOME/tools`.  Then build a language model from a tokenized, lowercased version of gigaword:
+Download and compile KenLM into `$JAMR_HOME/tools`.  Then build a 5-gram language model from a tokenized, lowercased
+version of gigaword (or download a much smaller, compressed 4-gram language model
+[here](http://cs.cmu.edu/~jmflanig/gigaword.tok.lc.klm) and put it in the `data/` directory):
 
     tools/cdec/corpus/tokenize-anything.sh < data/gigaword.txt | tools/cdec/corpus/lowercase.pl > data/gigaword.txt.tok.lc
     tools/kenlm/bin/lmplz -o 5 < data/gigaword.txt.tok.lc > data/gigaword.tok.lc.arpa 2> data/gigaword.tok.lc.arpa.log
