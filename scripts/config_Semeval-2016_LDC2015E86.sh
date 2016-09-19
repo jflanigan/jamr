@@ -18,7 +18,7 @@ export TRAIN_FILE="${JAMR_HOME}/data/LDC2015E86_DEFT_Phase_2_AMR_Annotation_R1/d
 export DEV_FILE="${JAMR_HOME}/data/LDC2015E86_DEFT_Phase_2_AMR_Annotation_R1/data/amrs/split/dev/dev.txt"
 export TEST_FILE="${JAMR_HOME}/data/LDC2015E86_DEFT_Phase_2_AMR_Annotation_R1/data/amrs/split/test/test.txt"
 
-export MODEL_DIR="${JAMR_HOME}/models/semeval-2016_LDC2015E86"  # ideally keep this the same as the config_SOMETHING.sh
+export MODEL_DIR="${JAMR_HOME}/models/Semeval-2016_LDC2015E86"  # ideally keep this the same as the config_SOMETHING.sh
 
 # The options specified below will override any options specified in the scripts
 # CONCEPT_ID_TRAINING_OPTIONS and RELATION_ID_TRAINING_OPTIONS will override PARSER_OPTIONS

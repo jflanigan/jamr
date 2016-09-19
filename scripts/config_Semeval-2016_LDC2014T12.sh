@@ -18,7 +18,7 @@ export TRAIN_FILE="${JAMR_HOME}/data/amr_anno_1.0/data/split/training/training.t
 export DEV_FILE="${JAMR_HOME}/data/amr_anno_1.0/data/split/dev/dev.txt"
 export TEST_FILE="${JAMR_HOME}/data/amr_anno_1.0/data/split/test/test.txt"
 
-export MODEL_DIR="${JAMR_HOME}/models/semeval-2016_LDC2014T12"  # ideally keep this the same as the config_SOMETHING.sh
+export MODEL_DIR="${JAMR_HOME}/models/Semeval-2016_LDC2014T12"  # ideally keep this the same as the config_SOMETHING.sh
 
 # The options specified below will override any options specified in the scripts
 # CONCEPT_ID_TRAINING_OPTIONS and RELATION_ID_TRAINING_OPTIONS will override PARSER_OPTIONS

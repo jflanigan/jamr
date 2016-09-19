@@ -3,7 +3,7 @@ set -ueo pipefail
 
 # Source config script
 JAMR_HOME="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." > /dev/null && pwd )"
-. "${JAMR_HOME}/scripts/config_ACL2014_LDC2014T12.sh"
+. "${JAMR_HOME}/scripts/config_Semeval-2016_LDC2014T12.sh"
 
 # Extract and preprocess data
 if [ ! -f "$JAMR_HOME/data/amr_anno_1.0_LDC2014T12.tgz" ]; then

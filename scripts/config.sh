@@ -1,1 +1,1 @@
-config_semeval-2016_LDC2015E86
+config_Semeval-2016_LDC2015E86.sh

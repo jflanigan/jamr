@@ -1,14 +1,16 @@
 JAMR - AMR Parser
 =================
 
-This is a fork of Jeff Flanigan's JAMR Parser, updated to contain training files for SemEval 2016 Task 8. It is otherwise unchanged
-from [the original](https://github.com/jflanigan/jamr).
+This is the JAMR Parser, updated for SemEval 2016 Task 8.
 
-JAMR is a semantic parser and aligner for the [Abstract Meaning Representation](http://amr.isi.edu/). 
+JAMR is a semantic parser, generator, and aligner for the [Abstract Meaning Representation](http://amr.isi.edu/).  The
+parser and aligner have been updated to include improvements from SemEval 2016 Task 8.
+
+For the generator, see the branch [Generator](http://github.com/jflanigan/jamr/tree/Generator).
 
 We have released [hand-alignments](docs/Hand_Alignments.md) for 200 sentences of the AMR corpus.
 
-For the performance of the parser, see [docs/Parser_Performance](docs/Parser_Performance.md).
+For the performance of the parser (including for the parser from SemEval 2016), see [docs/Parser_Performance](docs/Parser_Performance.md).
 
 #Building
 
@@ -37,18 +39,18 @@ Run `./compile` to build an uberjar, which will be output to
 
 #Running the Parser
 
-Download and extract model weights [models.tgz](http://cs.cmu.edu/~jmflanig/models.tgz) into the directory
-`$JAMR_HOME/models`.  To parse a file (cased, untokenized, with one sentence per line) with the model trained on
-LDC2014E41 data do:
+Download and extract model weights [models-2016.09.18.tgz](http://cs.cmu.edu/~jmflanig/models-2016.09.18.tgz) into the directory
+`$JAMR_HOME/models`.  To parse a file (cased, untokenized, with one sentence per line, no blank lines) with the model trained on
+LDC2015E86 data do:
 
     . scripts/config.sh
     scripts/PARSE.sh < input_file > output_file 2> output_file.err
 
 The output is AMR format, with some extra fields described in [docs/Nodes and Edges
 Format](docs/Nodes_and_Edges_Format.md) and [docs/Alignment Format](docs/Alignment_Format.md). To run the parser trained
-on other datasets (such as the older LDC2013E117 data, or freely downloadable [Little
-Prince](http://amr.isi.edu/download.html) data) source the config scripts `config_LDC203E41.sh`
-or `config_Little_Prince.sh` instead.
+on other datasets (such as LDC2014T12, or the freely downloadable [Little
+Prince](http://amr.isi.edu/download.html) data) source the config scripts `config_Semeval-2016_LDC2014T12.sh`
+or `config_Semeval-2016_Little_Prince.sh` instead.
 
 #Running the Aligner
 
@@ -57,8 +59,8 @@ To run the rule-based aligner:
     . scripts/config.sh
     scripts/ALIGN.sh < amr_input_file > output_file
 
-The output of the aligner is described in [docs/Alignment Format](docs/Alignment_Format.md).  Currently the aligner
-works best for release r3 data (AMR Specification v1.0), but it will run on newer data as well.
+The output of the aligner is described in [docs/Alignment Format](docs/Alignment_Format.md).  The aligner has been
+updated for SemEval 2016.
 
 #Hand Alignments
 
