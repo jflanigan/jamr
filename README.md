@@ -17,6 +17,7 @@ For the performance of the parser (including for the parser from SemEval 2016), 
 First checkout the github repository (or download the latest release):
 
     git clone https://github.com/jflanigan/jamr.git
+    git checkout Semeval-2016
 
 JAMR depends on [Scala](http://www.scala-lang.org), [Illinois NER
 system](http://cogcomp.cs.illinois.edu/page/download_view/NETagger) v2.7, tokenization scripts in
