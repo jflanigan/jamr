@@ -26,7 +26,7 @@ ${JAMR_HOME}/run CorpusTool < "${INPUT}" --tokenized "${INPUT}.snt.tok" > "${INP
 echo ' ### Running aligner ###' >&2
 
 # -v 1 will output spans
-${JAMR_HOME}/run Aligner -v 0 < "${INPUT}.tok" 
+${JAMR_HOME}/run Aligner -v 0 --print-nodes-and-edges < "${INPUT}.tok" 
 
 rm /tmp/jamr-$$ /tmp/jamr-$$.tok /tmp/jamr-$$.snt.tok
 
