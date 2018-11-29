@@ -7,7 +7,7 @@ We have released [hand-alignments](docs/Hand_Alignments.md) for 200 sentences of
 
 For the performance of the parser, see [docs/Parser_Performance](docs/Parser_Performance.md).
 
-#Building
+# Building
 
 First clone the github repository and check out the `Generator` branch:
 
@@ -33,7 +33,7 @@ Source the config script - you will need to do this before running any of the sc
 Run `./compile` to build an uberjar, which will be output to
 `target/scala-{scala_version}/jamr-assembly-{jamr_version}.jar` (the setup script does this for you).
 
-#Running the Generator
+# Running the Generator
 
 Configure and build cdec in `$JAMR_HOME/tools/cdec` (see [www.cdec-decoder.org](http://www.cdec-decoder.org)).
 
@@ -59,7 +59,7 @@ The output will be in `input_file.out`.  The `scripts/GENERATE.sh` command must 
 path to the language model specified in `JAMR_HOME/scripts/generator-training/cdec.ini` is relative.  Alternatively, you
 can edit the `cdec.ini` file to make the path absolute and then `GENERATE.sh` can be run from any directory.
 
-#Running the Parser
+# Running the Parser
 
 Download and extract the parser model weights [models.tgz](http://cs.cmu.edu/~jmflanig/models.tgz) into the directory
 `$JAMR_HOME/models`.  To parse a file (cased, untokenized, with one sentence per line) with the model trained on
@@ -74,7 +74,7 @@ on other datasets (such as the older LDC2013E117 data, or freely downloadable [L
 Prince](http://amr.isi.edu/download.html) data) source the config scripts `config_LDC203E41.sh`
 or `config_Little_Prince.sh` instead.
 
-#Running the Aligner
+# Running the Aligner
 
 To run the rule-based aligner:
 
@@ -84,11 +84,11 @@ To run the rule-based aligner:
 The output of the aligner is described in [docs/Alignment Format](docs/Alignment_Format.md).  Currently the aligner
 works best for release r3 data (AMR Specification v1.0), but it will run on newer data as well.
 
-#Hand Alignments
+# Hand Alignments
 
 To create the hand alignments file, see [docs/Hand Alignments](docs/Hand_Alignments.md).
 
-#Experimental Pipeline
+# Experimental Pipeline
 
 The following describes how to train and evaluate the parser.  There are scripts to train the parser on various
 datasets, as well as a general train script to train the parser on any AMR dataset.  More detailed instructions for
