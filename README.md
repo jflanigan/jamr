@@ -12,7 +12,7 @@ We have released [hand-alignments](docs/Hand_Alignments.md) for 200 sentences of
 
 For the performance of the parser (including for the parser from SemEval 2016), see [docs/Parser_Performance](docs/Parser_Performance.md).
 
-#Building
+# Building
 
 First checkout the github repository (or download the latest release):
 
@@ -38,7 +38,7 @@ Source the config script - you will need to do this before running any of the sc
 Run `./compile` to build an uberjar, which will be output to
 `target/scala-{scala_version}/jamr-assembly-{jamr_version}.jar` (the setup script does this for you).
 
-#Running the Parser
+# Running the Parser
 
 Download and extract model weights [models-2016.09.18.tgz](http://cs.cmu.edu/~jmflanig/models-2016.09.18.tgz) into the directory
 `$JAMR_HOME/models`.  To parse a file (cased, untokenized, with one sentence per line, no blank lines) with the model trained on
@@ -53,7 +53,7 @@ on other datasets (such as LDC2014T12, or the freely downloadable [Little
 Prince](http://amr.isi.edu/download.html) data) source the config scripts `config_Semeval-2016_LDC2014T12.sh`
 or `config_Semeval-2016_Little_Prince.sh` instead.
 
-#Running the Aligner
+# Running the Aligner
 
 To run the rule-based aligner:
 
@@ -63,11 +63,11 @@ To run the rule-based aligner:
 The output of the aligner is described in [docs/Alignment Format](docs/Alignment_Format.md).  The aligner has been
 updated for SemEval 2016.
 
-#Hand Alignments
+# Hand Alignments
 
 To create the hand alignments file, see [docs/Hand Alignments](docs/Hand_Alignments.md).
 
-#Experimental Pipeline
+# Experimental Pipeline
 
 The following describes how to train and evaluate the parser.  There are scripts to train the parser on various
 datasets, as well as a general train script to train the parser on any AMR dataset.  More detailed instructions for
