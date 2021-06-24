@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ivy-module version="2.0" xmlns:m="http://ant.apache.org/ivy/maven" xmlns:e="http://ant.apache.org/ivy/extra">
+	<info organisation="com.squareup.okio"
+		module="okio"
+		revision="1.12.0"
+		status="release"
+		publication="20170411232017"
+	>
+		<license name="Apache 2.0" url="http://www.apache.org/licenses/LICENSE-2.0.txt" />
+		<description homepage="" />
+		<m:dependency.management__junit__junit__version>4.11</m:dependency.management__junit__junit__version>
+		<m:properties__animal.sniffer.version>1.10</m:properties__animal.sniffer.version>
+		<m:dependency.management__org.openjdk.jmh__jmh-core__version>1.4.1</m:dependency.management__org.openjdk.jmh__jmh-core__version>
+		<m:dependency.management__org.openjdk.jmh__jmh-generator-annprocess__scope>provided</m:dependency.management__org.openjdk.jmh__jmh-generator-annprocess__scope>
+		<m:dependency.management__org.openjdk.jmh__jmh-generator-annprocess__version>1.4.1</m:dependency.management__org.openjdk.jmh__jmh-generator-annprocess__version>
+		<m:properties__project.build.sourceEncoding>UTF-8</m:properties__project.build.sourceEncoding>
+		<m:properties__junit.version>4.11</m:properties__junit.version>
+		<m:dependency.management__org.codehaus.mojo__animal-sniffer-annotations__version>1.10</m:dependency.management__org.codehaus.mojo__animal-sniffer-annotations__version>
+		<m:properties__java.version>1.7</m:properties__java.version>
+		<e:sbtTransformHash>fc9ef450e96d366c98ab8a761cbf3e71399ad384</e:sbtTransformHash>
+		<m:properties__jmh.version>1.4.1</m:properties__jmh.version>
+		<m:properties__sonatypeOssDistMgmtSnapshotsUrl>https://oss.sonatype.org/content/repositories/snapshots/</m:properties__sonatypeOssDistMgmtSnapshotsUrl>
+		<m:maven.plugins>org.apache.maven.plugins__maven-enforcer-plugin__1.0|org.apache.maven.plugins__maven-enforcer-plugin__1.0|org.apache.maven.plugins__maven-release-plugin__2.5|org.apache.maven.plugins__maven-enforcer-plugin__1.0|org.apache.maven.plugins__maven-enforcer-plugin__1.0|org.apache.maven.plugins__maven-release-plugin__2.5|org.codehaus.mojo__animal-sniffer-maven-plugin__1.10</m:maven.plugins>
+	</info>
+	<configurations>
+		<conf name="default" visibility="public" description="runtime dependencies and master artifact can be used with this conf" extends="runtime,master"/>
+		<conf name="master" visibility="public" description="contains only the artifact published by this module itself, with no transitive dependencies"/>
+		<conf name="compile" visibility="public" description="this is the default scope, used if none is specified. Compile dependencies are available in all classpaths."/>
+		<conf name="provided" visibility="public" description="this is much like compile, but indicates you expect the JDK or a container to provide it. It is only available on the compilation classpath, and is not transitive."/>
+		<conf name="runtime" visibility="public" description="this scope indicates that the dependency is not required for compilation, but is for execution. It is in the runtime and test classpaths, but not the compile classpath." extends="compile"/>
+		<conf name="test" visibility="private" description="this scope indicates that the dependency is not required for normal use of the application, and is only available for the test compilation and execution phases." extends="runtime"/>
+		<conf name="system" visibility="public" description="this scope is similar to provided except that you have to provide the JAR which contains it explicitly. The artifact is always available and is not looked up in a repository."/>
+		<conf name="sources" visibility="public" description="this configuration contains the source artifact of this module, if any."/>
+		<conf name="javadoc" visibility="public" description="this configuration contains the javadoc artifact of this module, if any."/>
+		<conf name="optional" visibility="public" description="contains all optional dependencies"/>
+	</configurations>
+	<publications>
+		<artifact name="okio" type="jar" ext="jar" conf="master"/>
+	</publications>
+	<dependencies>
+		<dependency org="org.codehaus.mojo" name="animal-sniffer-annotations" rev="1.10" force="true" conf="optional->compile(*),master(compile)"/>
+		<dependency org="junit" name="junit" rev="4.11" force="true" conf="test->runtime(*),master(compile)"/>
+	</dependencies>
+</ivy-module>

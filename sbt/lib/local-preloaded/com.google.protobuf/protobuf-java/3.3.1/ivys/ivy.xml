@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ivy-module version="2.0" xmlns:m="http://ant.apache.org/ivy/maven" xmlns:e="http://ant.apache.org/ivy/extra">
+	<info organisation="com.google.protobuf"
+		module="protobuf-java"
+		revision="3.3.1"
+		status="release"
+		publication="20170515134637"
+	>
+		<license name="3-Clause BSD License" url="https://opensource.org/licenses/BSD-3-Clause" />
+		<description homepage="">
+		Core Protocol Buffers library. Protocol Buffers are a way of encoding structured data in an
+    efficient yet extensible format.
+		</description>
+		<m:dependency.management__junit__junit__version>4.12</m:dependency.management__junit__junit__version>
+		<m:properties__project.reporting.outputEncoding>UTF-8</m:properties__project.reporting.outputEncoding>
+		<m:properties__protobuf.basedir>${project.basedir}/../..</m:properties__protobuf.basedir>
+		<m:dependency.management__com.google.guava__guava__version>19.0</m:dependency.management__com.google.guava__guava__version>
+		<m:properties__protobuf.source.dir>${protobuf.basedir}/src</m:properties__protobuf.source.dir>
+		<m:properties__generated.sources.dir>${project.build.directory}/generated-sources</m:properties__generated.sources.dir>
+		<m:dependency.management__org.easymock__easymockclassextension__scope>test</m:dependency.management__org.easymock__easymockclassextension__scope>
+		<m:properties__project.build.sourceEncoding>UTF-8</m:properties__project.build.sourceEncoding>
+		<m:dependency.management__org.easymock__easymockclassextension__version>2.2.1</m:dependency.management__org.easymock__easymockclassextension__version>
+		<m:dependency.management__org.easymock__easymock__scope>test</m:dependency.management__org.easymock__easymock__scope>
+		<m:properties__protoc>${protobuf.source.dir}/protoc</m:properties__protoc>
+		<m:dependency.management__org.easymock__easymock__version>2.2</m:dependency.management__org.easymock__easymock__version>
+		<m:properties__generated.testsources.lite.dir>${project.build.directory}/generated-test-sources-lite</m:properties__generated.testsources.lite.dir>
+		<m:properties__generated.sources.lite.dir>${project.build.directory}/generated-sources-lite</m:properties__generated.sources.lite.dir>
+		<e:sbtTransformHash>42de4e568b455346f82335b7c351957fb6ea5797</e:sbtTransformHash>
+		<m:properties__generated.testsources.dir>${project.build.directory}/generated-test-sources</m:properties__generated.testsources.dir>
+		<m:properties__test.proto.dir>src/test/proto</m:properties__test.proto.dir>
+		<m:maven.plugins>null__maven-antrun-plugin__null|org.codehaus.mojo__build-helper-maven-plugin__null|org.apache.felix__maven-bundle-plugin__null</m:maven.plugins>
+		<m:dependency.management__junit__junit__scope>test</m:dependency.management__junit__junit__scope>
+	</info>
+	<configurations>
+		<conf name="default" visibility="public" description="runtime dependencies and master artifact can be used with this conf" extends="runtime,master"/>
+		<conf name="master" visibility="public" description="contains only the artifact published by this module itself, with no transitive dependencies"/>
+		<conf name="compile" visibility="public" description="this is the default scope, used if none is specified. Compile dependencies are available in all classpaths."/>
+		<conf name="provided" visibility="public" description="this is much like compile, but indicates you expect the JDK or a container to provide it. It is only available on the compilation classpath, and is not transitive."/>
+		<conf name="runtime" visibility="public" description="this scope indicates that the dependency is not required for compilation, but is for execution. It is in the runtime and test classpaths, but not the compile classpath." extends="compile"/>
+		<conf name="test" visibility="private" description="this scope indicates that the dependency is not required for normal use of the application, and is only available for the test compilation and execution phases." extends="runtime"/>
+		<conf name="system" visibility="public" description="this scope is similar to provided except that you have to provide the JAR which contains it explicitly. The artifact is always available and is not looked up in a repository."/>
+		<conf name="sources" visibility="public" description="this configuration contains the source artifact of this module, if any."/>
+		<conf name="javadoc" visibility="public" description="this configuration contains the javadoc artifact of this module, if any."/>
+		<conf name="optional" visibility="public" description="contains all optional dependencies"/>
+	</configurations>
+	<publications>
+		<artifact name="protobuf-java" type="bundle" ext="jar" conf="master"/>
+	</publications>
+	<dependencies>
+		<dependency org="junit" name="junit" rev="4.12" force="true" conf="test->runtime(*),master(compile)"/>
+		<dependency org="org.easymock" name="easymock" rev="2.2" force="true" conf="test->runtime(*),master(compile)"/>
+		<dependency org="org.easymock" name="easymockclassextension" rev="2.2.1" force="true" conf="test->runtime(*),master(compile)"/>
+	</dependencies>
+</ivy-module>

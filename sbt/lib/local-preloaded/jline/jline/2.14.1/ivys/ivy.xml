@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ivy-module version="2.0" xmlns:m="http://ant.apache.org/ivy/maven" xmlns:e="http://ant.apache.org/ivy/extra">
+	<info organisation="jline"
+		module="jline"
+		revision="2.14.1"
+		status="release"
+		publication="20160315132458"
+	>
+		<license name="The BSD License" url="http://www.opensource.org/licenses/bsd-license.php" />
+		<description homepage="" />
+		<m:properties__project.reporting.outputEncoding>UTF-8</m:properties__project.reporting.outputEncoding>
+		<m:properties__build.timestamp>${maven.build.timestamp}</m:properties__build.timestamp>
+		<m:properties__maven.build.timestamp.format>yyyyMMddHHmm</m:properties__maven.build.timestamp.format>
+		<m:properties__maven.test.redirectTestOutputToFile>true</m:properties__maven.test.redirectTestOutputToFile>
+		<m:properties__jansi.version>1.11</m:properties__jansi.version>
+		<e:sbtTransformHash>c23518e18835168ff5b4b93207962eed63dd7da1</e:sbtTransformHash>
+		<m:properties__maven.compiler.target>1.5</m:properties__maven.compiler.target>
+		<m:properties__project.build.sourceEncoding>UTF-8</m:properties__project.build.sourceEncoding>
+		<m:properties__sonatypeOssDistMgmtSnapshotsUrl>https://oss.sonatype.org/content/repositories/snapshots/</m:properties__sonatypeOssDistMgmtSnapshotsUrl>
+		<m:maven.plugins>org.apache.maven.plugins__maven-enforcer-plugin__1.2|org.apache.maven.plugins__maven-enforcer-plugin__1.2|null__maven-surefire-plugin__2.18.1|null__maven-compiler-plugin__3.1|null__maven-source-plugin__2.4|org.codehaus.mojo__animal-sniffer-maven-plugin__1.14|org.apache.felix__maven-bundle-plugin__2.5.4|null__maven-jar-plugin__2.6|null__maven-scm-plugin__1.9.4|null__maven-shade-plugin__2.4.1|null__maven-site-plugin__null|null__maven-javadoc-plugin__null|com.mycila.maven-license-plugin__maven-license-plugin__1.9.0|null__maven-enforcer-plugin__1.4.1</m:maven.plugins>
+		<m:properties__maven.compiler.source>1.5</m:properties__maven.compiler.source>
+	</info>
+	<configurations>
+		<conf name="default" visibility="public" description="runtime dependencies and master artifact can be used with this conf" extends="runtime,master"/>
+		<conf name="master" visibility="public" description="contains only the artifact published by this module itself, with no transitive dependencies"/>
+		<conf name="compile" visibility="public" description="this is the default scope, used if none is specified. Compile dependencies are available in all classpaths."/>
+		<conf name="provided" visibility="public" description="this is much like compile, but indicates you expect the JDK or a container to provide it. It is only available on the compilation classpath, and is not transitive."/>
+		<conf name="runtime" visibility="public" description="this scope indicates that the dependency is not required for compilation, but is for execution. It is in the runtime and test classpaths, but not the compile classpath." extends="compile"/>
+		<conf name="test" visibility="private" description="this scope indicates that the dependency is not required for normal use of the application, and is only available for the test compilation and execution phases." extends="runtime"/>
+		<conf name="system" visibility="public" description="this scope is similar to provided except that you have to provide the JAR which contains it explicitly. The artifact is always available and is not looked up in a repository."/>
+		<conf name="sources" visibility="public" description="this configuration contains the source artifact of this module, if any."/>
+		<conf name="javadoc" visibility="public" description="this configuration contains the javadoc artifact of this module, if any."/>
+		<conf name="optional" visibility="public" description="contains all optional dependencies"/>
+	</configurations>
+	<publications>
+		<artifact name="jline" type="jar" ext="jar" conf="master"/>
+	</publications>
+	<dependencies>
+		<dependency org="junit" name="junit" rev="4.12" force="true" conf="test->runtime(*),master(compile)">
+			<exclude org="org.hamcrest" module="hamcrest-core" name="*" type="*" ext="*" conf="" matcher="exact"/>
+		</dependency>
+		<dependency org="org.easymock" name="easymock" rev="3.3.1" force="true" conf="test->runtime(*),master(compile)">
+			<exclude org="cglib" module="cglib" name="*" type="*" ext="*" conf="" matcher="exact"/>
+			<exclude org="org.ow2.asm" module="asm" name="*" type="*" ext="*" conf="" matcher="exact"/>
+			<exclude org="org.objenesis" module="objenesis" name="*" type="*" ext="*" conf="" matcher="exact"/>
+		</dependency>
+		<dependency org="org.powermock" name="powermock-module-junit4" rev="1.6.2" force="true" conf="test->runtime(*),master(compile)">
+			<exclude org="org.powermock" module="powermock-module-junit4-common" name="*" type="*" ext="*" conf="" matcher="exact"/>
+		</dependency>
+		<dependency org="org.powermock" name="powermock-api-easymock" rev="1.6.2" force="true" conf="test->runtime(*),master(compile)">
+			<exclude org="cglib" module="cglib-nodep" name="*" type="*" ext="*" conf="" matcher="exact"/>
+			<exclude org="org.powermock" module="powermock-api-support" name="*" type="*" ext="*" conf="" matcher="exact"/>
+		</dependency>
+	</dependencies>
+</ivy-module>

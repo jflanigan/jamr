@@ -6,6 +6,7 @@
 /project/project
 /experiments
 /models
+/tools
 # LDC data
 /data
 # IntelliJ cruft
