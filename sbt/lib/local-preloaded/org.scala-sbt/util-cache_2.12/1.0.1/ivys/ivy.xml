@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ivy-module version="2.0" xmlns:m="http://ant.apache.org/ivy/maven" xmlns:e="http://ant.apache.org/ivy/extra">
+	<info organisation="org.scala-sbt"
+		module="util-cache_2.12"
+		revision="1.0.1"
+		status="release"
+		publication="20170825174330"
+	>
+		<license name="BSD New" url="https://github.com/sbt/sbt/blob/0.13/LICENSE" />
+		<description homepage="https://github.com/sbt/util">
+		Util module for sbt
+		</description>
+		<e:sbtTransformHash>63e95a34bcf319df2142809fe14598a066586bd5</e:sbtTransformHash>
+	</info>
+	<configurations>
+		<conf name="default" visibility="public" description="runtime dependencies and master artifact can be used with this conf" extends="runtime,master"/>
+		<conf name="master" visibility="public" description="contains only the artifact published by this module itself, with no transitive dependencies"/>
+		<conf name="compile" visibility="public" description="this is the default scope, used if none is specified. Compile dependencies are available in all classpaths."/>
+		<conf name="provided" visibility="public" description="this is much like compile, but indicates you expect the JDK or a container to provide it. It is only available on the compilation classpath, and is not transitive."/>
+		<conf name="runtime" visibility="public" description="this scope indicates that the dependency is not required for compilation, but is for execution. It is in the runtime and test classpaths, but not the compile classpath." extends="compile"/>
+		<conf name="test" visibility="private" description="this scope indicates that the dependency is not required for normal use of the application, and is only available for the test compilation and execution phases." extends="runtime"/>
+		<conf name="system" visibility="public" description="this scope is similar to provided except that you have to provide the JAR which contains it explicitly. The artifact is always available and is not looked up in a repository."/>
+		<conf name="sources" visibility="public" description="this configuration contains the source artifact of this module, if any."/>
+		<conf name="javadoc" visibility="public" description="this configuration contains the javadoc artifact of this module, if any."/>
+		<conf name="optional" visibility="public" description="contains all optional dependencies"/>
+	</configurations>
+	<publications>
+		<artifact name="util-cache_2.12" type="jar" ext="jar" conf="master"/>
+	</publications>
+	<dependencies>
+		<dependency org="org.scala-lang" name="scala-library" rev="2.12.3" force="true" conf="compile->compile(*),master(compile);runtime->runtime(*)"/>
+		<dependency org="org.scala-sbt" name="util-testing_2.12" rev="1.0.1" force="true" conf="test->runtime(*),master(compile)"/>
+		<dependency org="com.eed3si9n" name="sjson-new-scalajson_2.12" rev="0.8.0" force="true" conf="compile->compile(*),master(compile);runtime->runtime(*)"/>
+		<dependency org="com.eed3si9n" name="sjson-new-murmurhash_2.12" rev="0.8.0" force="true" conf="compile->compile(*),master(compile);runtime->runtime(*)"/>
+		<dependency org="org.scala-lang" name="scala-reflect" rev="2.12.3" force="true" conf="compile->compile(*),master(compile);runtime->runtime(*)"/>
+		<dependency org="org.scala-sbt" name="io_2.12" rev="1.0.0" force="true" conf="compile->compile(*),master(compile);runtime->runtime(*)"/>
+	</dependencies>
+</ivy-module>

@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ivy-module version="2.0" xmlns:m="http://ant.apache.org/ivy/maven" xmlns:e="http://ant.apache.org/ivy/extra">
+	<info organisation="org.apache.logging.log4j"
+		module="log4j-api"
+		revision="2.8.1"
+		status="release"
+		publication="20170226185408"
+	>
+		<license name="Apache License, Version 2.0" url="https://www.apache.org/licenses/LICENSE-2.0.txt" />
+		<description homepage="">
+		The Apache Log4j API
+		</description>
+		<m:properties__osgi.api.version>4.3.1</m:properties__osgi.api.version>
+		<m:dependency.management__org.apache.logging.log4j__log4j-api__scope>test</m:dependency.management__org.apache.logging.log4j__log4j-api__scope>
+		<m:dependency.management__org.springframework__spring-oxm__version>3.2.18.RELEASE</m:dependency.management__org.springframework__spring-oxm__version>
+		<m:dependency.management__commons-codec__commons-codec__version>1.10</m:dependency.management__commons-codec__commons-codec__version>
+		<m:dependency.management__org.apache.logging.log4j__log4j-1.2-api__version>2.8.1</m:dependency.management__org.apache.logging.log4j__log4j-1.2-api__version>
+		<m:dependency.management__org.apache.flume__flume-ng-sdk__version>1.7.0</m:dependency.management__org.apache.flume__flume-ng-sdk__version>
+		<m:dependency.management__org.zeromq__jeromq__version>0.3.6</m:dependency.management__org.zeromq__jeromq__version>
+		<m:properties__conversantDisruptorVersion>1.2.10</m:properties__conversantDisruptorVersion>
+		<m:dependency.management__ch.qos.logback__logback-classic__version>1.2.0</m:dependency.management__ch.qos.logback__logback-classic__version>
+		<m:properties__failsafe.plugin.version>2.19.1</m:properties__failsafe.plugin.version>
+		<m:properties__cobertura.plugin.version>2.7</m:properties__cobertura.plugin.version>
+		<m:dependency.management__org.osgi__org.osgi.core__scope>provided</m:dependency.management__org.osgi__org.osgi.core__scope>
+		<m:dependency.management__org.codehaus.jackson__jackson-core-asl__scope>runtime</m:dependency.management__org.codehaus.jackson__jackson-core-asl__scope>
+		<m:dependency.management__org.apache.flume__flume-ng-core__version>1.7.0</m:dependency.management__org.apache.flume__flume-ng-core__version>
+		<m:dependency.management__com.google.code.java-allocation-instrumenter__java-allocation-instrumenter__version>3.0.1</m:dependency.management__com.google.code.java-allocation-instrumenter__java-allocation-instrumenter__version>
+		<m:dependency.management__org.eclipse.tycho__org.eclipse.osgi__version>3.11.2.v20161107-1947</m:dependency.management__org.eclipse.tycho__org.eclipse.osgi__version>
+		<m:dependency.management__org.apache.flume__flume-ng-sdk__exclusion_0>org.codehaus.jackson__jackson-core-asl</m:dependency.management__org.apache.flume__flume-ng-sdk__exclusion_0>
+		<m:dependency.management__commons-logging__commons-logging__version>1.2</m:dependency.management__commons-logging__commons-logging__version>
+		<m:dependency.management__org.xmlunit__xmlunit-matchers__scope>test</m:dependency.management__org.xmlunit__xmlunit-matchers__scope>
+		<m:dependency.management__org.apache.flume__flume-ng-sdk__exclusion_1>org.codehaus.jackson__jackson-mapper-asl</m:dependency.management__org.apache.flume__flume-ng-sdk__exclusion_1>
+		<m:dependency.management__junit__junit__scope>test</m:dependency.management__junit__junit__scope>
+		<m:properties__project.reporting.outputEncoding>UTF-8</m:properties__project.reporting.outputEncoding>
+		<m:dependency.management__org.apache.flume__flume-ng-node__exclusion_3>log4j__log4j</m:dependency.management__org.apache.flume__flume-ng-node__exclusion_3>
+		<m:properties__distMgmtSnapshotsUrl>https://repository.apache.org/content/repositories/snapshots</m:properties__distMgmtSnapshotsUrl>
+		<m:dependency.management__org.apache.flume__flume-ng-node__exclusion_0>org.codehaus.jackson__jackson-mapper-asl</m:dependency.management__org.apache.flume__flume-ng-node__exclusion_0>
+		<m:dependency.management__org.apache.flume__flume-ng-node__exclusion_2>org.codehaus.jackson__jackson-core-asl</m:dependency.management__org.apache.flume__flume-ng-node__exclusion_2>
+		<m:dependency.management__org.apache.flume__flume-ng-node__exclusion_1>org.slf4j__slf4j-log4j12</m:dependency.management__org.apache.flume__flume-ng-node__exclusion_1>
+		<m:properties__gpg.useagent>true</m:properties__gpg.useagent>
+		<m:dependency.management__net.javacrumbs.json-unit__json-unit__scope>test</m:dependency.management__net.javacrumbs.json-unit__json-unit__scope>
+		<m:properties__commonsLoggingVersion>1.2</m:properties__commonsLoggingVersion>
+		<m:dependency.management__org.mockito__mockito-core__version>2.2.7</m:dependency.management__org.mockito__mockito-core__version>
+		<m:properties__activemq.version>5.14.1</m:properties__activemq.version>
+		<m:dependency.management__org.apache.flume__flume-ng-embedded-agent__version>1.7.0</m:dependency.management__org.apache.flume__flume-ng-embedded-agent__version>
+		<m:dependency.management__org.eclipse.persistence__javax.persistence__version>2.1.0</m:dependency.management__org.eclipse.persistence__javax.persistence__version>
+		<m:dependency.management__org.mongodb__mongo-java-driver__version>3.0.4</m:dependency.management__org.mongodb__mongo-java-driver__version>
+		<m:dependency.management__org.xmlunit__xmlunit-matchers__version>2.2.1</m:dependency.management__org.xmlunit__xmlunit-matchers__version>
+		<m:dependency.management__com.lmax__disruptor__version>3.3.6</m:dependency.management__com.lmax__disruptor__version>
+		<m:properties__javadoc.plugin.version>2.10.4</m:properties__javadoc.plugin.version>
+		<m:dependency.management__org.apache.commons__commons-csv__version>1.4</m:dependency.management__org.apache.commons__commons-csv__version>
+		<m:properties__docLabel>API Documentation</m:properties__docLabel>
+		<m:properties__surefire.plugin.version>2.19.1</m:properties__surefire.plugin.version>
+		<m:properties__Log4jReleaseKey>B3D8E1BA</m:properties__Log4jReleaseKey>
+		<m:dependency.management__commons-io__commons-io__scope>test</m:dependency.management__commons-io__commons-io__scope>
+		<m:dependency.management__org.apache.hadoop__hadoop-core__version>1.2.1</m:dependency.management__org.apache.hadoop__hadoop-core__version>
+		<m:dependency.management__org.apache.activemq__activemq-broker__version>5.14.1</m:dependency.management__org.apache.activemq__activemq-broker__version>
+		<m:dependency.management__org.jctools__jctools-core__version>1.2.1</m:dependency.management__org.jctools__jctools-core__version>
+		<m:properties__argLine>-Xms256m -Xmx1024m</m:properties__argLine>
+		<m:dependency.management__org.apache.flume__flume-ng-node__version>1.7.0</m:dependency.management__org.apache.flume__flume-ng-node__version>
+		<m:properties__clirr.plugin.version>2.8</m:properties__clirr.plugin.version>
+		<m:dependency.management__junit__junit__version>4.12</m:dependency.management__junit__junit__version>
+		<m:properties__site.plugin.version>3.4</m:properties__site.plugin.version>
+		<m:dependency.management__org.eclipse.persistence__javax.persistence__scope>provided</m:dependency.management__org.eclipse.persistence__javax.persistence__scope>
+		<m:dependency.management__org.slf4j__slf4j-ext__version>1.7.24</m:dependency.management__org.slf4j__slf4j-ext__version>
+		<m:dependency.management__org.fusesource.jansi__jansi__version>1.14</m:dependency.management__org.fusesource.jansi__jansi__version>
+		<m:dependency.management__org.tukaani__xz__scope>test</m:dependency.management__org.tukaani__xz__scope>
+		<m:dependency.management__javax.servlet__servlet-api__scope>provided</m:dependency.management__javax.servlet__servlet-api__scope>
+		<m:dependency.management__com.fasterxml.jackson.dataformat__jackson-dataformat-xml__version>2.8.6</m:dependency.management__com.fasterxml.jackson.dataformat__jackson-dataformat-xml__version>
+		<m:dependency.management__org.apache.logging.log4j__log4j-slf4j-impl__version>2.8.1</m:dependency.management__org.apache.logging.log4j__log4j-slf4j-impl__version>
+		<m:dependency.management__com.sleepycat__je__version>5.0.73</m:dependency.management__com.sleepycat__je__version>
+		<m:dependency.management__org.apache.felix__org.apache.felix.framework__version>5.6.1</m:dependency.management__org.apache.felix__org.apache.felix.framework__version>
+		<m:dependency.management__org.codehaus.plexus__plexus-utils__version>3.0.24</m:dependency.management__org.codehaus.plexus__plexus-utils__version>
+		<m:dependency.management__org.apache.logging.log4j__log4j-jcl__version>2.8.1</m:dependency.management__org.apache.logging.log4j__log4j-jcl__version>
+		<e:sbtTransformHash>5caf96c21a5b419ddc86679c4c587c408d41c1b0</e:sbtTransformHash>
+		<m:properties__maven.compiler.target>1.7</m:properties__maven.compiler.target>
+		<m:dependency.management__org.jboss.spec.javax.jms__jboss-jms-api_1.1_spec__version>1.0.1.Final</m:dependency.management__org.jboss.spec.javax.jms__jboss-jms-api_1.1_spec__version>
+		<m:dependency.management__com.conversantmedia__disruptor__version>1.2.10</m:dependency.management__com.conversantmedia__disruptor__version>
+		<m:maven.plugins>org.apache.maven.plugins__maven-remote-resources-plugin__null|org.apache.maven.plugins__maven-site-plugin__null|org.apache.maven.plugins__maven-remote-resources-plugin__null|org.apache.maven.plugins__maven-site-plugin__null|org.apache.maven.plugins__maven-remote-resources-plugin__null|org.apache.maven.plugins__maven-site-plugin__null|org.apache.maven.plugins__maven-remote-resources-plugin__null|org.apache.maven.plugins__maven-site-plugin__null|org.apache.maven.plugins__maven-checkstyle-plugin__null|org.apache.maven.plugins__maven-compiler-plugin__null|org.apache.maven.plugins__maven-jar-plugin__null|null__maven-resources-plugin__3.0.1|org.apache.maven.plugins__maven-surefire-plugin__2.19.1|org.apache.maven.plugins__maven-failsafe-plugin__2.19.1|org.apache.maven.plugins__maven-site-plugin__3.4|org.apache.maven.plugins__maven-remote-resources-plugin__null|org.apache.maven.plugins__maven-pdf-plugin__1.2|org.apache.maven.plugins__maven-source-plugin__null|org.apache.rat__apache-rat-plugin__0.12|org.apache.maven.plugins__maven-doap-plugin__1.2|org.apache.maven.plugins__maven-remote-resources-plugin__null|org.apache.maven.plugins__maven-site-plugin__null|org.apache.maven.plugins__maven-remote-resources-plugin__null|org.apache.maven.plugins__maven-site-plugin__null|org.apache.maven.plugins__maven-remote-resources-plugin__null|org.apache.maven.plugins__maven-site-plugin__null|org.apache.maven.plugins__maven-remote-resources-plugin__null|org.apache.maven.plugins__maven-site-plugin__null|org.apache.maven.plugins__maven-checkstyle-plugin__null|org.apache.maven.plugins__maven-compiler-plugin__null|org.apache.maven.plugins__maven-jar-plugin__null|null__maven-resources-plugin__3.0.1|org.apache.maven.plugins__maven-surefire-plugin__2.19.1|org.apache.maven.plugins__maven-failsafe-plugin__2.19.1|org.apache.maven.plugins__maven-site-plugin__3.4|org.apache.maven.plugins__maven-remote-resources-plugin__null|org.apache.maven.plugins__maven-pdf-plugin__1.2|org.apache.maven.plugins__maven-source-plugin__null|org.apache.rat__apache-rat-plugin__0.12|org.apache.maven.plugins__maven-doap-plugin__1.2|org.apache.maven.plugins__maven-surefire-plugin__null|org.apache.maven.plugins__maven-jar-plugin__null|org.apache.maven.plugins__maven-remote-resources-plugin__null|org.apache.felix__maven-bundle-plugin__null</m:maven.plugins>
+		<m:dependency.management__org.apache.logging.log4j__log4j-flume-ng__version>2.8.1</m:dependency.management__org.apache.logging.log4j__log4j-flume-ng__version>
+		<m:dependency.management__org.jboss.spec.javax.jms__jboss-jms-api_1.1_spec__scope>provided</m:dependency.management__org.jboss.spec.javax.jms__jboss-jms-api_1.1_spec__scope>
+		<m:dependency.management__org.apache.logging.log4j__log4j-core__scope>test</m:dependency.management__org.apache.logging.log4j__log4j-core__scope>
+		<m:dependency.management__com.h2database__h2__version>1.4.193</m:dependency.management__com.h2database__h2__version>
+		<m:dependency.management__org.springframework__spring-webmvc__version>3.2.18.RELEASE</m:dependency.management__org.springframework__spring-webmvc__version>
+		<m:properties__release.plugin.version>2.5.3</m:properties__release.plugin.version>
+		<m:dependency.management__org.apache.logging.log4j__log4j-web__version>2.8.1</m:dependency.management__org.apache.logging.log4j__log4j-web__version>
+		<m:dependency.management__org.springframework__spring-core__version>3.2.18.RELEASE</m:dependency.management__org.springframework__spring-core__version>
+		<m:properties__pdf.plugin.version>1.2</m:properties__pdf.plugin.version>
+		<m:dependency.management__org.hamcrest__hamcrest-all__version>1.3</m:dependency.management__org.hamcrest__hamcrest-all__version>
+		<m:dependency.management__ch.qos.logback__logback-core__version>1.2.0</m:dependency.management__ch.qos.logback__logback-core__version>
+		<m:properties__jackson1Version>1.9.13</m:properties__jackson1Version>
+		<m:properties__distMgmtSnapshotsName>Apache Development Snapshot Repository</m:properties__distMgmtSnapshotsName>
+		<m:properties__sourceReleaseAssemblyDescriptor>source-release</m:properties__sourceReleaseAssemblyDescriptor>
+		<m:properties__slf4jVersion>1.7.24</m:properties__slf4jVersion>
+		<m:properties__flumeVersion>1.7.0</m:properties__flumeVersion>
+		<m:dependency.management__org.apache.logging.log4j__log4j-api-scala_2.11__version>2.8.1</m:dependency.management__org.apache.logging.log4j__log4j-api-scala_2.11__version>
+		<m:properties__remote.resources.plugin.version>1.5</m:properties__remote.resources.plugin.version>
+		<m:properties__jctoolsVersion>1.2.1</m:properties__jctoolsVersion>
+		<m:dependency.management__org.hsqldb__hsqldb__version>2.3.4</m:dependency.management__org.hsqldb__hsqldb__version>
+		<m:dependency.management__org.springframework__spring-expression__version>3.2.18.RELEASE</m:dependency.management__org.springframework__spring-expression__version>
+		<m:dependency.management__org.lightcouch__lightcouch__version>0.0.6</m:dependency.management__org.lightcouch__lightcouch__version>
+		<m:dependency.management__org.apache.logging.log4j__log4j-core__version>2.8.1</m:dependency.management__org.apache.logging.log4j__log4j-core__version>
+		<m:dependency.management__org.hamcrest__hamcrest-all__scope>test</m:dependency.management__org.hamcrest__hamcrest-all__scope>
+		<m:properties__Log4jReleaseVersion>2.8.1</m:properties__Log4jReleaseVersion>
+		<m:dependency.management__org.apache.flume.flume-ng-channels__flume-file-channel__exclusion_4>log4j__log4j</m:dependency.management__org.apache.flume.flume-ng-channels__flume-file-channel__exclusion_4>
+		<m:properties__scm.plugin.version>1.9.5</m:properties__scm.plugin.version>
+		<m:dependency.management__org.apache.flume.flume-ng-channels__flume-file-channel__exclusion_3>org.mortbay.jetty__servlet-api</m:dependency.management__org.apache.flume.flume-ng-channels__flume-file-channel__exclusion_3>
+		<m:properties__mockitoVersion>2.2.7</m:properties__mockitoVersion>
+		<m:properties__log4jParentDir>${basedir}/..</m:properties__log4jParentDir>
+		<m:dependency.management__org.tukaani__xz__version>1.5</m:dependency.management__org.tukaani__xz__version>
+		<m:dependency.management__com.fasterxml.jackson.dataformat__jackson-dataformat-yaml__version>2.8.6</m:dependency.management__com.fasterxml.jackson.dataformat__jackson-dataformat-yaml__version>
+		<m:dependency.management__ch.qos.logback__logback-classic__scope>test</m:dependency.management__ch.qos.logback__logback-classic__scope>
+		<m:properties__manifestfile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</m:properties__manifestfile>
+		<m:dependency.management__org.xmlunit__xmlunit-core__version>2.2.1</m:dependency.management__org.xmlunit__xmlunit-core__version>
+		<m:dependency.management__org.apache.flume.flume-ng-channels__flume-file-channel__exclusion_0>junit__junit</m:dependency.management__org.apache.flume.flume-ng-channels__flume-file-channel__exclusion_0>
+		<m:dependency.management__com.sun.mail__javax.mail__version>1.5.5</m:dependency.management__com.sun.mail__javax.mail__version>
+		<m:dependency.management__org.apache.flume.flume-ng-channels__flume-file-channel__exclusion_2>org.slf4j__slf4j-log4j12</m:dependency.management__org.apache.flume.flume-ng-channels__flume-file-channel__exclusion_2>
+		<m:dependency.management__org.springframework__spring-context__version>3.2.18.RELEASE</m:dependency.management__org.springframework__spring-context__version>
+		<m:dependency.management__org.apache.flume.flume-ng-channels__flume-file-channel__exclusion_1>org.mortbay.jetty__servlet-api-2.5</m:dependency.management__org.apache.flume.flume-ng-channels__flume-file-channel__exclusion_1>
+		<m:properties__rat.plugin.version>0.12</m:properties__rat.plugin.version>
+		<m:dependency.management__org.apache.commons__commons-compress__version>1.13</m:dependency.management__org.apache.commons__commons-compress__version>
+		<m:properties__compiler.plugin.version>3.6.0</m:properties__compiler.plugin.version>
+		<m:dependency.management__org.slf4j__slf4j-api__version>1.7.24</m:dependency.management__org.slf4j__slf4j-api__version>
+		<m:dependency.management__org.apache.commons__commons-lang3__version>3.5</m:dependency.management__org.apache.commons__commons-lang3__version>
+		<m:dependency.management__org.apache.logging.log4j__log4j-taglib__version>2.8.1</m:dependency.management__org.apache.logging.log4j__log4j-taglib__version>
+		<m:dependency.management__org.springframework__spring-test__version>3.2.18.RELEASE</m:dependency.management__org.springframework__spring-test__version>
+		<m:dependency.management__com.datastax.cassandra__cassandra-driver-core__version>3.1.0</m:dependency.management__com.datastax.cassandra__cassandra-driver-core__version>
+		<m:dependency.management__org.codehaus.plexus__plexus-utils__scope>test</m:dependency.management__org.codehaus.plexus__plexus-utils__scope>
+		<m:properties__jacoco.plugin.version>0.7.7.201606060606</m:properties__jacoco.plugin.version>
+		<m:dependency.management__org.apache.maven__maven-core__version>3.3.9</m:dependency.management__org.apache.maven__maven-core__version>
+		<m:properties__changes.plugin.version>2.12.1</m:properties__changes.plugin.version>
+		<m:properties__projectDir>/api</m:properties__projectDir>
+		<m:properties__jackson2Version>2.8.6</m:properties__jackson2Version>
+		<m:properties__Log4jReleaseManager>Ralph Goers</m:properties__Log4jReleaseManager>
+		<m:properties__findbugs.plugin.version>3.0.4</m:properties__findbugs.plugin.version>
+		<m:properties__pmd.plugin.version>3.7</m:properties__pmd.plugin.version>
+		<m:dependency.management__org.codehaus.jackson__jackson-core-asl__version>1.9.13</m:dependency.management__org.codehaus.jackson__jackson-core-asl__version>
+		<m:dependency.management__org.mockito__mockito-core__scope>test</m:dependency.management__org.mockito__mockito-core__scope>
+		<m:dependency.management__com.fasterxml.jackson.core__jackson-core__version>2.8.6</m:dependency.management__com.fasterxml.jackson.core__jackson-core__version>
+		<m:properties__logbackVersion>1.2.0</m:properties__logbackVersion>
+		<m:properties__springVersion>3.2.18.RELEASE</m:properties__springVersion>
+		<m:dependency.management__org.apache.kafka__kafka-clients__version>0.10.1.1</m:dependency.management__org.apache.kafka__kafka-clients__version>
+		<m:properties__organization.logo>https://www.apache.org/images/asf_logo_wide.gif</m:properties__organization.logo>
+		<m:dependency.management__com.fasterxml.jackson.core__jackson-databind__version>2.8.6</m:dependency.management__com.fasterxml.jackson.core__jackson-databind__version>
+		<m:dependency.management__org.hdrhistogram__HdrHistogram__version>2.1.8</m:dependency.management__org.hdrhistogram__HdrHistogram__version>
+		<m:dependency.management__org.apache.hadoop__hadoop-core__exclusion_1>org.codehaus.jackson__jackson-core-asl</m:dependency.management__org.apache.hadoop__hadoop-core__exclusion_1>
+		<m:properties__jxr.plugin.version>2.5</m:properties__jxr.plugin.version>
+		<m:dependency.management__org.apache.flume__flume-ng-embedded-agent__exclusion_3>log4j__log4j</m:dependency.management__org.apache.flume__flume-ng-embedded-agent__exclusion_3>
+		<m:dependency.management__org.apache.hadoop__hadoop-core__exclusion_0>org.codehaus.jackson__jackson-mapper-asl</m:dependency.management__org.apache.hadoop__hadoop-core__exclusion_0>
+		<m:dependency.management__org.springframework__spring-aop__version>3.2.18.RELEASE</m:dependency.management__org.springframework__spring-aop__version>
+		<m:dependency.management__org.apache.logging.log4j__log4j-iostreams__version>2.8.1</m:dependency.management__org.apache.logging.log4j__log4j-iostreams__version>
+		<m:properties__minSeverity>info</m:properties__minSeverity>
+		<m:dependency.management__org.apache.flume__flume-ng-embedded-agent__exclusion_0>org.codehaus.jackson__jackson-mapper-asl</m:dependency.management__org.apache.flume__flume-ng-embedded-agent__exclusion_0>
+		<m:dependency.management__commons-io__commons-io__version>2.5</m:dependency.management__commons-io__commons-io__version>
+		<m:dependency.management__org.apache.logging.log4j__log4j-api__version>2.8.1</m:dependency.management__org.apache.logging.log4j__log4j-api__version>
+		<m:dependency.management__org.apache.flume__flume-ng-embedded-agent__exclusion_2>org.codehaus.jackson__jackson-core-asl</m:dependency.management__org.apache.flume__flume-ng-embedded-agent__exclusion_2>
+		<m:dependency.management__org.apache.hadoop__hadoop-core__exclusion_3>org.mortbay.jetty__servlet-api</m:dependency.management__org.apache.hadoop__hadoop-core__exclusion_3>
+		<m:dependency.management__net.javacrumbs.json-unit__json-unit__version>1.5.5</m:dependency.management__net.javacrumbs.json-unit__json-unit__version>
+		<m:dependency.management__org.apache.flume__flume-ng-embedded-agent__exclusion_1>org.slf4j__slf4j-log4j12</m:dependency.management__org.apache.flume__flume-ng-embedded-agent__exclusion_1>
+		<m:dependency.management__org.apache.hadoop__hadoop-core__exclusion_2>junit__junit</m:dependency.management__org.apache.hadoop__hadoop-core__exclusion_2>
+		<m:dependency.management__org.codehaus.jackson__jackson-mapper-asl__version>1.9.13</m:dependency.management__org.codehaus.jackson__jackson-mapper-asl__version>
+		<m:dependency.management__org.eclipse.persistence__org.eclipse.persistence.jpa__version>2.6.0</m:dependency.management__org.eclipse.persistence__org.eclipse.persistence.jpa__version>
+		<m:dependency.management__com.beust__jcommander__version>1.48</m:dependency.management__com.beust__jcommander__version>
+		<m:dependency.management__org.apache.logging.log4j__log4j-api-scala_2.10__version>2.8.1</m:dependency.management__org.apache.logging.log4j__log4j-api-scala_2.10__version>
+		<m:dependency.management__org.springframework__spring-beans__version>3.2.18.RELEASE</m:dependency.management__org.springframework__spring-beans__version>
+		<m:properties__checkstyle.plugin.version>2.17</m:properties__checkstyle.plugin.version>
+		<m:dependency.management__org.springframework__spring-web__version>3.2.18.RELEASE</m:dependency.management__org.springframework__spring-web__version>
+		<m:dependency.management__org.osgi__org.osgi.core__version>4.3.1</m:dependency.management__org.osgi__org.osgi.core__version>
+		<m:dependency.management__ch.qos.logback__logback-core__scope>test</m:dependency.management__ch.qos.logback__logback-core__scope>
+		<m:dependency.management__org.liquibase__liquibase-core__version>3.5.3</m:dependency.management__org.liquibase__liquibase-core__version>
+		<m:dependency.management__org.apache.flume.flume-ng-channels__flume-file-channel__version>1.7.0</m:dependency.management__org.apache.flume.flume-ng-channels__flume-file-channel__version>
+		<m:dependency.management__org.xmlunit__xmlunit-core__scope>test</m:dependency.management__org.xmlunit__xmlunit-core__scope>
+		<m:properties__project.build.sourceEncoding>UTF-8</m:properties__project.build.sourceEncoding>
+		<m:properties__surefire.version>2.19.1</m:properties__surefire.version>
+		<m:dependency.management__org.apache.flume__flume-ng-core__exclusion_0>org.slf4j__slf4j-log4j12</m:dependency.management__org.apache.flume__flume-ng-core__exclusion_0>
+		<m:dependency.management__org.apache.flume__flume-ng-core__exclusion_1>log4j__log4j</m:dependency.management__org.apache.flume__flume-ng-core__exclusion_1>
+		<m:dependency.management__org.codehaus.jackson__jackson-mapper-asl__scope>runtime</m:dependency.management__org.codehaus.jackson__jackson-mapper-asl__scope>
+		<m:dependency.management__javax.servlet__servlet-api__version>2.5</m:dependency.management__javax.servlet__servlet-api__version>
+		<m:properties__disruptorVersion>3.3.6</m:properties__disruptorVersion>
+		<m:dependency.management__org.apache.logging.log4j__log4j-jul__version>2.8.1</m:dependency.management__org.apache.logging.log4j__log4j-jul__version>
+		<m:properties__maven.compiler.source>1.7</m:properties__maven.compiler.source>
+		<m:dependency.management__com.fasterxml.jackson.module__jackson-module-jaxb-annotations__version>2.8.6</m:dependency.management__com.fasterxml.jackson.module__jackson-module-jaxb-annotations__version>
+	</info>
+	<configurations>
+		<conf name="default" visibility="public" description="runtime dependencies and master artifact can be used with this conf" extends="runtime,master"/>
+		<conf name="master" visibility="public" description="contains only the artifact published by this module itself, with no transitive dependencies"/>
+		<conf name="compile" visibility="public" description="this is the default scope, used if none is specified. Compile dependencies are available in all classpaths."/>
+		<conf name="provided" visibility="public" description="this is much like compile, but indicates you expect the JDK or a container to provide it. It is only available on the compilation classpath, and is not transitive."/>
+		<conf name="runtime" visibility="public" description="this scope indicates that the dependency is not required for compilation, but is for execution. It is in the runtime and test classpaths, but not the compile classpath." extends="compile"/>
+		<conf name="test" visibility="private" description="this scope indicates that the dependency is not required for normal use of the application, and is only available for the test compilation and execution phases." extends="runtime"/>
+		<conf name="system" visibility="public" description="this scope is similar to provided except that you have to provide the JAR which contains it explicitly. The artifact is always available and is not looked up in a repository."/>
+		<conf name="sources" visibility="public" description="this configuration contains the source artifact of this module, if any."/>
+		<conf name="javadoc" visibility="public" description="this configuration contains the javadoc artifact of this module, if any."/>
+		<conf name="optional" visibility="public" description="contains all optional dependencies"/>
+	</configurations>
+	<publications>
+		<artifact name="log4j-api" type="jar" ext="jar" conf="master"/>
+	</publications>
+	<dependencies>
+		<dependency org="org.apache.felix" name="org.apache.felix.framework" rev="5.6.1" force="true" conf="test->runtime(*),master(compile)"/>
+		<dependency org="org.osgi" name="org.osgi.core" rev="4.3.1" force="true" conf="provided->compile(*),provided(*),runtime(*),master(compile)"/>
+		<dependency org="junit" name="junit" rev="4.12" force="true" conf="test->runtime(*),master(compile)"/>
+		<dependency org="org.eclipse.tycho" name="org.eclipse.osgi" rev="3.11.2.v20161107-1947" force="true" conf="test->runtime(*),master(compile)"/>
+		<dependency org="org.apache.maven" name="maven-core" rev="3.3.9" force="true" conf="test->runtime(*),master(compile)"/>
+		<dependency org="org.apache.commons" name="commons-lang3" rev="3.5" force="true" conf="test->runtime(*),master(compile)"/>
+		<dependency org="com.fasterxml.jackson.core" name="jackson-core" rev="2.8.6" force="true" conf="test->runtime(*),master(compile)"/>
+		<dependency org="com.fasterxml.jackson.core" name="jackson-databind" rev="2.8.6" force="true" conf="test->runtime(*),master(compile)"/>
+	</dependencies>
+</ivy-module>
