@@ -12,3 +12,6 @@
 .idea
 *.iml
 .history
+
+# ignore generated tools
+tools/
