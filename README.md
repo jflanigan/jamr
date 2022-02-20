@@ -17,12 +17,18 @@ For the performance of the parser (including for the parser from SemEval 2016), 
 First checkout the github repository (or download the latest release):
 
     git clone https://github.com/jflanigan/jamr.git
-    git checkout Semeval-2016
+    git checkout setup --
 
 JAMR depends on [Scala](http://www.scala-lang.org), [Illinois NER
 system](http://cogcomp.cs.illinois.edu/page/download_view/NETagger) v2.7, tokenization scripts in
 [cdec](https://github.com/redpony/cdec), and [WordNet](http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz) for the
-aligner. To download these dependencies into the subdirectory `tools`, cd to the `jamr` repository and run (requires
+aligner.
+To manually install them, you can use [SDKMAN!](https://sdkman.io/install) and run the following:
+
+    sdk install sbt 1.0.2
+    sdk install scala 2.11.8
+
+To download project dependencies into the subdirectory `tools`, cd to the `jamr` repository and run (requires
 wget to be installed):
 
     ./setup
@@ -37,6 +43,8 @@ Source the config script - you will need to do this before running any of the sc
 
 Run `./compile` to build an uberjar, which will be output to
 `target/scala-{scala_version}/jamr-assembly-{jamr_version}.jar` (the setup script does this for you).
+
+**Important**: if you have further troubles during the installation please refer to this [issue](https://github.com/jflanigan/jamr/issues/43#issuecomment-981128400).
 
 # Running the Parser
 
